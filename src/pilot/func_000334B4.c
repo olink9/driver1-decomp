@@ -31,8 +31,8 @@ void func_000334B4(void)
         DrawSync(0);
         PutDrawEnv(*(int *)&D_00097524 + 0x10);
         while (D_000972D4) {
-            t = D_00089118[1];
             rp = rect;
+            t = D_00089118[1];
             i = 1;
             q = D_00089118 + 1;
             for (; i < 13; i++, q++)

@@ -18,17 +18,16 @@ void func_00034808(void)
     while (func_00079F70(1) != 2) {
         a = D_00089118;
         first = a[1];
+        i = 1;
         p = a + 1;
-        for (i = 1; i < 13; i++) {
+        for (; i < 13; i++, p++)
             *p = p[1];
-            p++;
-        }
         a[i] = first;
         rect.x = 0x3C0;
         rect.y = 0x1AA;
         rect.w = 16;
         rect.h = 1;
-        func_00074404(&rect);
+        func_00074404(&rect, a);
         DrawPrim(D_000A7B3C);
         DrawSync(0);
         VSync(0);

@@ -11,7 +11,7 @@ typedef struct {
 extern void func_000614DC();
 extern int SquareRoot0();
 
-void func_000618C8(OBJ *o) {
+int func_000618C8(OBJ *o) {
     V3 d;
     V3 *q;
     func_000614DC(o);

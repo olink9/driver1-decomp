@@ -1,2 +1,5 @@
 - systemic: several near-misses swap v0/v1 between the 0x78654321 constant and a loaded value (0005D89C, 000513D4, 0005C68C) - one idiom to crack in the Opus pass
   (matched examples using the same constant: src/pilot/func_000394E0.c, func_000395D8.c - compare with the wips)
+- absolute addresses like 0x1E4038 / 0x1E40A0 (lui 0x1E) are probably linker-script symbols (a memory region past bss) - declare them as externs placed by the linker script, not *(int*)0x1E4038 (func_00043270, b038)
+- systemic: v0/v1-style swaps between `current` (D_00097530) and the 0xFFFFFF mask (func_000564A4 draw_box, func_00035BC8, func_00055530) = the PsyQ addPrim/setaddr macro. Use the EXACT libgpu.h macro text (addPrim(ot,p): setaddr(p, getaddr(ot)), setaddr(ot, p)) instead of hand-written masks
+  -> real PsyQ P_TAG is `unsigned addr:24; unsigned len:8;` (libgpu.h #else branch, line ~356); addPrim through that bitfield is what produces the original 0xFFFFFF mask sequence. Check which branch common.h selects.

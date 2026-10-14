@@ -109,6 +109,20 @@ GCC 2.7.2-psx and 2.8.x each failed functions that cdk matches.
 - (run 1) Recover divisors from magic: find d with ceil(2^(32+s)/d) == M (0x57619F1/sra5 = /1500, 0x88888889/sra5 = /60).
 - (run 1) PsyQ macros store fields in their own order - write the stores out by hand when the target order differs.
 
+- (run 1) Plain `char` is UNSIGNED in this GCC; `sll 24; sra 2x` on a value means `signed char`.
+- (run 1) A chain of `==1`, `==2` tests on one value may only match as a `switch`.
+
+- (run 1) Old cpp rejects `0x12E-0x24` in array sizes - write the decimal. Gas macros must be one line with `;`.
+
+- (run 1) Keep your BEST attempt: copy it to `<SYMBOL>.best.c` whenever the score improves, and save that as the .wip.c.
+- (run 1) One symbol used in two addressing forms: `extern unsigned char Arr[] __asm__("D_x");` alias works.
+
+- (r001, Opus) For pure register-priority swaps, declaration order rarely helps. What works: order of FIRST
+  ASSIGNMENT, which variable a sum is stored into, new pseudos (a local pointer), parameter TYPE (`short` param gives
+  temp-then-copy), an `int` return type with no return (keeps v0 live, stops epilogue delay-slot filling), and hidden
+  extra call arguments. A small brute-force script over source variants (~1 variant/s) is fine for sweeping shapes.
+- (b042) Functions called with fewer args than they take need a K&R definition.
+
 ## Rules
 - Only write in `src/pilot/`, and only append to `pilot/results.tsv`. Never edit configs, tools,
   `orig/`, `asm*/` or `include/` (except new macros in `include/gte.h`).

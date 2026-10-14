@@ -130,3 +130,21 @@ D_00097530	current	b029 data
 D_000969F0	spoolpos_writing	b029 data
 D_00096DC4	FastForward	b029 data
 func_00034B18	ready_cb_textures	b028
+func_000564A4	draw_box	b030
+func_00034D74	data_cb_regions	b030
+func_0002258C	LoadGameLevel	b030
+func_000511EC	ReportMode	b030 likely
+func_0005073C	FadeGameScreen	b031
+func_0003497C	data_cb_textures	b033
+func_0007A53C	CdDataCallback	b033 lib likely
+func_00032DEC	test_changemode	b035
+func_0001D3EC	SetShadowPoints	b034
+func_00053C88	DrawN	b039
+func_0005C99C	LoadFont	b039
+func_00033604	UpdateSpool	b039
+func_00079DB0	memcpy	b039 lib guess
+func_000426B4	AddGroundDebris	b038
+func_00043270	damage_object	b038
+func_00041AC4	AddLeaf	b038 likely
+func_00059BBC	ShowReplayMenu	b040 weak
+func_00052240	GetTextureDetails	b042

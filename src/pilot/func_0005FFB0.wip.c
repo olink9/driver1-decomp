@@ -26,8 +26,9 @@ void func_0005FFB0(char *p)
         D_000976C0 = n;
         arr[n] = s;
         if (*(unsigned char *)(p + 0x56) == 6) {
-            if (D_000976CC[*(unsigned char *)(p + 0x53)].f != 0)
-                D_000976CC[*(unsigned char *)(p + 0x53)].f = 0;
+            E12 *e = &D_000976CC[*(unsigned char *)(p + 0x53)];
+            if (e->f != 0)
+                e->f = 0;
         }
     } else {
         *(short *)(p + 0x44) = r;
