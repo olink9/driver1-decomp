@@ -6,7 +6,6 @@ unsigned char func_0006ACC8(char *buf, int ticks, unsigned char flag)
     unsigned char hs = 0;
     unsigned char len;
     int q;
-    short sec;
 
     if (ticks == 0x7FFFFFFF) {
         len = sprintf(buf, D_00096EDC);
@@ -16,8 +15,7 @@ unsigned char func_0006ACC8(char *buf, int ticks, unsigned char flag)
     } else {
         q = ticks / 16384;
         hs = ((ticks - q * 16384) * 100) / 16384;
-        sec = q;
-        len = sprintf(buf, D_000110C8, (unsigned char)(sec / 60), (short)(sec % 60));
+        len = sprintf(buf, D_000110C8, (unsigned char)((short)q / 60), (short)((short)q % 60));
         if (flag) {
             sprintf(buf + len, D_00096EE8, hs);
         }

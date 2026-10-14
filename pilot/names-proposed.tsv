@@ -101,3 +101,32 @@ func_0005334C	animate_garage_door	b023
 func_00035044	ready_cb_soundbank	b023
 func_0003D4D0	PlaceCameraAtLocation	b023
 func_0004E214	LoadSoundBank	b023
+func_000541C8	InitOverheadMap	b020
+func_00060E4C	FindSeated	b020 likely
+func_000466D4	GetSmokeDrift	b020 likely
+func_00060F54	add_seated	b020 likely
+func_00056278	LoadMapTile	b020 likely
+func_000513D4	SwapDrawBuffers	b020 guess
+func_00074684	ClearOTagR	b020 lib guess
+func_0007178C	DoVibrato	b022
+func_0004C610	GetEngineRevs	b022
+func_0001B380	LongQuaternion2Matrix	b022
+func_0007D66C	SetDefDrawEnv	b024 lib guess
+func_0007D720	SetDefDispEnv	b024 lib guess
+func_00054618	FlashOverheadMap	b024
+func_00033D18	SendSBK	b024
+func_0006ADFC	SetColourByValue	b026 likely
+func_00041CE4	SwirlLeaves	b026 likely
+func_00074404	LoadImage	b026 lib guess
+func_0007A7F4	GetClut	b026 lib guess
+func_00020844	jump_debris	b027
+func_000346C8	ProcessSpoolInfoLump	b025
+func_00067EE0	Long2DDistance	b025
+D_0008EAA8	rcossin_tbl	b025 data
+func_00035174	data_cb_misc	b029
+func_000718A8	DoTremolo	b029
+func_000493CC	add_haze	b029
+D_00097530	current	b029 data
+D_000969F0	spoolpos_writing	b029 data
+D_00096DC4	FastForward	b029 data
+func_00034B18	ready_cb_textures	b028

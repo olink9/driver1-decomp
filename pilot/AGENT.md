@@ -97,6 +97,18 @@ GCC 2.7.2-psx and 2.8.x each failed functions that cdk matches.
   wrap jumps in a gas macro (`.macro XJ t; j \t; .endm` then `XJ label`). Don't add `.set noat` after it.
 - (run 1) Duplicated setup in two branches: write it twice in C; GCC cross-jumps the tails.
 
+- (run 1) **Scratch files are shared between parallel agents** - name every temp file with your batch id
+  (e.g. `b031_try.c`), never generic names like `b.c` or `test.c`.
+- (run 1) Stack locals: the first-declared local gets the lowest address - reverse declaration order to match.
+- (run 1) `unsigned char v = arg;` at the top keeps a separate callee-saved copy (`int` gets copy-propagated away).
+
+- (run 1) Strides from shifts: `i*3 + (i*3<<5)` then `<<2` = 396 (0x18C); `x*3<<4 - x*3` = *45. Derive before trusting D2.
+- (run 1) Reassociation (`x + (rand()&0x1ff) - 256` vs `x - 256 + ...`): put the intended sub-expression in its own temp.
+
+- (run 1) Pointer globals in lui form: `extern long long D_x; #define current (*(DB **)&D_x)`.
+- (run 1) Recover divisors from magic: find d with ceil(2^(32+s)/d) == M (0x57619F1/sra5 = /1500, 0x88888889/sra5 = /60).
+- (run 1) PsyQ macros store fields in their own order - write the stores out by hand when the target order differs.
+
 ## Rules
 - Only write in `src/pilot/`, and only append to `pilot/results.tsv`. Never edit configs, tools,
   `orig/`, `asm*/` or `include/` (except new macros in `include/gte.h`).
