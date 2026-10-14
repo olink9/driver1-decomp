@@ -1,0 +1,2 @@
+func_0001A9BC	99.74	bytes believed identical; %hi addend annotation differs after GNU as
+func_00068928	99.80	bytes believed identical; target addiu has no reloc, ours %lo(D_000C6F04)

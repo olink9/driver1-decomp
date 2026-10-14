@@ -123,6 +123,23 @@ GCC 2.7.2-psx and 2.8.x each failed functions that cdk matches.
   extra call arguments. A small brute-force script over source variants (~1 variant/s) is fine for sweeping shapes.
 - (b042) Functions called with fewer args than they take need a K&R definition.
 
+- (b047) `andi 0xff`/`0xf0` at call sites: give callees real prototypes with `unsigned char` params (K&R `()` loses it).
+
+- (b048) Small helpers that were already matched (e.g. ClearMem func_00012498) get inlined: copy the matched body
+  as a `static inline` into the caller's file.
+
+- (b052) Delay slots tell the global's form: `long long` form is never moved into a delay slot (target shows `nop`);
+  `T D_x[]` form is (target shows `lui` in the slot).
+
+- (b053) **Empty `__asm__("")` / `__asm__("" : "=r"(p) : "0"(p))` hints emit no code but are not real source:**
+  allowed as a last resort, but the file MUST start with `/* FAKEMATCH: ... */` (counted separately; a later pass
+  looks for a real C form). Prefer real C.
+- (b053) **addPrim: use the real PsyQ bitfield P_TAG** (`typedef struct { unsigned addr:24; unsigned len:8; } P_TAG;`
+  and `((P_TAG*)p)->addr = ((P_TAG*)&ot[z])->addr; ((P_TAG*)&ot[z])->addr = (unsigned)p;`). Fixes the
+  0xFFFFFF/0xFF000000 mask scheduling.
+- (b053) Globals that are fields of a real struct (camera_angle.vx/.vy/.vz) must be declared as structs - aliasing
+  rules decide whether loads move past stores.
+
 ## Rules
 - Only write in `src/pilot/`, and only append to `pilot/results.tsv`. Never edit configs, tools,
   `orig/`, `asm*/` or `include/` (except new macros in `include/gte.h`).

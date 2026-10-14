@@ -148,3 +148,34 @@ func_00043270	damage_object	b038
 func_00041AC4	AddLeaf	b038 likely
 func_00059BBC	ShowReplayMenu	b040 weak
 func_00052240	GetTextureDetails	b042
+func_00070728	SPE	b047
+func_00071504	DoS3MRetrig	b047
+func_0004428C	ShowLight1	b046
+func_000710D0	SetPer	b046
+func_00037EF8	wjmDraw3	b048
+func_0007EAF4	RotTransPers	b048 lib
+func_0007B1E8	NormalClip	b048 lib
+func_00012498	ClearMem	b048
+func_0002452C	main	b049
+func_00042C8C	ShowLightStreak	b049 guess
+func_0003F658	bFindCollisionPoint	b050
+func_0002DFEC	ProcessMapLump	b053
+func_00058B2C	RecordCamera	b053
+func_00022344	ProcessLumps	b053 likely
+func_00059658	FindFreeCamera	b053
+D_00096DB4	LastChange	b053 data
+D_00097658	tracking_car	b053 data
+D_00096897	cameraview	b053 data
+func_00037274	DrawBlackQuad	b054 guess
+func_0003B748	DrawWheelObject	b054
+func_000702BC	JPlayNote	b054
+func_0005CF10	PrintDigit	b054
+D_0009781C	XMC	b054 data
+D_000971A0	combointensity	b054 data
+func_00037C9C	wjmDraw4	b055
+func_0003F88C	bFindCollisionTime	b055
+func_00068928	MissionScriptParse	b055 guess
+func_0006FB14	InitXMData	b057
+func_00055A20	DrawSightCone	b057
+func_0001B4A4	InitCarPhysics	b057 likely
+func_0001B380	QuatToMatrix	b057 guess

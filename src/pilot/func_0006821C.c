@@ -1,3 +1,4 @@
+/* FAKEMATCH: empty __asm__ used as a compiler hint (no instruction emitted) */
 struct O { char pad[0x11C]; unsigned int f11c; };
 extern volatile long long D_000970D8;
 extern int D_00097784;

@@ -1,3 +1,4 @@
+/* FAKEMATCH: empty __asm__ used as a compiler hint (no instruction emitted) */
 extern unsigned short D_0008D878[];
 unsigned short func_0006F81C(unsigned int a, unsigned short b)
 {

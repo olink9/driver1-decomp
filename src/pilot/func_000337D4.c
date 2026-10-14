@@ -1,3 +1,4 @@
+/* FAKEMATCH: empty __asm__ used as a compiler hint (no instruction emitted) */
 /* Driver 2: InitSpooling */
 extern short D_0009728C[];
 extern volatile int D_00097234;
