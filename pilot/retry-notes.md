@@ -10,3 +10,4 @@
 - func_000614DC matches with a double bit test `(flags & 0x80) && ((flags & 0x80) >> 7)` - probably a 1-bit bitfield in the original; revisit when struct types are consolidated.
 - func_0006AF48 (95.33) likely fixed by moving the ShowTime-like second half into a static inline with its own char buf[8] (see func_0006B4AC.wip.c, b091)
 - 2nd aspsx-2.69-only case: func_00051ADC (100.0 with --aspsx 2.69, 94.13 default). Both cases = tentative .comm definitions in the file, gp_rel at +0 but lui/%lo at +2..+6. Likely the real rule is about .comm symbols, not the aspsx version - fix maspsx rule (gp_allow_offset False for .comm) and re-test all, in cleanup.
+- func_000130D4 (96) and func_000138A0 (99.35) share the car-list layout/loop - match one, port to the other (b107)

@@ -292,3 +292,14 @@ func_00024F1C	FrontEndLoop	b105 guess
 func_00051ADC	LoadTPagesCluts	b105 guess
 func_00040BAC	PlacePoolForCar	b106
 D_0008A73C	PoolPrimData	b106 data
+func_0003C998	CameraCollisionCheck	b103
+func_0001A30C	CivCarsStep	b103 guess
+D_000A0E20	modelpointers	b103 data
+func_00057AE4	DrawFullscreenMap	b104 guess
+func_00048660	HandleDebris	b108
+func_00041690	HandleBirds	b108 likely
+func_000217C8	ROADS_GetRouteData	b108 likely
+D_00096C3C	weather_level	b108 data
+func_00024754	GameStateSwitch	b107 guess
+func_000130D4	JunctionClearCheck	b107 guess
+func_00016F0C	ChooseJunctionExit	b111 guess

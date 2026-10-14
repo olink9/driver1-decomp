@@ -1,3 +1,4 @@
+/* WIP 99.72: only diff = register choice in the bounding-sphere test (sphere_sq v1 vs a2, xd v0 vs a1, zd a0 vs v0) */
 /* Driver 2 name: CameraCollisionCheck */
 typedef struct { int vx, vy, vz, pad; } VEC;
 typedef struct { short m[3][3]; short pad; int t[3]; } MAT;
@@ -76,7 +77,7 @@ int func_0003C998(void)
     int sphere_sq;
 
     count = 0;
-    sphere = scr_z * 3 - 382;
+    { int sz2 = scr_z * 2 - 382; sphere = scr_z + sz2; }
     do {
         ox = (count % 3) * 1024 - 1024;
         oz = (count / 3) * 1024 - 1024;
@@ -103,7 +104,8 @@ int func_0003C998(void)
                     zd = cop->vz - camera_position.vz;
                     if (zd < 0)
                         zd = camera_position.vz - cop->vz;
-                    if (xd * xd + zd * zd < sphere_sq + sphere * sphere) {
+                    sphere_sq += sphere * sphere;
+                    if (zd * zd + xd * xd < sphere_sq) {
                         num_cb = *boxptr;
                         collide = (COLLISION_PACKET *)(boxptr + 1);
                         for (box_loop = 0; box_loop < num_cb; box_loop++, collide++) {

@@ -164,6 +164,12 @@ GCC 2.7.2-psx and 2.8.x each failed functions that cdk matches.
 - (b093) Diagnostic: `fnscore --extra="-fno-schedule-insns -fno-schedule-insns2"` tells whether an order diff comes from
   the scheduler or from RTL order. `x - (y*48 - 4096)` reassociation: wrap the inner part in a `static inline` sub().
 
+- (b103) Leaf functions have no 0x10 outgoing-arg area: size `char pad[]` from sp+0. Copy Driver 2's debug-symbol
+  locals literally (xmin/xmax..., reused tx/tz) - it often fixes allocation.
+
+- (b104) Diagnosing register swaps: run cc1 with `-dl -dg` and compare per-pseudo "used N times across M insns" with
+  GCC 2.7 global-alloc priority floor_log2(refs)*refs/live_length - shows which variable needs more/fewer refs.
+
 ## Final check (coordinator)
 `tools/linkcheck.py` links every matched C file into the real build and compares bytes with the original exe - the
 real proof. fnscore 100 is necessary, linkcheck pass is what counts. Hand-written asm must also pass it (no stray nop).

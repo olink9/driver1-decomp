@@ -58,7 +58,7 @@ void func_0005F3F8(void)
     int a;
     int dot;
     int r;
-    int ox, oz;
+    int oz, ox;
     int turn;
     int snd;
     int off;
@@ -134,10 +134,10 @@ void func_0005F3F8(void)
                     D_000C6F01[0] = 1;
                 }
                 d.vx = car->x - p->x;
-                d.vy = 0;
                 d.vz = car->z - p->z;
-                dir.vx = car->f48;
                 dir.vy = 0;
+                d.vy = 0;
+                dir.vx = car->f48;
                 dir.vz = -car->f40;
                 dot = (dir.vx * d.vx + dir.vy * d.vy + dir.vz * d.vz + 0x800) >> 12;
                 off = 0;
@@ -154,8 +154,8 @@ void func_0005F3F8(void)
                 p->vx = (spd * D_0008EAA8[((p->angle + 0x800) & 0xFFF) * 2]) >> 12;
                 p->vz = (spd * D_0008EAA8[((p->angle + 0x800) & 0xFFF) * 2 + 1]) >> 12;
                 if (!(p->flags & 0x1000)) {
-                    p->b48 = 0;
                     p->i4C = *(int *)&D_000C0160;
+                    p->b48 = 0;
                 }
                 p->flags |= 0x1000;
                 if (p->state == 6) {
@@ -182,12 +182,12 @@ void func_0005F3F8(void)
             int dx = p->x - D_0009B0A4[0].x;
             int dz = p->z - D_0009B0A4[0].z;
             if (dx * dx + dz * dz > 0x2B80D840) {
-                D_000976C0--;
-                D_000C0340[D_000976C0] = p->s42;
                 p->flags = 0;
                 p->s1C = 0;
                 p->angle = 0;
                 p->s18 = 0;
+                D_000976C0--;
+                D_000C0340[D_000976C0] = p->s42;
                 if (p->state == 6 && D_000976CC[p->idx].fA != 0)
                     D_000976CC[p->idx].fA = 0;
             }
