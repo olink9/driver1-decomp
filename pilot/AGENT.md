@@ -140,6 +140,9 @@ GCC 2.7.2-psx and 2.8.x each failed functions that cdk matches.
 - (b053) Globals that are fields of a real struct (camera_angle.vx/.vy/.vz) must be declared as structs - aliasing
   rules decide whether loads move past stores.
 
+- (b059) A local copied from an .sdata D_ via lui/addiu + lwl/lwr is an initialized local aggregate
+  (`SVECTOR a = {0,0,10};`), not a struct copy of an extern.
+
 ## Rules
 - Only write in `src/pilot/`, and only append to `pilot/results.tsv`. Never edit configs, tools,
   `orig/`, `asm*/` or `include/` (except new macros in `include/gte.h`).

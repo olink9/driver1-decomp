@@ -179,3 +179,28 @@ func_0006FB14	InitXMData	b057
 func_00055A20	DrawSightCone	b057
 func_0001B4A4	InitCarPhysics	b057 likely
 func_0001B380	QuatToMatrix	b057 guess
+func_0003ED78	LoseHubcap	b059
+func_0005CC68	PrintString	b059
+func_0004EAC0	_MatrixRotate	b059 guess
+func_00033F9C	CheckLoadAreaData	b056
+func_00047824	Setup_Debris	b056
+D_00096850	gNight	b056 data
+D_000BABC0	debris	b056 data
+func_00049DB8	AddRainDrops	b060
+D_000970D8	VSyncCounter	b060 data guess
+func_000451A8	RoundShadow	b061
+func_00045460	ShowGroundLight	b061
+func_0004A398	DisplayLightReflections	b061
+func_0002C564	Apply_Inv_CameraMatrix	b061 likely
+func_00033870	SendTPage	b058
+D_000A7F50	tsetinfo	b058 data
+D_00087030	texture_cluts	b058 data
+D_00086F30	texture_pages	b058 data
+func_00045A04	DisplayWater	b064
+func_0003C6CC	MangleWheelModels	b063
+func_00039D94	ControlMap	b063 guess
+func_00045718	ShowFlare	b065
+func_00053E54	DrawCompass	b065
+func_0001B720	TempBuildHandlingMatrix	b065 likely
+func_000539C8	WorldToOverheadMapPositions	b065 likely
+func_0004EA98	RotMatrixXYZ	b065 guess

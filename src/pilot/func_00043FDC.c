@@ -13,23 +13,27 @@ extern int func_0001F5B0();
 extern void func_0004449C(), func_0004A398();
 extern void func_00045718(VEC *, CVEC *, short, int);
 
-void func_00043FDC(SVEC *pos, int car, CVEC *col, short size, int arg4, unsigned char flag)
+void func_00043FDC(SVEC *pos, int car, CVEC *col, short size, int arg4, int flag)
 {
     VEC v2;
     VEC v;
     SVEC sv;
     int fade;
+    int tmp;
+    unsigned char cd = flag;
+    int odd = flag & 1;
 
-    if (flag == 0xFF) {
+    if (cd == 0xFF) {
         fade = 0xFF;
-        flag = 0;
+        cd = 0;
     } else {
-        if (flag & 1)
-            fade = D_00097468;
+        if (odd)
+            tmp = D_00097468;
         else
-            fade = D_00097440;
-        if (fade < 0)
+            tmp = D_00097440;
+        if (tmp < 0)
             return;
+        fade = tmp;
     }
     col->r = (col->r * fade) >> 10;
     col->b = (col->b * fade) >> 10;
@@ -50,7 +54,7 @@ void func_00043FDC(SVEC *pos, int car, CVEC *col, short size, int arg4, unsigned
         v2 = v;
         v2.vy = -func_0001F5B0(&D_0009B0A4[car].pos) - D_0008A8F0.vy;
     }
-    col->cd = flag;
+    col->cd = cd;
     func_0004449C(&v, col, size, arg4);
     func_00045718(&v, col, size * 3, ((pos->vx + pos->vz) >> 2) + ((D_00097434 + D_00097438) & 0xFFF) * 2);
     func_0004A398(&v2, col, size, D_000B9230);

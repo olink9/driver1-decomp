@@ -46,8 +46,9 @@ void func_0006A6C8(SNDOBJ *p)
             p->t.timer--;
         } else {
             play = 0;
-            if (!(p->flags & 2) ||
-                ((p->flags & 2) && *(int *)&D_0009770C > 0 && *(int *)&D_00097708 > 0x292))
+            if (!(p->flags & 2))
+                play = 1;
+            else if ((p->flags & 2) >> 1 && *(int *)&D_0009770C > 0 && *(int *)&D_00097708 > 0x292)
                 play = 1;
             if (play) {
                 r = func_0004FFE8();
