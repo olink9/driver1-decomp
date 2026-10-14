@@ -7,3 +7,4 @@
 - pilot/review.tsv: near-misses whose bytes look identical but reloc annotations differ. Settle by linking them into the real build (sha1 check), not by loosening the scorer blindly.
 - switch decision trees (func_0006A318 95.38): needs gcc 2.7.2 balance_case_nodes worked out - target tree ==4,<5,==2 then ==7,>7 exit,==5,==6.
 - FIX FOUND (b069): the 0x78654321 assert loop = `extern volatile int D_00097534;` with `while (D_00097534 != 0x78654321) ...` - fixes the v0/v1 swap; apply to 0005D89C / 000513D4 / 0005C68C.
+- func_000614DC matches with a double bit test `(flags & 0x80) && ((flags & 0x80) >> 7)` - probably a 1-bit bitfield in the original; revisit when struct types are consolidated.

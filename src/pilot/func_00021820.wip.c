@@ -1,4 +1,6 @@
-/* func_00021820 - no Driver 2 counterpart: locate the road segment at (x, z) for a heading */
+/* WIP 94.38: remaining diff is the in-place cx%60/cz%60 vs idx ordering and D_00097374 load hoisting
+   (a separate local for D_00097374 gives 94.22 with only that block differing).
+   func_00021820 - no Driver 2 counterpart: locate the road segment at (x, z) for a heading */
 typedef struct {
     int d0, d1;
     short f8, fA, fC, fE, f10;
@@ -54,12 +56,11 @@ int func_00021820(int x, int z, unsigned char dir, SEG *seg)
     cz = (t - z) / 1500;
     if (cx < 0 || cx >= D_0009E714[0] || cz < 0 || cz >= D_0009E714[1])
         return -1;
+    t = *(int *)&D_00097374;
     zc = cz / 60;
     xc = cx / 60;
-    idx = (xc & 1) + (((*(int *)&D_00097374 - zc) & 1) << 1);
-    cx = cx % 60;
-    cz = cz % 60;
-    cell = cz * 60 + cx;
+    idx = (((t - zc) & 1) << 1) + (xc & 1);
+    cell = (cz % 60) * 60 + cx % 60;
     id = D_0009E724[idx][cell];
     info = D_0009D8F4[idx][cell];
     seg->d1 = 0x7FFFFFFF;

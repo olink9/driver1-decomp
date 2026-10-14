@@ -148,6 +148,13 @@ GCC 2.7.2-psx and 2.8.x each failed functions that cdk matches.
 
 - (b072) A `goto`-built loop is invisible to loop.c (nothing hoisted) - try it when the target recomputes invariants.
 
+- (b077) GCC 2.7 MEM_IN_STRUCT alias rule: byte/short globals written through `*(T *)&D_x` let loads move above
+  the store; declare them as 8-byte structs and write a field (`typedef struct { unsigned char v; char pad[7]; } B8;`).
+- (b077) Two copies of the same code with different loop shapes can still be ONE `static inline` called twice.
+
+- (b080) A small buffer whose address the target rebuilds after calls: declare it with its real small size
+  (`extern char D_x[8];`). A `for(;;)` left only by `return` gets no invariant hoisting - use `break`.
+
 ## Final check (coordinator)
 `tools/linkcheck.py` links every matched C file into the real build and compares bytes with the original exe - the
 real proof. fnscore 100 is necessary, linkcheck pass is what counts. Hand-written asm must also pass it (no stray nop).

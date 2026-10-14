@@ -1,3 +1,4 @@
+/* Driver 2 name unknown. Note: the doubled 0x80 test reproduces the target's duplicate beqz; maybe a 1-bit bitfield in the original. */
 typedef struct { int vx, vy, vz, pad; } VEC;
 
 typedef struct {
@@ -35,6 +36,7 @@ void func_000614DC(OBJ *obj)
     VEC d;
     VEC *src;
     unsigned char flags;
+    int i;
     int d1;
     int d2;
 
@@ -96,10 +98,7 @@ void func_000614DC(OBJ *obj)
     func_00079D20(D_000AF6A0);
     func_0004EAC0(&b);
 
-    if (flags & 0x80) {
-        if (flags & 0x80)
-            a = D_0009B0A4.pos1;
-    }
+    if ((flags & 0x80) && ((flags & 0x80) >> 7)) a = D_0009B0A4.pos1;
 
     c.vx = a.vx - b.vx;
     c.vy = -a.vy - b.vy;
