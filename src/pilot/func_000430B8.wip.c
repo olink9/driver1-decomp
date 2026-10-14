@@ -1,6 +1,6 @@
 struct E { char pad[0x10]; int f10; short f14; unsigned char f16; char p17; };
-extern int D_00097448;
 struct Q { int a, b; };
+extern int D_00097448;
 extern volatile struct Q D_00097534;
 extern struct E D_000B738C[];
 extern int D_000BBDD0[];

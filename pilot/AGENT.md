@@ -82,6 +82,21 @@ GCC 2.7.2-psx and 2.8.x each failed functions that cdk matches.
 - (run 1) Register swaps: register allocation follows local declaration order - declare separately, reorder.
 - (run 1) `bgez; addiu 0xF; sra 4` is signed `/ 16`, not `>> 4`.
 
+- (run 1) Top-tested loop with `j` back: only `loop: if (!v) return; ...; goto loop;` reproduces it.
+- (run 1) 9-byte struct copy as lw/lw/lb: `typedef struct { char c[9]; } S __attribute__((aligned(4)));`.
+
+- (run 1) Target has a `nop` in a branch delay slot: an empty `__asm__ volatile("");` in the block stops GCC filling it.
+- (run 1) GTE register moves without a handwritten function: `register int t4 __asm__("$12") = x;` + inline `ctc2`.
+
+- (run 1) REDRIVER2's odd local forms (`pmsk = mask; pmsk &= 1 << t; if (pmsk)`) often ARE the original - keep them.
+- (run 1) Struct arrays: model the real struct and index it (`p->ch[t]`) instead of manual `+ off` arithmetic.
+
+- (run 1) `static inline` helpers (as in REDRIVER2) reproduce temporaries that a local pointer pushes into s-registers.
+
+- (run 1) Handwritten asm fragments: maspsx adds a `nop` after j/jal/beq/bne/bgez/bgtz. Keep plain `.set noreorder` and
+  wrap jumps in a gas macro (`.macro XJ t; j \t; .endm` then `XJ label`). Don't add `.set noat` after it.
+- (run 1) Duplicated setup in two branches: write it twice in C; GCC cross-jumps the tails.
+
 ## Rules
 - Only write in `src/pilot/`, and only append to `pilot/results.tsv`. Never edit configs, tools,
   `orig/`, `asm*/` or `include/` (except new macros in `include/gte.h`).

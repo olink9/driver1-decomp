@@ -1,4 +1,4 @@
-typedef struct { int a, b; char c; } S9;
+typedef struct { char c[9]; } S9 __attribute__((aligned(4)));
 extern S9 D_00010920;
 extern char D_00096CC8[];
 extern void func_0007E8EC();
@@ -7,7 +7,7 @@ extern int func_0007DE58();
 
 int func_00050E28(char *name, int mode) {
     S9 path = D_00010920;
-    char pad[0x74];
+    char pad[0x6c];
     int ev;
     int r;
     func_0007E8EC(&path, name);

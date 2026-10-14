@@ -26,3 +26,78 @@ func_00051898	Find_TexID	b009
 func_00073630	ClearSPU	b009
 func_000736C4	XM_FreeVAG	b009 likely
 func_0004FB70	Getlong	b009 likely
+func_0004E9C4	Calc_Object_MatrixYZX	b008
+func_0004E948	Calc_Object_MatrixXZY	b008 likely
+func_0003ECD4	InitHubcap	b008
+func_00060C18	SetPedestrianTurn	b008
+func_0004FFE8	Random2	b008 likely
+func_00035394	StartSpooling	b010
+func_000337D4	InitSpooling	b010
+func_0001D648	StepCars	b010
+func_0007146C	DoXMPanSlide	b010
+func_00051A40	ProcessTextureInfo	b010
+func_0007E8EC	strcat	b010 lib guess
+func_000776E4	rand	b010 lib guess
+func_0006D56C	ReInitSystem	b011
+func_000431CC	damage_lamp	b011 likely
+func_00058A84	setCamera	b011 likely
+func_000777E8	StopCallback	b011 lib guess
+func_000776F4	ResetCallback	b011 lib guess
+func_00079800	ResetGraph	b011 lib guess
+func_000739B4	SetGeomOffset	b011 lib guess
+func_00077D6C	SetGeomScreen	b011 lib guess
+func_00077E1C	MemCardInit	b011 lib guess
+func_00071BB4	XM_DoFullUpdate	b014
+func_0004A654	DoLightning	b014
+func_0004DACC	SetChannelPitch	b013
+func_00071A10	UpdateXMData	b013
+func_0006F760	cbready	b013
+func_00072150	CalcPlayPos	b013
+func_00072684	UpdateEffs	b013
+func_0007A4FC	CdGetSector	b013 lib guess
+func_00070508	JPlayEffects	b013 likely
+func_00073208	CurrentKeyStat	b012
+func_0007EF18	SpuGetAllKeysStatus	b012 lib
+func_0003DEE0	OK_To_Zoom	b012
+func_0004D544	ResetSound	b012
+func_000774C4	memset	b012 lib
+func_0004D4D4	ClearChannelFields	b012
+func_0005C5B0	NoMoreCamerasErrorMessage	b012
+func_0005C7D0	SetTextColour	b012
+func_0005122C	sector_ready	b016
+func_00079F70	CdDiskReady	b016 lib guess
+func_0002DADC	InitFrustrumMatrix	b016
+func_00070EFC	SetNote	b017
+func_00073408	XM_Pause	b017
+func_00073020	XM_SetSongPos	b017
+func_00073324	SilenceXM	b017
+func_0004FA7C	ScaleCamera	b018
+func_00071AC8	UpdateWithTimer	b018
+func_00072740	DoDolbySS	b018
+func_000734E8	XM_Restart	b018
+func_0004D3DC	InitSound	b018
+func_00079AC0	SpuInit	b018 lib
+func_0004E840	AllocateReverb	b018
+func_0007D2C4	TransMatrix	b018 lib
+func_00079D20	SetRotMatrix	b018 lib
+func_0007D2F4	SetTransMatrix	b018 lib
+func_0007232C	ApplyEffs	b018
+func_00077784	VSyncCallback	b018 lib
+func_0004D648	SetMasterVolume	b018
+func_0004D7E4	Start3DSoundVolPitch	b015
+func_00052C10	DrawAnimatingObject	b015
+func_0004D968	CompleteSoundSetup	b015 likely
+func_0004E4B0	GetFreeChannel	b015 likely
+func_00070FD8	SetInstr	b019
+func_000712E4	Arpeggio	b019
+func_00034C74	ready_cb_regions	b019
+func_00025638	ReInitFrontend	b021
+func_00022700	InitModelNames	b021
+func_0005192C	GetTEXINFName	b021
+func_0007B228	strcmp	b021 lib guess
+func_000396A8	FindModelPtrWithName	b021 likely
+func_00050CF8	CloseShutters	b023
+func_0005334C	animate_garage_door	b023
+func_00035044	ready_cb_soundbank	b023
+func_0003D4D0	PlaceCameraAtLocation	b023
+func_0004E214	LoadSoundBank	b023
