@@ -46,7 +46,9 @@ def target_obj(sym):
 
 
 def compile_c(path, out, a):
-    cc1 = os.path.join(ROOT, "compilers", f"gcc-{a.cc}-psx", "cc1")
+    d = os.path.join(ROOT, "compilers")
+    cc1 = next(os.path.join(d, n, "cc1") for n in (f"gcc-{a.cc}-psx", f"gcc-{a.cc}", f"gcc-{a.cc}-plain")
+               if os.path.exists(os.path.join(d, n, "cc1")))
     flags = [a.opt, f"-G{a.G}", "-mips1", "-mcpu=3000", "-fgnu-linker", "-mgas", "-msoft-float", "-quiet",
              "-funsigned-char", "-w"] + (a.extra.split() if a.extra else [])
     with tempfile.TemporaryDirectory(dir=B) as t:
@@ -57,7 +59,9 @@ def compile_c(path, out, a):
                 return (r.stdout + r.stderr)[-3000:]
         mx = [sys.executable, os.path.join(ROOT, "tools/maspsx/maspsx.py"), f"--aspsx-version={a.aspsx}",
               "--expand-div", f"-G{a.G}"] + (["--dont-force-G0"] if False else [])
-        r = subprocess.run(mx, stdin=open(s), cwd=ROOT, capture_output=True, text=True)
+        # empirical (2026-10-14): externs of <= 4 bytes are $gp-relative, 8-byte ones are not
+        env = dict(os.environ, MASPSX_EXTERN_G=os.environ.get("MASPSX_EXTERN_G", "4"))
+        r = subprocess.run(mx, stdin=open(s), cwd=ROOT, capture_output=True, text=True, env=env)
         if r.returncode:
             return "maspsx: " + r.stderr[-2000:]
         open(m, "w").write('.include "macro.inc"\n' + r.stdout)
@@ -105,9 +109,25 @@ def rows(j, side, sym):
 
 
 def reloc_target(row):
+    """(name, addend) of an instruction's relocation target from objdiff's text:
+    '%hi(D_000A8014+0xd)' -> ('D_000A8014', 13); '%lo([.rodata]+0x10)' -> ('.rodata', 16)."""
     t = (row.get("instruction") or {}).get("formatted", "")
-    m = re.search(r"%(?:hi|lo|gp_rel)\(([^)+]+)", t) or re.search(r"\b(jtbl_\w+|D_[0-9A-F]{8}|\.L\w+|\$L\d+)\b", t)
-    return m.group(1) if m else None
+    m = re.search(r"%(?:hi|lo|gp_rel)\(\[?([^)\]+]+)\]?(?:\+(0x[0-9a-fA-F]+|\d+))?\)", t)
+    if not m:
+        m = re.search(r"\b(jtbl_\w+|D_[0-9A-F]{8})\b()", t)
+    if not m:
+        return None, 0
+    return m.group(1), int(m.group(2), 0) if m.group(2) else 0
+
+
+def section_bytes(path, name, off, n):
+    from elftools.elf.elffile import ELFFile
+    with open(path, "rb") as f:
+        sec = ELFFile(f).get_section_by_name(name)
+        return None if sec is None or sec["sh_type"] == "SHT_NOBITS" else sec.data()[off:off + n]
+
+
+WHY = []
 
 
 def relaxed_equal(L, R, cand):
@@ -116,26 +136,38 @@ def relaxed_equal(L, R, cand):
     if len(L) != len(R):
         return False, 0
     n = 0
-    for l, r in zip(L, R):
+    for i, (l, r) in enumerate(zip(L, R)):
         if {l.get("diff_kind", "DIFF_NONE"), r.get("diff_kind", "DIFF_NONE")} <= {"DIFF_NONE"}:
             continue
         n += 1
         li, ri = l.get("instruction") or {}, r.get("instruction") or {}
         if li.get("formatted", "").split()[:1] != ri.get("formatted", "").split()[:1]:
-            return False, n
-        tl, tr = reloc_target(l), reloc_target(r)
+            WHY.append(i); return False, n
+        (tl, al), (tr, ar) = reloc_target(l), reloc_target(r)
         if not tl or not tr:
-            return False, n
+            WHY.append(i); return False, n
+        if tl == tr and al == ar:
+            continue                      # same symbol; differs elsewhere -> objdiff noise
         m = re.fullmatch(r"(?:D|jtbl)_([0-9A-F]{8})", tl)
         if not m:
-            return False, n
-        cb = obj_data(cand, tr)
-        if cb is None:
-            return False, n
+            WHY.append(i); return False, n
         if tl.startswith("jtbl_"):
             continue                      # entries are code labels; the code itself is compared
-        if exe_bytes(int(m.group(1), 16), len(cb)) != cb:
-            return False, n
+        if tr.startswith(".") and "%hi(" in ri.get("formatted", ""):
+            continue                      # objdiff drops %hi addends; the paired %lo row is checked
+        if tr.startswith("."):            # candidate's own section data (a string literal)
+            want = exe_bytes(int(m.group(1), 16) + al, 64)
+            cb = section_bytes(cand, tr, ar, 64)
+            if cb is None:
+                WHY.append(i); return False, n
+            k = want.find(b"\0")
+            k = 4 if k < 0 else k + 1
+            if cb[:k] != want[:k]:
+                WHY.append(i); return False, n
+            continue
+        cb = obj_data(cand, tr)
+        if cb is None or exe_bytes(int(m.group(1), 16) + al, len(cb)) != cb:
+            WHY.append(i); return False, n
     return True, n
 
 
@@ -147,13 +179,14 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("symbol")
     ap.add_argument("file")
-    ap.add_argument("--cc", default="2.7.2")
+    ap.add_argument("--cc", default="2.7.2-cdk")
     ap.add_argument("--opt", default="-O2")
     ap.add_argument("-G", default="8")
     ap.add_argument("--aspsx", default="2.79")
     ap.add_argument("--extra", default="")
     ap.add_argument("--asm", action="store_true")
     ap.add_argument("--keep-s", action="store_true")
+    ap.add_argument("--diff", action="store_true", help="print only the rows that differ")
     ap.add_argument("--quiet", action="store_true", help="print only the MATCH line")
     a = ap.parse_args()
     if not sfile_of(a.symbol):
@@ -182,6 +215,12 @@ def main():
         else:
             pct = min(pct or 0.0, 99.99)
     print(f"MATCH {'100.0' if pct >= 100.0 else f'{pct:.2f}'}{note}  ({len(L)} vs {len(R)} instrs)")
+    if a.diff and WHY:
+        print(f"(relaxed check stopped at row {WHY[0]})")
+    if a.diff:
+        for i, (l, r) in enumerate(zip(L, R)):
+            if l.get("diff_kind", "DIFF_NONE") != "DIFF_NONE" or r.get("diff_kind", "DIFF_NONE") != "DIFF_NONE":
+                print(f"{i:4} {(l.get('instruction') or {}).get('formatted', ''):40} | {(r.get('instruction') or {}).get('formatted', '')}")
     if a.asm and not a.quiet:
         print("---- target\n" + listing(L) + "\n---- candidate\n" + listing(R))
 

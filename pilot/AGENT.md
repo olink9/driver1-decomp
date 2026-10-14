@@ -1,0 +1,64 @@
+# Matching loop - instructions for one agent
+
+You are decompiling functions of **Driver** (PS1, 1999, US Rev 1, `SLUS_008.42`) into C that compiles to
+**exactly** the original machine code. Working directory: `~/dev/driver1`. Everything runs through the
+Ubuntu container: prefix every tool command with `distrobox enter build -- `.
+
+## Your batch
+You get a list of symbols from `pilot/queue.tsv` (size, address, symbol, Driver 2 name, similarity).
+Work through them in order. For each one:
+
+1. Read the target and its hints: `distrobox enter build -- .venv/bin/python tools/fnasm.py SYMBOL`.
+   This prints the asm and the globals it references. When the function has a Driver 2 counterpart,
+   it also prints that function's **debug-symbol prototype** (source file, parameter names and registers,
+   locals, stack frame) and its **REDRIVER2 C source**. Driver 2 runs on the same engine, so start from
+   that code, but Driver 1's version often differs (other constants, fields, extra or missing branches).
+2. Write `src/pilot/<SYMBOL>.c`, defining `SYMBOL` with exactly that name (keep the `func_XXXXXXXX`
+   name; put the Driver 2 name in a comment). Declare every global and function you use with the exact
+   name the asm uses (`D_000BE754`, `func_00012498`, `DrawPrim`, ...).
+3. Score it: `distrobox enter build -- .venv/bin/python tools/fnscore.py SYMBOL src/pilot/SYMBOL.c --diff`.
+   It prints `MATCH <percent>` and the differing rows (`--asm` prints both full listings). 100.0 means
+   zero differing instructions. A string literal or jump table may come from your own `.rodata`/`.sdata`;
+   the scorer checks its bytes against the original.
+4. Stop at `MATCH 100.0`, or after **8 attempts**.
+5. Append one line to `pilot/results.tsv`: `<UTC time>\t<symbol>\t<size>\t<best>\t<attempts>\t<matched|gave_up>`.
+   On giving up, keep the best attempt as `src/pilot/<SYMBOL>.wip.c` if it scored above 80%; otherwise
+   delete it.
+
+## Compiler (confirmed 2026-10-14 on 70 functions)
+**GCC 2.7.2-cdk** (`compilers/gcc-2.7.2-cdk`), `-O2 -G8`, then maspsx (`--aspsx-version=2.79
+--expand-div -G8`, plus the extern patch below) and GNU as. These are fnscore's defaults; don't change them.
+GCC 2.7.2-psx and 2.8.x each failed functions that cdk matches.
+
+## What the pilot learned
+- **Globals come in three addressing forms; declare them to match:**
+  - `%gp_rel(D_x)($gp)`: a small extern of ≤4 bytes: `extern int D_x;` / `extern char D_x;`.
+  - `lui at / sw %lo(D_x)(at)` or `lui v0 / lw %lo(D_x)(v0)` (assembler macro form, no address reuse):
+    an **8-byte** object. Declare `extern long long D_x;` and access it as `*(int *)&D_x`. This is
+    empirical: maspsx is patched (`tools/maspsx-extern-gp.patch`, MASPSX_EXTERN_G=4) so that externs
+    of 5–8 bytes are not gp-relative.
+  - `lui v0 / addiu v0,%lo(D_x)` with the address kept in a register: a big object such as an array or
+    struct. Declare `extern T D_x[];` or a struct type larger than 8 bytes.
+- Use `abs(x)` (a GCC builtin) instead of an `ABS()` macro or a `?:` expression.
+- Struct copies of n words show up as `lw/sw` countdown loops (`bgtz`): use a struct assignment.
+- Switches: an explicit `case 0:` that shares the `default` label puts 0 into the jump table.
+  Identical case bodies, written out once per case, are still emitted through a jump table.
+- Register choice follows source variables: reusing a parameter (`volume = ...`) or doing `p += 4; X = p;`
+  versus `X = p + 4` changes which register is used.
+- Statement order matters even for independent stores (setRGB0, setRGB2, setRGB1, setRGB3 in ShowLoading).
+- GTE code: the PsyQ inline macros are in `include/gte.h` (`gte_SetRotMatrix`, `gte_SetLightMatrix`,
+  `gte_SetColorMatrix`). Add new macros there, copying the exact register sequence from the target.
+  splat marks such functions "Handwritten", but they are C.
+- `break` from inline asm: aspsx encodes `break n` as `n << 6`, so the target's `break 1` is
+  `__asm__ volatile("break 1024")`.
+- PsyQ types and macros: `#include "common.h"` (PsyCross headers configured for real PSX layouts:
+  POLY_*, VECTOR, MATRIX, DRAWENV, setRGB0, setXYWH, ...). Small functions don't need it.
+- Library functions not yet named appear as `func_0007xxxx`. If you identify one with certainty, note it
+  in your summary (the coordinator adds it to symbol_addrs.txt). Don't edit it yourself.
+
+## Rules
+- Only write in `src/pilot/`, and only append to `pilot/results.tsv`. Never edit configs, tools,
+  `orig/`, `asm*/` or `include/` (except new macros in `include/gte.h`).
+- Don't run `make` or git; the coordinator commits.
+- Be efficient: small functions should take 1–3 attempts. Move on rather than burn tokens.
+- At the end, reply with one line (matched / gave up / total) plus anything systematic you learned.

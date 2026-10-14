@@ -9,11 +9,11 @@ OBJCOPY  := $(CROSS)objcopy
 PYTHON   := .venv/bin/python
 
 ASFLAGS  := -EL -Iinclude -march=r3000 -mtune=r3000 -no-pad-sections -G0
-CC1      := compilers/gcc-2.7.2-psx/cc1
+CC1      := compilers/gcc-2.7.2-cdk/cc1
 CPP      := compilers/gcc-2.7.2-psx/cpp
-CFLAGS   := -O2 -G0 -mips1 -mcpu=3000 -fgnu-linker -mgas -msoft-float -quiet -funsigned-char -w
+CFLAGS   := -O2 -G8 -mips1 -mcpu=3000 -fgnu-linker -mgas -msoft-float -quiet -funsigned-char -w
 CPPFLAGS := -Iinclude -Isrc -undef -Wall -lang-c -fno-builtin -Dmips -D__GNUC__=2 -D__OPTIMIZE__ -D__mips__ -D__mips -Dpsx -D__psx__ -D__psx -D_PSYQ -D__EXTENSIONS__ -D_MIPSEL -D_LANGUAGE_C -DLANGUAGE_C -DNO_LOGS -DHACKS -DUSE_INCLUDE_ASM -D_internal_version_$(VERSION) -DSOTN_STR
-MASPSX   := $(PYTHON) tools/maspsx/maspsx.py --aspsx-version=2.79 --expand-div
+MASPSX   := MASPSX_EXTERN_G=4 $(PYTHON) tools/maspsx/maspsx.py --aspsx-version=2.79 --expand-div -G8
 
 S_FILES  := $(shell find asm -name '*.s' -not -path 'asm/nonmatchings/*')
 C_FILES  := $(shell find src -name '*.c' 2>/dev/null)
