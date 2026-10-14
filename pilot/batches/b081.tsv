@@ -1,0 +1,3 @@
+1052	0x00039978	func_00039978	CheckUnpackNewRegions	0.316
+1056	0x0002ADEC	func_0002ADEC	PlaceShadowForCar	0.298
+1064	0x0001FAFC	func_0001FAFC	CheckCarToCarCollisions	0.273

@@ -1,0 +1,11 @@
+extern int D_00096F04;
+extern volatile int D_00096F08;
+extern long long D_0009687C;
+void func_0006BE3C(void)
+{
+    int x;
+    D_00096F04 = 1;
+    __asm__ volatile("");
+    x = D_00096F08;
+    *(int *)&D_0009687C = 0;
+}

@@ -56,6 +56,32 @@ GCC 2.7.2-psx and 2.8.x each failed functions that cdk matches.
 - Library functions not yet named appear as `func_0007xxxx`. If you identify one with certainty, note it
   in your summary (the coordinator adds it to symbol_addrs.txt). Don't edit it yourself.
 
+- (run 1) Store through an unsized array (`extern int D_x[]; D_x[0] = v;`) hoists the `lui` before nearby gp stores.
+- (run 1) Loops over a global pointer: index it inside the loop (`D_ptr[i].f`), don't cache it in a local.
+- (run 1) Conditional stores: write the store in each branch (`if (c) D = 3; else D = 6;`) for the delay-slot form.
+- (run 1) `andi 0xff` on a char global copy: use an `unsigned char` local.
+
+- (run 1) Genuinely hand-written asm (e.g. GTE op in the `jr` delay slot): a file-level
+  `__asm__(".set noreorder\n.globl SYM\nSYM: ... jr $31\n<op>\n.set reorder")` is acceptable ONLY when C can't express it.
+- (run 1) An `a0` that looks unused may be passed through to a callee - try passing it.
+- (run 1) `case 1: case 2: ... return 1;` sharing one label collapses to a compare; separate cases give a jump table.
+
+- (run 1) A register loaded early and never stored is usually an argument to the next `jal`: declare the callee
+  `extern void f();` and pass it. Copying fields through locals often fixes load order vs pointer arithmetic.
+- (run 1) Probable Driver 2 names you spot: list them in your summary (coordinator keeps pilot/names-proposed.tsv).
+
+- (run 1) File-scope `__asm__` functions MUST start with the comment `/* HANDWRITTEN ASM */` and are only for
+  code with no C form (no prologue/`jr ra`, GTE op in a delay slot). They count separately, not as decompiled C.
+- (run 1) Dead volatile read: `volatile int D_x;` + `__asm__ volatile("");` before the read keeps its position.
+- (run 1) Unused `char pad[N];` local sets the stack frame size. Pad structs to the real stride instead of `a*132+off`.
+- (run 1) In shell loops over files, `distrobox enter` eats stdin: use `for x in $(cat f)` not `while read`.
+
+- (run 1) Switch with entry 0 = default: `case 0: default:` first (plain `default:` gives a -1 bias). Pointer-walking
+  loops (`p++`) vs `D[i]` indexing is worth trying both. Returning a comparison (`return z <= b;`) gives `slt; xori 1`.
+
+- (run 1) Register swaps: register allocation follows local declaration order - declare separately, reorder.
+- (run 1) `bgez; addiu 0xF; sra 4` is signed `/ 16`, not `>> 4`.
+
 ## Rules
 - Only write in `src/pilot/`, and only append to `pilot/results.tsv`. Never edit configs, tools,
   `orig/`, `asm*/` or `include/` (except new macros in `include/gte.h`).

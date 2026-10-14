@@ -1,0 +1,28 @@
+func_000735DC	XM_SetMasterVol	b004 likely
+func_000736E4	GetFreeSongID	b004 likely
+func_00049538	SetupRain	b004 likely
+func_00072BC0	GetFreq2	b004 likely
+func_0004C96C	PlaySpeech	b004 likely
+func_00073738	XM_Quit	b005 guess
+func_0006F940	XM_CloseVAB	b005 guess
+func_0004E398	StartXM	b007 likely
+func_000512FC	loadsectors	b007 likely
+func_0005C7EC	StringWidth	b007 likely
+func_0006D610	PlayRender	b007 likely
+func_0006F994	XM_CloseVAB2	b007 likely
+func_0007A580	CdIntToPos	b007 lib guess
+func_0007A27C	CdControlF	b007 lib guess
+func_0007A53C	CdDataCallback	b007 lib guess
+func_0007A12C	CdReadyCallback	b007 lib guess
+func_0004EB10	InvertMatrix	b006
+func_000722C0	JCalcPat	b006
+func_0004315C	find_lamp_streak	b006
+func_00058D70	FindNextChange	b006
+func_0005C458	dist	b006
+func_00034638	UnpackRegion	b009
+func_0004D6B0	StartSound	b009
+func_000713DC	DoVolSlide	b009
+func_00051898	Find_TexID	b009
+func_00073630	ClearSPU	b009
+func_000736C4	XM_FreeVAG	b009 likely
+func_0004FB70	Getlong	b009 likely
