@@ -170,6 +170,9 @@ GCC 2.7.2-psx and 2.8.x each failed functions that cdk matches.
 - (b104) Diagnosing register swaps: run cc1 with `-dl -dg` and compare per-pseudo "used N times across M insns" with
   GCC 2.7 global-alloc priority floor_log2(refs)*refs/live_length - shows which variable needs more/fewer refs.
 
+- (b110) rcossin table: index ONE table (`D_0008EAA8[ang*2+1]`), don't declare D_0008EAAA separately - lets loop.c
+  hoist the base. Spilled locals in the target = compute all products first, then compare.
+
 ## Final check (coordinator)
 `tools/linkcheck.py` links every matched C file into the real build and compares bytes with the original exe - the
 real proof. fnscore 100 is necessary, linkcheck pass is what counts. Hand-written asm must also pass it (no stray nop).

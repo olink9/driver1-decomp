@@ -1,4 +1,4 @@
-/* func_0001262C: cp car view-cone / box overlap test (no Driver 2 counterpart) */
+/* func_0001262C: does any other car (or the player) overlap the 4-plane box ahead of civ car cp; result cached in D_000988B0 (no Driver 2 counterpart) */
 typedef struct {
     unsigned char id;       /* 0x00 */
     unsigned char type;     /* 0x01 */
@@ -21,7 +21,6 @@ typedef struct {
 typedef struct { int nx, ny, nz, d; } PLANE;
 
 extern short D_0008EAA8[];
-extern short D_0008EAAA[];
 extern long long D_00096898;
 extern long long D_000970D8;
 extern short D_000978B0[];
@@ -46,6 +45,7 @@ int func_0001262C(CIV *cp)
     int x0, z0, x1, z1, x2, z2, x3, z3;
     int s, c;
     int d0, d1, d2, d3;
+    int dd;
     int ox, oz;
     int other;
     unsigned char gm;
@@ -65,13 +65,13 @@ int func_0001262C(CIV *cp)
     }
 
     cp = D_00098900;
-    px = D_0009B230[slot].x;
-    pz = D_0009B230[slot].z;
+    px = D_0009B230[id].x;
+    pz = D_0009B230[id].z;
 
     for (i = 0; i < 23; i++, cp++) {
         if (i == 0) {
             gm = *(unsigned char *)&D_00096898;
-            if (gm == 3 || gm == 6 || (unsigned)(gm - 1) < 2)
+            if (gm == 3 || gm == 6 || (unsigned char)(gm - 1) < 2)
                 continue;
         }
         if (cp->type == 0 && i != 0)
@@ -97,26 +97,28 @@ int func_0001262C(CIV *cp)
 
         if (!done) {
             ang = -D_0009B230[id].dir & 0xFFF;
-            c = D_0008EAAA[ang * 2];
+            c = D_0008EAA8[ang * 2 + 1];
             s = D_0008EAA8[ang * 2];
             ox = (-range * c) >> 12;
             oz = (-range * s) >> 12;
-            pl[0].nx = -c;
-            pl[0].nz = -s;
-            pl[0].d = -c * (ox + px) + -s * (oz + pz);
+            ox += px;
+            oz += pz;
+            pl[0].d = -c * ox + -s * oz;
             ox = (range * c) >> 12;
             oz = (range * s) >> 12;
-            pl[1].nx = c;
-            pl[1].nz = s;
             pl[1].d = c * (ox + px) + s * (oz + pz);
             ox = (dist * -s) >> 12;
             oz = (dist * c) >> 12;
+            pl[2].d = -s * (ox + px) + c * (oz + pz);
+            pl[3].d = s * px + -c * pz;
+            pl[0].nx = -c;
+            pl[0].nz = -s;
+            pl[1].nx = c;
+            pl[1].nz = s;
             pl[2].nx = -s;
             pl[2].nz = c;
-            pl[2].d = -s * (ox + px) + c * (oz + pz);
             pl[3].nx = s;
             pl[3].nz = -c;
-            pl[3].d = s * px + -c * pz;
             done = 1;
         }
 
@@ -154,29 +156,33 @@ int func_0001262C(CIV *cp)
         x2 += x; z2 += z;
         x3 += x; z3 += z;
 
+        dd = pl[0].d;
         d0 = pl[0].nx * x0 + pl[0].nz * z0;
         d1 = pl[0].nx * x1 + pl[0].nz * z1;
         d2 = pl[0].nx * x2 + pl[0].nz * z2;
         d3 = pl[0].nx * x3 + pl[0].nz * z3;
-        if (pl[0].d < d0 && pl[0].d < d1 && pl[0].d < d2 && pl[0].d < d3)
+        if (dd < d0 && dd < d1 && dd < d2 && dd < d3)
             continue;
+        dd = pl[1].d;
         d0 = pl[1].nx * x0 + pl[1].nz * z0;
         d1 = pl[1].nx * x1 + pl[1].nz * z1;
         d2 = pl[1].nx * x2 + pl[1].nz * z2;
         d3 = pl[1].nx * x3 + pl[1].nz * z3;
-        if (pl[1].d < d0 && pl[1].d < d1 && pl[1].d < d2 && pl[1].d < d3)
+        if (dd < d0 && dd < d1 && dd < d2 && dd < d3)
             continue;
+        dd = pl[2].d;
         d0 = pl[2].nx * x0 + pl[2].nz * z0;
         d1 = pl[2].nx * x1 + pl[2].nz * z1;
         d2 = pl[2].nx * x2 + pl[2].nz * z2;
         d3 = pl[2].nx * x3 + pl[2].nz * z3;
-        if (pl[2].d < d0 && pl[2].d < d1 && pl[2].d < d2 && pl[2].d < d3)
+        if (dd < d0 && dd < d1 && dd < d2 && dd < d3)
             continue;
+        dd = pl[3].d;
         d0 = pl[3].nx * x0 + pl[3].nz * z0;
         d1 = pl[3].nx * x1 + pl[3].nz * z1;
         d2 = pl[3].nx * x2 + pl[3].nz * z2;
         d3 = pl[3].nx * x3 + pl[3].nz * z3;
-        if (pl[3].d < d0 && pl[3].d < d1 && pl[3].d < d2 && pl[3].d < d3)
+        if (dd < d0 && dd < d1 && dd < d2 && dd < d3)
             continue;
         D_000988B0[slot] = 1;
         return 1;

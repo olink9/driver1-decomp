@@ -16,15 +16,19 @@ typedef struct {
 
 typedef struct {
     unsigned int tag;
-    unsigned int rgb;
+    unsigned char r0, g0, b0, code;
     short x0, y0;
-    unsigned int u0;
+    unsigned char u0, v0;
+    unsigned short clut;
     short x1, y1;
-    unsigned int u1;
+    unsigned char u1, v1;
+    unsigned short tpage;
     short x2, y2;
-    unsigned int u2;
+    unsigned char u2, v2;
+    unsigned short pad1;
     short x3, y3;
-    unsigned int u3;
+    unsigned char u3, v3;
+    unsigned short pad2;
 } POLY_FT4;
 
 typedef struct { unsigned addr:24; unsigned len:8; } P_TAG;
@@ -68,7 +72,6 @@ void func_00066FF0(int time)
     int z;
     int sf, sf1, sf2;
     unsigned int u0, u1, u2, u3;
-    int transparency, red;
 
     u0 = D_000B91B0.u0;
     u1 = D_000B91B0.u1;
@@ -82,13 +85,19 @@ void func_00066FF0(int time)
 
     u0 += 0x200;
     u1 += 0x200;
-    u0 |= D_000B91B0.clutid << 16;
-    u1 |= (D_000B91B0.tpageid | 0x20) << 16;
+    u0 = u0 | D_000B91B0.clutid << 16;
+    u1 = u1 | (D_000B91B0.tpageid | 0x20) << 16;
 
-    transparency = 255 - (time >> 4);
-    rgb = ((255 - transparency) * (transparency >> 2) + transparency * (transparency >> 1) >> 8 |
-           transparency * transparency >> 10 << 8) << 8 |
-          transparency >> 1 | 0x2e000000;
+    {
+        int transparency, red, green, blue;
+
+        transparency = 255 - (time >> 4);
+        blue = transparency >> 1;
+        green = (255 - transparency) * (transparency >> 2) + transparency * blue >> 8;
+        red = transparency * transparency >> 10;
+        rgb = (red << 8 | green) << 8 | blue;
+        rgb |= 0x2e000000;
+    }
 
     v.vx = (D_000C6CD8.vx + D_000C6CE8.vx) / 2 - D_0008A8F0.vx;
     v.vy = (D_000C6CD8.vy + D_000C6CE8.vy) / 2 - D_0008A8F0.vy;
@@ -104,10 +113,11 @@ void func_00066FF0(int time)
         sf1 = ((time * (14240 - time) + 0x800) >> 12) + 12;
         sf = CameraCnt * (64 - i * 90);
 
-        c = (sf1 * D_0008EAAA[(sf & 0xfff) * 2] + 0x800) >> 12;
+        c = (sf1 * D_0008EAA8[(sf & 0xfff) * 2 + 1] + 0x800) >> 12;
         s = (sf1 * D_0008EAA8[(sf & 0xfff) * 2] + 0x800) >> 12;
         D_0008BCC4.m[1][1] = sf1;
-        D_0008BCC4.m[2][2] = D_0008BCC4.m[0][0] = c;
+        D_0008BCC4.m[2][2] = c;
+        D_0008BCC4.m[0][0] = c;
         D_0008BCC4.m[0][2] = -(D_0008BCC4.m[2][0] = s);
 
         MulMatrix0(&D_000BBE84, &D_0008BCC4, &workmatrix);
@@ -122,8 +132,8 @@ void func_00066FF0(int time)
             src += 3;
             gte_rtpt();
 
-            poly[0].rgb = rgb;
-            poly[1].rgb = rgb;
+            *(unsigned int *)&poly[0].r0 = rgb;
+            *(unsigned int *)&poly[1].r0 = rgb;
 
             gte_stsxy3(&poly[0].x0, &poly[0].x1, &poly[0].x2);
             gte_stsxy(&poly[1].x0);
@@ -137,14 +147,14 @@ void func_00066FF0(int time)
                 src += 2;
 
             if (z > 32) {
-                poly[0].u0 = u0;
-                poly[0].u1 = u1;
-                poly[0].u2 = u2;
-                poly[0].u3 = u3;
-                poly[1].u0 = u0;
-                poly[1].u1 = u1;
-                poly[1].u2 = u2;
-                poly[1].u3 = u3;
+                *(unsigned int *)&poly[0].u0 = u0;
+                *(unsigned int *)&poly[0].u1 = u1;
+                *(unsigned int *)&poly[0].u2 = u2;
+                *(unsigned int *)&poly[0].u3 = u3;
+                *(unsigned int *)&poly[1].u0 = u0;
+                *(unsigned int *)&poly[1].u1 = u1;
+                *(unsigned int *)&poly[1].u2 = u2;
+                *(unsigned int *)&poly[1].u3 = u3;
 
                 ((unsigned char *)&poly[0])[3] = 9;
                 ((P_TAG *)&poly[0])->addr = ((P_TAG *)&current->ot[z >> 3])->addr;
@@ -161,11 +171,20 @@ void func_00066FF0(int time)
         }
     }
 
-    transparency = 255 - (time >> 4);
-    red = transparency >> 1;
-    rgb = (red + ((255 - transparency) * (transparency >> 2) + transparency * red >> 8) >> 1 |
-           red + (transparency * transparency >> 10) >> 1 << 8) << 8 |
-          red | 0x2e000000;
+    {
+        int transparency, red, green, blue;
+
+        transparency = 255 - (time >> 4);
+        blue = transparency >> 1;
+        green = (255 - transparency) * (transparency >> 2);
+        green = green + transparency * blue >> 8;
+        green = blue + green >> 1;
+        red = transparency * transparency;
+        red = red >> 10;
+        red = blue + red >> 1;
+        rgb = (red << 8 | green) << 8 | blue;
+        rgb |= 0x2e000000;
+    }
 
     for (i = 0; i < 2; i++) {
         MATRIX workmatrix;
@@ -174,9 +193,10 @@ void func_00066FF0(int time)
         sf2 = ((time * (26240 - time) + 0x800) >> 12) + 12;
         sf = CameraCnt * (64 - i * 90);
 
-        c = (sf2 * D_0008EAAA[(sf & 0xfff) * 2] + 0x800) >> 12;
+        c = (sf2 * D_0008EAA8[(sf & 0xfff) * 2 + 1] + 0x800) >> 12;
         s = (sf2 * D_0008EAA8[(sf & 0xfff) * 2] + 0x800) >> 12;
-        D_0008BCC4.m[2][2] = D_0008BCC4.m[0][0] = c;
+        D_0008BCC4.m[2][2] = c;
+        D_0008BCC4.m[0][0] = c;
         D_0008BCC4.m[0][2] = -(D_0008BCC4.m[2][0] = s);
         D_0008BCC4.m[1][1] = sf2 / 16;
 
@@ -192,8 +212,8 @@ void func_00066FF0(int time)
             src += 3;
             gte_rtpt();
 
-            poly[0].rgb = rgb;
-            poly[1].rgb = rgb;
+            *(unsigned int *)&poly[0].r0 = rgb;
+            *(unsigned int *)&poly[1].r0 = rgb;
 
             gte_stsxy3(&poly[0].x0, &poly[0].x1, &poly[0].x2);
             gte_stsxy(&poly[1].x0);
@@ -207,14 +227,14 @@ void func_00066FF0(int time)
                 src += 2;
 
             if (z > 32) {
-                poly[0].u0 = u0;
-                poly[0].u1 = u1;
-                poly[0].u2 = u2;
-                poly[0].u3 = u3;
-                poly[1].u0 = u0;
-                poly[1].u1 = u1;
-                poly[1].u2 = u2;
-                poly[1].u3 = u3;
+                *(unsigned int *)&poly[0].u0 = u0;
+                *(unsigned int *)&poly[0].u1 = u1;
+                *(unsigned int *)&poly[0].u2 = u2;
+                *(unsigned int *)&poly[0].u3 = u3;
+                *(unsigned int *)&poly[1].u0 = u0;
+                *(unsigned int *)&poly[1].u1 = u1;
+                *(unsigned int *)&poly[1].u2 = u2;
+                *(unsigned int *)&poly[1].u3 = u3;
 
                 ((unsigned char *)&poly[0])[3] = 9;
                 ((P_TAG *)&poly[0])->addr = ((P_TAG *)&current->ot[z >> 3])->addr;

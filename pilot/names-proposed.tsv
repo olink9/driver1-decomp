@@ -303,3 +303,9 @@ D_00096C3C	weather_level	b108 data
 func_00024754	GameStateSwitch	b107 guess
 func_000130D4	JunctionClearCheck	b107 guess
 func_00016F0C	ChooseJunctionExit	b111 guess
+func_0001262C	CarVisibilityPlanes	b110 guess
+func_00074D54	SetDrawMode	b113 lib
+func_0002EB94	DrawDecals	b113 guess
+func_0003BDC8	SortModelPolys	b114 guess
+func_00066FF0	DrawExplosion	b109
+D_000C6CF8	globemesh	b109 data
