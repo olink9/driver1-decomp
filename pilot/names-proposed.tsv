@@ -275,3 +275,20 @@ D_000A295C	track_buffer	b096 data
 func_000230B0	StepGame	b097 likely
 func_00079AF0	SetSp	b097 lib likely
 func_000270D4	DrawCellObjects	b097 guess
+func_00046E44	DrawLensFlare	b100
+func_00055CA0	DrawTargetArrow	b100 likely
+func_000473F0	DisplaySun	b100
+func_00074464	StoreImage	b100 lib
+func_0002A808	SubdivShadow	b101
+func_0001EEB4	FindSurface	b101 guess
+func_00056BDC	DrawPercentageBar	b099
+func_0007EAA4	SetLineF4	b099 lib
+func_0007EA84	SetLineF2	b099 lib
+func_0005C864	PrintStringRightAligned	b099
+func_00058FCC	CameraBar	b102
+func_0001FF24	ProcessCarPad	b102 likely
+D_00097668	ReplayParameterPtr	b102 data
+func_00024F1C	FrontEndLoop	b105 guess
+func_00051ADC	LoadTPagesCluts	b105 guess
+func_00040BAC	PlacePoolForCar	b106
+D_0008A73C	PoolPrimData	b106 data

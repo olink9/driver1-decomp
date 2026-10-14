@@ -1,3 +1,4 @@
+/* FAKEMATCH: second extern name (__asm__ alias) for the same symbol to defeat CSE */
 /* Driver 2: DrawLensFlare (SKY.C) */
 #include "gte.h"
 
@@ -54,7 +55,7 @@ extern long long D_00096834;
 #define GameLevel (*(int *)&D_00096834)
 extern unsigned char D_00096AA8;
 extern unsigned char D_000973F8;
-extern RECT16 D_00096C34;
+extern RECT16 D_00096C34[];
 extern SVECTOR D_00096C2C;
 extern SVECTOR D_00096C24;
 extern MATRIX D_000BBE84;
@@ -62,6 +63,8 @@ extern VECTOR D_0008909C;
 extern short D_000B722C[];
 extern FLAREREC D_0008A878[];
 extern TEXINF D_000B9110;
+/* u0 read through a second name for the same object: keeps its %hi out of the hoisted &D_000B9110 */
+extern TEXINF lf_tex __asm__("D_000B9110");
 
 extern void func_00074464();
 extern int SquareRoot0();
@@ -83,7 +86,6 @@ void func_00046E44(void)
     RECT16 source;
     CVECTOR col;
     int flarez;
-    int c;
     int distance_to_sun;
     int xgap;
     int ygap;
@@ -97,7 +99,7 @@ void func_00046E44(void)
     POLY_FT4 *poly;
     DR_MOVE *sample_sun;
 
-    source = D_00096C34;
+    source = D_00096C34[0];
 
     if (gTimeOfDay != 0) { col.r = 0x60; col.b = 0x60; col.g = 0x60; } else { col.r = 0xFF; col.b = 0xFF; col.g = 0xFF; }
 
@@ -154,7 +156,8 @@ void func_00046E44(void)
 
                 gapmod = (128 - pFlareInfo->gapmod) * 2;
                 xpos = (xgap * gapmod) / 256 + 256;
-                ypos = (ygap * gapmod) / 256 + 120;
+                gapmod = (ygap * gapmod) / 256;
+                ypos = gapmod + 120;
                 flaresize = pFlareInfo->size;
 
                 poly = (POLY_FT4 *)current->primptr;
@@ -177,11 +180,11 @@ void func_00046E44(void)
                 poly->r0 = r >> 6;
                 poly->g0 = g >> 6;
                 poly->b0 = b >> 6;
-                poly->x3 = xpos + ((flaresize * 3) >> 1);
                 poly->y2 = ypos + pFlareInfo->size;
+                poly->x3 = xpos + ((flaresize * 3) >> 1);
                 poly->y3 = ypos + pFlareInfo->size;
 
-                poly->u0 = D_000B9110.u0;
+                poly->u0 = lf_tex.u0;
                 poly->v0 = D_000B9110.v0;
                 poly->u1 = D_000B9110.u1;
                 poly->v1 = D_000B9110.v1;

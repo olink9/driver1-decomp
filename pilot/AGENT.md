@@ -132,7 +132,7 @@ GCC 2.7.2-psx and 2.8.x each failed functions that cdk matches.
   `T D_x[]` form is (target shows `lui` in the slot).
 
 - (b053) **Empty `__asm__("")` / `__asm__("" : "=r"(p) : "0"(p))` hints emit no code but are not real source:**
-  allowed as a last resort, but the file MUST start with `/* FAKEMATCH: ... */` (counted separately; a later pass
+  allowed as a last resort (same for a second `__asm__("D_x")` alias name used only to defeat CSE), but the file MUST start with `/* FAKEMATCH: ... */` (counted separately; a later pass
   looks for a real C form). Prefer real C.
 - (b053) **addPrim: use the real PsyQ bitfield P_TAG** (`typedef struct { unsigned addr:24; unsigned len:8; } P_TAG;`
   and `((P_TAG*)p)->addr = ((P_TAG*)&ot[z])->addr; ((P_TAG*)&ot[z])->addr = (unsigned)p;`). Fixes the
