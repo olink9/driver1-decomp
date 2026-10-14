@@ -219,3 +219,16 @@ func_0007A684	CdPosToInt	b069 lib
 func_0007A3B0	CdControl	b069 lib
 func_0007DCBC	CdRead	b069 lib
 func_0007DE58	CdReadSync	b069 lib
+func_00070B68	DoEEffects	b074
+func_0003F2E0	bcollided2d	b073
+func_00049590	DrawRainDrops	b073
+func_0007232C	ApplyEffs	b071
+func_0006E040	ScreenFadeLetterbox	b071 guess
+func_0007282C	UpdateHardware	b072
+func_00072B8C	IntVols	b072
+func_000732D8	SetVol	b072
+func_00073304	SetFrq	b072
+func_00073104	PlaySFX	b072
+func_00057734	DrawStopZone	b075
+D_000970D8	CameraCnt	b075 data
+D_0008A8F0	camera_position	b075 data

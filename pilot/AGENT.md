@@ -146,6 +146,8 @@ GCC 2.7.2-psx and 2.8.x each failed functions that cdk matches.
 - (b066) `D[x-1].f` gets folded into the offset; if the target keeps `addiu -1` before the multiply, compute the
   index in its own statement first.
 
+- (b072) A `goto`-built loop is invisible to loop.c (nothing hoisted) - try it when the target recomputes invariants.
+
 ## Final check (coordinator)
 `tools/linkcheck.py` links every matched C file into the real build and compares bytes with the original exe - the
 real proof. fnscore 100 is necessary, linkcheck pass is what counts. Hand-written asm must also pass it (no stray nop).
