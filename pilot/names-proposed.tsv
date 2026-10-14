@@ -263,3 +263,15 @@ func_000731A0	InitSPUChannel	b090
 func_000737CC	JPClearSPUFlags	b090
 func_0004ED34	LoadSky	b090 guess
 func_00025748	GameLoopStep	b090 guess
+func_00071C74	UpdatePatternData	b091
+func_0006B4AC	MissionHUD	b091 guess
+func_0003B208	DrawCarWheels	b094
+D_0009687C	pauseflag	b094 data
+func_00047A90	Setup_Smoke	b093
+func_0004CA5C	DoDopplerSFX	b093 likely
+func_00048E88	DisplaySmoke	b096
+func_0002A084	DrawTyreTracks	b096
+D_000A295C	track_buffer	b096 data
+func_000230B0	StepGame	b097 likely
+func_00079AF0	SetSp	b097 lib likely
+func_000270D4	DrawCellObjects	b097 guess

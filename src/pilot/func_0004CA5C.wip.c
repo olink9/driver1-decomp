@@ -43,13 +43,16 @@ extern CS D_00098950[];
 extern int D_0008A8F0[];
 extern CAR D_0009B0A4[];
 extern CHAN D_000BD498[];
+typedef struct { int v; int pad; } W8;
 extern long long D_0009779C;
-extern long long D_000C7000;
-extern long long D_00097798;
+extern W8 D_000C7000;
+extern W8 D_00097798;
 extern int D_0008909C[];
 extern void func_0004DDA8();
 #define ABS(x) ((x) < 0 ? -(x) : (x))
 extern void func_0004DB84();
+
+static inline int sub(int a, int b) { return a - b; }
 
 void func_0004CA5C(void)
 {
@@ -59,12 +62,13 @@ void func_0004CA5C(void)
     int n;
     int i;
     int j;
-    unsigned int c;
+    unsigned short c;
     int t;
     int left3;
     int left5;
     int ch;
     CAR *cp;
+    int *pos;
 
     n = 0;
     for (i = 0; i < 25; i++) {
@@ -76,10 +80,11 @@ void func_0004CA5C(void)
 
     for (i = 0; i < n; i++) {
         for (j = i + 1; j < n; j++) {
-            if (dist[order[j]] < dist[order[i]]) {
-                t = order[i];
-                order[i] = order[j];
-                order[j] = t;
+            int a = order[i];
+            int b = order[j];
+            if (dist[a] > dist[b]) {
+                order[i] = b;
+                order[j] = a;
             }
         }
     }
@@ -90,12 +95,13 @@ void func_0004CA5C(void)
         c = order[i];
         if (c < 25) {
             cp = &D_0009B0A4[c];
+            pos = cp->pos;
             if (cp->f12E == 1) {
                 if (left5 && D_00098950[c - 1].f10 == 1 && (t = D_00098950[c - 1].fD) < 80) {
                     left5--;
                     ch = left5 + 5;
                     D_000BD498[ch].f42 = 50;
-                    func_0004DDA8(ch, cp->pos, cp->vel, -2000 - t * 30, c * 4 - (t * 48 - 4096));
+                    func_0004DDA8(ch, pos, cp->vel, -2000 - t * 30, sub(c * 4, t * 48 - 4096));
                 }
             }
             if (cp->f12E == 1 || cp->f3 == 1) {
@@ -103,7 +109,7 @@ void func_0004CA5C(void)
                     left3--;
                     ch = left3 + 7;
                     D_000BD498[ch].f42 = 50;
-                    func_0004DDA8(ch, cp->pos, cp->vel, -2000, (cp->f180 >> 2) - ((cp->f182 >> 7) - 1000));
+                    func_0004DDA8(ch, cp->pos, cp->vel, -2000, sub(cp->f180 >> 2, (cp->f182 >> 7) - 1000));
                 }
             }
         }
@@ -113,10 +119,11 @@ void func_0004CA5C(void)
         c = order[i];
         if (c < 25) {
             cp = &D_0009B0A4[c];
+            pos = cp->pos;
             if (cp->f12E != 1 && cp->f3 != 1 && left3) {
                 left3--;
                 D_000BD498[left3 + 7].f42 = 50;
-                func_0004DDA8(left3 + 7, cp->pos, cp->vel, -6000, 0x830);
+                func_0004DDA8(left3 + 7, pos, cp->vel, -6000, 0x830);
             }
         }
     }
@@ -125,7 +132,7 @@ void func_0004CA5C(void)
         left5--;
         ch = left5 + 5;
         D_000BD498[ch].f42 = 50;
-        func_0004DDA8(ch, *(int *)&D_000C7000, D_0008909C, -2000, *(int *)&D_00097798);
+        func_0004DDA8(ch, D_000C7000.v, D_0008909C, -2000, D_00097798.v);
     }
 
     for (i = left5 - 1; i >= 0; i--)
@@ -135,7 +142,8 @@ void func_0004CA5C(void)
 
     for (ch = 0; ch < 16; ch++) {
         CHAN *p = &D_000BD498[ch];
-        if (p->f40 == 0 && p->f42 != 0 && p->f5C != 0)
-            func_0004DDA8(ch, p->f5C, p->f70, p->f48, p->f50);
+        int a;
+        if (p->f40 == 0 && p->f42 != 0 && (a = p->f5C) != 0)
+            func_0004DDA8(ch, a, p->f70, p->f48, p->f50);
     }
 }

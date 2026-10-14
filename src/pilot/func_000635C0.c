@@ -47,7 +47,8 @@ extern long long D_00096FBC;
 extern int D_000C6FFC[];
 extern int D_00097704, D_00097708, D_0009770C, D_00097744;
 typedef struct { short a, b, c; } LIM;
-extern LIM D_00097758;
+extern short D_00097758;
+extern LIM Lm __asm__("D_00097758");
 extern long long D_0009775A, D_0009775C;
 extern void func_0003A100();
 extern int func_0001B198();
@@ -70,6 +71,7 @@ void func_000635C0(void)
     unsigned char flag;
     COP *cop;
     COP *cp2;
+    LIM *lim;
     CAR *car;
     short s;
 
@@ -81,10 +83,11 @@ void func_000635C0(void)
     found = 0;
     if (*(unsigned char *)&D_00096FBC)
         D_000C6FFC[0] = func_0001B198(tgt, a, b);
+    lim = &Lm;
     if (D_00097708 > 0x292) {
-        D_00097758.a = 8000;
-        D_00097758.b = 25000;
-        D_00097758.c = 1024;
+        D_00097758 = 8000;
+        lim->b = 25000;
+        lim->c = 1024;
     }
     if (D_0009770C > 0)
         D_0009770C = 2;
@@ -112,7 +115,7 @@ void func_000635C0(void)
                 if (!func_000397F4(&pos, tgt, a, b))
                     continue;
                 flag = 0;
-                if (cop->dist < D_00097758.a) {
+                if (cop->dist < D_00097758) {
                     flag = 1;
                 } else {
                     VEC d;

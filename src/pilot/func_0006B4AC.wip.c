@@ -1,4 +1,4 @@
-/* func_0006B4AC - no Driver 2 counterpart: mission HUD text (timers, messages) */
+/* func_0006B4AC - no Driver 2 counterpart: mission HUD (timers/messages). WIP 97.99: case 0x16 stack layout (t should be at sp+0x20, inline buf at 0x50 - temp-slot order), andi/li order after sprintf, sll delay slot before bltz */
 typedef struct { int type; char *s1; char *s2; int pad; } MSG;
 typedef struct { int f[12]; } TIMER;
 typedef struct {
@@ -74,12 +74,13 @@ static inline void ShowLap(int v)
     func_0005C7D0(0xFF, 0xFF, 0x40);
 }
 
-static inline void ShowTime(int *v)
+static inline void ShowTime(char *tbl, int n, int *v)
 {
     char buf[8];
     int w;
     unsigned char len;
 
+    func_0006B450(tbl, n);
     func_0005C7D0(0x80, 0x80, 0x80);
     len = sprintf(buf, D_00096EF0, v[0]);
     w = func_0005CF10((short)(0x197 + (1 - len) * 26), 0x18, buf);
@@ -104,15 +105,14 @@ void func_0006B4AC(GS *gs)
     if (*(int *)&D_000967F4 == 0x11) {
         func_0006AF48(&gs->t.f[2], 0x171, 0x18);
     } else if (*(int *)&D_000967F4 == 0x12) {
-        func_0006B450(D_0008C228, 2);
-        ShowTime(&gs->t.f[2]);
+        ShowTime(D_0008C228, 2, &gs->t.f[2]);
     } else if (*(int *)&D_000967F4 == 0x16) {
+        int a = gs->t.f[7], b = gs->t.f[6], c = gs->t.f[8];
         TIMER t;
-        t.f[2] = gs->t.f[7];
-        t.f[3] = gs->t.f[6];
-        t.f[8] = gs->t.f[8];
-        func_0006B450(D_0008C288, 6);
-        ShowTime(&t.f[2]);
+        t.f[8] = c;
+        t.f[2] = a;
+        t.f[3] = b;
+        ShowTime(D_0008C288, 6, &t.f[2]);
     } else if (*(int *)&D_000967F4 == 0x13) {
         ShowCount(gs->t.f[8]);
     }

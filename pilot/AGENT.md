@@ -158,6 +158,12 @@ GCC 2.7.2-psx and 2.8.x each failed functions that cdk matches.
 - (b089) Operand order across a signed divide matters: the `bgez` of the division splits the block, so the operand
   written first is evaluated before it. Scalar gp loads drifting early: declare the global as a 4-byte struct.
 
+- (b094) GCC 2.7 substitutes constant args into inline bodies; if the target keeps that constant in a register
+  across a loop, copy the parameter into a local inside the inline (`int step = dstep;`).
+
+- (b093) Diagnostic: `fnscore --extra="-fno-schedule-insns -fno-schedule-insns2"` tells whether an order diff comes from
+  the scheduler or from RTL order. `x - (y*48 - 4096)` reassociation: wrap the inner part in a `static inline` sub().
+
 ## Final check (coordinator)
 `tools/linkcheck.py` links every matched C file into the real build and compares bytes with the original exe - the
 real proof. fnscore 100 is necessary, linkcheck pass is what counts. Hand-written asm must also pass it (no stray nop).
