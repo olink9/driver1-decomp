@@ -1,0 +1,13 @@
+- systemic: several near-misses swap v0/v1 between the 0x78654321 constant and a loaded value (0005D89C, 000513D4, 0005C68C) - one idiom to crack in the Opus pass
+  (matched examples using the same constant: src/pilot/func_000394E0.c, func_000395D8.c - compare with the wips)
+- absolute addresses like 0x1E4038 / 0x1E40A0 (lui 0x1E) are probably linker-script symbols (a memory region past bss) - declare them as externs placed by the linker script, not *(int*)0x1E4038 (func_00043270, b038)
+- systemic: v0/v1-style swaps between `current` (D_00097530) and the 0xFFFFFF mask (func_000564A4 draw_box, func_00035BC8, func_00055530) = the PsyQ addPrim/setaddr macro. Use the EXACT libgpu.h macro text (addPrim(ot,p): setaddr(p, getaddr(ot)), setaddr(ot, p)) instead of hand-written masks
+  -> real PsyQ P_TAG is `unsigned addr:24; unsigned len:8;` (libgpu.h #else branch, line ~356); addPrim through that bitfield is what produces the original 0xFFFFFF mask sequence. Check which branch common.h selects.
+- aspsx 2.69 test (11:40): re-scored all 434 matched files with --aspsx 2.69 -> 431 still match, 3 regress (func_0001A9BC 99.74, func_00033F9C 94.71, func_0005CF10 67.22). So 2.79 stays default. func_0002A5CC matches ONLY with 2.69 (gp_rel(X) next to %hi(X+1) on a .comm symbol = gp_allow_offset). Per-file setting or a smarter maspsx rule needed - decide in cleanup, not now.
+- pilot/review.tsv: near-misses whose bytes look identical but reloc annotations differ. Settle by linking them into the real build (sha1 check), not by loosening the scorer blindly.
+- switch decision trees (func_0006A318 95.38): needs gcc 2.7.2 balance_case_nodes worked out - target tree ==4,<5,==2 then ==7,>7 exit,==5,==6.
+- FIX FOUND (b069): the 0x78654321 assert loop = `extern volatile int D_00097534;` with `while (D_00097534 != 0x78654321) ...` - fixes the v0/v1 swap; apply to 0005D89C / 000513D4 / 0005C68C.
+- func_000614DC matches with a double bit test `(flags & 0x80) && ((flags & 0x80) >> 7)` - probably a 1-bit bitfield in the original; revisit when struct types are consolidated.
+- func_0006AF48 (95.33) likely fixed by moving the ShowTime-like second half into a static inline with its own char buf[8] (see func_0006B4AC.wip.c, b091)
+- 2nd aspsx-2.69-only case: func_00051ADC (100.0 with --aspsx 2.69, 94.13 default). Both cases = tentative .comm definitions in the file, gp_rel at +0 but lui/%lo at +2..+6. Likely the real rule is about .comm symbols, not the aspsx version - fix maspsx rule (gp_allow_offset False for .comm) and re-test all, in cleanup.
+- func_000130D4 (96) and func_000138A0 (99.35) share the car-list layout/loop - match one, port to the other (b107)

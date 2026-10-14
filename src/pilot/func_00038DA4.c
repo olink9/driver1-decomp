@@ -1,0 +1,81 @@
+/* POLY_GT3 draw with per-vertex xy/uv split (wjmDraw3-like) */
+typedef struct { char *primptr; unsigned int *ot; } DB;
+extern long long D_00097530;
+#define current (*(DB **)&D_00097530)
+extern long long D_000971A0;
+extern unsigned short D_00087030[][32];
+extern unsigned short D_00086F30[];
+extern unsigned char *D_000972F0;
+extern long long D_00096990;
+extern long long D_000975CC;
+extern int D_000BE9FC[][30][5];
+extern int func_0007B1E8();
+
+typedef struct {
+    unsigned char id, texture_set;
+    unsigned short texture_id;
+    unsigned char v0, v1, v2, spare;
+    int pad;
+    unsigned char u0, v0_, u1, v1_, u2, v2_;
+} POLYFT3;
+
+typedef struct {
+    unsigned int tag;
+    unsigned char r0, g0, b0, code;
+    short x0, y0;
+    unsigned char u0, v0;
+    unsigned short clut;
+    unsigned char r1, g1, b1, p1;
+    short x1, y1;
+    unsigned char u1, v1;
+    unsigned short tpage;
+    unsigned char r2, g2, b2, p2;
+    short x2, y2;
+    unsigned char u2, v2;
+    unsigned short pad2;
+} PGT3;
+
+void func_00038DA4(void)
+{
+    POLYFT3 *src;
+    short *zbuff;
+    short *outlongs;
+    PGT3 *prims;
+    unsigned char off;
+    int z;
+
+    src = *(POLYFT3 **)0x1F80003C;
+    outlongs = (short *)0x1F800044;
+    zbuff = *(short **)0x1F80001C;
+    prims = (PGT3 *)current->primptr;
+
+    if (func_0007B1E8(((int *)outlongs)[src->v0], ((int *)outlongs)[src->v1], ((int *)outlongs)[src->v2]) > 0) {
+        *(int *)&prims->r0 = *(int *)&D_000971A0;
+        *(int *)&prims->r1 = *(int *)&D_000971A0;
+        *(int *)&prims->r2 = *(int *)&D_000971A0;
+        ((unsigned char *)prims)[3] = 9;
+        ((unsigned char *)prims)[7] = 0x34;
+        prims->x0 = outlongs[src->v0 * 2];
+        prims->y0 = outlongs[src->v0 * 2 + 1];
+        prims->x1 = outlongs[src->v1 * 2];
+        prims->y1 = outlongs[src->v1 * 2 + 1];
+        prims->x2 = outlongs[src->v2 * 2];
+        prims->y2 = outlongs[src->v2 * 2 + 1];
+        off = *D_000972F0;
+        prims->u0 = src->u0 + off;
+        prims->v0 = src->v0_;
+        prims->u1 = src->u1 + off;
+        prims->v1 = src->v1_;
+        prims->u2 = src->u2 + off;
+        prims->v2 = src->v2_;
+        if (*(int *)&D_00096990 == 1)
+            prims->clut = D_00087030[src->texture_set][src->texture_id];
+        else
+            prims->clut = D_000BE9FC[src->texture_set - *(int *)&D_000975CC][src->texture_id][*(int *)&D_00096990 - 2];
+        prims->tpage = D_00086F30[src->texture_set];
+        z = (zbuff[src->v0] + zbuff[src->v1] + zbuff[src->v2]) / 3;
+        prims->tag = (prims->tag & 0xFF000000) | (current->ot[z] & 0xFFFFFF);
+        current->ot[z] = (current->ot[z] & 0xFF000000) | ((unsigned int)prims & 0xFFFFFF);
+        current->primptr += 0x28;
+    }
+}

@@ -1,0 +1,325 @@
+func_000735DC	XM_SetMasterVol	b004 likely
+func_000736E4	GetFreeSongID	b004 likely
+func_00049538	SetupRain	b004 likely
+func_00072BC0	GetFreq2	b004 likely
+func_0004C96C	PlaySpeech	b004 likely
+func_00073738	XM_Quit	b005 guess
+func_0006F940	XM_CloseVAB	b005 guess
+func_0004E398	StartXM	b007 likely
+func_000512FC	loadsectors	b007 likely
+func_0005C7EC	StringWidth	b007 likely
+func_0006D610	PlayRender	b007 likely
+func_0006F994	XM_CloseVAB2	b007 likely
+func_0007A580	CdIntToPos	b007 lib guess
+func_0007A27C	CdControlF	b007 lib guess
+func_0007A53C	CdDataCallback	b007 lib guess
+func_0007A12C	CdReadyCallback	b007 lib guess
+func_0004EB10	InvertMatrix	b006
+func_000722C0	JCalcPat	b006
+func_0004315C	find_lamp_streak	b006
+func_00058D70	FindNextChange	b006
+func_0005C458	dist	b006
+func_00034638	UnpackRegion	b009
+func_0004D6B0	StartSound	b009
+func_000713DC	DoVolSlide	b009
+func_00051898	Find_TexID	b009
+func_00073630	ClearSPU	b009
+func_000736C4	XM_FreeVAG	b009 likely
+func_0004FB70	Getlong	b009 likely
+func_0004E9C4	Calc_Object_MatrixYZX	b008
+func_0004E948	Calc_Object_MatrixXZY	b008 likely
+func_0003ECD4	InitHubcap	b008
+func_00060C18	SetPedestrianTurn	b008
+func_0004FFE8	Random2	b008 likely
+func_00035394	StartSpooling	b010
+func_000337D4	InitSpooling	b010
+func_0001D648	StepCars	b010
+func_0007146C	DoXMPanSlide	b010
+func_00051A40	ProcessTextureInfo	b010
+func_0007E8EC	strcat	b010 lib guess
+func_000776E4	rand	b010 lib guess
+func_0006D56C	ReInitSystem	b011
+func_000431CC	damage_lamp	b011 likely
+func_00058A84	setCamera	b011 likely
+func_000777E8	StopCallback	b011 lib guess
+func_000776F4	ResetCallback	b011 lib guess
+func_00079800	ResetGraph	b011 lib guess
+func_000739B4	SetGeomOffset	b011 lib guess
+func_00077D6C	SetGeomScreen	b011 lib guess
+func_00077E1C	MemCardInit	b011 lib guess
+func_00071BB4	XM_DoFullUpdate	b014
+func_0004A654	DoLightning	b014
+func_0004DACC	SetChannelPitch	b013
+func_00071A10	UpdateXMData	b013
+func_0006F760	cbready	b013
+func_00072150	CalcPlayPos	b013
+func_00072684	UpdateEffs	b013
+func_0007A4FC	CdGetSector	b013 lib guess
+func_00070508	JPlayEffects	b013 likely
+func_00073208	CurrentKeyStat	b012
+func_0007EF18	SpuGetAllKeysStatus	b012 lib
+func_0003DEE0	OK_To_Zoom	b012
+func_0004D544	ResetSound	b012
+func_000774C4	memset	b012 lib
+func_0004D4D4	ClearChannelFields	b012
+func_0005C5B0	NoMoreCamerasErrorMessage	b012
+func_0005C7D0	SetTextColour	b012
+func_0005122C	sector_ready	b016
+func_00079F70	CdDiskReady	b016 lib guess
+func_0002DADC	InitFrustrumMatrix	b016
+func_00070EFC	SetNote	b017
+func_00073408	XM_Pause	b017
+func_00073020	XM_SetSongPos	b017
+func_00073324	SilenceXM	b017
+func_0004FA7C	ScaleCamera	b018
+func_00071AC8	UpdateWithTimer	b018
+func_00072740	DoDolbySS	b018
+func_000734E8	XM_Restart	b018
+func_0004D3DC	InitSound	b018
+func_00079AC0	SpuInit	b018 lib
+func_0004E840	AllocateReverb	b018
+func_0007D2C4	TransMatrix	b018 lib
+func_00079D20	SetRotMatrix	b018 lib
+func_0007D2F4	SetTransMatrix	b018 lib
+func_0007232C	ApplyEffs	b018
+func_00077784	VSyncCallback	b018 lib
+func_0004D648	SetMasterVolume	b018
+func_0004D7E4	Start3DSoundVolPitch	b015
+func_00052C10	DrawAnimatingObject	b015
+func_0004D968	CompleteSoundSetup	b015 likely
+func_0004E4B0	GetFreeChannel	b015 likely
+func_00070FD8	SetInstr	b019
+func_000712E4	Arpeggio	b019
+func_00034C74	ready_cb_regions	b019
+func_00025638	ReInitFrontend	b021
+func_00022700	InitModelNames	b021
+func_0005192C	GetTEXINFName	b021
+func_0007B228	strcmp	b021 lib guess
+func_000396A8	FindModelPtrWithName	b021 likely
+func_00050CF8	CloseShutters	b023
+func_0005334C	animate_garage_door	b023
+func_00035044	ready_cb_soundbank	b023
+func_0003D4D0	PlaceCameraAtLocation	b023
+func_0004E214	LoadSoundBank	b023
+func_000541C8	InitOverheadMap	b020
+func_00060E4C	FindSeated	b020 likely
+func_000466D4	GetSmokeDrift	b020 likely
+func_00060F54	add_seated	b020 likely
+func_00056278	LoadMapTile	b020 likely
+func_000513D4	SwapDrawBuffers	b020 guess
+func_00074684	ClearOTagR	b020 lib guess
+func_0007178C	DoVibrato	b022
+func_0004C610	GetEngineRevs	b022
+func_0001B380	LongQuaternion2Matrix	b022
+func_0007D66C	SetDefDrawEnv	b024 lib guess
+func_0007D720	SetDefDispEnv	b024 lib guess
+func_00054618	FlashOverheadMap	b024
+func_00033D18	SendSBK	b024
+func_0006ADFC	SetColourByValue	b026 likely
+func_00041CE4	SwirlLeaves	b026 likely
+func_00074404	LoadImage	b026 lib guess
+func_0007A7F4	GetClut	b026 lib guess
+func_00020844	jump_debris	b027
+func_000346C8	ProcessSpoolInfoLump	b025
+func_00067EE0	Long2DDistance	b025
+D_0008EAA8	rcossin_tbl	b025 data
+func_00035174	data_cb_misc	b029
+func_000718A8	DoTremolo	b029
+func_000493CC	add_haze	b029
+D_00097530	current	b029 data
+D_000969F0	spoolpos_writing	b029 data
+D_00096DC4	FastForward	b029 data
+func_00034B18	ready_cb_textures	b028
+func_000564A4	draw_box	b030
+func_00034D74	data_cb_regions	b030
+func_0002258C	LoadGameLevel	b030
+func_000511EC	ReportMode	b030 likely
+func_0005073C	FadeGameScreen	b031
+func_0003497C	data_cb_textures	b033
+func_0007A53C	CdDataCallback	b033 lib likely
+func_00032DEC	test_changemode	b035
+func_0001D3EC	SetShadowPoints	b034
+func_00053C88	DrawN	b039
+func_0005C99C	LoadFont	b039
+func_00033604	UpdateSpool	b039
+func_00079DB0	memcpy	b039 lib guess
+func_000426B4	AddGroundDebris	b038
+func_00043270	damage_object	b038
+func_00041AC4	AddLeaf	b038 likely
+func_00059BBC	ShowReplayMenu	b040 weak
+func_00052240	GetTextureDetails	b042
+func_00070728	SPE	b047
+func_00071504	DoS3MRetrig	b047
+func_0004428C	ShowLight1	b046
+func_000710D0	SetPer	b046
+func_00037EF8	wjmDraw3	b048
+func_0007EAF4	RotTransPers	b048 lib
+func_0007B1E8	NormalClip	b048 lib
+func_00012498	ClearMem	b048
+func_0002452C	main	b049
+func_00042C8C	ShowLightStreak	b049 guess
+func_0003F658	bFindCollisionPoint	b050
+func_0002DFEC	ProcessMapLump	b053
+func_00058B2C	RecordCamera	b053
+func_00022344	ProcessLumps	b053 likely
+func_00059658	FindFreeCamera	b053
+D_00096DB4	LastChange	b053 data
+D_00097658	tracking_car	b053 data
+D_00096897	cameraview	b053 data
+func_00037274	DrawBlackQuad	b054 guess
+func_0003B748	DrawWheelObject	b054
+func_000702BC	JPlayNote	b054
+func_0005CF10	PrintDigit	b054
+D_0009781C	XMC	b054 data
+D_000971A0	combointensity	b054 data
+func_00037C9C	wjmDraw4	b055
+func_0003F88C	bFindCollisionTime	b055
+func_00068928	MissionScriptParse	b055 guess
+func_0006FB14	InitXMData	b057
+func_00055A20	DrawSightCone	b057
+func_0001B4A4	InitCarPhysics	b057 likely
+func_0001B380	QuatToMatrix	b057 guess
+func_0003ED78	LoseHubcap	b059
+func_0005CC68	PrintString	b059
+func_0004EAC0	_MatrixRotate	b059 guess
+func_00033F9C	CheckLoadAreaData	b056
+func_00047824	Setup_Debris	b056
+D_00096850	gNight	b056 data
+D_000BABC0	debris	b056 data
+func_00049DB8	AddRainDrops	b060
+D_000970D8	VSyncCounter	b060 data guess
+func_000451A8	RoundShadow	b061
+func_00045460	ShowGroundLight	b061
+func_0004A398	DisplayLightReflections	b061
+func_0002C564	Apply_Inv_CameraMatrix	b061 likely
+func_00033870	SendTPage	b058
+D_000A7F50	tsetinfo	b058 data
+D_00087030	texture_cluts	b058 data
+D_00086F30	texture_pages	b058 data
+func_00045A04	DisplayWater	b064
+func_0003C6CC	MangleWheelModels	b063
+func_00039D94	ControlMap	b063 guess
+func_00045718	ShowFlare	b065
+func_00053E54	DrawCompass	b065
+func_0001B720	TempBuildHandlingMatrix	b065 likely
+func_000539C8	WorldToOverheadMapPositions	b065 likely
+func_0004EA98	RotMatrixXYZ	b065 guess
+func_0003F01C	MoveHubcap	b062
+func_0007EAC4	RotTrans	b062 lib
+func_0006EB74	MissionCommandInterp	b068 guess
+func_0002B20C	clipAgainstZ	b070
+func_00045CEC	DisplaySpark	b067
+func_00050EC4	LoadfileSeg	b069
+func_0004A064	DisplaySplashes	b069
+func_0005BFF0	cjpRecord	b069
+func_0004449C	ShowLight	b069 likely
+func_0001F5B0	MapHeight	b069 likely
+func_0007EA74	strcpy	b069 lib
+func_0007A684	CdPosToInt	b069 lib
+func_0007A3B0	CdControl	b069 lib
+func_0007DCBC	CdRead	b069 lib
+func_0007DE58	CdReadSync	b069 lib
+func_00070B68	DoEEffects	b074
+func_0003F2E0	bcollided2d	b073
+func_00049590	DrawRainDrops	b073
+func_0007232C	ApplyEffs	b071
+func_0006E040	ScreenFadeLetterbox	b071 guess
+func_0007282C	UpdateHardware	b072
+func_00072B8C	IntVols	b072
+func_000732D8	SetVol	b072
+func_00073304	SetFrq	b072
+func_00073104	PlaySFX	b072
+func_00057734	DrawStopZone	b075
+D_000970D8	CameraCnt	b075 data
+D_0008A8F0	camera_position	b075 data
+func_00050024	DrawSkyDome	b076 likely
+func_0002B9BC	sQuad	b078
+func_0002B560	clippedPoly	b078 likely
+D_00097480	LightSortCorrect	b078 data
+func_00039978	CheckUnpackNewRegions	b081
+func_0002ADEC	PlaceShadowForCar	b081
+func_0001FAFC	CheckCarToCarCollisions	b081
+func_00034204	ClearRegion	b081
+D_0009B0A4	car_data	b081 data
+D_000BBE84	inv_camera_matrix	b081 data
+D_0009732C	current_region	b081 data
+func_0003E6A0	DentCar	b082
+func_0005972C	ShowIcons	b084
+func_000508B0	ShowLoadingScreen	b083
+func_00071724	DoToneSlide	b083
+func_00074158	SetDispMask	b083 lib
+func_0007D5A4	LoadClut	b083 lib
+func_00050E28	Loadfile	b083
+func_0004343C	DrawLampFlare	b083 guess
+func_0004F34C	PlotSkyPoly	b086
+func_0005B784	DoAutoDirect	b086
+func_00029C00	UpdateSkidTrails	b086 guess
+func_000481C8	DisplayDebris	b087
+func_00063114	CopPathSearch	b087 guess
+func_00061B9C	popNode	b087 guess
+func_00049914	DrawRainDrops?	b089 (conflicts with b073 func_00049590)
+func_0006FDF0	XM_Init	b090
+func_000731A0	InitSPUChannel	b090
+func_000737CC	JPClearSPUFlags	b090
+func_0004ED34	LoadSky	b090 guess
+func_00025748	GameLoopStep	b090 guess
+func_00071C74	UpdatePatternData	b091
+func_0006B4AC	MissionHUD	b091 guess
+func_0003B208	DrawCarWheels	b094
+D_0009687C	pauseflag	b094 data
+func_00047A90	Setup_Smoke	b093
+func_0004CA5C	DoDopplerSFX	b093 likely
+func_00048E88	DisplaySmoke	b096
+func_0002A084	DrawTyreTracks	b096
+D_000A295C	track_buffer	b096 data
+func_000230B0	StepGame	b097 likely
+func_00079AF0	SetSp	b097 lib likely
+func_000270D4	DrawCellObjects	b097 guess
+func_00046E44	DrawLensFlare	b100
+func_00055CA0	DrawTargetArrow	b100 likely
+func_000473F0	DisplaySun	b100
+func_00074464	StoreImage	b100 lib
+func_0002A808	SubdivShadow	b101
+func_0001EEB4	FindSurface	b101 guess
+func_00056BDC	DrawPercentageBar	b099
+func_0007EAA4	SetLineF4	b099 lib
+func_0007EA84	SetLineF2	b099 lib
+func_0005C864	PrintStringRightAligned	b099
+func_00058FCC	CameraBar	b102
+func_0001FF24	ProcessCarPad	b102 likely
+D_00097668	ReplayParameterPtr	b102 data
+func_00024F1C	FrontEndLoop	b105 guess
+func_00051ADC	LoadTPagesCluts	b105 guess
+func_00040BAC	PlacePoolForCar	b106
+D_0008A73C	PoolPrimData	b106 data
+func_0003C998	CameraCollisionCheck	b103
+func_0001A30C	CivCarsStep	b103 guess
+D_000A0E20	modelpointers	b103 data
+func_00057AE4	DrawFullscreenMap	b104 guess
+func_00048660	HandleDebris	b108
+func_00041690	HandleBirds	b108 likely
+func_000217C8	ROADS_GetRouteData	b108 likely
+D_00096C3C	weather_level	b108 data
+func_00024754	GameStateSwitch	b107 guess
+func_000130D4	JunctionClearCheck	b107 guess
+func_00016F0C	ChooseJunctionExit	b111 guess
+func_0001262C	CarVisibilityPlanes	b110 guess
+func_00074D54	SetDrawMode	b113 lib
+func_0002EB94	DrawDecals	b113 guess
+func_0003BDC8	SortModelPolys	b114 guess
+func_00066FF0	DrawExplosion	b109
+D_000C6CF8	globemesh	b109 data
+func_0003A698	DrawCars	b115 guess
+func_000154A8	CreateCivCar	b116 guess
+func_0006C964	ShowPauseMenu	b117 guess
+func_0002F444	DrawHorizonPolys	b121 guess
+func_0004449C	ShowLight	b120
+D_000B738C	Known_Lamps	b120 data
+D_000970E8	gLightsOn	b120 data
+func_0002360C	MainGameLoop	b122 guess
+func_00065424	CopChaseUpdate	b119 guess
+func_0003FF0C	CarBuildingCollision	b118
+func_000650E4	NoteFelony	b118 likely
+func_0003FAE8	ApplyDamage	b118 likely
+func_0004157C	CreateBirds	b118 likely
+func_00047FA4	Setup_Sparks	b118 likely

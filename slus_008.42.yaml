@@ -1,0 +1,66 @@
+name: SLUS_008.42
+sha1: 94b44a84de2f9fa2dcaf120db2e7b3d74bc70d3d
+options:
+  basename: slus_008.42
+  target_path: orig/SLUS_008.42
+  elf_path: build/slus_008.42.elf
+  base_path: .
+  platform: psx
+  compiler: PSYQ
+
+  # asm_path: asm
+  # src_path: src
+  # build_path: build
+  # create_asm_dependencies: True
+
+  ld_script_path: slus_008.42.ld
+  ld_dependencies: True
+
+  find_file_boundaries: False
+  gp_value: 0x00096770
+  # ld_gp_expression: main_SCOMMON_START + 0x7FF0
+
+  o_as_suffix: True
+  use_legacy_include_asm: False
+
+  section_order: [".rodata", ".text", ".data", ".bss"]
+  # auto_link_sections: [".data", ".rodata", ".bss"]
+
+  symbol_addrs_path:
+    - symbol_addrs.txt
+  reloc_addrs_path:
+    - reloc_addrs.txt
+
+  # undefined_funcs_auto_path: undefined_funcs_auto.txt
+  # undefined_syms_auto_path: undefined_syms_auto.txt
+
+  extensions_path: tools/splat_ext
+
+  subalign: 2
+  ld_align_section_vram_end: False
+  ld_align_segment_vram_end: False
+
+  string_encoding: ASCII
+  data_string_encoding: ASCII
+  rodata_string_guesser_level: 2
+  data_string_guesser_level: 2
+
+  # Uncomment this line if you need to use the maspsx reorder workaround hack
+  # https://github.com/mkst/maspsx?tab=readme-ov-file#include_asm-reordering-workaround-hack
+  # include_asm_macro_style: maspsx_hack
+segments:
+  - name: header
+    type: header
+    start: 0x0
+
+  - name: main
+    type: code
+    start: 0x800
+    vram: 0x10000
+    bss_size: 0x39100   # highest referenced address 0xD0054 (2026-10-14)
+    subsegments:
+      - [0x800, rodata, 800]
+      - [0x2C8C, asm, 2C8C] # estimated
+      - [0x75B14, data, 75B14] # estimated
+      - { start: 0x87800, type: bss, vram: 0x97000 }
+  - [0x87800]

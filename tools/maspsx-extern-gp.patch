@@ -1,0 +1,50 @@
+diff --git a/maspsx/__init__.py b/maspsx/__init__.py
+index 5ab6f94..f87888b 100644
+--- a/maspsx/__init__.py
++++ b/maspsx/__init__.py
+@@ -468,6 +468,7 @@ class MaspsxProcessor:
+         self.lines = [x.strip() for x in lines]
+ 
+         self.sdata_limit = sdata_limit
++        self.extern_small = {}
+ 
+         self.expand_div = expand_div
+         self.expand_li = expand_li
+@@ -535,6 +536,13 @@ class MaspsxProcessor:
+ 
+             if line.startswith(".extern"):
+                 in_sdata = False
++                # aspsx addresses a small extern ($gp) when cc1 gives its size
++                # (".extern sym, 4") - Driver 1 relies on it (olink9/driver1 patch)
++                parts = line.split(None, 1)[1].split(",") if len(line.split()) > 1 else []
++                if len(parts) == 2 and parts[1].strip().isdigit():
++                    size = int(parts[1].strip())
++                    if 0 < size <= int(__import__("os").environ.get("MASPSX_EXTERN_G", self.sdata_limit)):
++                        self.extern_small[parts[0].strip()] = size
+                 continue
+ 
+             if line.startswith(".comm") or line.startswith(".lcomm"):
+@@ -705,6 +713,7 @@ class MaspsxProcessor:
+ 
+                 if gp_allowed and (
+                     symbol in self.sbss_entries or symbol in self.sdata_entries
++                    or symbol in self.extern_small
+                 ):
+                     return True
+ 
+@@ -1006,6 +1015,7 @@ class MaspsxProcessor:
+ 
+                 if gp_allowed and (
+                     symbol in self.sdata_entries or symbol in self.sbss_entries
++                    or symbol in self.extern_small
+                 ):
+                     res.append(f"{op}\t{r_dest},{gp_rel}")
+                 else:
+@@ -1097,6 +1107,7 @@ class MaspsxProcessor:
+ 
+                 if gp_allowed and (
+                     symbol in self.sdata_entries or symbol in self.sbss_entries
++                    or symbol in self.extern_small
+                 ):
+                     res.append(f"{op}\t{r_dest},{gp_rel}")
+                 else:
