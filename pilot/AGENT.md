@@ -155,6 +155,9 @@ GCC 2.7.2-psx and 2.8.x each failed functions that cdk matches.
 - (b080) A small buffer whose address the target rebuilds after calls: declare it with its real small size
   (`extern char D_x[8];`). A `for(;;)` left only by `return` gets no invariant hoisting - use `break`.
 
+- (b089) Operand order across a signed divide matters: the `bgez` of the division splits the block, so the operand
+  written first is evaluated before it. Scalar gp loads drifting early: declare the global as a 4-byte struct.
+
 ## Final check (coordinator)
 `tools/linkcheck.py` links every matched C file into the real build and compares bytes with the original exe - the
 real proof. fnscore 100 is necessary, linkcheck pass is what counts. Hand-written asm must also pass it (no stray nop).

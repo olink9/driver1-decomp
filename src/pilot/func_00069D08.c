@@ -49,6 +49,7 @@ int func_00069D08(S1 *a, S0 *b)
     VEC d;
     VEC *p;
     int dx, dz;
+    int v;
     int t;
     int angle;
 
@@ -79,17 +80,20 @@ int func_00069D08(S1 *a, S0 *b)
 
     if ((unsigned)((angle & 0x7ff) - 0x200) > 0x400) {
         t = D_0008EAAA[(angle & 0xfff) * 2];
-        if (d.vx > 0x7ffff)
-            dist = ((d.vx << 9) / t) << 3;
+        v = d.vx;
+        if (v > 0x7ffff)
+            t = ((v << 9) / t) << 3;
         else
-            dist = (d.vx << 12) / t;
+            t = (v << 12) / t;
     } else {
         t = D_0008EAA8[(angle & 0xfff) * 2];
-        if (d.vz > 0x7ffff)
-            dist = ((d.vz << 9) / t) << 3;
+        v = d.vz;
+        if (v > 0x7ffff)
+            t = ((v << 9) / t) << 3;
         else
-            dist = (d.vz << 12) / t;
+            t = (v << 12) / t;
     }
+    dist = t;
 
     if (a->f104 != 2)
         return dist;
@@ -99,47 +103,47 @@ int func_00069D08(S1 *a, S0 *b)
             if (!(b->fC & 4))
                 a->f114 = 300;
             b->fC |= 4;
-            return dist;
-        }
-        b->fC &= ~4;
-        if ((a->f11C & 1) && a->f2A0 > a->f120) {
-            if (!(b->fC & 2))
-                a->f114 = 300;
-            b->fC |= 2;
-            if (dist < b->f0) {
-                *(int *)&D_00097708 += 0x22;
-                *(int *)&D_00097738 = D_0009B0A4[0xC8 / 4];
-                *(int *)&D_0009773C = D_0009B0A4[0xD0 / 4];
-                if (*(int *)&D_00097708 > 0x1000)
-                    *(int *)&D_00097708 = 0x1000;
+        } else {
+            b->fC &= ~4;
+            if ((a->f11C & 1) && a->f2A0 > a->f120) {
+                if (!(b->fC & 2))
+                    a->f114 = 300;
+                b->fC |= 2;
+                if (dist < b->f0) {
+                    *(int *)&D_00097708 += 0x22;
+                    *(int *)&D_00097738 = D_0009B0A4[0xC8 / 4];
+                    *(int *)&D_0009773C = D_0009B0A4[0xD0 / 4];
+                    if (*(int *)&D_00097708 > 0x1000)
+                        *(int *)&D_00097708 = 0x1000;
+                }
+            } else {
+                b->fC &= ~2;
+                if (D_000C6F04[0x2C0 / 4] && D_0009B1AC[0] > D_000C6F04[0x2C4 / 4]) {
+                    if (!(b->fC & 8))
+                        a->f114 = 300;
+                    b->fC |= 8;
+                } else {
+                    b->fC &= ~8;
+                    if (dist < b->f0) {
+                        a->f298--;
+                        if (a->f2D0 == 2) {
+                            a->fD0++;
+                            a->f2A0 += 0x4000;
+                        }
+                        a->f104 = 0x7fff;
+                        b->fC = 0;
+                        *(int *)&D_000975DC = 0;
+                        dist = 0x7fffffff;
+                    }
+                }
             }
-            return dist;
-        }
-        b->fC &= ~2;
-        if (D_000C6F04[0x2C0 / 4] && D_000C6F04[0x2C4 / 4] < D_0009B1AC[0]) {
-            if (!(b->fC & 8))
-                a->f114 = 300;
-            b->fC |= 8;
-            return dist;
-        }
-        b->fC &= ~8;
-        if (dist < b->f0) {
-            a->f298--;
-            if (a->f2D0 == 2) {
-                a->fD0++;
-                a->f2A0 += 0x4000;
-            }
-            a->f104 = 0x7fff;
-            b->fC = 0;
-            *(int *)&D_000975DC = 0;
-            dist = 0x7fffffff;
         }
     } else {
         if (!D_00097794 || *(int *)&D_0009770C <= 0)
             b->fC &= ~4;
-        if (!(a->f11C & 1) || a->f120 >= a->f2A0)
+        if (!(a->f11C & 1) || a->f2A0 <= a->f120)
             b->fC &= ~2;
-        if (!D_000C6F04[0x2C0 / 4] || D_000C6F04[0x2C4 / 4] >= D_0009B1AC[0])
+        if (!D_000C6F04[0x2C0 / 4] || D_0009B1AC[0] <= D_000C6F04[0x2C4 / 4])
             b->fC &= ~8;
     }
     }

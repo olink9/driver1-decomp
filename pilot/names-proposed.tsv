@@ -245,3 +245,21 @@ D_000BBE84	inv_camera_matrix	b081 data
 D_0009732C	current_region	b081 data
 func_0003E6A0	DentCar	b082
 func_0005972C	ShowIcons	b084
+func_000508B0	ShowLoadingScreen	b083
+func_00071724	DoToneSlide	b083
+func_00074158	SetDispMask	b083 lib
+func_0007D5A4	LoadClut	b083 lib
+func_00050E28	Loadfile	b083
+func_0004343C	DrawLampFlare	b083 guess
+func_0004F34C	PlotSkyPoly	b086
+func_0005B784	DoAutoDirect	b086
+func_00029C00	UpdateSkidTrails	b086 guess
+func_000481C8	DisplayDebris	b087
+func_00063114	CopPathSearch	b087 guess
+func_00061B9C	popNode	b087 guess
+func_00049914	DrawRainDrops?	b089 (conflicts with b073 func_00049590)
+func_0006FDF0	XM_Init	b090
+func_000731A0	InitSPUChannel	b090
+func_000737CC	JPClearSPUFlags	b090
+func_0004ED34	LoadSky	b090 guess
+func_00025748	GameLoopStep	b090 guess

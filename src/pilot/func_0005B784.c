@@ -94,8 +94,8 @@ void func_0005B784(void)
 
             if (*(int *)&D_00096834 != 2)
             {
-                height = -70 - func_0001F5B0(&D_0008A8F0);
-                D_0008A8F0.vy = height - (func_000776E4() & 0x3ff);
+                height = func_0001F5B0(&D_0008A8F0);
+                D_0008A8F0.vy = -70 - (func_000776E4() & 0x3ff) - height;
             }
             else
                 D_0008A8F4[0] = -200;
