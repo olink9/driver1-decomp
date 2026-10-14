@@ -309,3 +309,17 @@ func_0002EB94	DrawDecals	b113 guess
 func_0003BDC8	SortModelPolys	b114 guess
 func_00066FF0	DrawExplosion	b109
 D_000C6CF8	globemesh	b109 data
+func_0003A698	DrawCars	b115 guess
+func_000154A8	CreateCivCar	b116 guess
+func_0006C964	ShowPauseMenu	b117 guess
+func_0002F444	DrawHorizonPolys	b121 guess
+func_0004449C	ShowLight	b120
+D_000B738C	Known_Lamps	b120 data
+D_000970E8	gLightsOn	b120 data
+func_0002360C	MainGameLoop	b122 guess
+func_00065424	CopChaseUpdate	b119 guess
+func_0003FF0C	CarBuildingCollision	b118
+func_000650E4	NoteFelony	b118 likely
+func_0003FAE8	ApplyDamage	b118 likely
+func_0004157C	CreateBirds	b118 likely
+func_00047FA4	Setup_Sparks	b118 likely

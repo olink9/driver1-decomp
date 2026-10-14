@@ -126,7 +126,7 @@ void func_0003A698(int i, int view)
 
     if (D_00096897.c[0] == 2 && i == I32(D_0009688C)) {
         CAR *cars = D_0009B0A4;
-        int *src = cars[i].mat;
+        int *src = D_0009B0A4[i].mat;
         int *dst = D_000AF6A0[i].m;
 
         if (view == 0 && func_000217C8(cars->x, cars->z, tmp)) {
@@ -134,8 +134,8 @@ void func_0003A698(int i, int view)
                 if (I32(D_0009687C) == 0) {
                     if (I32(D_00097004) != 0)
                         I32(D_00097004) = I32(D_00097004) - 1;
-                    cars[i].f40 -= cars[i].f40 >> 4;
-                    cars[i].f48 -= cars[i].f48 >> 4;
+                    D_0009B0A4[i].f40 -= D_0009B0A4[i].f40 >> 4;
+                    D_0009B0A4[i].f48 -= D_0009B0A4[i].f48 >> 4;
                 }
             } else {
                 I32(D_00097004) = 25;
@@ -279,13 +279,11 @@ void func_0003A698(int i, int view)
 done:
         func_00043E8C(i);
         if (i != 0) {
-            int k = i - 1;
-            PED *pp = &D_00098950[k];
-            if (pp->f1 != 1 && func_0004FFE8(i) == 0) {
+            if (D_00098950[i - 1].f1 != 1 && func_0004FFE8(i) == 0) {
                 if (I32(D_000970E8) != 0)
-                    pp->f17 |= 0x40;
+                    D_00098950[i - 1].f17 |= 0x40;
                 else
-                    pp->f17 &= ~0x40;
+                    D_00098950[i - 1].f17 &= ~0x40;
             }
         }
         if ((i == 0 && I32(D_000970E8) != 0) || (i != 0 && (D_00098950[i - 1].f17 & 0x40)))

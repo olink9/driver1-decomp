@@ -132,13 +132,13 @@ static inline int Nearest(int x, int z)
     min = 1024;
     for (i = 0; i < n; i++, o++) {
         if (o->f1) {
-            dx = o->x48 - tx;
-            if (dx < 0)
-                dx = tx - o->x48;
+            d = o->x48 - tx;
+            if (d < 0)
+                d = tx - o->x48;
             dz = o->x4C - tz;
             if (dz < 0)
                 dz = tz - o->x4C;
-            d = dx + dz;
+            d += dz;
             if (d < min)
                 min = d;
         }
@@ -146,7 +146,7 @@ static inline int Nearest(int x, int z)
     return min;
 }
 
-int func_000154A8(int id, int road, unsigned char flag, int x, int z)
+int func_000154A8(int id, int road, int flag, int x, int z)
 {
     CIV *cp;
     CAR *car;
@@ -157,6 +157,7 @@ int func_000154A8(int id, int road, unsigned char flag, int x, int z)
     int pos2[3];
     CIV *o;
     int tx, tz, i, cnt, min, dx, dz;
+    int one;
 
     ty = 0;
     mode = ty;
@@ -181,18 +182,21 @@ int func_000154A8(int id, int road, unsigned char flag, int x, int z)
                 if (roads[road].x0 * 1500 < *(int *)&D_0009B16C)
                     dir = 1;
             }
-            odir = (dir == 1) ? 3 : 1;
+            if (dir == 1)
+                odir = 3;
+            else
+                odir = 1;
             switch (roads2[road].xB) {
             case 0x81:
                 flag = 1;
-                odir = 1;
+                odir = flag;
                 break;
             case 0x83:
                 flag = 1;
                 odir = 3;
                 break;
             }
-            if (flag == 1)
+            if ((unsigned char)flag == 1)
                 cp->x24 = odir;
             else
                 cp->x24 = dir;
@@ -212,7 +216,7 @@ int func_000154A8(int id, int road, unsigned char flag, int x, int z)
                 odir = 2;
                 break;
             }
-            if (flag == 1)
+            if ((unsigned char)flag == 1)
                 cp->x24 = odir;
             else
                 cp->x24 = dir;
@@ -251,18 +255,24 @@ int func_000154A8(int id, int road, unsigned char flag, int x, int z)
                 z += 470;
                 break;
             }
-            if (Nearest(x, z) < 2)
-                goto fail;
+            if (Nearest(x, z) < 2) {
+                func_00017C50(id);
+                return 0;
+            }
             func_00021820(x, z, cp->x24, &info);
-            if (info.z < 4500)
-                goto fail;
+            if (info.z < 4500) {
+                func_00017C50(id);
+                return 0;
+            }
             if (info.x < 3000) {
                 func_00017C50(id);
                 return 0;
             }
         } else {
-            if (Nearest(x, z) < 2)
-                goto fail;
+            if (Nearest(x, z) < 2) {
+                func_00017C50(id);
+                return 0;
+            }
         }
         if (func_0004FFE8(id) & 3)
             cp->f7 = 1;
@@ -274,11 +284,13 @@ int func_000154A8(int id, int road, unsigned char flag, int x, int z)
     } else {
         cp->f1 = 2;
         cp->f8 = 1;
-        if (func_00021820(x, z, cp->x24, &info))
-            goto fail;
+        if (func_00021820(x, z, cp->x24, &info)) {
+            func_00017C50(id);
+            return 0;
+        }
         if (!func_00016F0C(cp, &info)) {
-            id = cp->id;
-            goto fail;
+            func_00017C50(cp->id);
+            return 0;
         }
         func_00014FC4(cp->x28, cp->x24, cp->x34, 0, 0xFF, pos2);
         if (cp->x24 & 1)
@@ -303,8 +315,10 @@ int func_000154A8(int id, int road, unsigned char flag, int x, int z)
             }
         }
         pos2[2] = min;
-        if (cnt >= 11 || (D_00096898.v != 3 && min < 6))
-            goto fail;
+        if (cnt >= 11 || (D_00096898.v != 3 && min < 6)) {
+            func_00017C50(id);
+            return 0;
+        }
         cp->x18 = info.x;
         cp->x1C = info.z;
         cp->x20 = info.sC;
@@ -317,8 +331,8 @@ int func_000154A8(int id, int road, unsigned char flag, int x, int z)
     if (road != -1)
         car->xF8 = cp->x24 << 10;
     else
-        car->xF8 = flag << 10;
-    cp->x44 = cp->x40 = 0x7FFFFFFF;
+        car->xF8 = (unsigned char)flag << 10;
+    cp->x40 = cp->x44 = 0x7FFFFFFF;
     cp->x38 = 0;
     cp->x3C = 0x82;
     if (mode)
@@ -334,13 +348,14 @@ int func_000154A8(int id, int road, unsigned char flag, int x, int z)
         D_00096FF4 = 0;
         D_00096FC0 = car;
     }
+    one = 1;
     if (cp->f5) {
-        if (D_00096774 == 1 && (D_00096770 != 1 || !(func_0004FFE8(id) & 1))) {
+        if (D_00096774 == one && (D_00096770 != one || !(func_0004FFE8(id) & 1))) {
             cp->x10 = 2;
             cp->x11 = 1;
         } else {
-            cp->x10 = 1;
-            cp->x11 = 1;
+            cp->x10 = one;
+            cp->x11 = one;
         }
     }
     car->x2 = cp->x10;
@@ -353,8 +368,4 @@ int func_000154A8(int id, int road, unsigned char flag, int x, int z)
     if (*(int *)&D_000970E8)
         cp->x17 = 0x42;
     return 1;
-
-fail:
-    func_00017C50(id);
-    return 0;
 }

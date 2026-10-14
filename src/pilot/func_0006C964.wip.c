@@ -21,6 +21,7 @@ extern int D_0009D8DC[];
 extern long long D_00097534, D_000967D4, D_000967F4, D_00096808, D_00096C90, D_00096C94;
 extern long long D_00096874, D_00096834, D_0009687C, D_000970A4, D_0008C388, D_00096A08;
 extern long long D_000967E8, D_0009709C;
+extern char *D_0008C388_[] __asm__("D_0008C388");
 extern unsigned char D_000977BC, D_00096F1C, D_00096F1D, D_00096EFC, D_00096EFD;
 extern int D_00096F00, D_00096F04, D_00096F08, D_00096F10, D_00096F18, D_00096F20, D_00096F24;
 extern int D_000977C8;
@@ -58,7 +59,7 @@ static inline void SetMenu(ENT *t, MENTRY *m, int n)
     D_000977D0 = t;
     D_000977C0 = m;
     D_000977C4 = m;
-    InitMenu(t, n, 1);
+    InitMenu(D_000977CC, D_000977C8, 1);
 }
 
 int func_0006C964(int mode)
@@ -67,6 +68,9 @@ int func_0006C964(int mode)
     MENTRY *p;
     ARG arg;
     int r;
+    int n;
+    ENT *t;
+    int i;
 
     first = 1;
     *(volatile int *)&D_00097534;
@@ -88,25 +92,17 @@ next:
     D_00096F1D = 0;
     D_00096F1C = 0;
     if (*(int *)&D_000967F4 == 5) {
-        if (D_0008D0A0[0] != -1) {
-            signed char *s = D_0008D0A0;
-            do {
-                if (*(int *)&D_00096808 == *s)
-                    D_00096F1D = 1;
-                else
-                    D_00096F1D = 0;
-                s++;
-            } while (*s != -1 && !D_00096F1D);
+        for (i = 0; D_0008D0A0[i] != -1 && !D_00096F1D; i++) {
+            if (*(int *)&D_00096808 == D_0008D0A0[i])
+                D_00096F1D = 1;
+            else
+                D_00096F1D = 0;
         }
-        if (D_0008D094[0] != -1 && !D_00096F1C) {
-            signed char *s = D_0008D094;
-            do {
-                if (*(int *)&D_00096808 == *s)
-                    D_00096F1C = 1;
-                else
-                    D_00096F1C = 0;
-                s++;
-            } while (*s != -1 && !D_00096F1C);
+        for (i = 0; D_0008D094[i] != -1 && !D_00096F1C; i++) {
+            if (*(int *)&D_00096808 == D_0008D094[i])
+                D_00096F1C = 1;
+            else
+                D_00096F1C = 0;
         }
     } else {
         D_00096F1D = 0;
@@ -149,7 +145,7 @@ next:
             D_000977D0 = D_0008C474;
             D_000977C0 = D_0008C3B4;
             D_000977C4 = D_0008C3B4;
-            D_0008C3B4[9].text = *(char **)&D_0008C388;
+            D_0008C3B4[9].text = D_0008C388_[0];
         } else {
             D_000977C8 = 11;
             D_0008C474[8].b[3] = 10;
@@ -218,18 +214,19 @@ next:
                 func_0005C8F4(D_0001160C, 0x78);
             } else {
                 p = D_000977C0;
-                while (p->text != 0) {
-                    func_0005C7D0(p->r, p->g, p->b);
-                    switch (p->flag) {
+                i = 0;
+                while (p[i].text != 0) {
+                    func_0005C7D0(p[i].r, p[i].g, p[i].b);
+                    switch (p[i].flag) {
                     case 0:
                     default:
-                        func_0005CC68(p->text, p->x, p->y);
+                        func_0005CC68(p[i].text, p[i].x, p[i].y);
                         break;
                     case 1:
-                        func_0005C8F4(p->text, p->y);
+                        func_0005C8F4(p[i].text, p[i].y);
                         break;
                     }
-                    p++;
+                    i++;
                 }
                 func_0005C7D0(0xFF, 0xFF, 0xFF);
             }

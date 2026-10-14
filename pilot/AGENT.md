@@ -173,6 +173,12 @@ GCC 2.7.2-psx and 2.8.x each failed functions that cdk matches.
 - (b110) rcossin table: index ONE table (`D_0008EAA8[ang*2+1]`), don't declare D_0008EAAA separately - lets loop.c
   hoist the base. Spilled locals in the target = compute all products first, then compare.
 
+- (b120) `abs()` is ONE insn (abssi2: bgez/move/subu) - no block split, loads move across it; `if (w<0) w=-w` is a real
+  branch. `bgez x; nop; negu x` = abs in place. Use Driver 2's per-block locals from the debug symbols.
+
+- (b122) loop.c hoists a load only if threshold*savings*lifetime >= insn_count; duplicate identical case bodies add up
+  savings (cross-jumping re-merges them). Check with `cc1 -dL` (.loop dump). Combined bit tests: nest the ifs.
+
 ## Final check (coordinator)
 `tools/linkcheck.py` links every matched C file into the real build and compares bytes with the original exe - the
 real proof. fnscore 100 is necessary, linkcheck pass is what counts. Hand-written asm must also pass it (no stray nop).
