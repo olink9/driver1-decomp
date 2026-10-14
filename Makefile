@@ -16,7 +16,7 @@ CPPFLAGS := -Iinclude -Isrc -undef -Wall -lang-c -fno-builtin -Dmips -D__GNUC__=
 MASPSX   := MASPSX_EXTERN_G=4 $(PYTHON) tools/maspsx/maspsx.py --aspsx-version=2.79 --expand-div -G8
 
 S_FILES  := $(shell find asm -name '*.s' -not -path 'asm/nonmatchings/*')
-C_FILES  := $(shell find src -name '*.c' 2>/dev/null)
+C_FILES  := $(shell find src -name '*.c' -not -path 'src/pilot/*' 2>/dev/null)   # pilot files are standalone, not linked yet
 O_FILES  := $(S_FILES:%.s=$(BUILD)/%.o) $(C_FILES:%.c=$(BUILD)/%.o)
 
 all: $(BUILD)/SLUS_008.42
