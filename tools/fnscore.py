@@ -153,6 +153,9 @@ def relaxed_equal(L, R, cand):
             WHY.append(i); return False, n
         if tl.startswith("jtbl_"):
             continue                      # entries are code labels; the code itself is compared
+        mr = re.fullmatch(r"D_([0-9A-F]{8})", tr)
+        if mr and int(m.group(1), 16) + al == int(mr.group(1), 16) + ar:
+            continue                      # two splat labels, same resolved address (array end)
         if tr.startswith(".") and "%hi(" in ri.get("formatted", ""):
             continue                      # objdiff drops %hi addends; the paired %lo row is checked
         if tr.startswith("."):            # candidate's own section data (a string literal)
