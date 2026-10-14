@@ -143,8 +143,16 @@ GCC 2.7.2-psx and 2.8.x each failed functions that cdk matches.
 - (b059) A local copied from an .sdata D_ via lui/addiu + lwl/lwr is an initialized local aggregate
   (`SVECTOR a = {0,0,10};`), not a struct copy of an extern.
 
+- (b066) `D[x-1].f` gets folded into the offset; if the target keeps `addiu -1` before the multiply, compute the
+  index in its own statement first.
+
+## Final check (coordinator)
+`tools/linkcheck.py` links every matched C file into the real build and compares bytes with the original exe - the
+real proof. fnscore 100 is necessary, linkcheck pass is what counts. Hand-written asm must also pass it (no stray nop).
+
 ## Rules
-- Only write in `src/pilot/`, and only append to `pilot/results.tsv`. Never edit configs, tools,
+- Only write in `src/pilot/`, and only append to `pilot/results.tsv` (and `pilot/review.tsv` for near-misses whose
+  only diff is a relocation label on byte-identical code: `<symbol>\t<score>\t<why>`). Never edit configs, tools,
   `orig/`, `asm*/` or `include/` (except new macros in `include/gte.h`).
 - Don't run `make` or git; the coordinator commits.
 - Be efficient: small functions should take 1–3 attempts. Move on rather than burn tokens.

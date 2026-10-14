@@ -1,4 +1,4 @@
-/* func_0003F01C: MoveHubcap (Driver 2 name) */
+/* func_0003F01C: MoveHubcap (Driver 2 name). 99.80: only diff is the %hi reloc addend annotation on a duplicated delay-slot lui (cc1 emits %hi(D_000B700C+80) for both); bytes believed identical. */
 typedef struct { short vx, vy, vz, pad; } SVECTOR;
 typedef struct { long vx, vy, vz, pad; } VECTOR;
 typedef struct { short m[3][3]; long t[3]; } MATRIX;

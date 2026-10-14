@@ -120,6 +120,15 @@ def reloc_target(row):
     return m.group(1), int(m.group(2), 0) if m.group(2) else 0
 
 
+def _operands_sans_reloc(ins):
+    """The instruction text with its relocation expression blanked, so rows that
+    differ only in what the relocation names still have to agree on registers."""
+    t = ins.get("formatted", "")
+    t = re.sub(r"%(?:hi|lo|gp_rel)\([^)]*\)", "R", t)
+    t = re.sub(r"\b(?:jtbl_\w+|D_[0-9A-F]{8}(?:\+0x[0-9a-fA-F]+)?)\b", "R", t)
+    return t
+
+
 def section_bytes(path, name, off, n):
     from elftools.elf.elffile import ELFFile
     with open(path, "rb") as f:
@@ -143,6 +152,8 @@ def relaxed_equal(L, R, cand):
         li, ri = l.get("instruction") or {}, r.get("instruction") or {}
         if li.get("formatted", "").split()[:1] != ri.get("formatted", "").split()[:1]:
             WHY.append(i); return False, n
+        if _operands_sans_reloc(li) != _operands_sans_reloc(ri):
+            WHY.append(i); return False, n    # registers differ too (linkcheck caught lui $v0 vs $v1)
         (tl, al), (tr, ar) = reloc_target(l), reloc_target(r)
         if not tl or not tr:
             WHY.append(i); return False, n

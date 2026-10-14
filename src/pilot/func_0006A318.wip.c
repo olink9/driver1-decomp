@@ -38,6 +38,7 @@ void func_0006A318(CAR *car)
     ENT *q;
     ST *st;
     int lim;
+    int n;
 
     for (e = car->e; e < &car->e[6]; e++) {
         d = func_00069D08(car, e);
@@ -79,11 +80,13 @@ void func_0006A318(CAR *car)
             if (*(short *)(p + 0x17C) < D_00096E78)
                 break;
             car->f104 = 0x7FFF;
-            if (((unsigned char *)&D_00098900[*p - 1])[0x55] == 0 || *(int *)&D_000C4C8C == 0)
+            n = *p - 1;
+            if (((unsigned char *)&D_00098900[n])[0x55] == 0 || *(int *)&D_000C4C8C == 0)
                 car->fF8 = 0;
         }
         break;
     case 7:
+    case 0x7FFF:
         break;
     case 4:
         st = &D_000BE774;

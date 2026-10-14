@@ -5,3 +5,5 @@
   -> real PsyQ P_TAG is `unsigned addr:24; unsigned len:8;` (libgpu.h #else branch, line ~356); addPrim through that bitfield is what produces the original 0xFFFFFF mask sequence. Check which branch common.h selects.
 - aspsx 2.69 test (11:40): re-scored all 434 matched files with --aspsx 2.69 -> 431 still match, 3 regress (func_0001A9BC 99.74, func_00033F9C 94.71, func_0005CF10 67.22). So 2.79 stays default. func_0002A5CC matches ONLY with 2.69 (gp_rel(X) next to %hi(X+1) on a .comm symbol = gp_allow_offset). Per-file setting or a smarter maspsx rule needed - decide in cleanup, not now.
 - pilot/review.tsv: near-misses whose bytes look identical but reloc annotations differ. Settle by linking them into the real build (sha1 check), not by loosening the scorer blindly.
+- switch decision trees (func_0006A318 95.38): needs gcc 2.7.2 balance_case_nodes worked out - target tree ==4,<5,==2 then ==7,>7 exit,==5,==6.
+- FIX FOUND (b069): the 0x78654321 assert loop = `extern volatile int D_00097534;` with `while (D_00097534 != 0x78654321) ...` - fixes the v0/v1 swap; apply to 0005D89C / 000513D4 / 0005C68C.

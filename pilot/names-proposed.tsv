@@ -204,3 +204,18 @@ func_00053E54	DrawCompass	b065
 func_0001B720	TempBuildHandlingMatrix	b065 likely
 func_000539C8	WorldToOverheadMapPositions	b065 likely
 func_0004EA98	RotMatrixXYZ	b065 guess
+func_0003F01C	MoveHubcap	b062
+func_0007EAC4	RotTrans	b062 lib
+func_0006EB74	MissionCommandInterp	b068 guess
+func_0002B20C	clipAgainstZ	b070
+func_00045CEC	DisplaySpark	b067
+func_00050EC4	LoadfileSeg	b069
+func_0004A064	DisplaySplashes	b069
+func_0005BFF0	cjpRecord	b069
+func_0004449C	ShowLight	b069 likely
+func_0001F5B0	MapHeight	b069 likely
+func_0007EA74	strcpy	b069 lib
+func_0007A684	CdPosToInt	b069 lib
+func_0007A3B0	CdControl	b069 lib
+func_0007DCBC	CdRead	b069 lib
+func_0007DE58	CdReadSync	b069 lib
