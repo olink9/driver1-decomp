@@ -14,3 +14,4 @@ slus_008.42.d
 undefined_funcs_auto.txt
 undefined_syms_auto.txt
 .splache
+__pycache__/
