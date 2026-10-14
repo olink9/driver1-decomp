@@ -9,7 +9,7 @@ names every label in it at load address + offset.
 """
 import json, os, re, struct, sys
 
-SIGS = os.path.expanduser("~/dev/psx_psyq_signatures")
+SIGS = os.environ.get("PSYQ_SIGS", os.path.expanduser("~/dev/psx_psyq_signatures"))
 EXE = os.path.join(os.path.dirname(__file__), "..", "orig", "SLUS_008.42")
 
 

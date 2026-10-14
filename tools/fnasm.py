@@ -13,8 +13,8 @@ import os, re, sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 FN = os.path.join(ROOT, "asm_fn/nonmatchings/main")
-DUMP = os.path.expanduser("~/dev/redriver2-old/symbols/spanish_dump.h")
-R2 = os.path.expanduser("~/dev/redriver2-ref/src_rebuild/Game")
+DUMP = os.environ.get("D2_SYMBOL_DUMP", os.path.expanduser("~/dev/redriver2-old/symbols/spanish_dump.h"))
+R2 = os.environ.get("REDRIVER2_GAME", os.path.expanduser("~/dev/redriver2-ref/src_rebuild/Game"))
 
 
 def d2_hint(sym):

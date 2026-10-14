@@ -19,7 +19,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 B = os.path.join(ROOT, "build", "fnscore")
 FN = os.path.join(ROOT, "asm_fn", "nonmatchings", "main")
 EXE = os.path.join(ROOT, "orig", "SLUS_008.42")
-OBJDIFF = os.path.expanduser("~/.local/opt/decomp/objdiff-cli")
+OBJDIFF = os.environ.get("OBJDIFF", os.path.expanduser("~/.local/opt/decomp/objdiff-cli"))
 AS = ["mips-linux-gnu-as", "-EL", "-Iinclude", "-march=r3000", "-mtune=r3000", "-no-pad-sections", "-G0"]
 CPP = [os.path.join(ROOT, "compilers", "gcc-2.7.2-psx", "cpp"), "-Iinclude", "-Iinclude/shim", "-Iinclude/psyq", "-Isrc", "-undef", "-Wall", "-lang-c", "-nostdinc",
        "-Dmips", "-D__GNUC__=2", "-D__OPTIMIZE__", "-D__mips__", "-D__mips", "-Dpsx", "-D__psx__", "-D__psx",
