@@ -389,3 +389,6 @@ func_000342D4	LoadRegionData	f-05
 D_000972B0	spoolcounter	f-05
 D_000BE4F8	tpageslots	f-05
 D_00097270	AreaTPages	f-05
+func_0005DBDC	DrawCiv	b129
+func_0005DB30	DrawAllCivs?	b129
+func_00045460	RoundShadow	b129
