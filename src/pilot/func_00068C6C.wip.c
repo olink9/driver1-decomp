@@ -1,8 +1,9 @@
+/* FAKEMATCH: case 93 relies on a dead store (p = 0; p = &D_000C017C;) to steer the compiler - counted as fake until a natural form is found. */
 /* func_00068C6C: mission script (DMS) interpreter step (no Driver 2 counterpart).
- * WIP 99.32: remaining diffs
- *  - case 69: t (&obj->tgt[i]) gets v1 (tied to the index temp) where the target uses a2.
- *  - case 106/109 shared jump tail: target has a copy `addu v1,s6,zero` in the bgez delay slot
- *    (a pseudo holding obj that survives cse-skip-blocks); not reproduced.
+ * Notes from matching:
+ *  - case 69: t->vx/t->vy/t->vz store order decides which register t gets.
+ *  - cases 106/109: `lab = obj->label` written in BOTH arms of an if/else keeps the obj copy
+ *    (addu v1,s6,zero) alive past cse-skip-blocks and puts it in the bgez delay slot.
  *  - case 93: `p = 0; p = &D_000C017C;` sets p twice so loop.c does not hoist the address
  *    (one set = hoisted and spilled into t3); probably not the original form. */
 typedef struct { int vx, vy, vz, pad; } VEC;
@@ -466,8 +467,8 @@ void func_00068C6C(OBJ *obj)
                 if (e->b < v)
                     e->b = v;
                 e->e = t;
-                t->vy = 0x7FFFFFFF;
                 t->vx = q[2];
+                t->vy = 0x7FFFFFFF;
                 t->vz = q[3];
                 e->d |= 1;
                 obj->f298++;
@@ -696,9 +697,12 @@ void func_00068C6C(OBJ *obj)
         case 106:
             {
                 int v = q[0];
-                int **lab = obj->label;
-                if (v < 0)
+                int **lab;
+                if (v < 0) {
                     v = ~v;
+                    lab = obj->label;
+                } else
+                    lab = obj->label;
                 cont = 0;
                 obj->pc = lab[v];
             }
@@ -737,10 +741,14 @@ void func_00068C6C(OBJ *obj)
                 v[1] = D_0008BD58[q[1]].nx;
                 if (*v[0] == *v[1]) {
                     int w = q[2];
-                    if (w < 0)
+                    int **lab;
+                    if (w < 0) {
                         w = ~w;
+                        lab = obj->label;
+                    } else
+                        lab = obj->label;
                     cont = 0;
-                    obj->pc = obj->label[w];
+                    obj->pc = lab[w];
                 }
 
             }
