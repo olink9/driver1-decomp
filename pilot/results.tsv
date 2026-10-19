@@ -929,3 +929,5 @@ time	symbol	size	best	attempts	status
 2026-10-19T19:03:48	func_000307E8	20	100	1	matched	run2 coordinator
 2026-10-19T19:04:00Z	func_00062DB0	868	80.73	12	gave_up	run2
 2026-10-19T19:04:25	func_00043270	0	100	1	matched	run2 coordinator (absolute syms in undefined_syms_auto.txt)
+2026-10-19T19:08:24Z	func_0005474C	3556	100.0	3	matched	run2-large
+2026-10-19T19:09:17Z	func_00032088	3428	100.0	8	matched	run2-large

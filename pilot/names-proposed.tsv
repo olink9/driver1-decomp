@@ -336,3 +336,12 @@ func_0004D7E4	Start3DSoundVolPitch	r2-037
 func_0004E4B0	GetFreeChannel	r2-037
 func_0004D968	CompleteSoundSetup	r2-037
 func_00052C10	DrawAnimatingObject	r2-039
+func_0005474C	DrawOverheadMap	b124
+func_00074CAC	SetDrawArea	b124 (from args)
+func_0007EAC4	RotTrans	b124 (from args)
+func_000563CC	SetMapPos	b124
+func_000564A4	draw_box	b124
+func_00054618	FlashOverheadMap	b124
+func_00055A20	DrawSightCone	b124
+func_00053E54	DrawCompass	b124
+func_00056278	LoadMapTile	b124
