@@ -16,17 +16,16 @@ static inline unsigned char chk(short k)
 
 void func_00021DE8(void)
 {
-    int i = 0;
-    int off = i;
-    for (; i < D_000967A8; i++, off += 16) {
-        E16 *e = AT(off);
+    int i;
+    for (i = 0; i < D_000967A8; i++) {
+        E16 *e = AT(i * 16);
         unsigned char t = e->b7 & D_00086710[e->b6];
         if (t == 0) {
-            if (chk(i) == 0) AT(off)->b11 = 0x82;
-            else AT(off)->b11 = 0x83;
+            if (chk(i) == 0) (&D_00097044[i])->b11 = 0x82;
+            else (&D_00097044[i])->b11 = 0x83;
         } else if (t == D_00086710[e->b6]) {
-            if (chk(i) == 0) AT(off)->b11 = 0x80;
-            else AT(off)->b11 = 0x81;
+            if (chk(i) == 0) (&D_00097044[i])->b11 = 0x80;
+            else (&D_00097044[i])->b11 = 0x81;
         } else {
             e->b11 = 0;
         }

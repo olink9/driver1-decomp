@@ -25,7 +25,7 @@ extern void func_0004EB7C();
 
 void func_0003DC00(void)
 {
-    int dx, dy, dz, d, ang;
+    int dx, dy, dz, d, ang, r, t, n, y;
     unsigned short pad;
 
     if (*(int *)&D_0009687C == 0 || *(int *)&D_00096DA8 == 2) {
@@ -52,11 +52,14 @@ void func_0003DC00(void)
             D_0008A8F0.vy = *(int *)&D_0008A1E0 - D_000BE9B4.vy;
             D_0008A8F0.vz = D_000BE9B4.vz + D_00096A60;
         } else {
-            D_00096A58 += ((((D_00096A6C - D_00096A58) + 0x800) & 0xfff) - 0x800) / 8;
-            D_00096A58 &= 0xfff;
-            ang = (D_00096A58 - (D_00096A78 >> 16)) & 0xfff;
+            t = D_00096A58;
+            t += (((D_00096A6C - t + 0x800) & 0xfff) - 0x800) / 8;
+            t &= 0xfff;
+            D_00096A58 = t;
+            ang = (t - (D_00096A78 >> 16)) & 0xfff;
             D_0008A8F0.vx = D_000BE9B4.vx + D_0008EAA8[ang * 2] * D_00096A60 / 4096;
-            D_0008A8F0.vy = *(int *)&D_0008A1E0 - D_000BE9B4.vy;
+            y = D_000BE9B4.vy;
+            D_0008A8F0.vy = *(int *)&D_0008A1E0 - y;
             D_0008A8F0.vz = D_000BE9B4.vz + D_0008EAA8[ang * 2 + 1] * D_00096A60 / 4096;
         }
         dx = D_000BE9B4.vx - D_0008A8F0.vx;

@@ -6,7 +6,8 @@ extern int D_000973C8;
 #define B(x) (*(unsigned char *)&x)
 #define I(x) (*(int *)&x)
 extern VEC D_0008A8F0;
-extern int D_00096C48[];
+typedef struct { short vx, vy, vz, pad; } SVEC;
+extern SVEC D_00096C48;
 extern PL D_0009B0A4[];
 extern int func_0003D600();
 extern void func_00077D6C(), func_0004EB7C();
@@ -22,7 +23,7 @@ void func_0003D4D0(int idx, int zoom)
         temp.vx = lp->bx;
         temp.vy = -lp->by;
         temp.vz = lp->bz;
-        d = func_0003D600(&D_0008A8F0, &temp, D_00096C48);
+        d = func_0003D600(&D_0008A8F0, &temp, &D_00096C48);
         D_000973C8 = d;
         if (d > 0x6978) {
             B(D_00096897) = 0;

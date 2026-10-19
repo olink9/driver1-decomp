@@ -76,7 +76,7 @@ void func_0003B208(int car, MATRIX *RearMatrix, VECTOR *pos, int unused, int cos
     SVECTOR *p;
     int FrontWheelIncrement, BackWheelIncrement;
     int sn, cs;
-    int a, b, c;
+    int a, b; short c;
     int loop;
 
     cp = &D_0009B0A4[car];

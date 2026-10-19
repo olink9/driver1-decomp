@@ -6,22 +6,24 @@ void func_0005BF2C(int i, int *out, char *a, char *b)
 {
     unsigned char *p;
     unsigned char c;
+    unsigned char **pp;
     unsigned u;
     int v;
     int x;
     volatile int t;
     volatile int *q;
 
-    p = D_000BEED4[i];
+    pp = &D_000BEED4[i];
+    p = *pp;
+    q = &t;
     c = D_00097654[i];
     x = (p[0] << 8) | p[1];
     if (c >= p[2]) {
-        D_000BEED4[i] = p + 3;
+        *pp = p + 3;
         D_00097654[i] = 0;
     } else {
         D_00097654[i] = c + 1;
     }
-    q = &t;
     *q = x;
     u = t;
     t = u & 0xA0FC;

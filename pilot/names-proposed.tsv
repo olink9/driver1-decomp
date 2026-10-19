@@ -323,3 +323,6 @@ func_000650E4	NoteFelony	b118 likely
 func_0003FAE8	ApplyDamage	b118 likely
 func_0004157C	CreateBirds	b118 likely
 func_00047FA4	Setup_Sparks	b118 likely
+func_0006F81C	GetPeriod?	r2-013 (takes note, c2spd)
+func_000710D0	SetPer	r2-013
+func_0006ADFC	SetColourByValue	r2-013

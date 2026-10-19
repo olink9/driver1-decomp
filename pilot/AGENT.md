@@ -211,3 +211,11 @@ real proof. fnscore 100 is necessary, linkcheck pass is what counts. Hand-writte
 - (r2-008) `*(short *)(p+off) = 0` through a char* keeps later gp loads below the stores; model the object as a real struct (`p->f18 = 0`).
 - (r2-008) Mixing a local alias and the global for the same array (`t = D` plus `D[i]`) is what makes the target recompute `t + i*4` twice with flipped operands - write it the same mixed way to match, or all through one local to merge.
 - (r2-008) Store order to one struct is reshuffled by the scheduler, so the target's order isn't the source order; try the natural order (x/y before r0/g0/b0).
+- (r2-013) Array address as `lui aN; addiu aN,aN,%lo` (same reg) = `extern long long D_x;` cast `(T *)&D_x`; split `lui vX; addiu aN,vX` = unsized `T D_x[]`.
+- (r2-013) `sh; lhu` reload of a just-stored field = the field is `unsigned short`. `beqz x; bne x,2` to the same code = `switch` with `case 0: break;`.
+- (r2-012) A constant computed after a call when expected before: pass it as an argument to the static inline (substitution changes RTL order). Real local struct sizes come from the slot gaps; a struct at the shared temp base belongs in its own inline.
+- (r2-012) Pointer/counter swap with the pointer bumped in the delay slot: write a plain indexed `for` (`D[a][i]`) and let loop.c strength-reduce.
+- (r2-010) Loop-counter init in the delay slot of an earlier if/else: a redundant `i = 23;` right after the if/else (legal C). A parameter reused as a temp keeps its a-reg; use a fresh local when the target has a t-reg.
+- (r2-010) Missing `move aN,vX` before a call = the original called a wrapper (e.g. seed() -> push()), not the callee directly.
+- (r2-015) Array lui/addiu before the index sll when the target does sll first: `T **pp = &D_x[i]; p = *pp; ... *pp = p + 3;`. An extra `addu tN,sp,zero` = a `volatile int *q = &t;`.
+- (r2-016) Loop over a global array: start/current pointers from a local `base`, but the bound against the global (`p < &D_x[N]`) so loop.c hoists it and base dies early. Two copies of a counter stepping by 16 and 0x10000 = a plain `for (i...)` with `&D[i]` and a `short` use of i.

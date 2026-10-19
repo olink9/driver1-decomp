@@ -1,5 +1,5 @@
 typedef struct BUF { unsigned a; int ot; unsigned c; } BUF;
-extern int D_00097534;
+extern volatile int D_00097534;
 extern BUF *D_00097530;
 extern BUF *D_00097524;
 extern int D_00096CB0;
@@ -32,10 +32,8 @@ void func_000513D4(void)
     a = D_00097530->a;
     if (c + lim < a) {
         printf(D_00010954, c - (a - lim));
-        if (D_00097534 != 0x78654321)
-            do {
-                __asm__ volatile("break 1024");
-            } while (D_00097534 != 0x78654321);
+        while (D_00097534 != 0x78654321)
+            __asm__ volatile("break 1024");
     }
     D_00097530->a = D_00097530->c;
     func_00074684(D_00097524->ot + 0x41FC);

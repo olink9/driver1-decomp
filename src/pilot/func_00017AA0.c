@@ -12,6 +12,7 @@ int func_00017AA0(unsigned char type)
 {
     int best = -1;
     int bestidx = -1;
+    CAR *base;
     CAR *car;
     CAR *cur;
     ENT *e;
@@ -19,8 +20,9 @@ int func_00017AA0(unsigned char type)
     unsigned char ok;
     int r;
 
-    car = &D_0009B0A4[1];
-    cur = &D_0009B0A4[*(int *)&D_00096884];
+    base = D_0009B0A4;
+    car = base + 1;
+    cur = base + *(int *)&D_00096884;
     e = D_00098950;
     i = 0;
     for (; car < &D_0009B0A4[23]; car++, e++, i++) {

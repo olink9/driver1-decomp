@@ -1,4 +1,4 @@
-/* func_0006B4AC - no Driver 2 counterpart: mission HUD (timers/messages). WIP 97.99: case 0x16 stack layout (t should be at sp+0x20, inline buf at 0x50 - temp-slot order), andi/li order after sprintf, sll delay slot before bltz */
+/* func_0006B4AC - no Driver 2 counterpart: mission HUD (timers/messages). */
 typedef struct { int type; char *s1; char *s2; int pad; } MSG;
 typedef struct { int f[12]; } TIMER;
 typedef struct {
@@ -74,7 +74,7 @@ static inline void ShowLap(int v)
     func_0005C7D0(0xFF, 0xFF, 0x40);
 }
 
-static inline void ShowTime(char *tbl, int n, int *v)
+static inline void ShowTime(char *tbl, int n, int *v, int k)
 {
     char buf[8];
     int w;
@@ -83,13 +83,25 @@ static inline void ShowTime(char *tbl, int n, int *v)
     func_0006B450(tbl, n);
     func_0005C7D0(0x80, 0x80, 0x80);
     len = sprintf(buf, D_00096EF0, v[0]);
-    w = func_0005CF10((short)(0x197 + (1 - len) * 26), 0x18, buf);
+    w = func_0005CF10((short)(0x197 + (k - len) * 26), 0x18, buf);
     func_0005C7D0(0x80, 0x80, 0x80);
     if (v[1] != 0x7FFFFFFF)
         sprintf(buf, D_00096EF4, v[1]);
     else
         sprintf(buf, D_00096EF8);
     func_0005CC68(buf, w, 0x25);
+}
+
+typedef struct { int f[10]; } TIMER10;
+
+static inline void Show16(GS *gs)
+{
+    int a = gs->t.f[7], b = gs->t.f[6], c = gs->t.f[8];
+    TIMER10 t;
+    t.f[6] = c;
+    t.f[0] = a;
+    t.f[1] = b;
+    ShowTime(D_0008C288, 6, t.f, 1);
 }
 
 void func_0006B4AC(GS *gs)
@@ -105,14 +117,9 @@ void func_0006B4AC(GS *gs)
     if (*(int *)&D_000967F4 == 0x11) {
         func_0006AF48(&gs->t.f[2], 0x171, 0x18);
     } else if (*(int *)&D_000967F4 == 0x12) {
-        ShowTime(D_0008C228, 2, &gs->t.f[2]);
+        ShowTime(D_0008C228, 2, &gs->t.f[2], 1);
     } else if (*(int *)&D_000967F4 == 0x16) {
-        int a = gs->t.f[7], b = gs->t.f[6], c = gs->t.f[8];
-        TIMER t;
-        t.f[8] = c;
-        t.f[2] = a;
-        t.f[3] = b;
-        ShowTime(D_0008C288, 6, &t.f[2]);
+        Show16(gs);
     } else if (*(int *)&D_000967F4 == 0x13) {
         ShowCount(gs->t.f[8]);
     }
@@ -142,7 +149,8 @@ void func_0006B4AC(GS *gs)
     }
     if (D_000C6F04.f114) {
         if (snd >= 0) {
-            if ((s = D_0008BD58[snd].s1) != 0 || (s = D_0008BD58[snd].s2) != 0) {
+            MSG *m = &D_0008BD58[snd];
+            if ((s = m->s1) != 0 || (s = m->s2) != 0) {
                 if (*(int *)&D_0009687C == 0)
                     func_0005C8F4(s, 0x54);
             }

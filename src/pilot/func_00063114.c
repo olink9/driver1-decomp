@@ -1,4 +1,4 @@
-/* WIP 98.63: only register allocation differs (g in a3 vs t6, push copies).
+/* (run 2 match)
  * func_00063114: A* search over the 64x64 cop/path map from map cell `start`
  * (offset x,z from the centre) towards the centre cell D_000C241C. */
 typedef struct {
@@ -94,6 +94,7 @@ int func_00063114(OBJ *obj, int x, int z, int start)
     int mask;
     int cost;
     int inheap;
+    int g;
     unsigned char b;
 
     if (abs(x) >= 28) return 0;
@@ -133,7 +134,7 @@ int func_00063114(OBJ *obj, int x, int z, int start)
         if (cell == goal)
             return func_00061F5C(obj, x, z);
         mask = 0;
-        start = cell->dist - hdist(cell);
+        g = cell->dist - hdist(cell);
         if (cell[-1].type & 0x1E) mask = 0x101;
         if (cell[-64].type & 0x1E) mask |= 4;
         if (cell[1].type & 0x1E) mask |= 0x10;
@@ -148,14 +149,17 @@ int func_00063114(OBJ *obj, int x, int z, int start)
                     continue;
                 cost += 2;
             }
-            cost += start + hdist(nb);
+            idx = nb - (D_000C241C - 0x820);
+            dx = (idx & 0x3F) - 32;
+            dz = (idx >> 6) - 32;
+            cost = g + cost + (abs(dx) + abs(dz)) * 2;
             b = nb->heapidx;
             inheap = b != 0xFF && b != 0;
             if (b != 0 && nb->dist < cost)
                 continue;
             nb->dist = cost;
             if (!inheap)
-                push(nb, cost);
+                seed(nb, cost);
         }
     }
     return 0;

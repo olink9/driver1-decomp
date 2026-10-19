@@ -11,7 +11,7 @@ extern char D_000A801F[];
 extern int D_00096A08;
 extern long long D_000967EC;
 extern char D_00096A0C[];
-extern char D_00096A10[];
+extern char D_00096A10[4];
 extern int func_0007AED4();
 extern int func_0007AF94();
 extern void func_0007B198();

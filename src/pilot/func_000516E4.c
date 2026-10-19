@@ -1,5 +1,5 @@
 extern short D_00086F30[];
-extern short D_00087030[];
+extern short D_00087030[][32];
 extern int D_0009757C;
 extern void func_00035B5C();
 extern void func_00074404();
@@ -11,25 +11,18 @@ int func_000516E4(short *a0, short *a1, int a2, int *a3)
     int n;
     int i;
     short r[4];
-    short *q;
 
     n = *a3;
     a3++;
-    i = 0;
-    if (n > 0) {
-        q = D_00087030 + a2 * 32;
-        do {
-            func_00074404(a1, a3);
-            a3 += 8;
-            *q = func_0007A7F4(a1[0], a1[1]);
-            a1[0] += 16;
-            if (a1[0] == 0x400) {
-                a1[0] = 0x3C0;
-                a1[1] += 1;
-            }
-            i++;
-            q++;
-        } while (i < n);
+    for (i = 0; i < n; i++) {
+        func_00074404(a1, a3);
+        a3 += 8;
+        D_00087030[a2][i] = func_0007A7F4(a1[0], a1[1]);
+        a1[0] += 16;
+        if (a1[0] == 0x400) {
+            a1[0] = 0x3C0;
+            a1[1] += 1;
+        }
     }
     r[0] = a0[0];
     r[1] = a0[1];
