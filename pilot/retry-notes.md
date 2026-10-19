@@ -16,3 +16,4 @@
 - systemic (r2-038): the world-to-cell lookup (/1500, /60 and %60, D_0009D8F4 or D_0009E724[sel][lz][lx]) in 00021690, 00020AE4, 00064360 (and 000143CC, 00021820, 0005BDF8?) - both quotients before both remainders; sched2 moves the x remainder between mult z and mfhi. Crack once, apply to all.
 - (r2-042) file-scope __asm__ + .set noreorder matched func_0002680C exactly - try it on the j-stubs func_00030464 / func_000307E8.
 - FIXED (coordinator): the j-stubs - maspsx inserts the nop after j even under .set noreorder, so the asm source must NOT have its own delay-slot nop. Both pass linkcheck.
+- FIXED (coordinator): func_00043270 passes with D_001E4038/D_001E40A0 defined by hand at the end of undefined_syms_auto.txt.

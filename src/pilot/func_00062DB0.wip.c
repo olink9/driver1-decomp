@@ -1,3 +1,4 @@
+/* run2 r2-041: 80.73. Fixed hoist order (x first), D_00098950 as 8-byte form (not hoisted), z0 = (cam.z+750) - car.z. Left: D_0008EAA8+2 base loses its hard reg (rematerialized) and the len/t-reg allocation. */
 typedef struct {
     char pad0[0xC8];
     int x;          /* 0xC8 */
@@ -29,12 +30,13 @@ typedef struct {
     int z;      /* 0x54 */
 } MAP;
 
-extern SLOT D_00098950[];
+extern long long D_00098950;
 extern CAR D_0009B230[];
 extern CAM D_0009E714;
 extern short D_0008EAA8[];
 extern CELL D_000C039C[];
 
+static inline int add750(int v) { return v + 750; }
 #define FIX(a) (((a) + 2048) >> 12)
 
 void func_00062DB0(MAP *m)
@@ -57,23 +59,22 @@ void func_00062DB0(MAP *m)
 
     for (i = 0; i < 22; i++) {
         car = &D_0009B230[(unsigned char)i];
-        s = &D_00098950[(unsigned char)i];
+        s = &((SLOT *)&D_00098950)[(unsigned char)i];
         if (s->active == 0)
             continue;
         if (s->id == m->id + 1)
             continue;
-        pass = 0;
-        tb = &D_0008EAA8[(car->ang & 0xFFF) * 2];
-        ns = -tb[0];
-        c = tb[1];
-        len = car->len * 20 + 450;
+        x = car->x + D_0009E714.x;
+        ns = -D_0008EAA8[(car->ang & 0xFFF) * 2];
+        c = D_0008EAA8[(car->ang & 0xFFF) * 2 + 1];
         stepx = FIX(ns * 750);
         stepz = FIX(c * 750);
-        x = car->x + D_0009E714.x;
-        x1 = x + FIX(c * 180 + ns * -900);
-        pos[0] = x + FIX(ns * -900 - c * 180);
-        z0 = D_0009E714.z - car->z + 750;
+        z0 = add750(D_0009E714.z) - car->z;
         pos[1] = z0 + FIX(c * -900 - ns * 180);
+        len = car->len * 20 + 450;
+        pos[0] = x + FIX(ns * -900 - c * 180);
+        x1 = x + FIX(c * 180 + ns * -900);
+        pass = 0;
     next:
             if (pass) {
                 pos[0] = x1;

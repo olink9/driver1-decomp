@@ -1,0 +1,3 @@
+/* Absolute RAM past bss that the original reaches with a literal lui 0x1E (run 2, damage_object func_00043270). Kept out of the generated undefined_syms_auto.txt. */
+D_001E4038 = 0x1E4038;
+D_001E40A0 = 0x1E40A0;

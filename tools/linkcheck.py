@@ -321,7 +321,7 @@ def link(script, tag):
     elf = os.path.join(LC, "out", tag + ".elf")
     exe = elf[:-4] + ".exe"
     os.makedirs(os.path.dirname(elf), exist_ok=True)
-    r = sh([LD, "-EL", "-T", "undefined_syms_auto.txt", "-T", "undefined_funcs_auto.txt", "-T", script,
+    r = sh([LD, "-EL", "-T", "undefined_syms_auto.txt", "-T", "undefined_syms_manual.txt", "-T", "undefined_funcs_auto.txt", "-T", script,
             "-Map", elf[:-4] + ".map", "--no-check-sections", "-o", elf])
     if r.returncode:
         raise LinkErr("ld: " + " | ".join(l for l in r.stderr.strip().split("\n")[:4]))

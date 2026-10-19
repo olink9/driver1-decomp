@@ -927,3 +927,5 @@ time	symbol	size	best	attempts	status
 2026-10-19T19:02:28Z	func_000514E0	96	100.0	1	matched	run2
 2026-10-19T19:03:48	func_00030464	16	100	1	matched	run2 coordinator (maspsx adds the j delay nop)
 2026-10-19T19:03:48	func_000307E8	20	100	1	matched	run2 coordinator
+2026-10-19T19:04:00Z	func_00062DB0	868	80.73	12	gave_up	run2
+2026-10-19T19:04:25	func_00043270	0	100	1	matched	run2 coordinator (absolute syms in undefined_syms_auto.txt)
