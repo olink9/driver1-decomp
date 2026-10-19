@@ -1,6 +1,7 @@
 /* FAKEMATCH: the func_00026F28 / func_00031048 table entries use extra __asm__ alias names so CSE keeps
  * them apart (the original probably referenced distinct asm labels at those addresses). */
-/* WIP 97.80: only the rcossin/plane prologue is scheduled differently (load order of the six sin/cos values). */
+/* rcossin prologue (run2-r3): five loads are written as *(short *)((int)D_0008EAAA + i*4 [- 2]) (scalar MEMs, so they
+ * conflict with the D_00096998 = 0 store and pin its position); leftcos stays an array ref (MEM_IN_STRUCT, free). */
 /* func_0002C8FC: Driver 1 DrawMapPSX (Driver 2: DrawMapPSX, draw.c) - row/column walk of the visible cells */
 #include "common.h"
 #include "gte.h"
@@ -135,17 +136,17 @@ void func_0002C8FC(void)
     blist = (CELL_OBJECT **)0x1F800170;
     slist = (CELL_OBJECT **)0x1F800200;
 
-    leftcos = D_0008EAAA[((*(short *)&D_00096C4A + D_000971B4 / 2) & 0xfff) * 2];
-    backcos = D_0008EAAA[((*(short *)&D_00096C4A + 0x400) & 0xfff) * 2];
-    rightcos = D_0008EAAA[((*(short *)&D_00096C4A - D_000971B4 / 2) & 0xfff) * 2];
-    backsin = D_0008EAAA[((*(short *)&D_00096C4A + 0x400) & 0xfff) * 2 - 1];
-    leftsin = D_0008EAAA[((*(short *)&D_00096C4A + D_000971B4 / 2) & 0xfff) * 2 - 1];
-    rightsin = D_0008EAAA[((*(short *)&D_00096C4A - D_000971B4 / 2) & 0xfff) * 2 - 1];
-    rightPlane = -((rightcos + rightsin) * 9) - 8144;
-    backPlane = -((backcos + backsin) * 9) + 6144;
-    leftPlane = -((leftcos + leftsin) * 9) + 8144;
-
+    rightcos = *(short *)((int)D_0008EAAA + ((*(short *)&D_00096C4A - D_000971B4 / 2) & 0xfff) * 4);
+    rightsin = *(short *)((int)D_0008EAAA + ((*(short *)&D_00096C4A - D_000971B4 / 2) & 0xfff) * 4 - 2);
+    leftsin = *(short *)((int)D_0008EAAA + ((*(short *)&D_00096C4A + D_000971B4 / 2) & 0xfff) * 4 - 2);
+    backsin = *(short *)((int)D_0008EAAA + ((*(short *)&D_00096C4A + 0x400) & 0xfff) * 4 - 2);
     D_00096998 = 0;
+    backcos = *(short *)((int)D_0008EAAA + ((*(short *)&D_00096C4A + 0x400) & 0xfff) * 4);
+    rightPlane = -((rightcos + rightsin) * 9) - 8144;
+    leftcos = D_0008EAAA[((*(short *)&D_00096C4A + D_000971B4 / 2) & 0xfff) * 2];
+    leftPlane = -((leftcos + leftsin) * 9) + 8144;
+    backPlane = -((backcos + backsin) * 9) + 6144;
+
 
     if (*(int *)&D_00096804 == 0)
         func_00053828();
@@ -380,3 +381,4 @@ void func_0002C8FC(void)
     if (tiles)
         func_0002EB94(tiles);
 }
+
