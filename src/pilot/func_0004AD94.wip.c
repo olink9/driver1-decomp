@@ -1,3 +1,6 @@
+/* run2-r3: remaining is allocation only. dx*dx in a fresh local gives target a0 (cellz keeps t0) but then sched1
+ * puts the dz chain first; bs-first sums (bs + (speed+580)) tie the sum to bs but sched the speed lw first. Swept:
+ * 19x2 reuse vars, 13x11 var pairs, 160 bs/s/sum statement placements, inline add580(), short/int bs. */
 /* best 99.95 (run2-large b127). Only diff: 4 rows of block-local registers in the bounding-sphere test
  * (target: dx*dx in a0, sphere sum written into the bounding_sphere reg - addu v1,v1,v0; here a1/t2 and addu v0,v0,v1).
  * dz*dz stored into cellz reproduces the target t0 (reuse of the cell variable is probably original).

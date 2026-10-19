@@ -1,3 +1,7 @@
+/* WIP 99.91 (run2-r3 diagnosis): only the mfhi register of the first two /1500 (target t0, ours v0).
+ * .greg: the hi-part pseudos start in HI; the px mult (pos[0]/1500) sits inside the z hi span, so reload spills HI
+ * and retries both into the first free GPR (v0). Target needs v0..a3 unavailable at retry (or a different HI winner).
+ * Tried: all 3-divide statement orders with temps (30), declaration perms (120), inline cell(), PLAYER* locals. */
 typedef struct {
     unsigned char id;      /* 0x00 */
     unsigned char active;  /* 0x01 */

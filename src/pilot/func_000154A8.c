@@ -146,7 +146,7 @@ static inline int Nearest(int x, int z)
     return min;
 }
 
-int func_000154A8(int id, int road, int flag, int x, int z)
+int func_000154A8(int id, int road, unsigned char flag, int x, int z)
 {
     CIV *cp;
     CAR *car;
@@ -173,6 +173,7 @@ int func_000154A8(int id, int road, int flag, int x, int z)
 
     if (road != -1) {
         if (ty == 1) {
+            unsigned char odir;
             if (D_00096780 || D_0009677C) {
                 dir = 3;
                 if (roads[road].x0 * 1500 < *(int *)&D_0009D500)
@@ -196,7 +197,7 @@ int func_000154A8(int id, int road, int flag, int x, int z)
                 odir = 3;
                 break;
             }
-            if ((unsigned char)flag == 1)
+            if (flag == 1)
                 cp->x24 = odir;
             else
                 cp->x24 = dir;
@@ -216,7 +217,7 @@ int func_000154A8(int id, int road, int flag, int x, int z)
                 odir = 2;
                 break;
             }
-            if ((unsigned char)flag == 1)
+            if (flag == 1)
                 cp->x24 = odir;
             else
                 cp->x24 = dir;
@@ -331,7 +332,7 @@ int func_000154A8(int id, int road, int flag, int x, int z)
     if (road != -1)
         car->xF8 = cp->x24 << 10;
     else
-        car->xF8 = (unsigned char)flag << 10;
+        car->xF8 = flag << 10;
     cp->x40 = cp->x44 = 0x7FFFFFFF;
     cp->x38 = 0;
     cp->x3C = 0x82;

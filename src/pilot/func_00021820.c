@@ -1,7 +1,4 @@
-/* WIP 94.55 (run2 r2-023): switch temps now block-local (u). Remaining: target computes cx%60/cz%60 in place
-   (cx -= xc*60 etc.); doing that here frees one pseudo and cz then lands in a1 (param z reg) instead of t0,
-   shifting x/z/dir copies (t6/t5/t4). Needs a form where cz conflicts with a1.
-   func_00021820 - no Driver 2 counterpart: locate the road segment at (x, z) for a heading */
+/* func_00021820 - no Driver 2 counterpart: locate the road segment at (x, z) for a heading */
 typedef struct {
     int d0, d1;
     short f8, fA, fC, fE, f10;
@@ -57,11 +54,9 @@ int func_00021820(int x, int z, unsigned char dir, SEG *seg)
     cz = (t - z) / 1500;
     if (cx < 0 || cx >= D_0009E714[0] || cz < 0 || cz >= D_0009E714[1])
         return -1;
-    t = *(int *)&D_00097374;
-    zc = cz / 60;
-    xc = cx / 60;
-    idx = (((t - zc) & 1) << 1) + (xc & 1);
-    cell = (cz % 60) * 60 + cx % 60;
+    zc = cz / 60; xc = cx / 60; cx -= xc * 60; cz -= zc * 60; zc = *(int *)&D_00097374 - zc;
+    idx = (xc & 1) + ((zc & 1) << 1);
+    cell = cz * 60 + cx;
     id = D_0009E724[idx][cell];
     info = D_0009D8F4[idx][cell];
     seg->d1 = 0x7FFFFFFF;

@@ -35,10 +35,10 @@ static inline int GetCell(int cx, int cz)
     rx = cx / rs;
     rz = cz / rs;
     ra = *(int *)&D_00096A24 / rs;
-    cz -= rz * rs;
-    cx -= rx * rs;
-    region = rx + rz * ra;
     idx = (rx & 1) + (rz & 1) * 2;
+    cx -= rx * rs;
+    cz -= rz * rs;
+    region = rx + rz * ra;
 
     if (D_0009E734[idx] == region)
         return (*(unsigned short **)&D_000970E0)[idx * rs * rs + cx + cz * rs];
@@ -66,7 +66,8 @@ int func_0004A9F4(int *pos)
                 dx = co->x - pos[0];
                 dz = co->z - pos[2];
                 r = m->radius + 0x244;
-                if (dx * dx + dz * dz < r * r)
+                r = r * r;
+                if (dx * dx + dz * dz < r)
                     return 0;
             }
             num = pc->next;

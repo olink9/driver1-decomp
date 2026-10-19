@@ -1,3 +1,7 @@
+/* r3-02: only diff is the prologue lui: target lui v0 / addiu a0,v0,%lo(D_0009B0A4), ours lui a0 / addiu a0,a0.
+ * Cause: local-alloc ties the HIGH pseudo to the address pseudo because the address pseudo is local to
+ * block 0 with one death (proved: any later use of c in another block gives the split lui v0 form).
+ * Tried: no local / [0] / struct / int[] form, register asm("$4"), set twice, inline sub(), extra uses. */
 typedef struct { int vx, vy, vz; } V3;
 typedef struct {
     int x, y, z;

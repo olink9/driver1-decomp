@@ -121,8 +121,8 @@ void func_0004ED34(void)
         D_000BDE40[i].u3 = (rect.x << 2) + 63;
         D_000BDE40[i].v0 = rect.y;
         D_000BDE40[i].v1 = rect.y;
-        D_000BDE40[i].v2 = rect.y + rect.h - 1;
-        D_000BDE40[i].v3 = rect.y + rect.h - 1;
+        { unsigned char ty = rect.y; D_000BDE40[i].v2 = rect.h + ty - 1; }
+        { unsigned char ty = rect.y; D_000BDE40[i].v3 = rect.h + ty - 1; }
 
         bmp += offs[i + 1] - offs[i];
         rect.x += 16;

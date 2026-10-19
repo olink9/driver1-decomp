@@ -1,5 +1,4 @@
-/* run2 (r2-004): all 24 orderings of the 4 stores in the f30>10 block tried; sched1 always puts li 0x16/sw f38 before lw f34. */
-/* func_00065424 - no Driver 2 counterpart (cop car chase/steering control). Best 99.73: only diff is sched order of lw f34 vs li 0x16 in the f30>10 block */
+/* FAKEMATCH: volatile casts on s->f34 (load) and s->f38 (store) in the f30>10 block only order the two accesses for sched1 (lw f34 before sw f38, so 0x16 gets v1); real source form unknown. */
 typedef struct { int vx, vy, vz, pad; } VEC;
 
 typedef struct {
@@ -187,8 +186,9 @@ void func_00065424(COP *cp)
     else
         s->f30 = 0;
     if (s->f30 > 10 && s->f38 == 0) {
-        s->f34++;
-        s->f38 = 0x16;
+        int q = *(volatile int *)&s->f34;
+        *(volatile int *)&s->f38 = 0x16;
+        s->f34 = q + 1;
         s->f24 = s->f24 < 0 ? 300 : -300;
         s->f30 = 0;
         s->f20 = ((s->f34 * 5 & 6) - 3) << 7;

@@ -24,10 +24,12 @@ void func_000527BC(char *base)
 			i = *(int *)&D_0009683C + 5;
 		}
 		e = (E *)(i * 12 + (int)base);
-		if (e->a != -1)
-			D_000A1AB0[j] = func_00052944(base + (e->a + 0x9C), 0, 1);
-		if (e->b != -1)
-			D_000A1AD0[j] = func_00052944(base + (e->b + 0x9C), 0, 1);
+		t = e->a;
+		if (t != -1)
+			D_000A1AB0[j] = func_00052944(base + (t + 0x9C), 0, 1);
+		t = e->b;
+		if (t != -1)
+			D_000A1AD0[j] = func_00052944(base + (t + 0x9C), 0, 1);
 		t = e->c;
 		if (t != -1)
 			D_000A1AE0[j] = func_00052944(base + (t + 0x9C), 1, 1);

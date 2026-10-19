@@ -1,3 +1,4 @@
+/* func_000143CC - no Driver 2 counterpart: gather the objects of the cells around the player (offset table D_00099B08) */
 typedef struct {
     short model;
     char flag;
@@ -67,10 +68,11 @@ void func_000143CC(void)
         tz = z;
         tx = x;
         qz = tz / 60;
-        z = tz - qz * 60;
         qx = tx / 60;
         x = tx - qx * 60;
-        idx = ((*(int *)&D_00097374 - qz) & 1) * 2 + (qx & 1);
+        z = tz - qz * 60;
+        qz = *(int *)&D_00097374 - qz;
+        idx = (qx & 1) + ((qz & 1) << 1);
         val = ((short (*)[60])D_0009E724[idx])[z][x];
         uval = ((unsigned short (*)[60])D_0009E724[idx])[z][x];
         if (val == -0x8000) {
