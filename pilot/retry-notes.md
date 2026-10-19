@@ -17,3 +17,4 @@
 - (r2-042) file-scope __asm__ + .set noreorder matched func_0002680C exactly - try it on the j-stubs func_00030464 / func_000307E8.
 - FIXED (coordinator): the j-stubs - maspsx inserts the nop after j even under .set noreorder, so the asm source must NOT have its own delay-slot nop. Both pass linkcheck.
 - FIXED (coordinator): func_00043270 passes with D_001E4038/D_001E40A0 defined by hand at the end of undefined_syms_auto.txt.
+- near (r2-043): twins func_00072C18 / func_00072E1C at 99.50 - only the equal branch: target (b0<<18)>>16 (zero-ext of (short)b0<<2), ours sll 16; sra 14. One fix ports to both.

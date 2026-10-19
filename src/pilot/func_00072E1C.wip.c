@@ -18,9 +18,9 @@ extern G72E1C *D_00097818;
 #define EA(b, k) ((b)[(k) * 4 + 0xB1] + ((b)[(k) * 4 + 0xB2] << 8))
 #define EB(b, k) ((b)[(k) * 4 + 0xB3] + ((b)[(k) * 4 + 0xB4] << 8))
 
-static inline short interp(int b0, int c0, int c1, unsigned short x, short a0v, short a1v)
+static inline short interp(short b0, int c0, int c1, unsigned short x, short a0v, short a1v)
 {
-    unsigned short r;
+    int r;
     if (a0v == a1v) {
         r = b0 << 2;
     } else {
@@ -38,7 +38,7 @@ short func_00072E1C(int a0, int flag, int idx)
     unsigned short x = D_0009781C->x;
     unsigned char *b = D_00097818->tab[idx];
     int b0 = EB(b, i);
-    int c0 = b0 << 2;
+    int c0 = b0 * 4;
     int b1 = EB(b, j);
     int c1 = b1 << 2;
     short a0v = EA(b, i);
