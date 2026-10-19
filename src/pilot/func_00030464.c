@@ -5,7 +5,6 @@ __asm__(
     "func_00030464:\n"
     "ori $8, $0, 0x8080\n"
     "mtc2 $8, $23\n"
-    "j .L00030520\n"
-    "nop\n"
+    "j .L00030520\n"  /* maspsx adds the delay-slot nop itself */
     ".set reorder\n"
 );

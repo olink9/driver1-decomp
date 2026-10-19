@@ -10,6 +10,7 @@ extern char D_0001052C[];
 extern int printf();
 #define OUT (*(unsigned short **)&D_000970E0)
 
+static inline void fill(int k) { OUT[k] = 0xFFFF; }
 void func_00035558(void)
 {
     int idx = D_000A7F44.idx;
@@ -18,7 +19,7 @@ void func_00035558(void)
     int *d;
     int mode;
     unsigned short *src;
-    int i, cnt;
+    int i;
 
     D_000972A0 = 0;
     d = D_000A7F44.d;
@@ -27,9 +28,13 @@ void func_00035558(void)
     d += 1;
     src = (unsigned short *)d;
     if (mode == 0) {
-        cnt = n * n;
-        for (i = 0; i < cnt; i++)
-            OUT[base + i] = 0xFFFF;
+        /* guarded do-while: a plain for lets cse_around_loop drop the bound copy */
+        if (n * n > 0) {
+            i = 0;
+            do {
+                OUT[base + i] = 0xFFFF;
+            } while (++i < n * n);
+        }
     } else if (mode == 1) {
         for (i = 0; i < n * n; i++) {
             unsigned short s = *src++;
@@ -42,9 +47,10 @@ void func_00035558(void)
         unsigned short flags = *src++;
         for (i = 0; i < n * n; i++) {
             unsigned short s;
-            if (flags & bit)
-                s = *src++ + D_000AA7D4[idx].v;
-            else
+            if (flags & bit) {
+                s = *src++;
+                s += D_000AA7D4[idx].v;
+            } else
                 s = 0xFFFF;
             OUT[base + i] = s;
             bit >>= 1;

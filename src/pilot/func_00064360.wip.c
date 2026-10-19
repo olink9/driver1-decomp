@@ -47,39 +47,40 @@ void func_00064360(OBJ *obj, int *dx, int *dz, int force)
     int pz;
     int flag;
     int v;
+    int *car;
 
-    cz = (D_0009E714[3] - (D_0009B0A4[52] - 750)) / 1500;
-    cx = (D_0009B0A4[50] + D_0009E714[2]) / 1500;
+    car = D_0009B0A4;
+    cz = D_0009E714[3] - (car[52] - 750);
+    cz /= 1500;
+    cx = (car[50] + D_0009E714[2]) / 1500;
     v = GetCellType(cx, cz);
     flag = 0;
     obj->x = D_00097738;
     obj->z = D_0009773C;
     if (force == 0) {
         if (D_0009770C > 0 && (D_00097724 == 0 || v != 0x1000)) {
-            obj->x = D_0009B0A4[50];
             D_00097724 = 1;
-            D_00097738 = D_0009B0A4[50];
-            obj->z = D_0009B0A4[52];
-            D_0009773C = D_0009B0A4[52];
+            D_00097738 = obj->x = car[50];
+            D_0009773C = obj->z = car[52];
         } else {
             flag = 1;
         }
         if (func_000641C0(obj))
             flag = 1;
     } else {
-        obj->x = D_0009B0A4[50];
-        obj->z = D_0009B0A4[52];
+        obj->x = car[50];
+        obj->z = car[52];
     }
     if (flag) {
-        cx = (obj->x + D_0009E714[2]) / 1500;
-        obj->cx = cx;
-        cz = (D_0009E714[3] - (obj->z - 750)) / 1500;
-        obj->cz = cz;
+        cx = obj->x + D_0009E714[2];
+        cz = D_0009E714[3] - (obj->z - 750);
+        cx = obj->cx = cx / 1500;
+        cz = obj->cz = cz / 1500;
     } else {
-        cx = (obj->x + D_0009E714[2]) / 1500;
-        obj->cx = cx;
-        cz = (D_0009E714[3] - (obj->z - 750)) / 1500;
-        obj->cz = cz;
+        cx = obj->x + D_0009E714[2];
+        cz = D_0009E714[3] - (obj->z - 750);
+        cx = obj->cx = cx / 1500;
+        cz = obj->cz = cz / 1500;
     }
     px = (obj->px + D_0009E714[2]) / 1500;
     pz = (D_0009E714[3] - (obj->pz - 750)) / 1500;

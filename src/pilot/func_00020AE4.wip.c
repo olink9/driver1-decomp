@@ -37,11 +37,9 @@ extern CELLINFO *D_00097044;
 
 static inline short GetCell(int cx, int cz)
 {
-    int rx = cx / 60;
-    int rz = cz / 60;
-    int lx = cx - rx * 60;
-    int lz = cz - rz * 60;
-    return D_0009E724[(rx & 1) + ((*(int *)&D_00097374 - rz) & 1) * 2][lz][lx];
+    int rx, rz, lx, lz;
+    rx = cx / 60; rz = cz / 60; lx = cx - rx * 60; lz = cz - rz * 60;
+    return D_0009E724[(rx & 1) + (((*(int *)&D_00097374 - rz) & 1) << 1)][lz][lx];
 }
 
 int func_00020AE4(int x, int z)
@@ -64,11 +62,9 @@ int func_00020AE4(int x, int z)
 
     {
         short *cp;
-        int rx = cx / 60;
-        int rz = cz / 60;
-        int lx = cx - rx * 60;
-        int lz = cz - rz * 60;
-        cp = &D_0009E724[(rx & 1) + ((*(int *)&D_00097374 - rz) & 1) * 2][lz][lx];
+        int rx, rz, lx, lz;
+        rx = cx / 60; rz = cz / 60; lx = cx - rx * 60; lz = cz - rz * 60;
+        cp = &D_0009E724[(rx & 1) + (((*(int *)&D_00097374 - rz) & 1) << 1)][lz][lx];
         cell = *cp;
         if (*cp & 0xC000)
             return *cp;

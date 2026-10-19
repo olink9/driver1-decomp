@@ -13,3 +13,6 @@
 - func_000130D4 (96) and func_000138A0 (99.35) share the car-list layout/loop - match one, port to the other (b107)
 - (run2) func_00030464 / func_000307E8: HANDWRITTEN GTE stubs ending in `j .L00030520` - maspsx adds a nop after the j (C .text 4 B longer than the asm block). Needs `.set noreorder` around the asm or a maspsx exception; fnscore does not see it.
 - CLEANUP (r2-030): func_00043270 (99.95, byte-identical) needs absolute symbols D_001E4038 = 0x1E4038, D_001E40A0 = 0x1E40A0 (linker-defined, 8-byte form externs) - add to the undefined-syms script, then linkcheck.
+- systemic (r2-038): the world-to-cell lookup (/1500, /60 and %60, D_0009D8F4 or D_0009E724[sel][lz][lx]) in 00021690, 00020AE4, 00064360 (and 000143CC, 00021820, 0005BDF8?) - both quotients before both remainders; sched2 moves the x remainder between mult z and mfhi. Crack once, apply to all.
+- (r2-042) file-scope __asm__ + .set noreorder matched func_0002680C exactly - try it on the j-stubs func_00030464 / func_000307E8.
+- FIXED (coordinator): the j-stubs - maspsx inserts the nop after j even under .set noreorder, so the asm source must NOT have its own delay-slot nop. Both pass linkcheck.

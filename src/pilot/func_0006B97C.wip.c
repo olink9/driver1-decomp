@@ -1,14 +1,15 @@
-struct S { unsigned short a, b, c, d; };
-extern unsigned short D_0008C324[], D_0008C33C[];
+struct S { short a, b, c, d; };
+extern short D_0008C324[], D_0008C33C[];
 void func_0006B97C(struct S *p) {
-    unsigned short *s = D_0008C324, *t = D_0008C33C;
-    unsigned short v;
-    struct S *end = (struct S *)((char *)p + 0x58);
-    for (; p < end; p++) {
+    short *s = D_0008C324, *t = D_0008C33C;
+    struct S *q;
+    struct S *end = p + 11;
+    short v;
+    for (q = p; q < end; q++) {
         v = *s++;
-        p->a = v;
-        p->b = v;
-        p->d = 0;
-        p->c = *t++;
+        q->a = v;
+        q->b = v;
+        q->c = *t++;
+        q->d = 0;
     }
 }
