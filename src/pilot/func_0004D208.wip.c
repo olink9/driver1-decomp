@@ -57,7 +57,7 @@ void func_0004D208(int a0)
         D_000974C4 = t;
         P = t + ((v + 3) & -4);
         D_000974BC = P;
-        func_00050EC4(s0, t, buf[0], v + w);
+        func_00050EC4(D_000106C0, t, buf[0], v + w);
         if (D_00096C88_ == -1) {
             D_00096C8C_ = func_00073804();
             func_0004E214(D_000974BC, w, 2);

@@ -28,7 +28,7 @@ void func_00027E08(int tex, int unused, int n, unsigned long *ot)
     int v[4];
     char pad[32];
     unsigned long w;
-    FT4 *prim;
+    unsigned long *prim, *p;
 
     if (n == 16)
         tab = D_0008905C;
@@ -54,7 +54,7 @@ void func_00027E08(int tex, int unused, int n, unsigned long *ot)
         D_00096948[3] = D_00096938[v[2]];
         D_00096948[2] = D_00096938[v[3]];
 
-        if ((((unsigned long *)D_00096948)[1] & 0x80008000) & ((unsigned long *)D_00096948)[0] &
+        if (0x80008000 & ((unsigned long *)D_00096948)[0] & ((unsigned long *)D_00096948)[1] &
             ((unsigned long *)D_00096948)[2] & ((unsigned long *)D_00096948)[3])
             continue;
         if (D_00096948[0].x >= 512 && D_00096948[1].x >= 512 &&
@@ -82,18 +82,18 @@ void func_00027E08(int tex, int unused, int n, unsigned long *ot)
         D_0009694C[3] = D_00096940[v[2]];
         D_0009694C[2] = D_00096940[v[3]];
 
-        prim = (FT4 *)current->primptr;
-        prim->tag = *ot | 0x9000000;
+        p = prim = (unsigned long *)current->primptr;
+        *p++ = *ot | 0x9000000;
         *ot = (unsigned long)prim;
-        prim->rgbc = *D_00096950;
-        prim->xy0 = *(unsigned long *)&D_00096948[0];
-        prim->uv0 = *(unsigned short *)&D_0009694C[0] | D_00097130;
-        prim->xy1 = *(unsigned long *)&D_00096948[1];
-        prim->uv1 = *(unsigned short *)&D_0009694C[1] | D_00097134;
-        prim->xy2 = *(unsigned long *)&D_00096948[3];
-        prim->uv2 = *(unsigned short *)&D_0009694C[3];
-        prim->xy3 = *(unsigned long *)&D_00096948[2];
-        prim->uv3 = *(unsigned short *)&D_0009694C[2];
-        current->primptr = (char *)(prim + 1);
+        *p++ = *D_00096950;
+        *p++ = *(unsigned long *)&D_00096948[0];
+        *p++ = *(unsigned short *)&D_0009694C[0] | D_00097130;
+        *p++ = *(unsigned long *)&D_00096948[1];
+        *p++ = *(unsigned short *)&D_0009694C[1] | D_00097134;
+        *p++ = *(unsigned long *)&D_00096948[3];
+        *p++ = *(unsigned short *)&D_0009694C[3];
+        *p++ = *(unsigned long *)&D_00096948[2];
+        *p++ = *(unsigned short *)&D_0009694C[2];
+        current->primptr = (char *)p;
     }
 }

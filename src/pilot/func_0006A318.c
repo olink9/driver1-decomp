@@ -18,7 +18,8 @@ typedef struct { char pad[0xC]; short fC, fE; char pad2[8]; int f18; } ST;
 extern int func_00069D08(CAR *, E *);
 extern void func_0006A178(CAR *, E *);
 extern short func_0006B9D8(char *, int *, short);
-extern long long D_000975DC, D_000C4C8C;
+extern long long D_000975DC;
+extern int D_000C4C8C[];
 extern E *D_000977AC;
 extern F D_000BE9B4;
 extern ENT D_00098900[];
@@ -81,11 +82,15 @@ void func_0006A318(CAR *car)
                 break;
             car->f104 = 0x7FFF;
             n = *p - 1;
-            if (((unsigned char *)&D_00098900[n])[0x55] == 0 || *(int *)&D_000C4C8C == 0)
+            if (((unsigned char *)&D_00098900[n])[0x55] == 0 || D_000C4C8C[0] == 0)
                 car->fF8 = 0;
         }
         break;
+    case 0:
+    case 1:
+    case 3:
     case 7:
+    case 0xFF0:
     case 0x7FFF:
         break;
     case 4:

@@ -25,8 +25,7 @@ int func_00064C90(S *s)
         az = a->z;
         dx = b->x - ax;
         dz = b->z - az;
-        adx = abs(dx);
-        adz = abs(dz);
+if (dx < 0) adx = -dx; else adx = dx; if (dz < 0) adz = -dz; else adz = dz;
         if (adx < adz) {
             int tmp = adx;
             adx = adz;

@@ -9,6 +9,7 @@ extern void func_000774C4();
 extern int func_000776E4();
 extern void func_00047824();
 
+static inline int jit(void) { int r = func_000776E4() & 0x1ff; return r - 256; }
 /* Driver 2: jump_debris */
 void func_00020844(Car *cp)
 {
@@ -30,9 +31,9 @@ void func_00020844(Car *cp)
     }
     if (D_0009678C != 0 && --D_0009678C < 75) {
         func_000774C4(&velocity, 0, 16);
-        velocity.vx = cp->x + ((func_000776E4() & 0x1ff) - 256);
+        velocity.vx = cp->x + jit();
         velocity.vy = 200 - cp->y;
-        velocity.vz = cp->z + ((func_000776E4() & 0x1ff) - 256);
+        velocity.vz = cp->z + jit();
         position = velocity;
         func_000774C4(&velocity, 0, 16);
         func_00047824(&position, &velocity, 5, 0xb);

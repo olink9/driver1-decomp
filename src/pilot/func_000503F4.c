@@ -1,7 +1,8 @@
 extern int D_00086EC0[];
 extern int D_0008AAFC[];
 extern long long D_00097520;
-extern int D_000BE0A4[];
+typedef struct { int a, b; } P2;
+extern P2 D_000BE0A4[8][4];
 extern char D_00010910[];
 extern void CdInit();
 extern int CdSearchFile();
@@ -18,10 +19,6 @@ void func_000503F4(void)
     int sz[8];
     char file[0x18];
     int i, j;
-    int *src;
-    int *dst;
-    int *p;
-    int k;
     int *base;
 
     base = (int *)0xD0208;
@@ -39,20 +36,15 @@ void func_000503F4(void)
             func_0007DCBC(1, 0xD0200, 0x80);
             while (func_0007DE58(0, name + 0x80) != 0)
                 ;
-            src = base;
-            k = i * 32;
             for (j = 0; j < 4; j++) {
-                dst = (int *)((char *)D_000BE0A4 + k);
-                k += 8;
-                dst[0] = src[0] + (sz[i] << 11);
-                dst[1] = src[1];
-                src += 2;
+                D_000BE0A4[i][j].a = base[j * 2] + (sz[i] << 11);
+                D_000BE0A4[i][j].b = base[j * 2 + 1];
             }
         }
     }
-    for (i = 0, p = D_0008AAFC; i < 1; i++, p++) {
+    for (i = 0; i < 1; i++) {
         sz[i] = 0;
-        sprintf(name, D_00010910, *p);
+        sprintf(name, D_00010910, D_0008AAFC[i]);
         if (CdSearchFile(file, name) != 0)
             ((int *)&D_00097520)[i] = func_0007A684(file);
     }

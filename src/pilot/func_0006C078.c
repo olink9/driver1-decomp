@@ -7,11 +7,11 @@ extern void func_0006C8D4();
 
 int func_0006C078(void) {
     int old;
+    *(int *)&D_0009763C = 0;
     D_00096F10 = 3;
     old = D_00096F08;
     D_00096F08 = 2;
     D_00096F68 = 1;
-    *(int *)&D_0009763C = 0;
     D_000977CC = D_0008D064;
     D_000977C0 = D_0008D024;
     D_00096F0C = old;

@@ -1,4 +1,4 @@
-/* func_0006AF48 - no Driver 2 counterpart: two gradient-coloured numbers (WIP 95.33: buf2 address CSEd into s0, case-2 load order) */
+/* func_0006AF48 - no Driver 2 counterpart: two gradient-coloured numbers (second one right-aligned to k digits). */
 typedef struct {
     unsigned char r, g, b, pad;
     int val;
@@ -36,7 +36,7 @@ static inline void SetColour(int val)
     case 0:
         break;
     case 2:
-        val = p[-1].val + (*(unsigned char *)&D_000975E0 * (p->val - p[-1].val)) / 8;
+        { int lo = p[-1].val; val = lo + (*(unsigned char *)&D_000975E0 * (p->val - lo)) / 8; }
         break;
     }
     q = p - 1;
@@ -47,31 +47,36 @@ static inline void SetColour(int val)
     D_0009769A.v = (g * q->b + f * p->b) >> 12;
 }
 
+static inline short Off(short x, int k, unsigned char len)
+{
+    return x + (k - len) * 26;
+}
+
+static inline void ShowB(int *v, short x, short y)
+{
+    char buf[8];
+    short w;
+    unsigned char len;
+
+    SetColour(v[0]);
+    len = sprintf(buf, D_00096EF0, v[0]);
+    w = func_0005CF10(Off(x + 25, 2, len), y, buf);
+    func_0005C7D0(0x80, 0x80, 0x80);
+    if (v[1] != 0x7FFFFFFF)
+        sprintf(buf, D_00096EF4, v[1]);
+    else
+        sprintf(buf, D_00096EF8);
+    func_0005CC68(buf, w, y + 13);
+}
+
 void func_0006AF48(int *v, short x, short y)
 {
     char buf1[8];
-    char buf2[8];
-    COLSTEP *p;
-    COLSTEP *q;
     short w;
-    int val;
-    int f;
-    int g;
-    unsigned char len;
 
     w = func_0006B450(D_0008C248, 4);
     SetColour(v[9]);
     sprintf(buf1, D_00096EF0, v[9]);
     func_0005CC68(buf1, w, D_0008C27A[0]);
-
-    SetColour(v[0]);
-    len = sprintf(buf2, D_00096EF0, v[0]);
-    x += 25;
-    w = func_0005CF10((short)(x + (2 - len) * 26), y, buf2);
-    func_0005C7D0(0x80, 0x80, 0x80);
-    if (v[1] != 0x7FFFFFFF)
-        sprintf(buf2, D_00096EF4, v[1]);
-    else
-        sprintf(buf2, D_00096EF8);
-    func_0005CC68(buf2, w, y + 13);
+    ShowB(v, x, y);
 }

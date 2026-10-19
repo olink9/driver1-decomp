@@ -219,3 +219,13 @@ real proof. fnscore 100 is necessary, linkcheck pass is what counts. Hand-writte
 - (r2-010) Missing `move aN,vX` before a call = the original called a wrapper (e.g. seed() -> push()), not the callee directly.
 - (r2-015) Array lui/addiu before the index sll when the target does sll first: `T **pp = &D_x[i]; p = *pp; ... *pp = p + 3;`. An extra `addu tN,sp,zero` = a `volatile int *q = &t;`.
 - (r2-016) Loop over a global array: start/current pointers from a local `base`, but the bound against the global (`p < &D_x[N]`) so loop.c hoists it and base dies early. Two copies of a counter stepping by 16 and 0x10000 = a plain `for (i...)` with `&D[i]` and a `short` use of i.
+- (r2-014) camera_angle D_00096C48 is an 8-byte SVECTOR struct (`extern SVEC D_00096C48;`), not `int[]`. A return constant set mid-function (v0=1 early) can't come from `return 1;` - so far only a FAKEMATCH reproduces it.
+- (r2-017) Switch cases sharing a tail, one jumping into the other: write the tail once with a backward goto (`case B: off = x; goto words;`). Conditional fall-through: `case 2: if (c) goto r12; case 0x16: ...; break; r12: return ...;`.
+- (r2-017) Return value set in a branch delay slot (`bnez; addu v0,zero,zero`): early returns (`if (a || b) return 0; return expr;`) instead of one `&&`.
+- (r2-018) A reload of a global with nothing aliasing in between = `volatile` (spool/callback state). `move aN,x; bgez x; negu aN,x` = `if (x < 0) a = -x; else a = x;`, not abs().
+- (r2-020) Prologue loads interleaved as in `-fno-schedule-insns` output = a block boundary in the original; a tiny `static inline` (e.g. `sub2(a,b)`) adds one. Prim words via `*p++` (unsigned long *) keep gp loads below the stores; `prim->field` lets them hoist.
+- (r2-020) Chained `&` operand order decides load order (`0x80008000 & q[0] & q[1] ...`) - sweep permutations.
+- (r2-021) Constant loads swapped at the top: script every store order (the scheduler keeps ties in RTL order). Base needed before the index math: `b = D; r = &b[w];`. A pointer set in the guard's delay slot: initialise it in the `for (...)` init clause.
+- (r2-021) First field of a small global gp-relative, the rest through a pointer: `short *z = &D_x; z[0] = ...; z[1] = ...;` with a plain small extern.
+- (r2-019) Switch decision trees: brute-force extra empty `case N: break;` values (0, 1, 3, 0xFF0, 0x7FFF...) on test switches with cc1 - they emit no code but move balance_case_nodes' split; scripts in pilot/scripts/sw_gen.py, sw_brute3.py.
+- (r2-019) Two stores sched2 swaps (gp store vs `lui at; sw`): sweep the source position of BOTH statements together.

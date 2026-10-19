@@ -12,9 +12,10 @@ extern void func_0006C8D4();
 int func_0006BF24(void)
 {
     int x;
-    D_00096F68 = 1;
+    x = 2;
     D_00096F0C = D_00096F08;
-    D_00096F08 = x = 2;
+    D_00096F08 = x;
+    D_00096F68 = 1;
     D_000977CC = D_0008D064;
     D_000977C0 = (struct T *)D_0008D024;
     func_0006C8D4(D_0008D064, x, x);

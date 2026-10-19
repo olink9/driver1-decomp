@@ -12,11 +12,19 @@ extern int D_000C4C6C[];
 extern int D_000C4E38[];
 extern short D_000C4C7C[];
 extern short D_00097758;
-extern short D_00097758x[] __asm__("D_00097758");
 extern P D_000988C8[];
 extern unsigned short D_0008BB6C[];
 extern unsigned short D_0008BB84[];
 extern U D_0008BBC8[];
+
+static inline void fill(P *dst, unsigned short *src, int n)
+{
+    P *d;
+    for (d = dst; d < dst + n; d++) {
+        d->a = 0;
+        d->b = *src++;
+    }
+}
 
 void func_00063C60(void)
 {
@@ -74,23 +82,14 @@ void func_00063C60(void)
         *s = k;
     *s = 0x7FFF;
     D_00097760 = 1;
-    D_00097758 = 0xFA0;
-    z = D_00097758x;
+    z = &D_00097758;
+    z[0] = 0xFA0;
     z[1] = 0x30D4;
     z[2] = 0x200;
     base = D_000988C8;
-    src = D_0008BB6C;
-    for (d = base; d < base + 11; d++) {
-        d->a = 0;
-        d->b = *src++;
-    }
-    src = D_0008BB84;
-    for (d = base + 11; d < base + 22; d++) {
-        d->a = 0;
-        d->b = *src++;
-    }
+    fill(base, D_0008BB6C, 11);
+    fill(base + 11, D_0008BB84, 11);
     e = D_0008BBC8;
-    b = (U *)(base + 22);
-    for (a = e - 11; a < e; a++, b++)
+    for (a = e - 11, b = (U *)(base + 22); a < e; a++, b++)
         *b = *a;
 }

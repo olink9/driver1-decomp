@@ -2,7 +2,7 @@ extern int D_00096E30;
 extern long long D_00097098;
 extern int D_000976A0;
 extern int D_00097688;
-extern long long D_00097534;
+extern volatile long long D_00097534;
 extern char *D_000BF7EC[];
 extern void func_00050E28();
 extern int printf();
@@ -24,7 +24,7 @@ void func_0005C68C(void)
         ;
     if (D_00097688 >= 0xA5) {
         printf("too many lines!\n");
-        while (*(int *)&D_00097534 != 0x78654321) {
+        while (*(volatile int *)&D_00097534 != 0x78654321) {
             __asm__ volatile("break 1024");
         }
     }

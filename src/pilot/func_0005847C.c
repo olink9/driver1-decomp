@@ -9,12 +9,13 @@ extern long long D_00097530;
 extern int ratan2();
 extern void DrawPrim();
 
+static inline int sub2(int a, int b) { return a - b; }
 void func_0005847C(P2 *a, P2 *b)
 {
     int c, dz, dx, t;
     PRIM *p;
-    dz = a->z - b->z;
-    dx = a->x - b->x;
+    dz = sub2(a->z, b->z);
+    dx = sub2(a->x, b->x);
     ratan2(dz, dx);
     c = 0x40;
     p = (*(DB **)&D_00097530)->prim;

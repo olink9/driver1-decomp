@@ -14,7 +14,7 @@ unsigned char func_00015338(P *p)
 
     a3 = 0;
     if (w & 0xC000) return 0;
-    r = &D_0009E744[w];
+    { Rd *b = D_0009E744; r = &b[w]; }
     d = p->dir;
     t0 = ((unsigned char *)r)[d];
     if (t0 == 1) return 0;

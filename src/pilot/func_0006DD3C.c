@@ -18,9 +18,9 @@ void func_0006DD3C(int x)
 	D_00096F84 = 0;
 	D_000977D8 = 0;
 	*(char *)&D_00097658 = 0;
-	p = (int *)0xD0204;
 	*(char *)&D_00096897 = 5;
 	sprintf(buf, D_00011640, q, x);
+	p = (int *)0xD0204;
 	func_00050E28(buf, 0xD0200);
 	D_00096F84 = *(unsigned char *)0xD0200;
 	for (i = 0; i < D_00096F84; i++) {

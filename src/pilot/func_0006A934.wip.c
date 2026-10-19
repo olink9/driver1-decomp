@@ -57,8 +57,6 @@ static inline unsigned char AddTarget(CAR *car, int *p)
 
     int a, c;
 
-    if (p[0] == 0x7FFFFFFF)
-        return 0;
     a = p[0];
     c = p[1];
     for (e = car->e, f = car->f; e < &car->e[6]; e++, f++) {
@@ -117,7 +115,7 @@ void func_0006A934(CAR *car)
             p = car->f2B8;
             if (car->f298 < 6) {
                 car->f104 = 2;
-                p = AddTarget(car, p) ? p + 2 : p;
+                { int *q; if (p[0] == 0x7FFFFFFF) q = p; else if (AddTarget(car, p)) q = p + 2; else q = p; p = q; }
             }
             if (car->f298 == 0) {
                 car->f2D0 = 0;
