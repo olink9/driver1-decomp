@@ -11,7 +11,9 @@ Your batch file is `pilot/batches2/<id>.tsv` (`hw-NN` or `f-NN`). Follow AGENT.m
   hand-written asm: no normal prologue, jumps into another function (`j .Lxxxx` to a label that function owns),
   registers no compiler would pick. Write those as a **file-scope** `__asm__` block with `.set noreorder`, tagged
   `/* HANDWRITTEN ASM */`. Leave out the nop after a `j`/`jal` (maspsx inserts one even under noreorder); a `jr` with
-  a real instruction in its delay slot is fine. Matched examples: `src/pilot/func_0002680C.c`, `func_00030464.c`.
+  a real instruction in its delay slot is fine. maspsx also adds a nop after a conditional branch (`bgtz` etc.) that has a real delay-slot
+  instruction: hide the branch from it with a one-line gas macro (`.macro XBGTZ r,t; bgtz \\r,\\t; .endm`), as in
+  `src/pilot/func_000268B8.c`. Matched examples: `src/pilot/func_0002680C.c`, `func_00030464.c`.
 - Do NOT run linkcheck.py (shared build folder); the coordinator link-checks. Results line:
   `<UTC>\t<sym>\t<size>\t<best>\t<attempts>\t<matched|gave_up>\trun2-fresh`.
 
