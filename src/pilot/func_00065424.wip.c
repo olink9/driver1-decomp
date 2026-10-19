@@ -1,3 +1,4 @@
+/* run2 (r2-004): all 24 orderings of the 4 stores in the f30>10 block tried; sched1 always puts li 0x16/sw f38 before lw f34. */
 /* func_00065424 - no Driver 2 counterpart (cop car chase/steering control). Best 99.73: only diff is sched order of lw f34 vs li 0x16 in the f30>10 block */
 typedef struct { int vx, vy, vz, pad; } VEC;
 

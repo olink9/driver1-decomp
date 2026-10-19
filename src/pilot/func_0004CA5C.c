@@ -45,7 +45,7 @@ extern CAR D_0009B0A4[];
 extern CHAN D_000BD498[];
 typedef struct { int v; int pad; } W8;
 extern long long D_0009779C;
-extern W8 D_000C7000;
+extern int *D_000C7000[];
 extern W8 D_00097798;
 extern int D_0008909C[];
 extern void func_0004DDA8();
@@ -132,7 +132,7 @@ void func_0004CA5C(void)
         left5--;
         ch = left5 + 5;
         D_000BD498[ch].f42 = 50;
-        func_0004DDA8(ch, D_000C7000.v, D_0008909C, -2000, D_00097798.v);
+        func_0004DDA8(ch, D_000C7000[0], D_0008909C, -2000, D_00097798.v);
     }
 
     for (i = left5 - 1; i >= 0; i--)

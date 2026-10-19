@@ -1,4 +1,3 @@
-/* best 99.36: only diff is the NoPlayerControl double test (target: lbu v1, bnez v1, sw, bnez v1 again with no copy); plain if-forms give 96.88 */
 /* Driver 2: cjpRecord (RecordWaypoint and Put inlined) */
 typedef struct { int vx, vy, vz, pad; } VEC;
 typedef struct { char pad[0xC8]; VEC pos; char pad2[0x18C - 0xC8 - 16]; } CAR;
@@ -61,6 +60,13 @@ static inline int Put(int stream, unsigned int *pt0)
     return 1;
 }
 
+/* the NoPlayerControl test is repeated in the target: an inline's return label stops CSE folding it */
+static inline void ClearCams(void)
+{
+    if (*(unsigned char *)&D_00096899 == 0)
+        D_00096DD8 = 1;
+}
+
 void func_0005BFF0(int stream, unsigned int *ppad, signed char *psteer, char *ptype)
 {
     unsigned int t0;
@@ -80,15 +86,9 @@ void func_0005BFF0(int stream, unsigned int *ppad, signed char *psteer, char *pt
         t1 = 8;
     t0 |= (t1 & 0xF) << 8;
     if (Put(stream, &t0) != 0) {
-        if (*(unsigned char *)&D_00096899 == 0) {
-            D_00096DD8 = 1;
-            switch (*(unsigned char *)&D_00096899) { case 0:
-            if (*(unsigned char *)&D_00096898 != 3 && *(unsigned char *)&D_00096898 != 8 && *(int *)&D_000967F4 != 22)
-                *D_00097668 = *(int *)&D_000970D8;
-                break;
-            default: break;
-            }
-        }
+        ClearCams();
+        if (*(unsigned char *)&D_00096899 == 0 && *(unsigned char *)&D_00096898 != 3 && *(unsigned char *)&D_00096898 != 8 && *(int *)&D_000967F4 != 22)
+            *D_00097668 = *(int *)&D_000970D8;
     } else
         func_0005CC68("Out of Tape", 20, 0xD0);
     t1 = (t0 >> 8) & 0xF;

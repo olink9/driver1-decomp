@@ -190,3 +190,9 @@ real proof. fnscore 100 is necessary, linkcheck pass is what counts. Hand-writte
 - Don't run `make` or git; the coordinator commits.
 - Be efficient: small functions should take 1–3 attempts. Move on rather than burn tokens.
 - At the end, reply with one line (matched / gave up / total) plus anything systematic you learned.
+- (r2-001) The game-mode byte D_00096898 is the 8-byte form: `lui reg; lbu (same reg)` = `*(unsigned char *)&D_00096898` with `extern long long D_00096898;`.
+- (r2-003) A stack local used in a loop gets sp+N hoisted into an s-reg; moving it into a `static inline` helper (caller keeps a `char pad[]`) keeps `addiu a0,sp,N` before each call.
+- (r2-003) `addu dst,tmp,base` operand order follows C: `&q[x]`/`ptr+x` put the pointer first; for index-first write `(T *)(x*size + (int)q)`.
+- (r2-004) Register swaps between consecutive values are often global-alloc priority TIES (ties go to the lower pseudo): read "used N times across M insns" in -dl/-dg. Computing all sums first, then `x /= T;` in separate statements, changes pseudo order (0006D688).
+- (r2-002) `lui v0; lw a1,%lo(D_x)(v0)` (high part in its own reg) = unsized array `extern T *D_x[]; D_x[0]`; the 8-byte form ties the high part to the destination.
+- (r2-002) `mfhi t0` on a const divide = reload spilled HI; check the `.greg` dump ("Spilling reg 64") - reorder the divides so no other mult sits inside a high part's span.

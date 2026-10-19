@@ -49,8 +49,9 @@ void func_0002054C(int player)
     if (onground) {
         if (cp->f100 != 0 || abs(cp->f110) > 16000) {
             change = D_0009702C = 1;
-            vol = 13000;
-            if (cp->f100 == 0)
+            if (cp->f100 != 0)
+                vol = 13000;
+            else
                 vol = (abs(cp->f110) - 16000) / 2 + 1;
         }
     }

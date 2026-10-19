@@ -53,6 +53,7 @@ int func_000138A0(CAR *c)
     FOUND *f;
     FOUND *end;
     FOUND *g;
+    FOUND *h;
     PATH *path;
     REC *r;
     int n;
@@ -91,11 +92,11 @@ int func_000138A0(CAR *c)
         }
         g = &list[0];
         end = g + n;
-        for (f = g; f < end; f++) {
-            int v = f->v;
+        for (h = g; h < end; h++) {
+            int v = h->v;
             int b;
             if (v < 0x4074) {
-                b = f->b;
+                b = h->b;
                 if (b & 0x80)
                     return 0;
                 if (D_00098950[b].f34 != -1) {

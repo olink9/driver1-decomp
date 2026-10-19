@@ -1,3 +1,4 @@
+/* run2 (r2-004): shade (pseudo 95, 25 refs/332 insns, prio .30) loses to j*sy giv (.47), j (.42), const 0x80 (.39); target needs shade first (s4). Tried: shade set outside/inside j loop, unsigned char, temps for shade+-1, short sx/sy - no. */
 /* func_00057AE4: draws the full-screen map (Driver 1 only, no Driver 2 counterpart) */
 typedef struct { int x, y, z, pad; } POS;
 typedef struct { unsigned char r, g, b, cd; } COL;

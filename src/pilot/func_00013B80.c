@@ -1,6 +1,6 @@
 typedef struct { unsigned char p0, f1, f2, p3, p4, f5, p6, f7, f8; char pad[71]; } E80;
 extern E80 D_00098900[];
-extern unsigned char D_00096898[];
+extern long long D_00096898;
 extern char D_000C71E7[];
 extern char D_000988C8[];
 extern void func_0004C8F8();
@@ -11,7 +11,7 @@ void func_00013B80(int a, int b, int c)
     E80 *p = &D_00098900[a];
     E80 *q = &D_00098900[b];
 
-    if (D_00096898[0] == 3 && ((a == 0 && b == 23) || (b == 0 && a == 23))) {
+    if ((*(unsigned char *)&D_00096898) == 3 && ((a == 0 && b == 23) || (b == 0 && a == 23))) {
         D_000C71E7[0] = 15;
         return;
     }

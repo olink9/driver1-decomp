@@ -47,7 +47,7 @@ void func_000299B8(int n)
 		func_0004EAC0(&v);
 		v.x += *(int *)(s6 + 0xC8);
 		v.z += *(int *)(s6 + 0xD0);
-		p = &q[(i >> 1) + n];
+		p = (Q16 *)(((i >> 1) + n) * 16 + (int)q);
 		p->a = v.x;
 		p->c = v.z;
 		if (n != 0)

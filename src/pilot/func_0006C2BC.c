@@ -12,10 +12,11 @@ extern char D_000115E8[];
 extern void func_00074158(), func_00033AF8(), func_000513D4(), DrawSync(), func_0006EB48();
 extern void func_00050E28(), func_EC280(), func_E7508(), func_0003A068();
 
+typedef struct { char *primptr; int x; char *primtab; } DB;
+#define current (*(DB **)&D_00097530)
+#define last (*(DB **)&D_00097524)
 int func_0006C2BC(void)
 {
-    int *q;
-    int *p;
     char pad[8];
     func_00074158(0);
     func_00033AF8();
@@ -32,10 +33,8 @@ int func_0006C2BC(void)
     D_000868DC[3] = *(int *)&D_000977E8;
     func_00050E28(D_000115E8, 0xE6600);
     func_EC280(1);
-    q = (int *)*(int *)&D_00097524;
-    p = (int *)*(int *)&D_00097530;
-    p[0] = p[2];
-    q[0] = q[2];
+    current->primptr = current->primtab;
+    last->primptr = last->primtab;
     func_E7508(4, D_000868DC, 0x1E00);
     *(int *)&D_00097530 = (int)D_000BDFA4;
     *(int *)&D_00097524 = (int)D_000BDFA4 + 0x80;

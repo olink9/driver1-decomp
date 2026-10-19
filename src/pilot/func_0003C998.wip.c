@@ -1,3 +1,4 @@
+/* run2 (r2-004): all 5 values (xd, zd, sphere_sq, cop->vz, cam.vz) are global pseudos; ours alloc order zd>loads>xd>sphere_sq, target xd>sphere_sq>zd>loads. Tried ABS macro, D2 test order, sums into xd/zd, for/do loop shapes - no. */
 /* WIP 99.72: only diff = register choice in the bounding-sphere test (sphere_sq v1 vs a2, xd v0 vs a1, zd a0 vs v0) */
 /* Driver 2 name: CameraCollisionCheck */
 typedef struct { int vx, vy, vz, pad; } VEC;
