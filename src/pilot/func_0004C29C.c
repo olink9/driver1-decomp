@@ -11,8 +11,8 @@ static inline void ld(int i, int mode)
     int len, off;
     if (t[1] == 0)
         func_00050EC4(h, t, 0, 0x2C);
-    off = t[i];
-    len = t[i + 1] - off;
+    len = D_0008A988[i + 1] - D_0008A988[i];
+    off = D_0008A988[i];
     func_00050EC4(h, 0x80100000, off, len);
     func_0004E214(0x80100000, len, mode);
 }

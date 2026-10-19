@@ -3,7 +3,7 @@ typedef struct {
     char p0[6]; short OldLVol; short OldRVol; short OldPeriod; unsigned char OldSample; char p1[7];
     int SOffset; char p2[2];
     unsigned char panenvflg, panenvpts, panenvsus, panenvbeg, panenvend; char p3;
-    short panenvp, panenva, panenvb; short keyoffspd;
+    short panenvp, panenva, panenvb; unsigned short keyoffspd;
     unsigned char envflg, envpts, envsus, envbeg, envend; char p4;
     short envp, enva, envb; char p5[14];
     unsigned char sample; char p6[17];
@@ -18,13 +18,13 @@ extern XM *D_0009781C;
 extern MH *D_00097818;
 extern MH0 *D_00097814;
 extern int func_0006F81C();
-static inline unsigned short GetPeriod(short fine, unsigned char note) {
+static inline unsigned short GetPeriod(unsigned short fine, unsigned char note) {
     int t;
     if (D_00097814->flags == 1) {
-        t = 7680 - (fine / 2);
+        t = 7680 - ((short)fine / 2);
         return t - note * 64 + 64;
     }
-    return func_0006F81C(note);
+    return func_0006F81C(note, fine);
 }
 #define XMC D_0009781C
 #define mh D_00097818

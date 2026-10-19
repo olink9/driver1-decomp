@@ -2,6 +2,13 @@ typedef struct { int key; char a[0x3C]; unsigned char b40, b41; unsigned short h
 extern CH D_000BD498[];
 extern void SpuSetKey(), func_0004D4D4();
 
+static inline void ch_off(int i)
+{
+    if ((unsigned)i < 16) {
+        SpuSetKey(0, D_000BD498[i].key);
+        func_0004D4D4(i);
+    }
+}
 int func_0004E4B0(void)
 {
     int i, best, low;
@@ -9,10 +16,7 @@ int func_0004E4B0(void)
     low = 0;
     for (i = low; i < 16; i++) {
         if (D_000BD498[i].b41 == 0 && D_000BD498[i].h42 == 0) {
-            if ((unsigned)i < 16) {
-                SpuSetKey(0, D_000BD498[i].key);
-                func_0004D4D4(i);
-            }
+            ch_off(i);
             return i;
         }
     }
@@ -24,10 +28,7 @@ int func_0004E4B0(void)
             low = D_000BD498[i].h42;
         }
     }
-    if (best == -1) return best;
-    if ((unsigned)best < 16) {
-        SpuSetKey(0, D_000BD498[best].key);
-        func_0004D4D4(best);
-    }
+    if (best != -1)
+        ch_off(best);
     return best;
 }

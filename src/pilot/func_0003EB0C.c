@@ -16,6 +16,7 @@ void func_0003EB0C(int idx, unsigned int type)
     char *buf;
     char *p;
     int j;
+    int k;
 
     if (type > 0x10)
         return;
@@ -30,8 +31,8 @@ void func_0003EB0C(int idx, unsigned int type)
         dst->x = vx;
         dst->y = vy;
         dst->z = vz;
-        dst++;
         src++;
+        dst++;
         i--;
     }
     p = D_000A1AB0[type]->p14;
@@ -39,8 +40,8 @@ void func_0003EB0C(int idx, unsigned int type)
         buf = &D_000AF97A[idx * 150];
     else
         buf = D_000B08B8;
-    for (i = 0; i < D_000A1AB0[type]->n; i++)
-        buf[i] = 0;
+    for (k = 0; k < D_000A1AB0[type]->n; k++)
+        buf[k] = 0;
     func_0003ECCC(p, buf, D_000A1AB0[type]->n);
     for (j = 5; j >= 0; j--)
         D_0009B0A4[idx].a[j] = 0;

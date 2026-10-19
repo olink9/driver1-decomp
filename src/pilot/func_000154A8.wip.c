@@ -350,9 +350,14 @@ int func_000154A8(int id, int road, int flag, int x, int z)
     }
     one = 1;
     if (cp->f5) {
-        if (D_00096774 == one && (D_00096770 != one || !(func_0004FFE8(id) & 1))) {
-            cp->x10 = 2;
-            cp->x11 = 1;
+        if (D_00096774 == one) {
+            if (D_00096770 == one && (func_0004FFE8(id) & 1)) {
+                cp->x10 = one;
+                cp->x11 = one;
+            } else {
+                cp->x10 = 2;
+                cp->x11 = 1;
+            }
         } else {
             cp->x10 = one;
             cp->x11 = one;

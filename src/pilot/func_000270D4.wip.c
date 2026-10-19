@@ -1,3 +1,4 @@
+/* best 99.34: only diff = col[0] grey combine: target keeps f (copy of D_00097128) in a0 and ORs it in after the D_00097151 mult (sched1 put the |f later, lengthening f so lreg avoids v1). Tried: all term orders/assoc, temps, f types, B8 vs array/CV struct decls, col types - none move it. */
 /* func_000270D4: draw the visible building/cell objects (Driver 2: DrawAllBuildings-like) */
 typedef struct {
     int x, y, z;            /* 0x00 */

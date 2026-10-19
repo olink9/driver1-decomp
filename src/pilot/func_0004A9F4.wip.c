@@ -35,8 +35,8 @@ static inline int GetCell(int cx, int cz)
     rx = cx / rs;
     rz = cz / rs;
     ra = *(int *)&D_00096A24 / rs;
-    cx -= rx * rs;
     cz -= rz * rs;
+    cx -= rx * rs;
     region = rx + rz * ra;
     idx = (rx & 1) + (rz & 1) * 2;
 

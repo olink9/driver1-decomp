@@ -7,7 +7,7 @@ extern int D_00096DC8, D_00097668, D_0009765C, D_00097608, D_00096DCC, D_0009761
 extern int D_00096DE0, D_00096DDC, D_00096DD8, D_00096DA8, D_0009762C, D_00097648, D_00097624;
 extern short D_00097634;
 extern int D_00097620, D_00096DB4;
-extern char D_00097654[];
+extern char D_00097654[3];
 extern int D_000BEED4[];
 extern int D_000BEEE0[];
 extern char D_000BEEBC[];
@@ -63,10 +63,12 @@ void func_00058814(void)
     D_00097634 = 0;
     D_00097648 = 0;
     D_00097624 = 0;
-    if ((unsigned)(B98 - 7) < 2)
+    if ((unsigned)(B98 - 7) < 2) {
         D_00097620 = 150;
-    else
+    } else {
         D_00097620 = 100;
+    }
+    i = 23;
     {
         char *p = D_000BEEBC;
         p += 23;

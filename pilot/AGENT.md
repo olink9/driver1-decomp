@@ -196,3 +196,18 @@ real proof. fnscore 100 is necessary, linkcheck pass is what counts. Hand-writte
 - (r2-004) Register swaps between consecutive values are often global-alloc priority TIES (ties go to the lower pseudo): read "used N times across M insns" in -dl/-dg. Computing all sums first, then `x /= T;` in separate statements, changes pseudo order (0006D688).
 - (r2-002) `lui v0; lw a1,%lo(D_x)(v0)` (high part in its own reg) = unsized array `extern T *D_x[]; D_x[0]`; the 8-byte form ties the high part to the destination.
 - (r2-002) `mfhi t0` on a const divide = reload spilled HI; check the `.greg` dump ("Spilling reg 64") - reorder the divides so no other mult sits inside a high part's span.
+- (r2-005) "x = a; if (c) x = b;" vs a real if/else: the if/else's j+barrier changes reorg's delay-slot filling and cse - try it when the target loads a constant fresh or steals an arg into a delay slot.
+- (r2-005) A load kept below a store to another global = that store conflicts in GCC 2.7 (unsized `int[]`, volatile, or a loop note); two constant symbol addresses never conflict.
+- (r2-006) Reusing one pointer across two loops lengthens its life and swaps allocation (a1/a2): give each loop its own pointer.
+- (r2-006) Target re-tests a value already in a register (two bnez on the same reg): put the first `if` in a `static inline` - its return label stops CSE folding the second test.
+- (r2-006) For a register swap, copy the form of an already matched sibling first (F3 vs F4 prim builders) before sweeping.
+- (r2-007) One loop variable `i` reused for two loops = one pseudo with many refs that outranks the pointers: a separate variable per loop. Same for `if (i == 5) i = -1;` - use a separate result variable.
+- (r2-007) 0xFF-terminated records under an outer counter are a nested loop: `for (...) do { c = ...; if (c != 0xFF) {...} } while (c != 0xFF);` (depth weighting raises the constant's priority).
+- (r2-007) Identical div/shift math in both branches with a register mismatch: one `static inline` helper called from both.
+- (r2-011) Loop pointer at base+field with negative offsets = `T *e = arr; ... e++`, not `arr[i]`. Table entries read by an inline helper: named locals in the caller.
+- (r2-011) `slot++` then uses of slot = a separate pseudo; write `slot + 1` at each use. A late `move aN,sX` in the prologue = a parameter declared `unsigned char` - declare it `int`.
+- (r2-009) A global loaded early into v0 and never used again is the return value: `x = D_x; ...; return x;` (no volatile/asm hint).
+- (r2-009) Loop counter losing the priority race: `arr[k++] = v` in every branch instead of one `k++` at the bottom.
+- (r2-008) `*(short *)(p+off) = 0` through a char* keeps later gp loads below the stores; model the object as a real struct (`p->f18 = 0`).
+- (r2-008) Mixing a local alias and the global for the same array (`t = D` plus `D[i]`) is what makes the target recompute `t + i*4` twice with flipped operands - write it the same mixed way to match, or all through one local to merge.
+- (r2-008) Store order to one struct is reshuffled by the scheduler, so the target's order isn't the source order; try the natural order (x/y before r0/g0/b0).

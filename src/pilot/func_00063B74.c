@@ -20,12 +20,11 @@ static inline int find(void)
 char *func_00063B74(char *a0, int a1)
 {
     char *r = 0;
-    int k = find();
-    short idx = k;
+    short idx = find();
 
     if (idx != -1) {
         r = D_000C4E38 + idx * 0x7A8;
-        a0[5] = k + 1;
+        a0[5] = idx + 1;
         func_0001548C(a1, r);
         *(int *)&D_00096FC8 = 0;
         D_00097764 = D_00097764 + 1;

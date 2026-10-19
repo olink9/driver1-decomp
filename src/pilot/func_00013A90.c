@@ -11,19 +11,21 @@ extern int D_00099AE0[];
 int func_00013A90(int a, int b, int c, int d)
 {
     int i;
+    ENT *e;
     D_00099AE0[3] = 0;
     D_00099AE0[2] = 0;
     D_00099AE0[1] = 0;
     D_00099AE0[0] = 0;
-    for (i = 0; i < 22; i++) {
-        if (D_00098950[i].used) {
-            if (D_00098950[i].id == a)
+    e = D_00098950;
+    for (i = 0; i < 22; i++, e++) {
+        if (e->used) {
+            if (e->id == a)
                 D_00099AE0[0]++;
-            else if (D_00098950[i].id == b)
+            else if (e->id == b)
                 D_00099AE0[1]++;
-            else if (D_00098950[i].id == c)
+            else if (e->id == c)
                 D_00099AE0[2]++;
-            else if (D_00098950[i].id == d)
+            else if (e->id == d)
                 D_00099AE0[3]++;
         }
     }

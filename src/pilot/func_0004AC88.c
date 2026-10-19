@@ -2,6 +2,7 @@ extern int D_000BC784[];
 extern int D_000BC798[];
 extern unsigned int *D_000974A4;
 
+/* merge of two sorted index lists into D_000974A4 */
 void func_0004AC88(int a, int b, int c)
 {
     int na, nb, pa, pb, k;
@@ -13,7 +14,6 @@ void func_0004AC88(int a, int b, int c)
     pa = D_000BC798[a];
     pb = D_000BC798[b];
     k = D_000BC798[c];
-    k = k;
     while (k < 0x12B) {
         if (na == 0) {
             if (nb == 0)
@@ -25,22 +25,9 @@ void func_0004AC88(int a, int b, int c)
             y = D_000974A4[pb];
         else
             y = m8;
-        if (x == y) {
-            pa++;
-            na--;
-            pb++;
-            nb--;
-            D_000974A4[k] = y;
-        } else if (x < y) {
-            pa++;
-            na--;
-            D_000974A4[k] = x;
-        } else {
-            pb++;
-            nb--;
-            D_000974A4[k] = y;
-        }
-        k++;
+        if (x == y) { pa++; na--; pb++; nb--; D_000974A4[k++] = y; }
+        else if (x < y) { pa++; na--; D_000974A4[k++] = x; }
+        else { pb++; nb--; D_000974A4[k++] = y; }
     }
     D_000BC784[c] = k - D_000BC798[c];
 }

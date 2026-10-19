@@ -13,6 +13,7 @@ extern int func_000776E4();
 extern void func_000217C8(), func_00041AC4();
 
 /* Driver 2 name: AddGroundDebris */
+static inline int rnd(int s) { return (s & 0x3ff) - 512; }
 void func_000426B4(void)
 {
     int t, count, seed, xb, zb, type, number;
@@ -37,8 +38,8 @@ void func_000426B4(void)
         if (xb < 7000 && zb < 7000) return;
         if (D_00097430 >= 40) return;
         seed = func_000776E4();
-        Position.x = cop->x + ((seed & 0x3ff) - 512);
-        t = (func_000776E4() & 0x3ff) - 512;
+        Position.x = cop->x + rnd(seed);
+        t = rnd(func_000776E4());
         Position.z = cop->z + t;
         func_000217C8(Position.x, Position.z, out);
         Position.y = -out[1];

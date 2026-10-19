@@ -44,7 +44,7 @@ static inline void ClearMem(unsigned char *p, int n)
         *p++ = 0;
 }
 
-CAR *func_00016094(unsigned char model, int a1, int a2, int x, int z)
+CAR *func_00016094(int model, int a1, int a2, int x, int z)
 {
     VECTOR v2;
     VECTOR v;
@@ -59,8 +59,7 @@ CAR *func_00016094(unsigned char model, int a1, int a2, int x, int z)
         ClearMem((unsigned char *)cp, sizeof(CAR));
         ClearMem((unsigned char *)e, sizeof(ENT));
         e->id = slot;
-        slot++;
-        cp->id = slot;
+        cp->id = slot + 1;
         e->f1 = 1;
         e->f7 = 1;
         e->f28 = -1;
@@ -85,7 +84,7 @@ CAR *func_00016094(unsigned char model, int a1, int a2, int x, int z)
         e->f38 = 0;
         e->f11 = a1 + 1;
         e->f5 = 0;
-        func_0003EB0C(slot, e->f10);
+        func_0003EB0C(slot + 1, e->f10);
         func_0001B720(cp, 1);
         e->f48 = D_0009B230[e->id].x / 1500;
         e->f4C = D_0009B230[e->id].z / 1500;
