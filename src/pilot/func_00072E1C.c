@@ -18,11 +18,11 @@ extern G72E1C *D_00097818;
 #define EA(b, k) ((b)[(k) * 4 + 0xB1] + ((b)[(k) * 4 + 0xB2] << 8))
 #define EB(b, k) ((b)[(k) * 4 + 0xB3] + ((b)[(k) * 4 + 0xB4] << 8))
 
-static inline short interp(short b0, int c0, int c1, unsigned short x, short a0v, short a1v)
+static inline short interp(int b0, int c0, int c1, unsigned short x, short a0v, short a1v)
 {
     int r;
     if (a0v == a1v) {
-        r = b0 << 2;
+        r = (unsigned)(b0 << 18) >> 16;
     } else {
         short dy = c1 - c0;
         short dx = x - a0v;

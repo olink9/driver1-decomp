@@ -392,3 +392,8 @@ D_00097270	AreaTPages	f-05
 func_0005DBDC	DrawCiv	b129
 func_0005DB30	DrawAllCivs?	b129
 func_00045460	RoundShadow	b129
+func_0001D6E4	StepOneCar	b130
+func_0001EEB4	FindSurface?	b130
+func_0001F490	ConvertTorqueToAngularAcceleration?	b130
+D_00097424	wetness	b130
+D_00096850	gNight	b130
