@@ -367,3 +367,17 @@ func_00047FA4	Setup_Sparks?	b131
 func_00047824	Setup_Debris?	b131
 func_0001FAFC	CheckCarToCarCollisions?	b131
 D_0009AF04	car_cosmetics	b131
+func_000466D4	GetSmokeDrift	f-03
+func_00060E4C	FindSeated	f-03
+func_0001B380	LongQuaternion2Matrix	f-03
+func_00059D94	ControlReplay	b132
+func_0005C660	FirstCamera	b132 (certain)
+D_00097540	vblcounter (volatile)	b132 (certain)
+func_0001F5B0	MapHeight	b132
+func_000217C8	ROADS_GetRouteData	b132
+func_0005BC04	SelectCameraCar	b132
+D_0009761C	DirectorMenuActive	b132
+D_00097624	CursorX	b132
+D_00097628	CursorY	b132
+D_00096844	AttractMode	b132
+D_0009687C	pauseflag	b132

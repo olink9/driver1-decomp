@@ -17,6 +17,7 @@ SEATED *func_00060E4C(void)
 {
     SEATED *seatedptr;
     int dx, dz, count1;
+    PLAYER *pl;
 
     seatedptr = D_000976CC;
     if (*(int *)&D_00096834 == 7)
@@ -27,6 +28,7 @@ SEATED *func_00060E4C(void)
         return 0;
 
     count1 = 3;
+    pl = D_0009B0A4;
 loop:
     seatedptr = D_000976CC + ++D_000976B8;
     if (seatedptr->rotation == 9999) {
@@ -34,8 +36,8 @@ loop:
         seatedptr = D_000976CC;
     }
     if (seatedptr->index == 0) {
-        dx = (seatedptr->x - D_0009B0A4[0].pos[0]) >> 12;
-        dz = (seatedptr->z - D_0009B0A4[0].pos[2]) >> 12;
+        dx = (seatedptr->x - pl->pos[0]) >> 12;
+        dz = (seatedptr->z - pl->pos[2]) >> 12;
         count1--;
         if ((unsigned)(dx * dx + dz * dz) - 11U < 29) {
             func_00060F54(seatedptr, D_000976B8);
