@@ -2,7 +2,7 @@
 typedef struct { int pad0; int f4; char pad[0x3a]; unsigned short f42; int pad3; int f48; char pad2[0x38]; } S;
 extern int D_00096C74;
 extern S D_000BD498[];
-extern void func_0004E5E4(a0);
+extern void func_0004E5E4();
 extern void SpuSetVoiceAttr();
 
 

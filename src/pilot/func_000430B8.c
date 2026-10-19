@@ -7,14 +7,14 @@ extern int D_000BBDD0[];
 
 void func_000430B8(void)
 {
-    int i, n;
+    int i;
     for (i = 0; i < 20; i++) {
         if (D_00097448 == 0) break;
         if (D_000B738C[i].f16 == 0) {
-            n = D_00097448 - 1;
-            D_000B738C[i].f10 = D_000BBDD0[n];
-            D_00097448 = n;
-            D_000B738C[i].f14 = D_00097534.a - 2;
+            int v = D_000BBDD0[--D_00097448];
+            short t = D_00097534.a - 2;
+            D_000B738C[i].f10 = v;
+            D_000B738C[i].f14 = t;
         }
     }
     for (i = 0; i < 20; i++) {

@@ -1,4 +1,7 @@
-#define CNT (*(volatile int *)0x1E4038)
+/* NOTE: D_001E4038 / D_001E40A0 are absolute addresses 0x1E4038 / 0x1E40A0 (memory past bss);
+   they need linker/symbol_addrs definitions at those addresses. Code is byte-identical then. */
+extern long long D_001E4038, D_001E40A0;
+#define CNT (*(int *)&D_001E4038)
 typedef struct { int a, b, c; } COP;
 typedef struct { COP *cop; char active; char pad[3]; int rot; short vx, vy, vz; short p2; int c0; } DAM;
 extern int D_0009741C, D_0009745C;
@@ -11,7 +14,8 @@ int func_00043270(COP *cop, int *v)
 {
     DAM *dam;
 
-    dam = &D_000B7F3C[D_0009741C];
+    dam = D_000B7F3C;
+    dam += D_0009741C;
     D_0009741C++;
     dam->cop = cop;
     D_0009745C++;
@@ -38,7 +42,7 @@ int func_00043270(COP *cop, int *v)
         D_0009741C = 0;
     if (*(int *)&D_000967F4 == 0x16) {
         int n = CNT;
-        COP **t = (COP **)(*(int *)0x1E40A0) + n * 4;
+        COP **t = (COP **)(n * 16 + *(int *)&D_001E40A0);
         t[0] = cop;
         ((int *)t)[1] = cop->a;
         ((int *)t)[2] = cop->b;

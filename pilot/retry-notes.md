@@ -12,3 +12,4 @@
 - 2nd aspsx-2.69-only case: func_00051ADC (100.0 with --aspsx 2.69, 94.13 default). Both cases = tentative .comm definitions in the file, gp_rel at +0 but lui/%lo at +2..+6. Likely the real rule is about .comm symbols, not the aspsx version - fix maspsx rule (gp_allow_offset False for .comm) and re-test all, in cleanup.
 - func_000130D4 (96) and func_000138A0 (99.35) share the car-list layout/loop - match one, port to the other (b107)
 - (run2) func_00030464 / func_000307E8: HANDWRITTEN GTE stubs ending in `j .L00030520` - maspsx adds a nop after the j (C .text 4 B longer than the asm block). Needs `.set noreorder` around the asm or a maspsx exception; fnscore does not see it.
+- CLEANUP (r2-030): func_00043270 (99.95, byte-identical) needs absolute symbols D_001E4038 = 0x1E4038, D_001E40A0 = 0x1E40A0 (linker-defined, 8-byte form externs) - add to the undefined-syms script, then linkcheck.

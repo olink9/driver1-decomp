@@ -1,14 +1,14 @@
 extern int D_0009E714[];
 extern void func_00021558();
 
+static inline int grid(int v) { return v / 1500 * 1500 + 750; }
+static inline int snap(int v) { return v / 1500 * 1500; }
+static inline int sub(int a, int b) { return a - b; }
 void func_00060328(char *obj, int *pos)
 {
-	int x, z, t;
-	x = (pos[0] + D_0009E714[2]) / 1500 * 1500 + 750;
-	x -= D_0009E714[2];
-	t = D_0009E714[3] + 750;
-	t -= pos[2];
-	z = D_0009E714[3] - t / 1500 * 1500;
+	int x, z;
+	x = grid(pos[0] + D_0009E714[2]) - D_0009E714[2];
+	z = D_0009E714[3] - snap(sub(D_0009E714[3] + 750, pos[2]));
 	func_00021558(x, z - 1500);
 	func_00021558(x, z + 1500);
 	func_00021558(x - 1500, z);

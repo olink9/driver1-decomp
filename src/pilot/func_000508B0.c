@@ -26,9 +26,6 @@ extern int func_0007A7F4();            /* GetClut */
 void func_000508B0(char *screen_name, int effect)
 {
     int done;
-    SPRT *sprt;
-    POLY_FT3 *null;
-    unsigned int tp;
     int i;
     int j;
     int fade;
@@ -61,67 +58,46 @@ void func_000508B0(char *screen_name, int effect)
     DrawSync(0);
 
     done = 0;
-    null = nulls;
-    sprt = prims;
-    i = 0;
-    tp = 320;
-    while (i < 2) {
-        setSprt(sprt);
-        sprt->x0 = (i << 8);
-        sprt->y0 = 0;
-        sprt->u0 = 0;
-        sprt->v0 = 0;
-        sprt->w = 256;
-        sprt->h = 256;
-        sprt->clut = func_0007A7F4(320, 511);
-
-        setPolyFT3(null);
-        null->x0 = -1;
-        null->y0 = -1;
-        null->x1 = -1;
-        null->y1 = -1;
-        null->x2 = -1;
-        null->y2 = -1;
-        setSemiTrans(null, 0);
-        setShadeTex(null, 0);
-        null->tpage = GetTPage(1, 0, tp, 0);
-
-        null++;
-        sprt++;
-        tp += 128;
-        i++;
+    for (j = 0; j < 2; j++) {
+        setSprt(&prims[j]);
+        (&prims[j])->x0 = (j << 8);
+        (&prims[j])->y0 = 0;
+        (&prims[j])->u0 = 0;
+        (&prims[j])->v0 = 0;
+        (&prims[j])->w = 256;
+        (&prims[j])->h = 256;
+        (&prims[j])->clut = func_0007A7F4(320, 511);
+        setPolyFT3(&nulls[j]);
+        (&nulls[j])->x0 = -1;
+        (&nulls[j])->y0 = -1;
+        (&nulls[j])->x1 = -1;
+        (&nulls[j])->y1 = -1;
+        (&nulls[j])->x2 = -1;
+        (&nulls[j])->y2 = -1;
+        setSemiTrans(&nulls[j], 0);
+        setShadeTex(&nulls[j], 0);
+        (&nulls[j])->tpage = GetTPage(1, 0, 320 + j * 128, 0);
     }
-
-    sprt = &prims[2];
-    i = 0;
-    tp = 320;
-    while (i < 2) {
-        null = &nulls[i + 2];
-        setSprt(sprt);
-        sprt->x0 = (i << 8);
-        sprt->y0 = 256;
-        sprt->u0 = 0;
-        sprt->v0 = 0;
-        sprt->w = 256;
-        sprt->h = 256;
-        sprt->clut = func_0007A7F4(320, 511);
-
-        setPolyFT3(null);
-        null->x0 = -1;
-        null->y0 = -1;
-        null->x1 = -1;
-        null->y1 = -1;
-        null->x2 = -1;
-        null->y2 = -1;
-        setSemiTrans(null, 0);
-        setShadeTex(null, 0);
-        null->tpage = GetTPage(1, 0, tp, 256);
-
-        sprt++;
-        tp += 128;
-        i++;
+    for (j = 0; j < 2; j++) {
+        setSprt(&prims[j + 2]);
+        (&prims[j + 2])->x0 = (j << 8);
+        (&prims[j + 2])->y0 = 256;
+        (&prims[j + 2])->u0 = 0;
+        (&prims[j + 2])->v0 = 0;
+        (&prims[j + 2])->w = 256;
+        (&prims[j + 2])->h = 256;
+        (&prims[j + 2])->clut = func_0007A7F4(320, 511);
+        setPolyFT3(&nulls[j + 2]);
+        (&nulls[j + 2])->x0 = -1;
+        (&nulls[j + 2])->y0 = -1;
+        (&nulls[j + 2])->x1 = -1;
+        (&nulls[j + 2])->y1 = -1;
+        (&nulls[j + 2])->x2 = -1;
+        (&nulls[j + 2])->y2 = -1;
+        setSemiTrans(&nulls[j + 2], 0);
+        setShadeTex(&nulls[j + 2], 0);
+        (&nulls[j + 2])->tpage = GetTPage(1, 0, 320 + j * 128, 256);
     }
-
     if (effect == 1) {
         fade = 0;
         fade_step = 2;
@@ -136,9 +112,7 @@ void func_000508B0(char *screen_name, int effect)
             func_00074158(1);
 
         for (j = 0; j < 4; j++) {
-            prims[j].r0 = fade;
-            prims[j].g0 = fade;
-            prims[j].b0 = fade;
+            setRGB0(&prims[j], fade, fade, fade);
         }
         for (j = 0; j < 4; j++) {
             DrawPrim(&nulls[j]);

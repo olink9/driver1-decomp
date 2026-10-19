@@ -7,7 +7,7 @@ void func_000354D8(void) {
     int *dst;
     int *src;
     int left;
-    int n, v;
+    int n, v, c;
     src = D_000A7EA4[D_000972BC].p;
     dst = D_0009D8F4[D_000A7EA4[D_000972BC].h];
     D_000972A8 = 0;
@@ -19,10 +19,11 @@ void func_000354D8(void) {
         v = src[1];
         src += 2;
         left -= n;
-        if (n) {
+        c = n;
+        if (c) {
             do {
                 *dst++ = v;
-            } while (--n);
+            } while (--c);
         }
     } while (left);
 }
