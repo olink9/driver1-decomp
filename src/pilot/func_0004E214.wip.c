@@ -1,4 +1,4 @@
-/* LoadSoundBank (Driver 2 name) */
+/* LoadSoundBank (Driver 2 name). 97.40: only diff = target sets a0 (=0) for func_0007A704 before the D_000BD484[bank] load and puts "length -= slength" (subu s2) last before the jal; every statement order / inline wrapper / const tried. */
 typedef struct {
     unsigned int address;
     int a, b, c;
@@ -22,12 +22,13 @@ int func_0004E214(char *address, int length, int bank)
     int ct;
 
     num_samples = *(int *)address;
-    func_00079DB0(D_000BCA74[bank], address + 4, num_samples * 16);
-    slength = num_samples * 16 + 4;
+    slength = num_samples * 16;
+    { SAMPLE_DATA (*s)[32] = D_000BCA74; func_00079DB0(s[bank], address + 4, slength); }
+    slength += 4;
     address += slength;
+    func_0007A704(0);
     length -= slength;
     spuaddress = D_000BD484[bank];
-    func_0007A704(0);
     SpuSetTransferStartAddr(spuaddress);
     SpuRead(address, length);
     SpuIsTransferCompleted(1);
@@ -35,7 +36,7 @@ int func_0004E214(char *address, int length, int bank)
     for (ct = 0; ct < num_samples; ct++) {
         D_000BCA74[bank][ct].address += spuaddress;
         if (bank == 2)
-            func_00073840(D_00096C8C, ct, D_000BCA74[2][ct].address);
+            func_00073840(D_00096C8C, ct, D_000BCA74[bank][ct].address);
     }
     return num_samples;
 }
