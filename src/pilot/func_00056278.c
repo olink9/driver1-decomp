@@ -17,13 +17,14 @@ extern void DrawSync();
 void func_00056278(int a0, int a1, int a2)
 {
     RECT r;
-    int x = a1 << 5;
+    int x;
     int t;
     r.x = D_000975F0 + D_0008B140[a0].x;
+    r.y = *(unsigned short *)&D_000975F2 + D_0008B140[a0].y;
     r.w = 8;
     r.h = 32;
-    r.y = *(unsigned short *)&D_000975F2 + D_0008B140[a0].y;
     t = a1 + a2 * D_000975D8;
+    x = a1 << 5;
     a1 = x;
     if (t >= D_0008B080[*(int *)&D_00096834].e || t < 0 || (*(int *)&D_00096834 != 3 && x >= D_0008B080[*(int *)&D_00096834].c) || a1 < 0) {
         int i;

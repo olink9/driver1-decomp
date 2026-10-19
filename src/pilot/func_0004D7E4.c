@@ -1,3 +1,4 @@
+/* Start3DSoundVolPitch (Driver 2 name) */
 typedef struct {
     char pad0[0x48];
     int srcvolume;
@@ -10,21 +11,20 @@ typedef struct {
 } CH;
 extern CH D_000BD498[];
 extern int func_0004E4B0();
-extern int func_0004D968();
-
-/* Start3DSoundVolPitch */
 int func_0004D7E4(int ch, int bank, int sample, int x, int y, int z, int volume, int pitch)
 {
     CH *c;
+    CH *b;
     int n;
 
     n = ch;
-    if (n < 0)
+    if (ch < 0)
         n = func_0004E4B0();
-    if ((unsigned)n >= 16)
-        return -1;
     ch = n;
-    c = &D_000BD498[ch];
+    if ((unsigned)ch >= 16)
+        return -1;
+    b = D_000BD498;
+    c = &b[ch];
     c->srcposition = D_000BD498[ch].pos;
     c->pos[0] = x;
     c->pos[1] = y;

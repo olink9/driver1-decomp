@@ -27,18 +27,17 @@ void func_00027620(unsigned int a0, SV *a1)
     SV *s;
     SV *e;
     SV *p;
-    SV *q;
 
     for (i = 0; i < 2; i++) {
-        s = &a1[a0 & 0xFF];
-        e = &a1[a0 >> 8 & 0xFF];
+        s = (SV *)((a0 & 0xFF) * 8 + (int)a1);
+        e = (SV *)((a0 >> 5 & 0x7F8) + (int)a1);
         bits = D_00089044[i];
         x = s->x;
         y = s->y;
         z = s->z;
-        step[0] = (e->x - s->x) >> 2;
-        step[1] = (e->y - s->y) >> 2;
-        step[2] = (e->z - s->z) >> 2;
+        step[0] = (e->x - x) >> 2;
+        step[1] = (e->y - (short)y) >> 2;
+        step[2] = (e->z - (short)z) >> 2;
         for (j = 0; j < 5; j++) {
             p = &D_000A1B00[bits & 0x1F];
             bits >>= 5;
@@ -51,15 +50,13 @@ void func_00027620(unsigned int a0, SV *a1)
         }
         a0 >>= 16;
     }
-    q = D_000A1B00;
     for (k = 0; k < 9; k += 3) {
-        B35_LDV3(q);
+        B35_LDV3(&D_000A1B00[k]);
         B35_ST3(D_0009693C + k);
         B35_STSZ(sz);
         D_00096944[k] = sz[0];
         D_00096944[k + 1] = sz[1];
         D_00096944[k + 2] = sz[2];
-        q += 3;
     }
     B35_LDV1(&D_000A1B00[k]);
     B35_ST1(D_0009693C + k);

@@ -6,7 +6,7 @@ typedef struct {
     short x2, y2; unsigned char u2, v2; unsigned short pad2;
     short x3, y3; unsigned char u3, v3; unsigned short pad3;
 } PF4;
-extern char D_0008EAA8[];
+extern short D_0008EAA8[];
 extern long long D_00097530;
 extern long long D_00097534;
 extern UVS D_000B9170;
@@ -16,10 +16,11 @@ void func_0005813C(unsigned char *col, int *pos)
 {
     int x, y, d;
     PF4 *p;
+    UVS *uv;
     PF4 **pp = (PF4 **)*(int *)&D_00097530;
     x = pos[0];
     y = pos[1];
-    d = (*(short *)(D_0008EAA8 + ((*(int *)&D_00097534 << 10) & 0x3C00)) + 0x1388) >> 11;
+    d = (D_0008EAA8[(*(int *)&D_00097534 << 9) & 0x1E00] + 0x1388) >> 11;
     p = *pp;
     ((unsigned char *)p)[3] = 9;
     p->code = 0x2C;
@@ -30,12 +31,13 @@ void func_0005813C(unsigned char *col, int *pos)
     p->x1 = x + d; p->y1 = y - d;
     p->x2 = x - d; p->y2 = y + d;
     p->x3 = x + d; p->y3 = y + d;
-    p->u0 = D_000B9170.u0; p->v0 = D_000B9170.v0;
-    p->u1 = D_000B9170.u1; p->v1 = D_000B9170.v1;
-    p->u2 = D_000B9170.u2; p->v2 = D_000B9170.v2;
-    p->u3 = D_000B9170.u3; p->v3 = D_000B9170.v3;
-    p->tpage = D_000B9170.tpage | 0x20;
+    uv = &D_000B9170;
+    p->u0 = uv->u0; p->v0 = uv->v0;
+    p->u1 = uv->u1; p->v1 = uv->v1;
+    p->u2 = uv->u2; p->v2 = uv->v2;
+    p->u3 = uv->u3; p->v3 = uv->v3;
+    p->tpage = uv->tpage | 0x20;
+    p->clut = uv->clut;
     p->code |= 2;
-    p->clut = D_000B9170.clut;
     DrawPrim(p);
 }

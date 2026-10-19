@@ -6,7 +6,7 @@ extern int ratan2();
 
 int func_00067EE0(VECTOR *pPoint1, VECTOR *pPoint2)
 {
-    int theta, tempTheta;
+    int theta;
     int result;
     VECTOR delta;
 
@@ -21,17 +21,18 @@ int func_00067EE0(VECTOR *pPoint1, VECTOR *pPoint2)
     theta = ratan2(delta.vz, delta.vx);
 
     if ((theta & 2047) - 512U > 1024) {
-        tempTheta = D_0008EAAA[(theta & 4095) * 2];
-        result = delta.vx;
+        int cos = D_0008EAAA[(theta & 4095) * 2];
+        if (delta.vx > 0x7FFFF)
+            result = (delta.vx << 9) / cos << 3;
+        else
+            result = (delta.vx << 12) / cos;
     } else {
-        tempTheta = D_0008EAA8[(theta & 4095) * 2];
-        result = delta.vz;
+        int sin = D_0008EAA8[(theta & 4095) * 2];
+        if (delta.vz > 0x7FFFF)
+            result = (delta.vz << 9) / sin << 3;
+        else
+            result = (delta.vz << 12) / sin;
     }
-
-    if (result > 0x7FFFF)
-        result = (result << 9) / tempTheta << 3;
-    else
-        result = (result << 12) / tempTheta;
 
     return result;
 }

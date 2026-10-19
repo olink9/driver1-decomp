@@ -332,3 +332,7 @@ func_0003E6A0	DentCar	r2-025
 func_00033D18	SendSBK	r2-031
 func_0007A704	SpuSetTransferMode?	r2-031 (likely)
 func_00051A40	ProcessTextureInfo	r2-034
+func_0004D7E4	Start3DSoundVolPitch	r2-037
+func_0004E4B0	GetFreeChannel	r2-037
+func_0004D968	CompleteSoundSetup	r2-037
+func_00052C10	DrawAnimatingObject	r2-039

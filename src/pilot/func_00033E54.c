@@ -20,25 +20,22 @@ void func_00033E54(void)
     OBJ *p;
     OBJ *q;
     OBJ *o;
-    unsigned short *idx;
     int i, n, hdr;
 
-    p = D_00097238;
     D_00097248 = 0;
     n = *D_000972D0++;
-    idx = D_000972D0;
-    i = 0;
-    while (i < n) {
+    p = D_00097238;
+    for (i = 0; i < n; i++) {
         hdr = *(int *)p;
         p = (OBJ *)((int *)p + 1);
-        D_000A0E20[*idx] = p;
+        D_000A0E20[D_000972D0[i]] = p;
         o = p;
         if (p->pad4 == -1) {
             if (p->f20)
                 p->f20 += (int)p;
             p->f10 += (int)p;
-            p->f1c += (int)p;
             p->f18 += (int)p;
+            p->f1c += (int)p;
         } else {
             q = D_000A0E20[p->pad4];
             if (q->f20)
@@ -47,10 +44,8 @@ void func_00033E54(void)
             p->f18 = q->f18;
             p->f1c = q->f1c;
         }
-        p = (OBJ *)((char *)p + hdr);
         o->f14 += (int)o;
-        idx++;
-        i++;
+        p = (OBJ *)((char *)p + hdr);
     }
     D_000969E8 = 0;
 }

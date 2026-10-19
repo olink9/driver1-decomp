@@ -25,10 +25,10 @@ void func_00052C10(int a0, CO *cop)
     int loop;
     int type;
 
+    M *model;
     aop = D_0008AE3C[*(int *)&D_00096834];
-    type = cop->fE;
-    if (D_000A0E20[type]->f4 != -1)
-        type = D_000A0E20[type]->f4;
+    model = D_000A0E20[cop->fE];
+    type = model->f4 == -1 ? cop->fE : model->f4;
     for (loop = 0; loop < D_000975AC; loop++, aop++) {
         if (type == aop->f4) {
             type = aop->f0;
