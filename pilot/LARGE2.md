@@ -16,3 +16,7 @@ Follow AGENT.md's loop with these changes:
 Scratch files under `/tmp/claude-1000/d1r2/<batch id>/`, never in `src/`.
 Final reply: `<batch>: <symbol> <best score> <matched|gave up>`, what is left if not matched, each systematic lesson in
 one line, and any library function identified with certainty.
+
+If splat marked the function "Handwritten" (check `grep -B2 "nonmatching SYMBOL," asm/2C8C.s`) and it has no normal
+prologue / uses add/addi / clobbers unsaved s-regs, it is genuine asm: `pilot/scripts/asmconv.py` converts the listing
+into a matching file-scope `__asm__` block in one go (it matched a 1.5 KB one as-is). Tag it `/* HANDWRITTEN ASM */`.

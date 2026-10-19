@@ -964,3 +964,8 @@ time	symbol	size	best	attempts	status
 2026-10-19T19:21:29Z	func_0003110C	340	100.0	1	matched	run2-fresh
 2026-10-19T19:21:29Z	func_0003BA7C	380	100.0	2	matched	run2-fresh
 2026-10-19T19:23:01Z	func_00061F5C	3668	100.0	14	matched	run2-large
+2026-10-19T19:24:23Z	func_00026C38	408	100.0	1	matched	run2-fresh
+2026-10-19T19:24:23Z	func_0004DBF8	432	100.0	2	matched	run2-fresh
+2026-10-19T19:24:23Z	func_0004E67C	452	100.0	3	matched	run2-fresh
+2026-10-19T19:24:23Z	func_0003DF94	688	100.0	1	matched	run2-fresh
+2026-10-19T19:25:36Z	func_00026194	1484	100.0	1	matched	run2-fresh

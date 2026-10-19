@@ -12,18 +12,21 @@ for l in lines:
     m=re.match(r'\s*(\.L\w+):',l)
     if m: insns.append([m.group(1)+':',None])
 macros=set(); res=[]
-br={'j','jal','jalr','beq','bne','bnez','beqz','bgtz','bgez','bltz','blez'}
+br={"bgezal",'j','jal','jalr','beq','bne','bnez','beqz','bgtz','bgez','bltz','blez'}
 for i,(op,a) in enumerate(insns):
     if a is None: res.append(op); continue
     if op in br:
         nxt=insns[i+1]
-        if nxt[0]=='nop': 
+        if nxt[0]=='nop' and op in ('j','jal'):
             res.append(f"{op} {a}"); insns[i+1]=['__skip__',''] ; continue
         M='X'+op.upper(); n=len(a.split(','))
         ps=','.join('p%d'%k for k in range(n)); body=', '.join('\\\\p%d'%k for k in range(n))
         macros.add(f'.macro {M} {ps}; {op} {body}; .endm')
         res.append(f"{M} {a}")
     elif op=='__skip__': continue
+    elif op=='rtpt': res.append('.word 0x4A280030')
+    elif op=='nclip': res.append('.word 0x4B400006')
+    elif op=='avsz3': res.append('.word 0x4B58002D')
     else: res.append(f"{op} {a}".strip())
 print('/* HANDWRITTEN ASM */')
 print('__asm__(\n    ".set noreorder\\n"')

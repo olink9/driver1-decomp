@@ -36,3 +36,11 @@
 
 /* store SZ3 (from b048) */
 #define gte_stsz(r) __asm__ volatile("swc2 $19, 0(%0)" : : "r"(r) : "memory")
+
+/* load VECTOR into IR1-IR3 (hw-08) */
+#define gte_ldlvl(r0) __asm__ volatile ( \
+    "lwc2  $9, 0( %0 );" "lwc2  $10, 4( %0 );" "lwc2  $11, 8( %0 )" : : "r"(r0))
+
+/* square IR1-IR3 (hw-08) */
+#define gte_sqr0() __asm__ volatile ( \
+    "nop;" "nop;" ".word 0x4AA00428")
