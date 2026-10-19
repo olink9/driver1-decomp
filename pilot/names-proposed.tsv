@@ -360,3 +360,10 @@ func_00058A84	setCamera	f-01
 func_0005C5B0	NoMoreCamerasErrorMessage	f-02
 func_0002DADC	InitFrustrumMatrix	f-02
 func_00059658	FindFreeCamera	f-02
+func_0001BAC0	GlobalTimeStep	b131
+func_00067C9C	CarCarCollision3?	b131
+func_0003FC98	DamageCar3D?	b131
+func_00047FA4	Setup_Sparks?	b131
+func_00047824	Setup_Debris?	b131
+func_0001FAFC	CheckCarToCarCollisions?	b131
+D_0009AF04	car_cosmetics	b131
