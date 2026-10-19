@@ -65,13 +65,13 @@ void func_00029448(unsigned int verts, unsigned int uv, unsigned int uv2, SV *v)
     duv3[1] = (duv2[1] - duv[1]) >> 2;
     bp = D_00089030;
     pp = D_000A1B00;
-    for (k = i = 0; i < 5; i++) {
+    for (k = i = 0; i < 5; i++, bp++) {
         rx = x;
         ry = y;
         rz = z;
         ru = u;
         rw = w;
-        bits = *bp++;
+        bits = *bp;
         for (j = 0; j < 5; j++) {
             int n = bits & 0x1F;
             SV *p = &D_000A1B00[n];

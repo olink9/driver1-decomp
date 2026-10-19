@@ -12,9 +12,8 @@ void func_000604F8(OBJ *o) {
     int dz;
     int r = o->c50;
     o->xC = o->x28 - o->x0;
-    dz = o->x30 - o->x8;
-    o->x14 = dz;
     o->x10 = o->x2C - o->x4;
+    o->x14 = dz = o->x30 - o->x8;
     o->h18 = 0;
     o->h1C = 0;
     o->h1A = -ratan2(dz, o->xC) - 0x400;

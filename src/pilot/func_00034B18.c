@@ -1,7 +1,8 @@
 /* Driver 2: ready_cb_textures */
 typedef struct { int pad0, pad1, addr, pad3; } SPOOL;
 extern SPOOL D_000A7BA4[];
-extern int D_000969EC, D_000971F0, D_000971F4, D_000971F8, D_000971FC, D_00097200;
+extern volatile int D_000969EC;
+extern int D_000971F0, D_000971F4, D_000971F8, D_000971FC, D_00097200;
 extern int D_0009720C, D_00097220, D_00097268, D_000972D8;
 extern void func_0007A4FC();
 extern void func_0007A580();
@@ -32,13 +33,13 @@ void func_00034B18(unsigned char intr, unsigned char *result)
         } else {
             D_00097220--;
             D_000969EC++;
-            if (D_00097220 == 0) {
-                func_00032DEC();
-            } else {
+            if (D_00097220 != 0) {
                 D_0009720C = 0;
                 D_000971F8 = 17;
                 D_000971FC = intr;
                 D_000971F0 = cur->addr + 0x4000;
+            } else {
+                func_00032DEC();
             }
         }
     } else {

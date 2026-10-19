@@ -4,6 +4,7 @@ extern long long D_00096C88;
 extern unsigned long D_000BCE74[], D_000BD484[];
 extern void func_0004E40C(), func_0004E348(), func_0007A704(), SpuSetTransferStartAddr(), SpuRead();
 
+/* Driver 2: SendSBK (SPOOL.C) */
 void func_00033D18(void)
 {
     char *address;
@@ -19,14 +20,14 @@ void func_00033D18(void)
             func_0004E40C();
             func_0004E348();
         }
-        n = *(int *)address;
-        D_00097228 = n;
-        n <<= 2;
+        dest = D_000BCE74;
+        D_00097228 = *(int *)address;
+        n = D_00097228 << 2;
         source = (unsigned long *)(address + 4);
         for (i = 0; i < n; i++)
-            D_000BCE74[i] = source[i];
-        slength = 0xFF8 - D_00097228 * 16;
+            dest[i] = source[i];
         address += D_00097228 * 16 + 4;
+        slength = 0xFF8 - D_00097228 * 16;
         D_0009729C = D_000BD484[D_00097280];
     } else {
         slength = 0x1000;

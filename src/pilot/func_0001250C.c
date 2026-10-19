@@ -6,10 +6,8 @@ void func_0001250C(void)
 	int i = 0;
 	short *tab = D_0008EAA8;
 	do {
-		int c = tab[((i * 4 + 0x400) & 0xFFF) * 2];
-		int s = tab[((i * 4) & 0xFFF) * 2];
-		int a = c * 180, b = s * 450, a2 = s * 180, c2 = c * 450;
-		int na = -a, na2 = -a2, nb = -b, nc2 = -c2;
+int s = tab[((i * 4) & 0xFFF) * 2]; int c = tab[((i * 4 + 0x400) & 0xFFF) * 2];
+		int a = c*180, na = -a, b = s*450, a2 = s*180, na2 = -a2, c2 = c*450, nb = -b, nc2 = -c2;
 		i++;
 		out[0] = (na - b) >> 12;
 		out[1] = (na2 + c2) >> 12;

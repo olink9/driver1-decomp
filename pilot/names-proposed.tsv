@@ -329,3 +329,6 @@ func_0006ADFC	SetColourByValue	r2-013
 func_0004C610	GetEngineRevs	r2-026
 func_0005073C	FadeGameScreen	r2-026
 func_0003E6A0	DentCar	r2-025
+func_00033D18	SendSBK	r2-031
+func_0007A704	SpuSetTransferMode?	r2-031 (likely)
+func_00051A40	ProcessTextureInfo	r2-034

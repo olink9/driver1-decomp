@@ -1,6 +1,6 @@
 typedef struct { short x, y, w, h; } RECT;
 extern void func_000766A8(), func_0007D608();
-void func_0005CB68(unsigned int pos, unsigned int mask, unsigned int idx)
+void func_0005CB68(unsigned int pos, unsigned short mask, unsigned char idx)
 {
     int y, x;
     unsigned short buf[16];
