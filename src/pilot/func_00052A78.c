@@ -1,3 +1,4 @@
+/* InitAnimatingObjects (D2 name, probable) */
 extern long long D_00096834;
 extern int D_0008AE5C[];
 typedef struct { int a, b, c, d; } E16;
@@ -21,12 +22,12 @@ void func_00052A78(void)
     s0 = 0;
     if (D_000975AC != 0) {
         p = D_0008AE3C[idx];
-        for (i = 0; i < D_000975AC; i++) {
-            r = func_000396A8(p[i].c);
+        for (i = 0; i < D_000975AC; i++, p++) {
+            r = func_000396A8(p->c);
             if (r) {
                 for (s0 = 0; r != D_000A0E20[s0]; s0++)
                     ;
-                p[i].b = s0;
+                p->b = s0;
                 r->flags |= 4;
             }
             for (j = 0; j < *(int *)&D_00097370; j++) {

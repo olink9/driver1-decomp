@@ -1,5 +1,3 @@
-/* run2 (r2-004): all 5 values (xd, zd, sphere_sq, cop->vz, cam.vz) are global pseudos; ours alloc order zd>loads>xd>sphere_sq, target xd>sphere_sq>zd>loads. Tried ABS macro, D2 test order, sums into xd/zd, for/do loop shapes - no. */
-/* WIP 99.72: only diff = register choice in the bounding-sphere test (sphere_sq v1 vs a2, xd v0 vs a1, zd a0 vs v0) */
 /* Driver 2 name: CameraCollisionCheck */
 typedef struct { int vx, vy, vz, pad; } VEC;
 typedef struct { short m[3][3]; short pad; int t[3]; } MAT;
@@ -98,15 +96,15 @@ int func_0003C998(void)
                 model = modelpointers[cop->type];
                 boxptr = model->collision_block;
                 if (boxptr != 0 && !(model->flags2 & 0x800)) {
-                    sphere_sq = model->bounding_sphere * model->bounding_sphere;
+                    sphere_sq = model->bounding_sphere;
+                    sphere_sq *= sphere_sq;
                     xd = cop->vx - camera_position.vx;
                     if (xd < 0)
                         xd = camera_position.vx - cop->vx;
                     zd = cop->vz - camera_position.vz;
                     if (zd < 0)
                         zd = camera_position.vz - cop->vz;
-                    sphere_sq += sphere * sphere;
-                    if (zd * zd + xd * xd < sphere_sq) {
+                    if (sphere_sq + sphere * sphere > xd * xd + zd * zd) {
                         num_cb = *boxptr;
                         collide = (COLLISION_PACKET *)(boxptr + 1);
                         for (box_loop = 0; box_loop < num_cb; box_loop++, collide++) {

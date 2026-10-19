@@ -69,7 +69,7 @@ int func_00063E54(COP *cop, unsigned char *p)
     if (p[5] != 0) {
         COP *c = &D_000C4690[p[5]];
         if (c->state == 1)
-            return 0;
+            return 1;
         ang = ratan2(rdx, rdz) & 0xFFF;
         if (ABS(((ang - cop->ang + 0x800) & 0xFFF) - 0x800) < 0x400) {
             ang = car->ang;
@@ -98,12 +98,12 @@ int func_00063E54(COP *cop, unsigned char *p)
                 z1 += cdz;
                 x2 += kdx;
                 z2 += kdz;
-                dx = ABS(x1 - x2);
-                dz = ABS(z1 - z2);
-                if (dz < dx)
-                    d = dx + dz / 2;
+                rdx = ABS(x1 - x2);
+                rdz = ABS(z1 - z2);
+                if (rdz < rdx)
+                    d = rdx + rdz / 2;
                 else
-                    d = dz + dx / 2;
+                    d = rdz + rdx / 2;
                 if (d < 1200)
                     goto hit;
                 steps--;

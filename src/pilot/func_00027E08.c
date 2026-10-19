@@ -1,7 +1,8 @@
 /* no Driver 2 counterpart: draws textured quads (POLY_FT4) from packed vertex indices, clipping via func_00028FA4 */
 typedef struct { char *primptr; unsigned long *ot; } DB;
-extern long long D_00097530;
-#define current (*(DB **)&D_00097530)
+typedef struct { DB *p; int pad; } CUR;
+extern CUR D_00097530;
+#define current (D_00097530.p)
 
 typedef struct { short x, y; } SXY;
 typedef struct { unsigned char u, v; } UV;
@@ -29,6 +30,7 @@ void func_00027E08(int tex, int unused, int n, unsigned long *ot)
     char pad[32];
     unsigned long w;
     unsigned long *prim, *p;
+    DB *db;
 
     if (n == 16)
         tab = D_0008905C;
@@ -80,9 +82,10 @@ void func_00027E08(int tex, int unused, int n, unsigned long *ot)
         D_0009694C[0] = D_00096940[v[0]];
         D_0009694C[1] = D_00096940[v[1]];
         D_0009694C[3] = D_00096940[v[2]];
+        db = current;
         D_0009694C[2] = D_00096940[v[3]];
 
-        p = prim = (unsigned long *)current->primptr;
+        p = prim = (unsigned long *)db->primptr;
         *p++ = *ot | 0x9000000;
         *ot = (unsigned long)prim;
         *p++ = *D_00096950;

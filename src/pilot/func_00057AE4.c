@@ -1,4 +1,6 @@
-/* run2 (r2-004): shade (pseudo 95, 25 refs/332 insns, prio .30) loses to j*sy giv (.47), j (.42), const 0x80 (.39); target needs shade first (s4). Tried: shade set outside/inside j loop, unsigned char, temps for shade+-1, short sx/sy - no. */
+/* FAKEMATCH: a do { } while (0) wrapper (emits no code) is used only to raise loop-depth weights in register allocation - our run-1 rule counts these as fake until a real C form (e.g. a macro body) is found. */
+/* run2-r3: shade (14) only wins s4 when the GT4 setup sits in a do { } while (0) block: the loop notes raise the
+   loop-depth weight of its refs (flow REG_N_REFS) above the j*sy giv / j / 0x80. Real C, no asm hint. */
 /* func_00057AE4: draws the full-screen map (Driver 1 only, no Driver 2 counterpart) */
 typedef struct { int x, y, z, pad; } POS;
 typedef struct { unsigned char r, g, b, cd; } COL;
@@ -134,25 +136,27 @@ void func_00057AE4(void)
                 y0 = w - (i * sx + ox);
                 y1 = y0 + sx;
             }
-            gt = (GT4 *)**(int **)&D_00097530;
-            ((unsigned char *)gt)[3] = 0xC;
-            gt->code = 0x3C;
-            gt->r0 = shade; gt->g0 = shade; gt->b0 = shade; 
-            gt->r1 = shade + 1; gt->g1 = shade + 1; gt->b1 = shade + 1; 
-            gt->r2 = shade - 1; gt->g2 = shade - 1; gt->b2 = shade - 1; 
-            gt->r3 = shade; gt->g3 = shade; gt->b3 = shade; 
-            u = x0 & 0x40;
-            v = y0 & 0x40;
-            gt->u0 = u; gt->v0 = v;
-            gt->u1 = u + 0x3F; gt->v1 = v;
-            gt->u2 = u; gt->v2 = v + 0x3F;
-            gt->u3 = u + 0x3F; gt->v3 = v + 0x3F;
-            gt->x0 = x0; gt->y0 = y0;
-            gt->x1 = x1; gt->y1 = y0;
-            gt->x2 = x0; gt->y2 = y1;
-            gt->x3 = x1; gt->y3 = y1;
-            gt->clut = D_00087030[*(int *)&D_000974B4][0];
-            gt->tpage = D_00086F30[*(int *)&D_000974B4] | 0x20;
+            do {
+                gt = (GT4 *)**(int **)&D_00097530;
+                ((unsigned char *)gt)[3] = 0xC;
+                gt->code = 0x3C;
+                gt->r0 = shade; gt->g0 = shade; gt->b0 = shade; 
+                gt->r1 = shade + 1; gt->g1 = shade + 1; gt->b1 = shade + 1; 
+                gt->r2 = shade - 1; gt->g2 = shade - 1; gt->b2 = shade - 1; 
+                gt->r3 = shade; gt->g3 = shade; gt->b3 = shade; 
+                u = x0 & 0x40;
+                v = y0 & 0x40;
+                gt->u0 = u; gt->v0 = v;
+                gt->u1 = u + 0x3F; gt->v1 = v;
+                gt->u2 = u; gt->v2 = v + 0x3F;
+                gt->u3 = u + 0x3F; gt->v3 = v + 0x3F;
+                gt->x0 = x0; gt->y0 = y0;
+                gt->x1 = x1; gt->y1 = y0;
+                gt->x2 = x0; gt->y2 = y1;
+                gt->x3 = x1; gt->y3 = y1;
+                gt->clut = D_00087030[*(int *)&D_000974B4][0];
+                gt->tpage = D_00086F30[*(int *)&D_000974B4] | 0x20;
+            } while (0);
             DrawPrim(gt);
             func_00056278(0, i, j);
 

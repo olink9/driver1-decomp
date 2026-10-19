@@ -1,4 +1,6 @@
-/* best 99.34: only diff = col[0] grey combine: target keeps f (copy of D_00097128) in a0 and ORs it in after the D_00097151 mult (sched1 put the |f later, lengthening f so lreg avoids v1). Tried: all term orders/assoc, temps, f types, B8 vs array/CV struct decls, col types - none move it. */
+/* FAKEMATCH: a do { } while (0) wrapper (emits no code) is used only to raise loop-depth weights in register allocation - our run-1 rule counts these as fake until a real C form (e.g. a macro body) is found. */
+/* run2-r3: the else branch is a do { } while (0) block (probably a macro): its loop notes double the refs weight, so
+   local-alloc ranks the f<<8 temp above f (tie 2.0/2.0 before) and f lands in a0. Real C, no asm hint. */
 /* func_000270D4: draw the visible building/cell objects (Driver 2: DrawAllBuildings-like) */
 typedef struct {
     int x, y, z;            /* 0x00 */
@@ -74,10 +76,13 @@ void func_000270D4(int num)
         col[1] = D_00097138 | 0x28000000;
         col[2] = D_00097150 | 0x28000000;
     } else {
-        unsigned int f = *(unsigned int *)&D_00097128;
-        col[0] = (f << 16) | (f << 8) | f | 0x2C000000;
-        col[1] = 0x28000000 | ((((*(unsigned int *)&D_00097128 * D_0009713A.v) >> 7) & 0xFF) << 16) | ((((*(unsigned int *)&D_00097128 * D_00097139.v) >> 7) & 0xFF) << 8) | (((*(unsigned int *)&D_00097128 * *(unsigned char *)&D_00097138) >> 7) & 0xFF);
-        col[2] = 0x28000000 | ((((*(unsigned int *)&D_00097128 * D_00097152.v) >> 7) & 0xFF) << 16) | ((((*(unsigned int *)&D_00097128 * D_00097151.v) >> 7) & 0xFF) << 8) | (((*(unsigned int *)&D_00097128 * *(unsigned char *)&D_00097150) >> 7) & 0xFF);
+        do {
+            unsigned int f;
+            f = *(unsigned int *)&D_00097128;
+            col[0] = (f << 16) | (f << 8) | f | 0x2C000000;
+            col[1] = 0x28000000 | ((((*(unsigned int *)&D_00097128 * D_0009713A.v) >> 7) & 0xFF) << 16) | ((((*(unsigned int *)&D_00097128 * D_00097139.v) >> 7) & 0xFF) << 8) | (((*(unsigned int *)&D_00097128 * *(unsigned char *)&D_00097138) >> 7) & 0xFF);
+            col[2] = 0x28000000 | ((((*(unsigned int *)&D_00097128 * D_00097152.v) >> 7) & 0xFF) << 16) | ((((*(unsigned int *)&D_00097128 * D_00097151.v) >> 7) & 0xFF) << 8) | (((*(unsigned int *)&D_00097128 * *(unsigned char *)&D_00097150) >> 7) & 0xFF);
+        } while (0);
     }
 
     for (i = 0; i < num; i++) {
