@@ -41,7 +41,7 @@ static inline int dispatch(int **a0, int type, char *s, int *pl)
         pl[0] = (int)a0[0];
         return func_0006E558(pl[0], s);
     case 0x16:
-        return func_0006E598(a0[0], a0[1][7], s);
+        return func_0006E598(a0[0], a0[1][7], s, pl);
     }
     return -1;
 }
@@ -53,11 +53,11 @@ int func_0006E854(int **a0, int type, int idx)
     int r;
 
     s = getent(type, idx);
-    if (s == 0)
-        return 0;
-    loc[2] = -1;
-    r = dispatch(a0, type, s, loc);
-    if (r == -1 && loc[2] == r)
-        return 0;
-    return 1;
+    if (s != 0) {
+        loc[2] = -1;
+        r = dispatch(a0, type, s, loc);
+        if (r != -1 || loc[2] != r)
+            return 1;
+    }
+    return 0;
 }

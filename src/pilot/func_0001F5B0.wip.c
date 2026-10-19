@@ -45,6 +45,7 @@ int func_0001F5B0(VEC *pos)
     int r;
     int ht;
     int rx, rz;
+    char pad[16];
 
     x = D_0009E714[2] + pos->vx;
     r = pos->vz - 750;

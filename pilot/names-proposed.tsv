@@ -326,3 +326,6 @@ func_00047FA4	Setup_Sparks	b118 likely
 func_0006F81C	GetPeriod?	r2-013 (takes note, c2spd)
 func_000710D0	SetPer	r2-013
 func_0006ADFC	SetColourByValue	r2-013
+func_0004C610	GetEngineRevs	r2-026
+func_0005073C	FadeGameScreen	r2-026
+func_0003E6A0	DentCar	r2-025

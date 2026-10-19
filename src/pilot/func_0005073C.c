@@ -22,17 +22,14 @@ void func_0005073C(int flag, int speed) {
         D_000BDEF0.x2 = -1; D_000BDEF0.y2 = 0;
         D_000BDEF0.x3 = 0; D_000BDEF0.y3 = 0;
         D_000BDEF0.tpage = GetTPage(0, 2, 0, 0);
-        setlen(&D_000BDEC0, 8);
-        D_000BDEC0.code = 0x38;
+        setPolyG4(&D_000BDEC0);
         val = D_00096CB4;
-        D_000BDEC0.y2 = 0x100; D_000BDEC0.y3 = 0x100;
-        D_000BDEC0.x3 = D_000BDEC0.x1 = 0x200;
-        D_000BDEC0.x0 = 0; D_000BDEC0.y0 = 0; D_000BDEC0.y1 = 0; D_000BDEC0.x2 = 0;
-        D_000BDEC0.code = 0x3A;
-        D_000BDEC0.r0 = val; D_000BDEC0.g0 = val; D_000BDEC0.b0 = val;
-        D_000BDEC0.r1 = val; D_000BDEC0.g1 = val; D_000BDEC0.b1 = val;
-        D_000BDEC0.r2 = val; D_000BDEC0.g2 = val; D_000BDEC0.b2 = val;
-        D_000BDEC0.r3 = val; D_000BDEC0.g3 = val; D_000BDEC0.b3 = val;
+        setRGB0(&D_000BDEC0, val, val, val);
+        setRGB1(&D_000BDEC0, val, val, val);
+        setRGB2(&D_000BDEC0, val, val, val);
+        setRGB3(&D_000BDEC0, val, val, val);
+        setXYWH(&D_000BDEC0, 0, 0, 512, 256);
+        setSemiTrans(&D_000BDEC0, 1);
         if (flag != 0)
             D_00096CB4 = D_00096CB4 - speed;
         else

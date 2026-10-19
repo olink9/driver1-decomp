@@ -50,30 +50,25 @@ void func_0003E6A0(int id)
     int Zone;
     int Damage;
     int VertNo;
-    int count;
+    int count, c2, c3;
 
     VertPtr = D_000B09BC[id];
     MaxDamage = 0;
 
     if (id != 0) {
         model = D_00098950[id - 1].model;
-        TmpModel = D_000A1AB0[model];
-        DamModel = D_000A1AD0[model];
+        DamVertPtr = D_000A1AD0[model]->vertices;
+        CleanVertPtr = D_000A1AB0[model]->vertices;
     } else {
-        TmpModel = D_000A1AB0[0];
-        DamModel = D_000A1AD0[0];
+        DamVertPtr = D_000A1AD0[0]->vertices;
+        CleanVertPtr = D_000A1AB0[0]->vertices;
         model = *(int *)&D_0009683C;
     }
 
-    DamVertPtr = DamModel->vertices;
-    CleanVertPtr = TmpModel->vertices;
-
     CleanModel = D_000A1AB0[id != 0 ? model : 0];
 
-    for (count = 0; count < CleanModel->num_vertices; count++) {
+    for (count = 0; count < CleanModel->num_vertices; count++, VertPtr++)
         VertPtr->pad = 0;
-        VertPtr++;
-    }
 
     VertPtr = D_000B09BC[id];
 
@@ -101,13 +96,10 @@ void func_0003E6A0(int id)
         }
     }
 
-    for (count = 0; count < CleanModel->num_vertices; count++) {
+    for (count = 0; count < CleanModel->num_vertices; count++, VertPtr++, DamVertPtr++, CleanVertPtr++) {
         VertPtr->vx = CleanVertPtr->vx + (((DamVertPtr->vx - CleanVertPtr->vx) * VertPtr->pad) >> 12);
         VertPtr->vy = CleanVertPtr->vy + (((DamVertPtr->vy - CleanVertPtr->vy) * VertPtr->pad) >> 12);
         VertPtr->vz = CleanVertPtr->vz + (((DamVertPtr->vz - CleanVertPtr->vz) * VertPtr->pad) >> 12);
-        DamVertPtr++;
-        CleanVertPtr++;
-        VertPtr++;
     }
 
     if (id != 0)
@@ -115,17 +107,17 @@ void func_0003E6A0(int id)
     else
         DamPtr = D_000B08B8;
 
-    for (count = 0; count < CleanModel->num_polys; count++)
-        DamPtr[count] = 0;
+    for (c2 = 0; c2 < CleanModel->num_polys; c2++)
+        DamPtr[c2] = 0;
 
     for (Zone = 0; Zone < 6; Zone++) {
         Damage = D_0009B0A4[id].damage[Zone] >> 10;
 
-        for (count = 0; count < 70; count++) {
+        for (c3 = 0; c3 < 70; c3++) {
             if (id == 0)
-                PolyIndex = D_000973D4[model][Zone][count];
+                PolyIndex = D_000973D4[model][Zone][c3];
             else
-                PolyIndex = D_000973D0[model][Zone][count];
+                PolyIndex = D_000973D0[model][Zone][c3];
 
             if (PolyIndex == 0xFF)
                 break;
@@ -142,10 +134,10 @@ void func_0003E6A0(int id)
         }
     }
 
-    for (count = 0; count < CleanModel->num_polys; count++) {
+    for (c2 = 0; c2 < CleanModel->num_polys; c2++) {
         if (id != 0)
-            DamPtr[count] <<= 7;
+            DamPtr[c2] <<= 7;
         else
-            DamPtr[count] <<= 6;
+            DamPtr[c2] <<= 6;
     }
 }

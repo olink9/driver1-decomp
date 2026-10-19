@@ -13,20 +13,21 @@ unsigned short func_0004C610(CAR *cp)
 		ws >>= 11;
 		if (gear < 0) gear = 0;
 		if (gear > 3) gear = 3;
-		gd = D_0008A9B4;
-		gd += gear;
+		{
+			/* D2: gd = &geard[type][gear] - the row base is computed first */
+			GEAR_DESC *base = D_0008A9B4;
+			gd = base + gear;
+		}
 		do {
 			old = gear;
-			if (acc > 0) { if (ws < gd->low_ws) { gd--; gear--; } }
-			else { if (ws < gd->lowidl_ws) { gd--; gear--; } }
+			if (acc > 0 ? ws < gd->low_ws : ws < gd->lowidl_ws) { gd--; gear--; }
 			if (gd->hi_ws < ws) { gd++; gear++; }
 		} while (old != gear);
-		cp->gear = gear;
 	} else {
 		ws = -ws / 2048;
 		gear = 0;
-		cp->gear = gear;
 	}
-	if (acc == 0) return ws * D_0008A9B4[gear].ratio_id;
-	return ws * D_0008A9B4[gear].ratio_ac;
+	cp->gear = gear;
+	if (acc == 0) return D_0008A9B4[gear].ratio_id * ws;
+	return D_0008A9B4[gear].ratio_ac * ws;
 }

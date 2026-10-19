@@ -3,7 +3,8 @@ typedef struct {
     int f0; char p3[0xC]; int i100; char p4[4]; int i108; char p5[0x74];
     unsigned short h180; short h182; unsigned char b184, b185;
 } CAR;
-extern long long D_000967F4, D_00096858, D_000C7004;
+extern long long D_000967F4, D_00096858;
+extern int D_000C7004[];
 extern int D_00096C68, D_00096C6C, D_00096C64, D_00096C60;
 extern int func_0004C610();
 
@@ -11,7 +12,7 @@ extern int func_0004C610();
 void func_0004C72C(CAR *p)
 {
     int s2;
-    unsigned short ang;
+    unsigned int ang;
     int tgt;
     int a0;
 
@@ -22,7 +23,7 @@ void func_0004C72C(CAR *p)
         int v;
         if (p->type == 0x17 && *(int *)&D_000967F4 != 0x16)
             goto b0;
-        v = *(int *)&D_000C7004;
+        v = D_000C7004[0];
         if (v == 0x7f) goto b0;
         if ((unsigned)(v - 0xAA) < 10) goto b0;
         if (*(int *)&D_00096858 == 0) goto call;
@@ -36,16 +37,16 @@ call:
         }
     }
     tgt = 0x4E20;
-mid:
     p->b184 = 0;
     if (ang < 0x1F40) ang = 0x1F40;
+mid:
     a0 = tgt;
-    if (ang - (a0 & 0xFFFF) > D_00096C68) {
+    if ((unsigned short)ang - (a0 & 0xFFFF) > D_00096C68) {
         s2 = 0;
-        p->b185 = 1;
         a0 = ang - (unsigned short)D_00096C68;
+        p->b185 = 1;
     }
-    if ((a0 & 0xFFFF) - ang > D_00096C6C)
+    if ((a0 & 0xFFFF) - (unsigned short)ang > D_00096C6C)
         a0 = ang + (unsigned short)D_00096C6C;
     p->h180 = a0;
     if (s2 != 0 || p->i108 >= 0x1F) {

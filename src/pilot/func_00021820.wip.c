@@ -1,5 +1,6 @@
-/* WIP 94.38: remaining diff is the in-place cx%60/cz%60 vs idx ordering and D_00097374 load hoisting
-   (a separate local for D_00097374 gives 94.22 with only that block differing).
+/* WIP 94.55 (run2 r2-023): switch temps now block-local (u). Remaining: target computes cx%60/cz%60 in place
+   (cx -= xc*60 etc.); doing that here frees one pseudo and cz then lands in a1 (param z reg) instead of t0,
+   shifting x/z/dir copies (t6/t5/t4). Needs a form where cz conflicts with a1.
    func_00021820 - no Driver 2 counterpart: locate the road segment at (x, z) for a heading */
 typedef struct {
     int d0, d1;
@@ -89,21 +90,17 @@ int func_00021820(int x, int z, unsigned char dir, SEG *seg)
     r = &D_0009704C[(short)id];
     switch (dir) {
     case 0:
-        t = r->f4 * 1500 - 750;
-        d = t + z;
+        { int u = r->f4 * 1500 - 750; d = u + z; }
         d = -d;
         break;
     case 1:
-        t = (r->f8 + 1) * 1500 - 750;
-        d = t - x;
+        { int u = (r->f8 + 1) * 1500 - 750; d = u - x; }
         break;
     case 2:
-        t = (r->fC + 1) * 1500 - 750;
-        d = t + z;
+        { int u = (r->fC + 1) * 1500 - 750; d = u + z; }
         break;
     case 3:
-        t = r->f0 * 1500 - 750;
-        d = x - t;
+        { int u = r->f0 * 1500 - 750; d = x - u; }
         break;
     }
     seg->d0 = d;

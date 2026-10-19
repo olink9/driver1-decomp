@@ -31,6 +31,15 @@ extern short D_0008EAA8[];
 extern int ratan2();
 #define ABS(x) ((x) < 0 ? -(x) : (x))
 
+static inline int approx_dist(int dx, int dz)
+{
+    dx = abs(dx);
+    dz = abs(dz);
+    if (dz < dx)
+        return dx + dz / 2;
+    return dz + dx / 2;
+}
+
 int func_00063E54(COP *cop, unsigned char *p)
 {
     int x1, z1, x2, z2;
@@ -45,6 +54,7 @@ int func_00063E54(COP *cop, unsigned char *p)
     int speed, carspeed;
     int cdx, cdz, kdx, kdz;
     CAR *car;
+    int cid;
 
     x1 = cop->x;
     z1 = cop->z;
@@ -53,16 +63,12 @@ int func_00063E54(COP *cop, unsigned char *p)
     z2 = car->z;
     rdx = x2 - x1;
     rdz = z2 - z1;
-    dx = abs(rdx);
-    dz = abs(rdz);
-    if (dz < dx)
-        d = dx + dz / 2;
-    else
-        d = dz + dx / 2;
+    d = approx_dist(rdx, rdz);
     if (d >= 15000)
         return 0;
     if (p[5] != 0) {
-        if (D_000C4690[p[5]].state == 1)
+        COP *c = &D_000C4690[p[5]];
+        if (c->state == 1)
             return 0;
         ang = ratan2(rdx, rdz) & 0xFFF;
         if (ABS(((ang - cop->ang + 0x800) & 0xFFF) - 0x800) < 0x400) {

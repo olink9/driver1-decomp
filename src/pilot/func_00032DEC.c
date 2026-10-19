@@ -43,8 +43,8 @@ void func_00032DEC(void)
             D_00097210 = 0;
             D_000971FC = 2;
             D_000971F8 = current->nsectors;
-            D_000971F0 = ta + ((D_00097268 & 1) << 12);
             D_00097280 = current->data;
+            D_000971F0 = ta + ((D_00097268 & 1) << 12);
             func_0007A12C(func_00035044);
             break;
         }

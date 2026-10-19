@@ -1,4 +1,4 @@
-/* best 93.26: remaining diff is register allocation - target keeps &D_0009B0A4 (s7) and r*396 (s6) as separate pseudos and spills a->h/2 to 0x20(sp); here the R[r] sum is CSE'd instead */
+/* best 93.32 (run2: guards as early returns + rg = &D[r]); was 93.26: remaining diff is register allocation - target keeps &D_0009B0A4 (s7) and r*396 (s6) as separate pseudos and spills a->h/2 to 0x20(sp); here the R[r] sum is CSE'd instead */
 typedef struct {
     int x, y, z, pad;
     int w, d;
@@ -23,9 +23,12 @@ int func_0004BD48(BOX *boxes, int i, int j, int r) {
     int maxx, maxz, maxy, minx, minz, miny;
     int sa, sb;
     int t;
+    REGION *rg;
 
-    if (!(a->flags & 0x3ff) && !(b->flags & 0x3ff)
-        && abs(D_0009B0A4[r].y + a->y) <= a->h / 2 && abs(D_0009B0A4[r].y + b->y) <= b->h / 2) {
+    if (a->flags & 0x3ff) return 0;
+    if (b->flags & 0x3ff) return 0;
+    rg = &D_0009B0A4[r];
+    if (abs(rg->y + a->y) <= a->h / 2 && abs(rg->y + b->y) <= b->h / 2) {
         if (!(a->flags & 0x400)) {
             t = a->w;
             a->flags = 0x400;

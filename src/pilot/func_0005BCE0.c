@@ -17,10 +17,13 @@ int func_0005BCE0(int a)
     char *base;
 
     if (*(unsigned char *)&D_00096897 == 0) return 0;
-    if (*(unsigned char *)&D_00096897 == 2 && a != 0 && p->f1 == 0) {
-        *(int *)&D_0009688C = 0;
-        D_0008A1E0[0] = -300;
-        return 1;
+    if (*(unsigned char *)&D_00096897 == 2) {
+        if (a == 0) return 0;
+        if (p->f1 == 0) {
+            *(int *)&D_0009688C = 0;
+            D_0008A1E0[0] = -300;
+            return 1;
+        }
     }
     if (*(unsigned char *)&D_00096898 != 3)
         base = D_0009B0A4;
@@ -29,10 +32,12 @@ int func_0005BCE0(int a)
     if (func_00067EE0(base + 0xC8, D_0008A8F0) >= 0x55F1) {
         *(unsigned char *)&D_00096897 = 0;
         D_0008A1E0[0] = -300;
-    } else {
-        if (func_0005BDF8(D_0008A8F0[0], D_0008A8F0[2])) return 0;
+        *(int *)&D_0009688C = 0;
+        return 1;
+    } else if (func_0005BDF8(D_0008A8F0[0], D_0008A8F0[2]) == 0) {
         *(unsigned char *)&D_00096897 = 2;
+        *(int *)&D_0009688C = 0;
+        return 1;
     }
-    *(int *)&D_0009688C = 0;
-    return 1;
+    return 0;
 }

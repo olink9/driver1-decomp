@@ -1,40 +1,39 @@
-extern int D_00096834_dummy;
 extern long long D_00096834;
 extern int D_0008AE5C[];
-extern int D_0008AE3C[];
+typedef struct { int a, b, c, d; } E16;
+extern E16 *D_0008AE3C[];
 extern int D_0008AE8C[];
 extern long long D_00097370;
 extern int D_000975AC;
-extern unsigned short *D_000A0E20[];
-extern unsigned short *func_000396A8();
+typedef struct { unsigned short flags; short pad; short id; } M;
+extern M *D_000A0E20[];
+extern M *func_000396A8();
 
 void func_00052A78(void)
 {
     int k, i, j;
     int s0;
-    int *p;
-    unsigned short *r;
+    E16 *p;
+    M *r;
     int idx = *(int *)&D_00096834;
 
     D_000975AC = D_0008AE5C[idx];
     s0 = 0;
     if (D_000975AC != 0) {
-        p = (int *)D_0008AE3C[idx] + 1;
+        p = D_0008AE3C[idx];
         for (i = 0; i < D_000975AC; i++) {
-            r = func_000396A8(p[1]);
+            r = func_000396A8(p[i].c);
             if (r) {
                 for (s0 = 0; r != D_000A0E20[s0]; s0++)
                     ;
-                p[0] = s0;
-                *r |= 4;
+                p[i].b = s0;
+                r->flags |= 4;
             }
-            k = *(int *)&D_00097370;
-            for (j = 0; j < k; j++) {
-                unsigned short *t = D_000A0E20[j];
-                if (((short *)t)[2] == s0)
-                    *t |= 4;
+            for (j = 0; j < *(int *)&D_00097370; j++) {
+                M *t = D_000A0E20[j];
+                if (t->id == s0)
+                    t->flags |= 4;
             }
-            p += 4;
         }
     }
     {
