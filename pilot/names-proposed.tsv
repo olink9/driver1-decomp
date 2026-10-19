@@ -345,3 +345,18 @@ func_00054618	FlashOverheadMap	b124
 func_00055A20	DrawSightCone	b124
 func_00053E54	DrawCompass	b124
 func_00056278	LoadMapTile	b124
+func_0004AD94	CheckScenaryCollisions (D1 version)	b127
+D_000BC004	building box list [60]	b127
+D_000A0E20	modelpointers	b127
+D_000A6E8C	matrixtable	b127
+D_0009E734	RoadMapRegions	b127
+D_00096A60	camera distance	b127
+func_00068C6C	mission script (DMS) step	b128
+func_000687D4	mission script opcode skip	b128
+func_0002C8FC	DrawMapPSX	b126
+D_000BBE84	inv_camera_matrix?	b126
+D_000A5E3C	CompoundMatrix?	b126
+func_00058A84	setCamera	f-01
+func_0005C5B0	NoMoreCamerasErrorMessage	f-02
+func_0002DADC	InitFrustrumMatrix	f-02
+func_00059658	FindFreeCamera	f-02

@@ -18,3 +18,6 @@
 - FIXED (coordinator): the j-stubs - maspsx inserts the nop after j even under .set noreorder, so the asm source must NOT have its own delay-slot nop. Both pass linkcheck.
 - FIXED (coordinator): func_00043270 passes with D_001E4038/D_001E40A0 defined by hand at the end of undefined_syms_auto.txt.
 - near (r2-043): twins func_00072C18 / func_00072E1C at 99.50 - only the equal branch: target (b0<<18)>>16 (zero-ext of (short)b0<<2), ours sll 16; sra 14. One fix ports to both.
+- near (b127): CheckScenaryCollisions func_0004AD94 at 99.95 - 4 rows in the bounding-sphere block: dx*dx should be in a0, the sum into the bounding_sphere reg (addu v1,v1,v0).
+- near (b128): DMS interpreter func_00068C6C at 99.32 (1066 instrs, flow identical): case 69 reg, shared tail of 106/109 needs an extra obj copy (addu v1,s6,zero), case 93 uses a dubious p = 0; p = &D_000C017C.
+- near (b126): DrawMapPSX func_0002C8FC at 97.80 (FAKEMATCH aliases for func_00026F28/func_00031048) - only the prologue's rcossin loads/spills order; 13440 orders swept.
