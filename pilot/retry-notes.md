@@ -23,3 +23,4 @@
 - near (b126): DrawMapPSX func_0002C8FC at 97.80 (FAKEMATCH aliases for func_00026F28/func_00031048) - only the prologue's rcossin loads/spills order; 13440 orders swept.
 - CLEANUP (r3-05): DMS interpreter func_00068C6C is fnscore 100 but linkcheck can't place its .rodata (two bases 0x11034, 0x111B0) - same limitation as func_0002360C (main loop). Teach linkcheck to place C .rodata per relocation target (several ranges), then both should pass.
 - FIXED (coordinator, 10-20): linkcheck splits C .rodata per original range (split_rodata); main loop func_0002360C and DMS func_00068C6C (FAKEMATCH) pass.
+- FIXED (coordinator 10-20): .comm symbol + offset is never gp-relative - fnscore sets MASPSX_GP_ALLOW_OFFSET=0 (override added to maspsx.py); all 778 unchanged, 0002A5CC and 00051ADC now fnscore 100; linkcheck .sbss support being added.

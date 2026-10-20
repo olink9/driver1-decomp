@@ -60,7 +60,10 @@ def compile_c(path, out, a):
         mx = [sys.executable, os.path.join(ROOT, "tools/maspsx/maspsx.py"), f"--aspsx-version={a.aspsx}",
               "--expand-div", f"-G{a.G}"] + (["--dont-force-G0"] if False else [])
         # empirical (2026-10-14): externs of <= 4 bytes are $gp-relative, 8-byte ones are not
-        env = dict(os.environ, MASPSX_EXTERN_G=os.environ.get("MASPSX_EXTERN_G", "4"))
+        # empirical (2026-10-20): .comm symbols + offset are never gp-relative (aspsx 2.69 behaviour) -
+        # all 778 matches unchanged, and func_0002A5CC / func_00051ADC need it
+        env = dict(os.environ, MASPSX_EXTERN_G=os.environ.get("MASPSX_EXTERN_G", "4"),
+                   MASPSX_GP_ALLOW_OFFSET=os.environ.get("MASPSX_GP_ALLOW_OFFSET", "0"))
         r = subprocess.run(mx, stdin=open(s), cwd=ROOT, capture_output=True, text=True, env=env)
         if r.returncode:
             return "maspsx: " + r.stderr[-2000:]
