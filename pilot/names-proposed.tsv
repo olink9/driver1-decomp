@@ -401,3 +401,5 @@ func_0003C998	CameraCollisionCheck	r3-03
 func_0004D208	InitMusic?	r3-09
 func_00041CE4	SwirlLeaves	r3-11
 func_00033870	SendTPage	r3-11
+func_0007A704	SpuSetTransferMode	r3-16 (fairly certain)
+func_000342D4	LoadRegionData	r3-16

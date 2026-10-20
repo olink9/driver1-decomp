@@ -1,4 +1,4 @@
-/* Driver 2: LoadRegionData */
+/* Driver 2: LoadRegionData. RequestSpool is a static inline here. Key: ONE multi-set buffer variable for the cells / cell_objects targets, built in place (addr = base; addr += idx * size;) - a single-set temp gets sched1 birthing boost and the in-place += fixes the a0/a1 allocation. */
 typedef struct {
     unsigned short offset;
     unsigned char connected_areas[2];
@@ -69,8 +69,7 @@ static inline void RequestSpool(int type, int data, int offset, int loadsize, ch
 int func_000342D4(int region, int target_region)
 {
     int offset;
-    char *a4;
-    char *a5;
+    char *addr;
     char *roadmap_buffer;
     char *roadh_buffer;
     char *cell_buffer;
@@ -87,12 +86,14 @@ int func_000342D4(int region, int target_region)
     offset += spoolptr->roadh_size;
     cell_buffer = D_0009724C;
     RequestSpool(0, 0, offset, spoolptr->cell_data_size[1], cell_buffer, 0);
-    a4 = (char *)(*(int **)&D_000970D4 + D_000AA7D4[target_region]);
-    a5 = *(char **)&D_00097108 + (*(int *)&D_00097350 + D_000AB040[target_region]) * 16;
     offset += spoolptr->cell_data_size[1];
-    RequestSpool(0, 0, offset, spoolptr->cell_data_size[0],a4, 0);
+    addr = (char *)*(int **)&D_000970D4;
+    addr += D_000AA7D4[target_region] * 4;
+    RequestSpool(0, 0, offset, spoolptr->cell_data_size[0], addr, 0);
     offset += spoolptr->cell_data_size[0];
-    RequestSpool(0, 0, offset, spoolptr->cell_data_size[2],a5, 0);
+    addr = *(char **)&D_00097108;
+    addr += (*(int *)&D_00097350 + D_000AB040[target_region]) * 16;
+    RequestSpool(0, 0, offset, spoolptr->cell_data_size[2], addr, 0);
     offset += spoolptr->cell_data_size[2];
     RequestSpool(0, 0, offset, spoolptr->pvs_size, D_000AA7E8[target_region], func_0003490C);
     offset += spoolptr->pvs_size;
