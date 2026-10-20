@@ -1,4 +1,10 @@
-/* run2 r2-041: 80.73. Fixed hoist order (x first), D_00098950 as 8-byte form (not hoisted), z0 = (cam.z+750) - car.z. Left: D_0008EAA8+2 base loses its hard reg (rematerialized) and the len/t-reg allocation. */
+/* run2 r2-041: 80.73 -> run2-r3 r3-15: 83.35. Pass loop is now a real `for (pass...)` (goto loop lost the loop-depth
+   weighting): prologue now matches the target's shape (s5 = s4+2, both mult constants in t-regs, s7 saved but unused =
+   the hoisted D_000C039C high part allocated s7 then spilled by reload and rematerialised as lui v0).
+   Left: loop.c hoists the pass-2 `z0 + FIX(ns*180 - c*900)` chain out of the pass loop (target recomputes it inside
+   `if (pass)` from ns/c), which also shifts every t-reg by one. Tried: user-var copies of ns/c (cse propagates them),
+   `z = ...` user var (only the last add stays), x1 inline in the if-block (prologue regresses to the old shape), an
+   invalid pass loop (jump into it: same regression). 1500 statement-order swaps (perm2.py) found nothing above 83.35. */
 typedef struct {
     char pad0[0xC8];
     int x;          /* 0xC8 */
@@ -74,8 +80,7 @@ void func_00062DB0(MAP *m)
         len = car->len * 20 + 450;
         pos[0] = x + FIX(ns * -900 - c * 180);
         x1 = x + FIX(c * 180 + ns * -900);
-        pass = 0;
-    next:
+        for (pass = 0; pass < 2; pass++) {
             if (pass) {
                 pos[0] = x1;
                 pos[1] = z0 + FIX(ns * 180 - c * 900);
@@ -105,8 +110,6 @@ void func_00062DB0(MAP *m)
                 pos[0] += stepx;
                 pos[1] += stepz;
             }
-            pass++;
-            if (pass < 2)
-                goto next;
+        }
     }
 }
