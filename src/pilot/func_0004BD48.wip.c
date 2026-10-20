@@ -1,4 +1,4 @@
-/* best 93.32 (run2: guards as early returns + rg = &D[r]); was 93.26: remaining diff is register allocation - target keeps &D_0009B0A4 (s7) and r*396 (s6) as separate pseudos and spills a->h/2 to 0x20(sp); here the R[r] sum is CSE'd instead */
+/* best 94.47 (run2-r3: region y read once into the swap temp `t = D_0009B0A4[r].y;`, all region accesses as D_0009B0A4[r].f). Remaining: the target keeps &D_0009B0A4 (s7) and r*396 (s6) as two pseudos and recomputes their sum at the .x access, so one more reg is live and a->h/2 is spilled to 0x20(sp) (frame 0x48). Here CSE reuses the first sum (s6). Killing the first sum (e.g. a dead `rg = 0;` after the y test) reproduces the s6/s7 split and the .z recompute, but then r*396 is spilled instead of h/2 - so the original invalidates the first sum some other way (a reused variable?). */
 typedef struct {
     int x, y, z, pad;
     int w, d;
@@ -27,8 +27,9 @@ int func_0004BD48(BOX *boxes, int i, int j, int r) {
 
     if (a->flags & 0x3ff) return 0;
     if (b->flags & 0x3ff) return 0;
-    rg = &D_0009B0A4[r];
-    if (abs(rg->y + a->y) <= a->h / 2 && abs(rg->y + b->y) <= b->h / 2) {
+
+    t = D_0009B0A4[r].y;
+    if (abs(t + a->y) <= a->h / 2 && abs(t + b->y) <= b->h / 2) {
         if (!(a->flags & 0x400)) {
             t = a->w;
             a->flags = 0x400;

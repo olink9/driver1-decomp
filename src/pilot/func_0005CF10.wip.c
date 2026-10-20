@@ -1,3 +1,6 @@
+/* r3-14 (94.09): tpage read as a struct field (D_000B9148.tpageid) keeps the global loads below the -1 stores;
+   setSemiTrans(null) after the tpage store gives the code reload. Left: sched2 places sw s1 (prologue), the
+   loop's y0 store (sh s1) one slot early, and the 0xFFFFFF mask lui/ori + tpage lhu vs lbu code at the tail. */
 /* Driver 2: PrintDigit (PRES.C) */
 typedef struct { char *primptr; unsigned int *ot; } DB;
 extern long long D_00097530;
@@ -15,7 +18,8 @@ typedef struct {
 } TEXTURE_DETAILS;
 extern TEXTURE_DETAILS D_000B9140;
 #define digit_texture D_000B9140
-extern long long D_000B9148;
+typedef struct { unsigned short tpageid, clutid; unsigned char tn, tp, p0, p1; } TPS;
+extern TPS D_000B9148;
 
 extern unsigned char D_00097698;
 extern long long D_00097699;
@@ -120,14 +124,14 @@ short func_0005CF10(int x, int y, char *string)
 
     null = (POLY_FT3 *)current->primptr;
     setPolyFT3(null);
-    setSemiTrans(null, 1);
     null->x0 = -1;
     null->y0 = -1;
     null->x1 = -1;
     null->y1 = -1;
     null->x2 = -1;
     null->y2 = -1;
-    null->tpage = *(unsigned short *)&D_000B9148;
+    null->tpage = D_000B9148.tpageid;
+    setSemiTrans(null, 1);
     addPrim(current->ot, null);
     current->primptr += sizeof(POLY_FT3);
 

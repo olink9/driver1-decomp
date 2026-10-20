@@ -1032,3 +1032,6 @@ time	symbol	size	best	attempts	status
 2026-10-20T05:13:36Z	func_00014A8C	1180	98.59	15	gave_up	run2-r3
 2026-10-20T05:15:01Z	func_000130D4	1996	100.0	12	matched	run2-r3
 2026-10-20T05:15:08Z	func_000354D8	128	100.0	5	matched	run2-r3
+2026-10-20T05:21:12Z	func_00033870	648	93.65	17	gave_up	run2-r3
+2026-10-20T05:32:09Z	func_0004BD48	1044	94.47	13	gave_up	run2-r3
+2026-10-20T05:32:09Z	func_00061C58	644	93.57	15	gave_up	run2-r3

@@ -1,13 +1,17 @@
+/* best 93.57 (run2-r3: inner op as b = v&1; v = (v>>25)&0x1e; c = v|b gives the exact or v0,v1,v0; else-branch src via a local). Remaining: x stays in t0 instead of a0 - x (priority 0 by integer division) loses its a0 preference because a local (ty chain / D_00097374 load) is put in a0 by local-alloc while x is live; the 64-count loop then takes a0. With `ty = D - ty; sel = (ty << 1) & 2` the magic/ty-chain regs match the target (a2/v0/v1) but the D load then lands in a0. Statement-order sweeps (1512 + 2520 orders) do not help. */
 extern long long D_00097374;
 extern int *D_0009D8F4[];
 extern int D_000C039C[];
 
 static inline void ConvRow(int *dst, int *src, int n)
 {
-    int v;
+    int v, b, c;
     while (n--) {
         v = *src++;
-        *dst++ = ((v & 1) | ((v >> 25) & 0x1e)) << 24 | 0xffff;
+        b = v & 1;
+        v = (v >> 25) & 0x1e;
+        c = v | b;
+        *dst++ = c << 24 | 0xffff;
     }
 }
 
@@ -47,7 +51,8 @@ void func_00061C58(int x, int y)
     } else {
         for (i = 0; i < 64; i++) {
             sel = (sel & 2) | (tx & 1);
-            ConvRow(base, D_0009D8F4[sel] + row + x, 64);
+            src = D_0009D8F4[sel] + row + x;
+            ConvRow(base, src, 64);
             base += 64;
             if (i + y == 59) {
                 row = 0;
