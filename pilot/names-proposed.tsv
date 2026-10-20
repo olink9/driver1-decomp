@@ -398,3 +398,4 @@ func_0001F490	ConvertTorqueToAngularAcceleration?	b130
 D_00097424	wetness	b130
 D_00096850	gNight	b130
 func_0003C998	CameraCollisionCheck	r3-03
+func_0004D208	InitMusic?	r3-09

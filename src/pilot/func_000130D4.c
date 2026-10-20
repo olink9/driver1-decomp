@@ -65,8 +65,6 @@ int func_000130D4(ENT *c)
 {
     FOUND l1[22];
     FOUND l2[22];
-    FOUND *f;
-    FOUND *end;
     REC *r;
     int n;
     int b;
@@ -85,23 +83,31 @@ int func_000130D4(ENT *c)
 
     if (c->f34 == 0) {
         if (road1 != -1) {
+            FOUND *f;
+            FOUND *g;
+            FOUND *end;
             n = collect(c, l1, road1, next, jn);
+            g = l1 + n;
             f = l1;
-            end = f + n;
+            end = g;
             for (; f < end; f++) {
                 if (f->v < 0x4074) {
                     b = f->b;
                     if (b & 0x80)
-                        return 0;
+                        goto fail;
                     if (D_00098950[b].f38 && D_00098950[b].f2C != c->f28)
                         return 0;
                 }
             }
         }
         if (road2 != -1) {
+            FOUND *f;
+            FOUND *g;
+            FOUND *end;
             n = collect(c, l2, road2, prev, jn);
+            g = l2 + n;
             f = l2;
-            end = f + n;
+            end = g;
             for (; f < end; f++) {
                 if (f->v < 0x4074) {
                     if (D_00098950[f->b].f38)
@@ -109,47 +115,63 @@ int func_000130D4(ENT *c)
                 }
             }
         }
-        return func_00012E98(c, 1) == 0;
+        goto tail;
     } else if (c->f34 > 0) {
         if (road1 != -1) {
+            FOUND *f;
+            FOUND *g;
+            FOUND *end;
             n = collect(c, l1, road1, next, jn);
+            g = l1 + n;
             f = l1;
-            end = f + n;
+            end = g;
             for (; f < end; f++) {
                 if (f->v < 0x4074) {
                     b = f->b;
                     if (b & 0x80)
-                        return 0;
+                        goto fail;
                     if (D_00098950[b].f2C == road2 && D_00098950[b].f38)
                         return 0;
                 }
             }
         }
-        return func_00012E98(c, 1) == 0;
+    tail:
+        if (func_00012E98(c, 1) == 0)
+            goto ret1;
+    fail:
+        return 0;
     } else if (c->f34 < 0) {
         if (road1 != -1) {
+            FOUND *f;
+            FOUND *g;
+            FOUND *end;
             n = collect(c, l1, road1, next, jn);
+            g = l1 + n;
             f = l1;
-            end = f + n;
+            end = g;
             for (; f < end; f++) {
                 if (f->v < 0x4074) {
                     b = f->b;
                     if (b & 0x80)
-                        return 0;
+                        goto fail;
                     if (D_00098950[b].f38 && D_00098950[b].f2C != c->f28)
                         return 0;
                 }
             }
         }
         if (road2 != -1) {
+            FOUND *f;
+            FOUND *g;
+            FOUND *end;
             n = collect(c, l2, road2, prev, jn);
+            g = l2 + n;
             f = l2;
-            end = f + n;
+            end = g;
             for (; f < end; f++) {
                 if (f->v < 0x4074) {
                     b = f->b;
                     if (b & 0x80)
-                        return 0;
+                        goto fail;
                     if (D_00098950[b].f2C != r[c->f24].h && D_00098950[b].f38)
                         return 0;
                 }
@@ -157,7 +179,7 @@ int func_000130D4(ENT *c)
         }
         if (func_00012E98(c, 1))
             return 0;
-        return 1;
     }
+ret1:
     return 1;
 }

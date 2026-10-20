@@ -1,3 +1,9 @@
+/* FAKEMATCH (if it ever matches): do { } while (0) wrappers here only shift register priorities. */
+/* r3-06 (99.85): do{}while(0) around the flags==0 walk block raises p's global-alloc priority (loop-depth ref weight)
+ * and fixes the p/spd s2/s3 swap; a second do{}while(0) around ox/oz fixes block-1 scheduling. The despawn tail is
+ * func_0005F06C inlined (kill) and the 0xFF store uses a SLOT *q local (ptr-first addu). LEFT: block 1 local-alloc -
+ * target has the andi/sll chain in v0 and addr1/load1 in v1 (ours: addr1 v0, product in a0); needs the sll-result qty to
+ * outrank addr1 (needs addr2 scheduled before load1 in sched1). Tried: h1-h6, j1/j2, k1-k5, l1/l2, x1-x6, y1-y6, z1-z4. */
 /* func_0005F3F8: per-frame update of the 20 pedestrian/cop slots (Driver 1 only) */
 typedef struct {
     int x, y, z;
@@ -105,8 +111,10 @@ void func_0005F3F8(void)
                     else
                         a = p->angle + 0x73A;
                     a &= 0xFFF;
+    do {
                     ox = (D_0008EAA8[a * 2] * r) >> 12;
                     oz = (D_0008EAA8[a * 2 + 1] * r) >> 12;
+    } while (0);
                     if (func_00060AD4(p->x + ox, p->z + oz) == 0) {
                         if (p->c51 == 0 && p->c52 == 9) {
                             b = (p->angle + 0xA00) & 0xFFF;

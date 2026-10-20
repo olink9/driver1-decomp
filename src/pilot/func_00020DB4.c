@@ -18,7 +18,7 @@ typedef struct {
     unsigned char hit;
 } ROADOUT;
 
-extern MAPINFO D_0009E714;
+extern int D_0009E714[];
 extern short *D_0009E724[];
 extern long long D_00097374;
 extern void func_000774C4();
@@ -92,27 +92,18 @@ static inline short ProbeX(short *cell, int dstep, int dd, VEC *pos, ROADOUT *ou
 
 short func_00020DB4(int x, int z, int dir, ROADOUT *out)
 {
-    int cx, cz;
+    int cx, cz, xc, zc, t;
     short *cell;
     short r;
     VEC pos;
 
-    cx = (x + D_0009E714.ofs_x) / 1500;
+    cx = (x + D_0009E714[2]) / 1500;
+    t = D_0009E714[3] + 750;
+    cz = (t - z) / 1500;
+    if (cx >= 0 && cx < D_0009E714[0] && cz >= 0 && cz < D_0009E714[1])
     {
-        int t = D_0009E714.ofs_z + 750;
-        cz = (t - z) / 1500;
-    }
-
-    if (cx >= 0 && cx < D_0009E714.width && cz >= 0 && cz < D_0009E714.height)
-    {
-
-    {
-        int rz = cz / 60;
-        int rx = cx / 60;
-        int lx = cx - rx * 60;
-        int lz = cz - rz * 60;
-        cell = &D_0009E724[(rx & 1) + (((*(int *)&D_00097374 - rz) & 1) << 1)][lz * 60 + lx];
-    }
+    zc = cz / 60; xc = cx / 60; cx -= xc * 60; cz -= zc * 60; zc = *(int *)&D_00097374 - zc;
+    cell = &D_0009E724[(xc & 1) + ((zc & 1) << 1)][cz * 60 + cx];
     if (*cell == -1)
         return -1;
 
