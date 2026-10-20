@@ -323,3 +323,83 @@ func_000650E4	NoteFelony	b118 likely
 func_0003FAE8	ApplyDamage	b118 likely
 func_0004157C	CreateBirds	b118 likely
 func_00047FA4	Setup_Sparks	b118 likely
+func_0006F81C	GetPeriod?	r2-013 (takes note, c2spd)
+func_000710D0	SetPer	r2-013
+func_0006ADFC	SetColourByValue	r2-013
+func_0004C610	GetEngineRevs	r2-026
+func_0005073C	FadeGameScreen	r2-026
+func_0003E6A0	DentCar	r2-025
+func_00033D18	SendSBK	r2-031
+func_0007A704	SpuSetTransferMode?	r2-031 (likely)
+func_00051A40	ProcessTextureInfo	r2-034
+func_0004D7E4	Start3DSoundVolPitch	r2-037
+func_0004E4B0	GetFreeChannel	r2-037
+func_0004D968	CompleteSoundSetup	r2-037
+func_00052C10	DrawAnimatingObject	r2-039
+func_0005474C	DrawOverheadMap	b124
+func_00074CAC	SetDrawArea	b124 (from args)
+func_0007EAC4	RotTrans	b124 (from args)
+func_000563CC	SetMapPos	b124
+func_000564A4	draw_box	b124
+func_00054618	FlashOverheadMap	b124
+func_00055A20	DrawSightCone	b124
+func_00053E54	DrawCompass	b124
+func_00056278	LoadMapTile	b124
+func_0004AD94	CheckScenaryCollisions (D1 version)	b127
+D_000BC004	building box list [60]	b127
+D_000A0E20	modelpointers	b127
+D_000A6E8C	matrixtable	b127
+D_0009E734	RoadMapRegions	b127
+D_00096A60	camera distance	b127
+func_00068C6C	mission script (DMS) step	b128
+func_000687D4	mission script opcode skip	b128
+func_0002C8FC	DrawMapPSX	b126
+D_000BBE84	inv_camera_matrix?	b126
+D_000A5E3C	CompoundMatrix?	b126
+func_00058A84	setCamera	f-01
+func_0005C5B0	NoMoreCamerasErrorMessage	f-02
+func_0002DADC	InitFrustrumMatrix	f-02
+func_00059658	FindFreeCamera	f-02
+func_0001BAC0	GlobalTimeStep	b131
+func_00067C9C	CarCarCollision3?	b131
+func_0003FC98	DamageCar3D?	b131
+func_00047FA4	Setup_Sparks?	b131
+func_00047824	Setup_Debris?	b131
+func_0001FAFC	CheckCarToCarCollisions?	b131
+D_0009AF04	car_cosmetics	b131
+func_000466D4	GetSmokeDrift	f-03
+func_00060E4C	FindSeated	f-03
+func_0001B380	LongQuaternion2Matrix	f-03
+func_00059D94	ControlReplay	b132
+func_0005C660	FirstCamera	b132 (certain)
+D_00097540	vblcounter (volatile)	b132 (certain)
+func_0001F5B0	MapHeight	b132
+func_000217C8	ROADS_GetRouteData	b132
+func_0005BC04	SelectCameraCar	b132
+D_0009761C	DirectorMenuActive	b132
+D_00097624	CursorX	b132
+D_00097628	CursorY	b132
+D_00096844	AttractMode	b132
+D_0009687C	pauseflag	b132
+func_0004E214	LoadSoundBank	f-04
+func_00079DB0	memcpy?	f-04
+func_00058DE0	CheckCameraChange	f-05
+func_00033B10	LoadInAreaTSets	f-05
+func_000342D4	LoadRegionData	f-05
+D_000972B0	spoolcounter	f-05
+D_000BE4F8	tpageslots	f-05
+D_00097270	AreaTPages	f-05
+func_0005DBDC	DrawCiv	b129
+func_0005DB30	DrawAllCivs?	b129
+func_00045460	RoundShadow	b129
+func_0001D6E4	StepOneCar	b130
+func_0001EEB4	FindSurface?	b130
+func_0001F490	ConvertTorqueToAngularAcceleration?	b130
+D_00097424	wetness	b130
+D_00096850	gNight	b130
+func_0003C998	CameraCollisionCheck	r3-03
+func_0004D208	InitMusic?	r3-09
+func_00041CE4	SwirlLeaves	r3-11
+func_00033870	SendTPage	r3-11
+func_0007A704	SpuSetTransferMode	r3-16 (fairly certain)
+func_000342D4	LoadRegionData	r3-16

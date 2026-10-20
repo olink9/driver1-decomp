@@ -1,3 +1,9 @@
+/* FAKEMATCH (if it ever matches): do { } while (0) wrappers here only shift register priorities. */
+/* r3-06 (99.85): do{}while(0) around the flags==0 walk block raises p's global-alloc priority (loop-depth ref weight)
+ * and fixes the p/spd s2/s3 swap; a second do{}while(0) around ox/oz fixes block-1 scheduling. The despawn tail is
+ * func_0005F06C inlined (kill) and the 0xFF store uses a SLOT *q local (ptr-first addu). LEFT: block 1 local-alloc -
+ * target has the andi/sll chain in v0 and addr1/load1 in v1 (ours: addr1 v0, product in a0); needs the sll-result qty to
+ * outrank addr1 (needs addr2 scheduled before load1 in sched1). Tried: h1-h6, j1/j2, k1-k5, l1/l2, x1-x6, y1-y6, z1-z4. */
 /* func_0005F3F8: per-frame update of the 20 pedestrian/cop slots (Driver 1 only) */
 typedef struct {
     int x, y, z;
@@ -47,6 +53,20 @@ extern void func_0005FF70();
 extern void func_0005FF90();
 extern int ratan2();
 
+static inline void kill(PED *o)
+{
+    D_000976C0 = D_000976C0 - 1;
+    o->flags = 0;
+    o->s1C = 0;
+    o->angle = 0;
+    o->s18 = 0;
+    D_000C0340[D_000976C0] = o->s42;
+    if (o->state == 6) {
+        SLOT *q = &D_000976CC[o->idx];
+        if (q->fA) q->fA = 0;
+    }
+}
+
 void func_0005F3F8(void)
 {
     VEC d;
@@ -55,6 +75,7 @@ void func_0005F3F8(void)
     PED *p;
     CAR *car;
     int spd;
+    int spd2;
     int a;
     int dot;
     int r;
@@ -79,6 +100,7 @@ void func_0005F3F8(void)
         if (p->flags & 0x40) {
             func_00060C9C(p, D_000C017C);
         } else {
+            do {
             if (!(p->flags & 0x1000)) {
                 func_0005FA9C(p);
                 r = 500;
@@ -89,8 +111,10 @@ void func_0005F3F8(void)
                     else
                         a = p->angle + 0x73A;
                     a &= 0xFFF;
+    do {
                     ox = (D_0008EAA8[a * 2] * r) >> 12;
                     oz = (D_0008EAA8[a * 2 + 1] * r) >> 12;
+    } while (0);
                     if (func_00060AD4(p->x + ox, p->z + oz) == 0) {
                         if (p->c51 == 0 && p->c52 == 9) {
                             b = (p->angle + 0xA00) & 0xFFF;
@@ -123,9 +147,10 @@ void func_0005F3F8(void)
                     }
                 }
             }
+            } while (0);
             car = func_000607AC(p);
             if (car != 0) {
-                spd = 0x19;
+                spd2 = 0x19;
                 if (car == &D_0009B0A4[0] && !(p->flags & 0x1000)) {
                     snd = 0x1000;
                     if (*(int *)&D_00097080 != 0)
@@ -147,19 +172,20 @@ void func_0005F3F8(void)
                 p->vy = 0;
                 if (p->flags & 0x1000) {
                     if (p->b48 < 3)
-                        spd = 0x19;
+                        spd2 = 0x19;
                     else
-                        spd = 0x32;
+                        spd2 = 0x32;
                 }
-                p->vx = (spd * D_0008EAA8[((p->angle + 0x800) & 0xFFF) * 2]) >> 12;
-                p->vz = (spd * D_0008EAA8[((p->angle + 0x800) & 0xFFF) * 2 + 1]) >> 12;
+                p->vx = (spd2 * D_0008EAA8[((p->angle + 0x800) & 0xFFF) * 2]) >> 12;
+                p->vz = (spd2 * D_0008EAA8[((p->angle + 0x800) & 0xFFF) * 2 + 1]) >> 12;
                 if (!(p->flags & 0x1000)) {
                     p->i4C = *(int *)&D_000C0160;
                     p->b48 = 0;
                 }
                 p->flags |= 0x1000;
                 if (p->state == 6) {
-                    D_000976CC[p->idx].fA = 0xFF;
+                    SLOT *q = &D_000976CC[p->idx];
+                    q->fA = 0xFF;
                     p->state = 2;
                     p->speed = 0x14;
                 }
@@ -182,14 +208,7 @@ void func_0005F3F8(void)
             int dx = p->x - D_0009B0A4[0].x;
             int dz = p->z - D_0009B0A4[0].z;
             if (dx * dx + dz * dz > 0x2B80D840) {
-                p->flags = 0;
-                p->s1C = 0;
-                p->angle = 0;
-                p->s18 = 0;
-                D_000976C0--;
-                D_000C0340[D_000976C0] = p->s42;
-                if (p->state == 6 && D_000976CC[p->idx].fA != 0)
-                    D_000976CC[p->idx].fA = 0;
+                kill(p);
             }
         }
     next:

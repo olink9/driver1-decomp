@@ -1,3 +1,15 @@
+/* r3-11 (run2-r3) findings - two remaining diffs:
+ * (1) Target computes tpage2send<<6 (s1) and &D_00087030 (s3) BEFORE the LoadImage call and adds them after it
+ *     (addu a1,s1,s3). Assigning clutptr before the call gives one summed s-reg instead; two locals a,b assigned
+ *     before the call are single-use and update_equiv_regs sinks them past the call. What reproduces the shape:
+ *     the SAME two int locals reused in the else branch (b = (int)D_000BE278; a = tpage2send + b; loads/stores via
+ *     *(unsigned char *)a and *(unsigned char *)(old + b)) - matches the target's s1/s3 use there too. Copy kept at
+ *     build/scratch/r3-11/k5_keep.c (93.10). But then global-alloc order is b(.33) > a(.30) > slot(.30) > tpage(.107)
+ *     while the target needs slot > a > tpage > b (b's priority < .107): only the register names are left wrong.
+ * (2) cluts.w=64 / tpage.w/h stores and addr += 4 order in the then-branch: all 5040 orders of the 7 field stores on
+ *     the a/b form leave it unchanged (93.10) - likely follows from the register choice (anti-deps), fix (1) first.
+ * Tried without effect: D2 statement order, clutptr in for/inline/index forms (i/2, j, i>>1), decl order of a/b.
+ */
 /* func_00033870 - Driver 2: SendTPage */
 typedef struct {
     short x, y, w, h;

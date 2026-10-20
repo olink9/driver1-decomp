@@ -1,4 +1,8 @@
-/* WIP 99.90: remaining = v0/v1 swap on 'civ->t != 1' compare and on dz*dz mflo; plus reloc D_0008EAA8+2 vs D_0008EAAA (rcossin_tbl[idx*2+1], same bytes) */
+/* WIP 99.95 (run2-r3): 'civ->t != 1' swap fixed by moving the rcossin step into static inline step_car().
+ * Remaining: dz*dz product lands in v0 (target v1). Cause (.greg): dz*dz pseudo wins LO, dx*dx gets a2, then
+ * reload spills LO for the dx*dx mult and retries dz*dz into the first free GPR (v0). In the target dx*dx must win
+ * LO instead. Tried: operand/statement order, sq() inline, dist2() inline, in-place *=, 730 <= ..., !(<).
+ * Plus reloc D_0008EAA8+2 vs D_0008EAAA (same bytes). */
 /* Driver 2 name: unknown (per-frame civ car update / cull loop) */
 typedef struct {
     unsigned char id;     /* 0x00 */
@@ -86,6 +90,12 @@ static inline void remove_civ(int i)
     }
 }
 
+static inline void step_car(CAR *car, int idx)
+{
+    idx &= 0xFFF;
+    car->xC8 += (D_0008EAA8[idx * 2] * 500 + 0x800) >> 12;
+    car->xD0 += (D_0008EAA8[idx * 2 + 1] * 500 + 0x800) >> 12;
+}
 void func_0001A30C(void)
 {
     char pad[0x50];
@@ -120,11 +130,8 @@ void func_0001A30C(void)
 
     for (i = 0; i < count; i++, civ++, car++) {
         int idx = car->fF8;
-        if (civ->t != 1) {
-            idx &= 0xFFF;
-            car->xC8 += (D_0008EAA8[idx * 2] * 500 + 0x800) >> 12;
-            car->xD0 += (D_0008EAA8[idx * 2 + 1] * 500 + 0x800) >> 12;
-        }
+        if (civ->t != 1)
+            step_car(car, idx);
         D_0008539C[civ->t](civ);
         if (civ->t != 0) {
             int dx, dz;

@@ -31,7 +31,7 @@ $(BUILD)/%.o: %.c
 	$(CPP) $(CPPFLAGS) $< | $(CC1) $(CFLAGS) | $(MASPSX) | $(AS) $(ASFLAGS) -o $@
 
 $(BUILD)/$(BASENAME).elf: $(O_FILES) $(BASENAME).ld
-	$(LD) -EL -T undefined_syms_auto.txt -T undefined_funcs_auto.txt -T $(BASENAME).ld -Map $(BUILD)/$(BASENAME).map --no-check-sections -o $@
+	$(LD) -EL -T undefined_syms_auto.txt -T undefined_syms_manual.txt -T undefined_funcs_auto.txt -T $(BASENAME).ld -Map $(BUILD)/$(BASENAME).map --no-check-sections -o $@
 
 $(BUILD)/SLUS_008.42: $(BUILD)/$(BASENAME).elf
 	$(OBJCOPY) -O binary $< $@

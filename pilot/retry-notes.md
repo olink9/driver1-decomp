@@ -11,3 +11,16 @@
 - func_0006AF48 (95.33) likely fixed by moving the ShowTime-like second half into a static inline with its own char buf[8] (see func_0006B4AC.wip.c, b091)
 - 2nd aspsx-2.69-only case: func_00051ADC (100.0 with --aspsx 2.69, 94.13 default). Both cases = tentative .comm definitions in the file, gp_rel at +0 but lui/%lo at +2..+6. Likely the real rule is about .comm symbols, not the aspsx version - fix maspsx rule (gp_allow_offset False for .comm) and re-test all, in cleanup.
 - func_000130D4 (96) and func_000138A0 (99.35) share the car-list layout/loop - match one, port to the other (b107)
+- (run2) func_00030464 / func_000307E8: HANDWRITTEN GTE stubs ending in `j .L00030520` - maspsx adds a nop after the j (C .text 4 B longer than the asm block). Needs `.set noreorder` around the asm or a maspsx exception; fnscore does not see it.
+- CLEANUP (r2-030): func_00043270 (99.95, byte-identical) needs absolute symbols D_001E4038 = 0x1E4038, D_001E40A0 = 0x1E40A0 (linker-defined, 8-byte form externs) - add to the undefined-syms script, then linkcheck.
+- systemic (r2-038): the world-to-cell lookup (/1500, /60 and %60, D_0009D8F4 or D_0009E724[sel][lz][lx]) in 00021690, 00020AE4, 00064360 (and 000143CC, 00021820, 0005BDF8?) - both quotients before both remainders; sched2 moves the x remainder between mult z and mfhi. Crack once, apply to all.
+- (r2-042) file-scope __asm__ + .set noreorder matched func_0002680C exactly - try it on the j-stubs func_00030464 / func_000307E8.
+- FIXED (coordinator): the j-stubs - maspsx inserts the nop after j even under .set noreorder, so the asm source must NOT have its own delay-slot nop. Both pass linkcheck.
+- FIXED (coordinator): func_00043270 passes with D_001E4038/D_001E40A0 defined by hand at the end of undefined_syms_auto.txt.
+- near (r2-043): twins func_00072C18 / func_00072E1C at 99.50 - only the equal branch: target (b0<<18)>>16 (zero-ext of (short)b0<<2), ours sll 16; sra 14. One fix ports to both.
+- near (b127): CheckScenaryCollisions func_0004AD94 at 99.95 - 4 rows in the bounding-sphere block: dx*dx should be in a0, the sum into the bounding_sphere reg (addu v1,v1,v0).
+- near (b128): DMS interpreter func_00068C6C at 99.32 (1066 instrs, flow identical): case 69 reg, shared tail of 106/109 needs an extra obj copy (addu v1,s6,zero), case 93 uses a dubious p = 0; p = &D_000C017C.
+- near (b126): DrawMapPSX func_0002C8FC at 97.80 (FAKEMATCH aliases for func_00026F28/func_00031048) - only the prologue's rcossin loads/spills order; 13440 orders swept.
+- CLEANUP (r3-05): DMS interpreter func_00068C6C is fnscore 100 but linkcheck can't place its .rodata (two bases 0x11034, 0x111B0) - same limitation as func_0002360C (main loop). Teach linkcheck to place C .rodata per relocation target (several ranges), then both should pass.
+- FIXED (coordinator, 10-20): linkcheck splits C .rodata per original range (split_rodata); main loop func_0002360C and DMS func_00068C6C (FAKEMATCH) pass.
+- FIXED (coordinator 10-20): .comm symbol + offset is never gp-relative - fnscore sets MASPSX_GP_ALLOW_OFFSET=0 (override added to maspsx.py); all 778 unchanged, 0002A5CC and 00051ADC now fnscore 100; linkcheck .sbss support being added.

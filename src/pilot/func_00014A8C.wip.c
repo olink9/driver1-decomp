@@ -1,4 +1,10 @@
-/* func_00014A8C */
+/* func_00014A8C - DrawAllTheCars-like (sort visible cars by distance, then draw)
+ * run2-r3 (r3-09): 98.59. Fixed: car loop as a biv `c++` (t[0]/t[2] via c->t, call arg indexed
+ * D_0009B230[i].t) -> vz giv anchor + separate call giv; ENT pointer biv `e++`; separate counter `m`
+ * for the draw loop (fixed the s2/s3 swap). Left: prologue only - target computes the car base into
+ * a0 with the lui in v0 (split = base pseudo global), ours ties it (lui v1/addiu v1) and schedules it
+ * after s7. Swept: all 360 orders of the six init statements, for/while/do forms, initializer/register c.
+ */
 typedef struct {
     unsigned char f0, f1, f2, f3, f4, f5;
     char pad6[0x10 - 6];
@@ -22,7 +28,7 @@ typedef struct {
     char pad1c[0x20 - 0x1c];
     int f20;
     char pad24[0xC8 - 0x24];
-    VECTOR pos;
+    int t[3];
     char padD4[0x18C - 0xD4];
 } CAR;
 
@@ -48,7 +54,7 @@ void func_00014A8C(void)
 {
     unsigned char order[32];
     unsigned char n;
-    int i, j, k;
+    int i, j, k, m;
     int camx, camz;
     int d, dx, dz;
     int t;
@@ -62,16 +68,18 @@ void func_00014A8C(void)
     int r;
     int a1;
 
-    n = 0;
+    e = D_00098950;
+    c = D_0009B230;
+    *(int *)&D_000973B4 = 0;
     camx = D_0008A8F0[0];
     camz = D_0008A8F0[2];
-    *(int *)&D_000973B4 = 0;
-    for (i = 0; i < 25; i++) {
-        if (D_00098950[i].f1 != 0 && func_000398B0(&D_0009B230[i].pos) == 1) {
-            dx = camx - D_0009B230[i].pos.vx;
-            if (dx < 0) dx = D_0009B230[i].pos.vx - camx;
-            dz = camz - D_0009B230[i].pos.vz;
-            if (dz < 0) dz = D_0009B230[i].pos.vz - camz;
+    n = 0;
+    for (i = 0; i < 25; i++, e++, c++) {
+        if (e->f1 != 0 && func_000398B0((VECTOR *)D_0009B230[i].t) == 1) {
+            dx = camx - c->t[0];
+            if (dx < 0) dx = c->t[0] - camx;
+            dz = camz - c->t[2];
+            if (dz < 0) dz = c->t[2] - camz;
             d = dx + dz;
             if (d < 27000) {
                 D_0009784C[n] = d;
@@ -92,15 +100,15 @@ void func_00014A8C(void)
         order[k] = o;
         D_0009784C[k] = t;
     }
-    for (i = 0; i < n; i++) {
-        idx = order[i];
+    for (m = 0; m < n; m++) {
+        idx = order[m];
         e = &D_00098950[idx];
         cur = *(int **)&D_00097530;
         p = current->primptr - 0x1E000; r = current->primtab - p - 3000;
         *(int *)&D_00096990 = e->f11;
         if (r < 0)
             return;
-        r -= (n - i - 1) << 11;
+        r -= (n - m - 1) << 11;
         if (r < 4000)
             *(int *)&D_000973B8 = 1;
         idx++;

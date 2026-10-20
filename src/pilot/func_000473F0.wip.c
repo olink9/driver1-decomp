@@ -1,3 +1,8 @@
+/* FAKEMATCH (if it ever matches): do { } while (0) wrappers here only shift register priorities. */
+/* r3-06 (99.16): do{}while(0) from poly1's primptr += to the end (loop-depth ref weights for local-alloc) fixes poly2=t0 /
+ * current#2=a2. LEFT: the CSE'd len constant 9 gets t1 (target t4) ahead of the 0xFFFFFF mask (target t1), and the
+ * angle block (idx v1/&tbl a3/-35 in a1 in the target). Statement permutations (3 groups) and do-while placement
+ * sweeps (single + pairs + addPrim wraps) found nothing better. */
 /* (no Driver 2 counterpart) - HUD sprite pair + rotating overlay */
 
 typedef struct { short vx, vy, vz, pad; } SVECTOR;
@@ -96,6 +101,7 @@ void func_000473F0(DVECTOR *pos, int a1, int a2, int intensity)
     poly->clut = D_000B9240.clut;
     poly->tpage = D_000B9240.tpage | 0x20;
     addPrim(current->ot + 0x1079, poly);
+    do {
     current->primptr += sizeof(POLY_FT4);
 
     poly = (POLY_FT4 *)current->primptr;
@@ -131,4 +137,5 @@ void func_000473F0(DVECTOR *pos, int a1, int a2, int intensity)
     poly->tpage = D_000B9130.tpage | 0x20;
     addPrim(current->ot + 0x1078, poly);
     current->primptr += sizeof(POLY_FT4);
+    } while (0);
 }

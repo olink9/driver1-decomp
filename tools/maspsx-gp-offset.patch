@@ -1,0 +1,15 @@
+diff --git a/maspsx.py b/maspsx.py
+index 02f2587..9ef339f 100644
+--- a/maspsx.py
++++ b/maspsx.py
+@@ -45,6 +45,10 @@ def config_for_aspsx_version(aspsx_version_arg: str | None) -> AspsxVersionConfi
+         config.gp_allow_offset = True
+     if aspsx_version >= (2, 80):
+         config.gp_allow_la = True
++    # driver1 (run 2): test override for the .comm offset rule, see pilot/retry-notes.md
++    import os
++    if os.environ.get("MASPSX_GP_ALLOW_OFFSET") in ("0", "1"):
++        config.gp_allow_offset = os.environ["MASPSX_GP_ALLOW_OFFSET"] == "1"
+ 
+     return config
+ 

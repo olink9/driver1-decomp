@@ -20,7 +20,23 @@ How it works (all output under build/linkcheck/, nothing else is written):
     .rodata/.sdata/.data (string literals, jump tables, initialised local aggregates)
     is placed at the original address, found by pairing the C object's %lo/%gp_rel
     relocations against its sections with the asm's relocations at the same
-    instruction; the original data labels that range covers are dropped. Every symbol
+    instruction; the original data labels that range covers are dropped. If .rodata
+    pairs to several bases (its strings/jump tables live apart in the original), the
+    maspsx output is reassembled with .rodata cut at its labels: first one section per
+    label to pair each one alone, then one section .rodata.lc<k> per run of labels that
+    sit back to back in the original (C alignment), each placed at its own address and
+    re-paired to exactly one base (the unchanged reassembly must reproduce the fnscore
+    object first, and the .text must keep its size). Its .bss/.sbss (tentative
+    definitions of variables in the original bss, kept in C because being .comm changes
+    how maspsx addresses them) has no bytes: each label in it must be a symbol of the
+    original (its address from the baseline link), and all labels of a section must give
+    one base (address - offset); otherwise the maspsx output is reassembled the same way
+    with each bss label in its own section .bss.lc<i>/.sbss.lc<i>. Each bss piece gets a
+    NOLOAD output section at that address (SUBALIGN(1): the original address wins over
+    C's alignment), at or above main_BSS_START, and must land there after the link;
+    the exe byte compare is what proves the relocations against it. A global the C
+    object defines in bss is removed from the undefined_*_auto.txt copies used for that
+    link, so the C definition is the only one. Every symbol
     defined only in a dropped block gets PROVIDE(sym = original address), so remaining
     asm still links, but all relocations of the C object resolve through the linker.
     Merged string blocks are cut at line granularity when a C piece covers only part.
@@ -205,6 +221,7 @@ def data_layout(files, pieces):
     """Lay out the data files with the C objects' data pieces at their addresses.
     Returns ({src: [(addr, input-section text)]}, [(addr, input-section text)] for
     duplicate pieces, set of touched blocks)."""
+    pieces = [p for p in pieces if p[4] is not None]        # bss: see bss_pieces
     layout, dups, touched = {}, [], set()
     placed = []                                              # (addr, end, bytes)
     for src, (secname, blocks) in files.items():
@@ -268,11 +285,25 @@ def data_layout(files, pieces):
     return layout, dups, touched
 
 
+UNDEF = ["undefined_syms_auto.txt", "undefined_syms_manual.txt", "undefined_funcs_auto.txt"]
+
+
+def bss_pieces(pieces):
+    """The bss pieces, in the order gen_script gives them output sections .lcbss<k>.
+    Overlapping ones must be the same variable (same address and size) of two C files."""
+    bss = sorted((p for p in pieces if p[4] is None), key=lambda p: (p[0], p[1], p[2], p[3]))
+    for x, y in zip(bss, bss[1:]):
+        if y[0] < x[0] + x[1] and (x[0], x[1]) != (y[0], y[1]):
+            raise LinkErr(f"C {y[3]} at 0x{y[0]:X} overlaps another C object's {x[3]} at 0x{x[0]:X}")
+    return bss
+
+
 def gen_script(files, repl, pieces, provides, tag, pads=None):
-    """repl: {text block name: C object}; pieces: [(addr, size, obj, section, bytes)];
-    provides: {sym: addr}; pads: {text block name: zero bytes after the C .text}.
-    Returns the path of the generated linker script."""
+    """repl: {text block name: C object}; pieces: [(addr, size, obj, section, bytes or
+    None for bss)]; provides: {sym: addr}; pads: {text block name: zero bytes after the
+    C .text}. Returns (path of the generated linker script, symbol scripts to link with)."""
     layout, dups, _ = data_layout(files, pieces)
+    bss = bss_pieces(pieces)
     pads = pads or {}
     out = []
     for line in open(LDSCRIPT).read().split("\n"):
@@ -281,6 +312,10 @@ def gen_script(files, repl, pieces, provides, tag, pads=None):
             if line.strip() == "/DISCARD/ :":
                 for k, (a, txt) in enumerate(dups):
                     out.append(f"    .lcdup{k} 0x{a:X} (NOLOAD) : {{ {txt} }}")
+                # bss has no bytes in the exe; SUBALIGN(1): the original address wins
+                # over C's alignment of the variable (the exe compare proves the relocs)
+                for k, (a, _, o, sec, _) in enumerate(bss):
+                    out.append(f"    .lcbss{k} 0x{a:X} (NOLOAD) : SUBALIGN(1) {{ {o}({sec}); }}")
             out.append(line)
             continue
         ind, objname, sec = m.groups()
@@ -310,21 +345,42 @@ def gen_script(files, repl, pieces, provides, tag, pads=None):
     path = os.path.join(LC, "ld", tag + ".ld")
     os.makedirs(os.path.dirname(path), exist_ok=True)
     open(path, "w").write(text)
-    return path
+    # a global the C object defines in bss replaces the symbol script's `sym = addr;`
+    # (an assignment there would silently win over the C definition)
+    drop = {n for _, _, o, sec, _ in bss for _, n, g in bss_labels(o).get(sec, []) if g}
+    undef = []
+    for u in UNDEF:
+        if not drop:
+            undef.append(u)
+            continue
+        keep = [l for l in open(os.path.join(ROOT, u)).read().split("\n")
+                if not (re.match(r"\s*(\w+)\s*=", l) and re.match(r"\s*(\w+)\s*=", l).group(1) in drop)]
+        undef.append(os.path.join(LC, "ld", f"{tag}.{u}"))
+        open(undef[-1], "w").write("\n".join(keep))
+    return path, undef
 
 
 class LinkErr(Exception):
     pass
 
 
-def link(script, tag):
+def link(gen, tag, pieces=()):
+    """Link the (script, symbol scripts) from gen_script; the bss pieces must land at
+    their addresses."""
+    script, undef = gen
     elf = os.path.join(LC, "out", tag + ".elf")
     exe = elf[:-4] + ".exe"
     os.makedirs(os.path.dirname(elf), exist_ok=True)
-    r = sh([LD, "-EL", "-T", "undefined_syms_auto.txt", "-T", "undefined_funcs_auto.txt", "-T", script,
+    r = sh([LD, "-EL"] + [x for u in undef for x in ("-T", u)] + ["-T", script,
             "-Map", elf[:-4] + ".map", "--no-check-sections", "-o", elf])
     if r.returncode:
         raise LinkErr("ld: " + " | ".join(l for l in r.stderr.strip().split("\n")[:4]))
+    with open(elf, "rb") as f:
+        e = ELFFile(f)
+        for k, (a, n, _, sec, _) in enumerate(bss_pieces(pieces)):
+            x = e.get_section_by_name(f".lcbss{k}")
+            if x is None or x["sh_addr"] != a or x["sh_size"] != n:
+                raise LinkErr(f"C {sec} did not land at 0x{a:X} (0x{n:X} bytes)")
     r = sh([OBJCOPY, "-O", "binary", elf, exe])
     if r.returncode:
         raise LinkErr("objcopy: " + r.stderr[-300:])
@@ -364,21 +420,13 @@ def imm16(text, off):
 DATASECS = (".rodata", ".sdata", ".data")
 
 
-def place_c(cobj, block, addrs):
-    """[(addr, size, obj, section, bytes)] for the C object's own data sections."""
-    with open(cobj, "rb") as f:
-        e = ELFFile(f)
-        secs = {s.name: s["sh_size"] for s in e.iter_sections()}
-        content = {s.name: s.data() for s in e.iter_sections() if s.name in DATASECS}
-    for bad in (".bss", ".sbss"):
-        if secs.get(bad):
-            raise LinkErr(f"C object has {bad} ({secs[bad]} bytes); not supported")
-    need = [s for s in DATASECS if secs.get(s)]
-    if not need:
-        return []
+def pair_bases(cobj, block, addrs, names):
+    """{section: set of original addresses its offset 0 maps to}, from pairing the C
+    object's %lo/%gp_rel relocations against `names` with the asm block's at the same
+    instruction."""
     cr, ct = text_relocs(cobj)
     tr, tt = text_relocs(block.o)
-    bases = {s: set() for s in need}
+    bases = {s: set() for s in names}
     for off, (typ, name, issec) in cr.items():
         if not issec or name not in bases or typ not in (6, 7):     # R_MIPS_LO16, R_MIPS_GPREL16
             continue
@@ -386,7 +434,65 @@ def place_c(cobj, block, addrs):
         if not t or t[1] not in addrs or off + 4 > len(tt):
             continue
         bases[name].add(addrs[t[1]] + imm16(tt, off) - imm16(ct, off))
+    return bases
+
+
+BSSSECS = (".bss", ".sbss")
+RAM_END = 0x200000                                  # 2 MB main RAM (addresses as linked)
+
+
+def is_bss(name):
+    return name in BSSSECS or name.startswith((".bss.lc", ".sbss.lc"))
+
+
+def bss_labels(cobj):
+    """{bss section: [(offset, symbol, is_global)]} for the C object's .bss/.sbss
+    (and .bss.lc<k>/.sbss.lc<k> pieces made by split_bss)."""
+    out = {}
+    with open(cobj, "rb") as f:
+        e = ELFFile(f)
+        st = e.get_section_by_name(".symtab")
+        for x in st.iter_symbols() if st else []:
+            if not x.name or not isinstance(x["st_shndx"], int) or x["st_info"]["type"] == "STT_SECTION":
+                continue
+            sec = e.get_section(x["st_shndx"]).name
+            if is_bss(sec):
+                out.setdefault(sec, []).append((x["st_value"], x.name, x["st_info"]["bind"] == "STB_GLOBAL"))
+    return out
+
+
+def place_c(cobj, block, addrs):
+    """[(addr, size, obj, section, bytes)] for the C object's own data sections
+    (.rodata, .sdata, .data, and .rodata.lc<k> pieces made by split_rodata), and
+    [(addr, size, obj, section, None)] for its .bss/.sbss (or .bss.lc<k>/.sbss.lc<k>
+    pieces made by split_bss): every label in a bss section must sit at its original
+    address, i.e. all give the same base = address - offset."""
+    with open(cobj, "rb") as f:
+        e = ELFFile(f)
+        secs = {s.name: s["sh_size"] for s in e.iter_sections()}
+        content = {s.name: s.data() for s in e.iter_sections()
+                   if s.name in DATASECS or s.name.startswith(".rodata.lc")}
+    need = [s for s in content if secs.get(s)]
+    bss = [s for s in secs if is_bss(s) and secs[s]]
+    if not need and not bss:
+        return []
+    bases = pair_bases(cobj, block, addrs, need)
     out = []
+    labels = bss_labels(cobj) if bss else {}
+    for s in bss:
+        if not labels.get(s):
+            raise LinkErr(f"cannot place C {s} ({secs[s]} bytes): no label in it")
+        miss = [n for _, n, _ in labels[s] if n not in addrs]
+        if miss:
+            raise LinkErr(f"cannot place C {s} ({secs[s]} bytes): no original address for {miss[0]}")
+        b = {addrs[n] - off for off, n, _ in labels[s]}
+        if len(b) != 1:
+            raise LinkErr(f"cannot place C {s} ({secs[s]} bytes): inconsistent bases " +
+                          ",".join(f"0x{x:X}" for x in sorted(b)))
+        a = b.pop()
+        if "main_BSS_START" not in addrs or a < addrs["main_BSS_START"] or a + secs[s] > RAM_END:
+            raise LinkErr(f"C {s} at 0x{a:X} (0x{secs[s]:X} bytes) is outside the original bss")
+        out.append((a, secs[s], cobj, s, None))
     for s in need:
         if len(bases[s]) != 1:
             raise LinkErr(f"cannot place C {s} ({secs[s]} bytes): " +
@@ -394,6 +500,190 @@ def place_c(cobj, block, addrs):
                            "inconsistent bases " + ",".join(f"0x{b:X}" for b in sorted(bases[s]))))
         out.append((bases[s].pop(), secs[s], cobj, s, content[s]))
     return out
+
+
+LABEL_RE = re.compile(r"\s*[A-Za-z_.$][\w.$]*:\s*$")
+SECDIR = (".section", ".text", ".data", ".sdata", ".rdata", ".bss", ".sbss")
+
+
+def _split_asm(ms, groups):
+    """maspsx output with every `.section .rodata` chunk cut at its labels into units
+    (a label plus the .align lines just before it). groups=None puts unit i in section
+    .rodata.u<i>; otherwise groups[i] is the piece number k (section .rodata.lc<k>).
+    Returns (text, number of units)."""
+    out, n, inro = [], 0, False
+    for l in ms.split("\n"):
+        st = l.strip()
+        if st.startswith(SECDIR):
+            if inro:
+                out += pend
+            inro = st == ".section .rodata"
+            if inro:
+                pend, started = [], False
+                continue
+        if not inro:
+            out.append(l)
+            continue
+        if st.startswith(".align") or not st or st.startswith("#"):
+            pend.append(l)
+            continue
+        if LABEL_RE.match(l) or not started:
+            name = f".rodata.u{n}" if groups is None else f".rodata.lc{groups[n]}"
+            out.append(f'.section {name},"a",@progbits')
+            n += 1
+            started = True
+        out += pend + [l]
+        pend = []
+    if inro:
+        out += pend
+    return "\n".join(out), n
+
+
+def _assemble_ms(text, o):
+    s = o[:-2] + ".m.s"
+    open(s, "w").write(text)
+    r = sh(AS + ["-o", o, s])
+    if r.returncode:
+        raise LinkErr("split: as: " + r.stderr[-300:])
+
+
+def _sections(o):
+    with open(o, "rb") as f:
+        e = ELFFile(f)
+        return {s.name: (s["sh_size"], s["sh_addralign"], s.data() if s["sh_type"] != "SHT_NOBITS" else b"")
+                for s in e.iter_sections() if s.name}
+
+
+def maspsx_text(cpath, cobj):
+    """The maspsx output (assembler input) of cpath, with fnscore.compile_c's settings;
+    checked: assembled unchanged, it reproduces cobj."""
+    o_keep = cobj[:-2] + ".keep.o"
+    a = types.SimpleNamespace(cc="2.7.2-cdk", opt="-O2", G="8", aspsx="2.79", extra="", keep_s=True)
+    err = fnscore.compile_c(cpath, o_keep, a)
+    if err:
+        raise LinkErr("compile error: " + " ".join(err.split())[:200])
+    # the same maspsx step as fnscore.compile_c; checked below by reassembling unchanged
+    mx = [sys.executable, os.path.join(ROOT, "tools/maspsx/maspsx.py"), "--aspsx-version=2.79", "--expand-div", "-G8"]
+    env = dict(os.environ, MASPSX_EXTERN_G=os.environ.get("MASPSX_EXTERN_G", "4"),
+               MASPSX_GP_ALLOW_OFFSET=os.environ.get("MASPSX_GP_ALLOW_OFFSET", "0"))
+    r = subprocess.run(mx, stdin=open(o_keep[:-2] + ".cc1.s"), cwd=ROOT, capture_output=True, text=True, env=env)
+    if r.returncode:
+        raise LinkErr("split: maspsx: " + r.stderr[-300:])
+    ms = '.include "macro.inc"\n' + r.stdout
+    same = cobj[:-2] + ".same.o"
+    _assemble_ms(ms, same)
+    if _sections(same) != _sections(cobj):
+        raise LinkErr("split: reassembling the maspsx output does not reproduce the C object")
+    return ms
+
+
+BSS_RE = re.compile(r"(?:\.section\s+)?(\.s?bss)(?=[\s,]|$)")
+
+
+def split_bss(ms):
+    """maspsx output with every .bss/.sbss chunk cut at its labels: label i (with the
+    .align lines just before it) goes in its own section <.bss|.sbss>.lc<i>."""
+    out, n, inb = [], 0, None
+    for l in ms.split("\n"):
+        st = l.strip()
+        if st.startswith(SECDIR):
+            if inb:
+                out += pend
+            m = BSS_RE.fullmatch(st.split(",")[0].strip())
+            inb = m.group(1) if m else None
+            if inb:
+                pend, started = [], False
+                continue
+        if not inb:
+            out.append(l)
+            continue
+        if st.startswith((".align", "#", ".globl", ".global")) or not st:
+            pend.append(l)
+            continue
+        if LABEL_RE.match(l):
+            out.append(f'.section {inb}.lc{n},"aw",@nobits')
+            n += 1
+            started = True
+        elif not started:
+            raise LinkErr(f"bss split: {inb} has content before its first label: {st[:60]}")
+        out += pend + [l]
+        pend = []
+    if inb:
+        out += pend
+    return "\n".join(out)
+
+
+def split_rodata(ms, cobj, block, addrs):
+    """For a C object whose .rodata pairs to several original ranges: return its maspsx
+    output `ms` with .rodata in one section per contiguous original range
+    (.rodata.lc<k>). Every unit (label) must pair to exactly one base."""
+    # 1) one section per unit, to learn each unit's original address
+    text, n = _split_asm(ms, None)
+    uo = cobj[:-2] + ".units.o"
+    _assemble_ms(text, uo)
+    usec = _sections(uo)
+    units = [f".rodata.u{i}" for i in range(n)]
+    if sum(usec[u][0] for u in units) == 0 or ".rodata" in usec and usec[".rodata"][0]:
+        raise LinkErr("rodata split: could not cut .rodata at its labels")
+    ub = pair_bases(uo, block, addrs, units)
+    for i, u in enumerate(units):
+        if len(ub[u]) > 1:
+            raise LinkErr(f"cannot place C .rodata: unit {i} ({usec[u][0]} bytes) has inconsistent bases " +
+                          ",".join(f"0x{b:X}" for b in sorted(ub[u])))
+    ubase = {u: min(b) for u, b in ub.items() if b}
+    # 2) group units that sit back to back (with C's alignment) in the original
+    groups, k, prev_end = [], -1, None
+    for i, u in enumerate(units):
+        size, align, _ = usec[u]
+        if size == 0:
+            groups.append(max(k, 0))
+            continue
+        if u not in ubase:
+            raise LinkErr(f"cannot place C .rodata: unit {i} ({size} bytes) has no paired relocation")
+        if prev_end is not None:
+            al = max(align, 1)
+            if ubase[u] == (prev_end + al - 1) // al * al:
+                groups.append(k)
+                prev_end = ubase[u] + size
+                continue
+        k += 1
+        groups.append(k)
+        prev_end = ubase[u] + size
+    if k < 0:
+        raise LinkErr("rodata split: no .rodata units")
+    if k == 0:
+        raise LinkErr("rodata split: every unit is contiguous, yet the bases disagree")
+    return _split_asm(ms, groups)[0]
+
+
+def split_kind(e):
+    """(needs split_rodata, needs split_bss) for a place_c error."""
+    m = str(e)
+    return (m.startswith("cannot place C .rodata ") and "inconsistent bases" in m,
+            m.startswith(("cannot place C .bss ", "cannot place C .sbss ")) and "inconsistent bases" in m)
+
+
+def split_c(cpath, cobj, block, addrs, rodata, bss):
+    """Rebuild a C object from its maspsx output with .rodata split by split_rodata
+    and/or .bss/.sbss split by split_bss, and return (new object, its data pieces).
+    The .text must keep its size; every piece must pair to exactly one base."""
+    ms = maspsx_text(cpath, cobj)
+    while True:
+        text = split_bss(ms) if bss else ms
+        if rodata:
+            text = split_rodata(text, cobj, block, addrs)
+        so = cobj[:-2] + ".split.o"
+        _assemble_ms(text, so)
+        if _sections(so)[".text"][0] != _sections(cobj)[".text"][0]:
+            raise LinkErr("split: .text size changed")
+        try:
+            return so, place_c(so, block, addrs)      # 3) raises unless every piece has one base
+        except LinkErr as e:
+            r, b = split_kind(e)
+            if (r and not rodata) or (b and not bss):
+                rodata, bss = rodata or r, bss or b
+                continue
+            raise
 
 
 def compile_one(sym, path):
@@ -485,7 +775,15 @@ def main():
         # padding (an alignment nop between objects); the byte compare covers it
         if pad < 0 or (pad and any(orig[lo + n:lo + b.size])):
             raise LinkErr(f"C .text is 0x{n:X} bytes, asm block is 0x{b.size:X}")
-        pieces = place_c(o, b, addrs)
+        try:
+            pieces = place_c(o, b, addrs)
+        except LinkErr as e:
+            # .rodata spread over several original ranges: one piece per range;
+            # bss variables that are not laid out as in C: one piece per variable
+            r, bs = split_kind(e)
+            if not (r or bs):
+                raise
+            o, pieces = split_c(cpath, o, b, addrs, r, bs)
         return o, pieces, pad
 
     def provides_for(repl, pieces):
@@ -505,7 +803,7 @@ def main():
             o, pieces, pad = prep(item)
             repl = {sym: o}
             script = gen_script(files, repl, pieces, provides_for(repl, pieces), sym, {sym: pad})
-            _, exe = link(script, sym)
+            _, exe = link(script, sym, pieces)
         except LinkErr as e:
             return sym, "fail", f"{rel}: {e}", None
         out = open(exe, "rb").read()
@@ -518,7 +816,9 @@ def main():
             w = orig[d & ~3:(d & ~3) + 4][::-1].hex()
             g = out[d & ~3:(d & ~3) + 4][::-1].hex()
             return sym, "fail", f"{rel}: first diff at +0x{d - lo:X} (0x{d - FILEOFF + VRAM:08X}) want {w} got {g}; {tail}", None
-        for addr, size, _, sec, _ in pieces:
+        for addr, size, _, sec, data in pieces:
+            if data is None:
+                continue                                      # bss: no bytes; link() checked it
             p = addr - VRAM + FILEOFF
             dd = first_diff(orig, out, p, p + size)
             if dd is not None:
@@ -539,7 +839,7 @@ def main():
     pads = {s: x[2] for s, x in passing}
     try:
         script = gen_script(files, repl, pieces, provides_for(repl, pieces), "combined", pads)
-        _, exe = link(script, "combined")
+        _, exe = link(script, "combined", pieces)
         out = open(exe, "rb").read()
         h = hashlib.sha1(out).hexdigest()
         ok = h == SHA1

@@ -1,3 +1,10 @@
+/* WIP 88.33 (run2-r3 r3-cell; was 84.58). Driver 2: unknown - road direction at (x, z).
+   Now: `%` remainders + `rz = D_00097374 - rz;` reassigned (form of matched func_00021558/00021690/000143CC).
+   Remaining: (1) sched1 puts the cz divide first; the target keeps cx first with the whole lookup in RTL order
+   (xq, zq, xr, zr, D) - all 120 statement orders x {%, x - q*60} x {expr, reassign, local m} swept, none gives
+   cx first; a pointer-returning inline CellPtr(x, z) with in-place params is worse (75). (2) global alloc:
+   target has base(&D_0009E714)=a3, cz=t0, cx=t1, hi=t2, count=t3, dir=t4 - i.e. base/hi outrank cx/cz/dir/count,
+   which their refs/live (-dl) cannot explain; `count` is a copy of dir's zero (`addu t3,t4,zero`). */
 typedef struct {
     int width;
     int height;
@@ -37,11 +44,9 @@ extern CELLINFO *D_00097044;
 
 static inline short GetCell(int cx, int cz)
 {
-    int rx = cx / 60;
-    int rz = cz / 60;
-    int lx = cx - rx * 60;
-    int lz = cz - rz * 60;
-    return D_0009E724[(rx & 1) + ((*(int *)&D_00097374 - rz) & 1) * 2][lz][lx];
+    int rx, rz, lx, lz, m;
+    rz = cz / 60; lx = cx % 60; rx = cx / 60; lz = cz % 60; rz = *(int *)&D_00097374 - rz;
+    return D_0009E724[(rx & 1) + ((rz & 1) << 1)][lz][lx];
 }
 
 int func_00020AE4(int x, int z)
@@ -64,11 +69,9 @@ int func_00020AE4(int x, int z)
 
     {
         short *cp;
-        int rx = cx / 60;
-        int rz = cz / 60;
-        int lx = cx - rx * 60;
-        int lz = cz - rz * 60;
-        cp = &D_0009E724[(rx & 1) + ((*(int *)&D_00097374 - rz) & 1) * 2][lz][lx];
+        int rx, rz, lx, lz, m;
+        rz = cz / 60; lx = cx % 60; rx = cx / 60; lz = cz % 60; rz = *(int *)&D_00097374 - rz;
+        cp = &D_0009E724[(rx & 1) + ((rz & 1) << 1)][lz][lx];
         cell = *cp;
         if (*cp & 0xC000)
             return *cp;

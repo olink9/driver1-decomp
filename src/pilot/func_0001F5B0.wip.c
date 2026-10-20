@@ -1,3 +1,10 @@
+/* r3-13 (run2-r3) 98.69: fixes found - D_000967A0 is a plain `int *` scalar (struct form kept the cell-pointer store
+ * above the reload); `info` must stay live across the loop (a `(int)info < 0` test inside it - target keeps info in s5
+ * and spills h); exactly ONE copy of the A0E20/0x4000 bump code (two copies double the lui savings -> loop.c hoists the
+ * table base; target hoists only the index). The identical arms around `ht -= h` reproduce the dead hoisted flip (s6).
+ * Left: s6/s7 swap of the hoisted flip (info&0x40000000) and h-sext: h-sext has 5 refs (used in both arms) vs flip 3;
+ * target needs flip >= h-sext in priority but h-sext above the index (3 refs/39) and above h (spilled). Tried: h once
+ * before/after the arms (refs 2-3 but live 44 -> h-sext spilled instead of h), flip tested twice, nested arms. */
 /* func_0001F5B0 - no Driver 2 counterpart (map height lookup, cf. MapHeight) */
 
 typedef struct { int vx, vy, vz, pad; } VEC;
@@ -26,8 +33,7 @@ extern int *D_0009D8F4[];
 extern SURF *D_0009D904[];
 extern unsigned short *D_000A0E20[];
 extern short D_0008EAA8[];
-typedef struct { int *p; } P4;
-extern P4 D_000967A0;
+extern int *D_000967A0;
 extern int func_00024418();
 extern int func_00024370();
 
@@ -45,6 +51,7 @@ int func_0001F5B0(VEC *pos)
     int r;
     int ht;
     int rx, rz;
+    char pad[16];
 
     x = D_0009E714[2] + pos->vx;
     r = pos->vz - 750;
@@ -79,7 +86,7 @@ int func_0001F5B0(VEC *pos)
             q += 2;
     }
 
-    D_000967A0.p = D_0009D8F4[q] + cz * 60 + cx;
+    D_000967A0 = D_0009D8F4[q] + cz * 60 + cx;
     info = ((int (*)[60])D_0009D8F4[q])[cz][cx];
     h = info;
     if (!*(int *)&D_00096858)
@@ -112,14 +119,7 @@ int func_0001F5B0(VEC *pos)
             else
                 r = func_00024370(x, z, sp);
             if (r) {
-                ht = (x * sp->nx + z * sp->nz) / 4096 - sp->d - h;
-                if (info & 0x40000000) {
-                    if (D_000A0E20[tile][1] & 0x4000)
-                        ht += D_0008EAA8[((x + z) << 2) & 0x1ffc] >> 9;
-                } else {
-                    if (D_000A0E20[tile][1] & 0x4000)
-                        ht += D_0008EAA8[((x + z) << 2) & 0x1ffc] >> 9;
-                }
+                ht = (x * sp->nx + z * sp->nz) / 4096 - sp->d; if (((int)info < 0) || (info & 0x40000000)) { ht -= h; } else { ht -= h; } if (D_000A0E20[(info >> 16) & 0x3ff][1] & 0x4000) ht += D_0008EAA8[((x + z) << 2) & 0x1ffc] >> 9;
                 return ht;
             }
         }
