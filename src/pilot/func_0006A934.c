@@ -49,20 +49,16 @@ extern void func_0006A6C8();
 extern void func_00068C6C(CAR *);
 extern void func_0006A318(CAR *);
 
-static inline unsigned char AddTarget(CAR *car, int *p)
+static inline unsigned char AddTarget(CAR *car, int a1, int a2, int a3)
 {
     E *e;
-    F *f;
+    F *f = car->f;
     SUB *s;
 
-    int a, c;
-
-    a = p[0];
-    c = p[1];
-    for (e = car->e, f = car->f; e < &car->e[6]; e++, f++) {
+    for (e = car->e; e < (E *)car->f; e++, f++) {
         if (!(e->f0C & 1)) {
-            f->a = a;
-            f->c = c;
+            f->a = a2;
+            f->c = a3;
             e->f0 = 0x2EE;
             e->f4 = 0x5DC0;
             e->f8 = 0x1C2;
@@ -75,7 +71,7 @@ static inline unsigned char AddTarget(CAR *car, int *p)
             s->b = 0;
             s->c = 0;
             s->d = 0;
-            e->f0 = 0x2EE;
+            e->f0 = a1;
             e->f10 = f;
             e->f0C = 1;
             car->f298++;
@@ -115,7 +111,7 @@ void func_0006A934(CAR *car)
             p = car->f2B8;
             if (car->f298 < 6) {
                 car->f104 = 2;
-                { int *q; if (p[0] == 0x7FFFFFFF) q = p; else if (AddTarget(car, p)) q = p + 2; else q = p; p = q; }
+                { int *q; if (p[0] == 0x7FFFFFFF) q = p; else if (AddTarget(car, 0x2EE, p[0], p[1])) q = p + 2; else q = p; p = q; }
             }
             if (car->f298 == 0) {
                 car->f2D0 = 0;
@@ -129,8 +125,7 @@ void func_0006A934(CAR *car)
     if (car->f104 == 0xFF0)
         goto end;
 
-    if (*(int *)&D_00096F80 == 5 && (car->f29C.flags & 8)) {
-        t = &car->f29C;
+    if (*(int *)&D_00096F80 == 5 && ((t = &car->f29C)->flags & 8)) {
         if (t->flags & 0x80) {
             t->val += 0x222;
             if (t->val > 0x3840000)

@@ -76,11 +76,12 @@ void func_0003B208(int car, MATRIX *RearMatrix, VECTOR *pos, int unused, int cos
     SVECTOR *p;
     int FrontWheelIncrement, BackWheelIncrement;
     int sn, cs;
-    int a, b; short c;
+    int a, b; short c, d;
     int loop;
 
     cp = &D_0009B0A4[car];
-    BackWheelIncrement = FrontWheelIncrement = cp->wheel_speed / 256;
+    FrontWheelIncrement = cp->wheel_speed / 256;
+    BackWheelIncrement = cp->wheel_speed / 256;
 
     if (car == 0)
         car_cos = &D_0009AF04[0];
@@ -113,27 +114,27 @@ void func_0003B208(int car, MATRIX *RearMatrix, VECTOR *pos, int unused, int cos
     v = WheelModelFront->vertices;
     a = D_0008EAAA[(D_000AB654[car] & 0xFFF) * 2] * 101 >> 12;
     b = D_0008EAAA[(D_000AB654[car] & 0xFFF) * 2 - 1] * 101 >> 12;
-    c = -b;
+    c = -b; d = -a;
     v[15].vy = v[8].vy = a;
     v[15].vz = v[8].vz = b;
     v[14].vy = v[9].vy = c;
     v[14].vz = v[9].vz = a;
-    v[13].vy = v[10].vy = -a;
+    v[13].vy = v[10].vy = d;
     v[13].vz = v[10].vz = c;
     v[12].vy = v[11].vy = b;
-    v[12].vz = v[11].vz = -a;
+    v[12].vz = v[11].vz = d;
     v = WheelModelBack->vertices;
     a = D_0008EAAA[(D_000AB6C4[car] & 0xFFF) * 2] * 101 >> 12;
     b = D_0008EAAA[(D_000AB6C4[car] & 0xFFF) * 2 - 1] * 101 >> 12;
-    c = -b;
+    c = -b; d = -a;
     v[15].vy = v[8].vy = a;
     v[15].vz = v[8].vz = b;
     v[14].vy = v[9].vy = c;
     v[14].vz = v[9].vz = a;
-    v[13].vy = v[10].vy = -a;
+    v[13].vy = v[10].vy = d;
     v[13].vz = v[10].vz = c;
     v[12].vy = v[11].vy = b;
-    v[12].vz = v[11].vz = -a;
+    v[12].vz = v[11].vz = d;
     SteerMatrix.m[2][2] = D_0008EAAA[(cp->direction & 0xFFF) * 2];
     SteerMatrix.m[0][0] = SteerMatrix.m[2][2];
     SteerMatrix.m[0][2] = D_0008EAAA[(cp->direction & 0xFFF) * 2 - 1];
