@@ -17,7 +17,7 @@ Your batch file is `pilot/batches2/<id>.tsv` (`hw-NN` or `f-NN`). Follow AGENT.m
 - Do NOT run linkcheck.py (shared build folder); the coordinator link-checks. Results line:
   `<UTC>\t<sym>\t<size>\t<best>\t<attempts>\t<matched|gave_up>\trun2-fresh`.
 
-Scratch files under `/tmp/claude-1000/d1r2/<batch id>/`, never in `src/`.
+Scratch files under `build/scratch/<batch id>/`, never in `src/`.
 Final reply: `<batch>: matched N / gave up M`, each systematic lesson in one line, any library function identified
 with certainty, and which functions you judged to be genuine asm and why.
   hw-NN tip: pilot/scripts/asmconv.py converts a fnasm listing into the file-scope asm form (macro-wraps branches with real delay slots).

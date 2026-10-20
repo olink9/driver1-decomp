@@ -4,7 +4,7 @@
  *     before the call are single-use and update_equiv_regs sinks them past the call. What reproduces the shape:
  *     the SAME two int locals reused in the else branch (b = (int)D_000BE278; a = tpage2send + b; loads/stores via
  *     *(unsigned char *)a and *(unsigned char *)(old + b)) - matches the target's s1/s3 use there too. Copy kept at
- *     /tmp/claude-1000/d1r2/r3-11/k5_keep.c (93.10). But then global-alloc order is b(.33) > a(.30) > slot(.30) > tpage(.107)
+ *     build/scratch/r3-11/k5_keep.c (93.10). But then global-alloc order is b(.33) > a(.30) > slot(.30) > tpage(.107)
  *     while the target needs slot > a > tpage > b (b's priority < .107): only the register names are left wrong.
  * (2) cluts.w=64 / tpage.w/h stores and addr += 4 order in the then-branch: all 5040 orders of the 7 field stores on
  *     the a/b form leave it unchanged (93.10) - likely follows from the register choice (anti-deps), fix (1) first.

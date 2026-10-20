@@ -19,6 +19,6 @@ For each symbol:
 6. Tags: empty-asm hints -> `/* FAKEMATCH: ... */` at the top; genuine asm -> `/* HANDWRITTEN ASM */`.
    Prefer real C; a FAKEMATCH is only a last resort.
 
-Scratch files: put them under `/tmp/claude-1000/d1r2/<batch id>/`, never in `src/`.
+Scratch files: put them under `build/scratch/<batch id>/`, never in `src/`.
 Final reply: one line `<batch>: matched N / gave up M` plus each systematic lesson in one line (the coordinator
 adds them to AGENT.md) and any library function you identified with certainty.

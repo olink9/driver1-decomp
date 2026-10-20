@@ -1,5 +1,7 @@
 import random, subprocess, sys, re, itertools
-D='/tmp/claude-1000/d1r2/f-03/s'
+import os
+ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+D=os.path.join(ROOT, 'build', 'sweep')
 form=sys.argv[1]; iters=int(sys.argv[2]); seed=int(sys.argv[3])
 random.seed(seed)
 idx={'x':0,'y':1,'z':2,'w':3}
@@ -19,7 +21,7 @@ def gen(P,S,form):
 def score(P,S):
     f=D+'/v%d.c'%seed
     open(f,'w').write(gen(P,S,form))
-    r=subprocess.run(['.venv/bin/python','pilot/scripts/fs.py',D+'/b%d'%seed,'func_0001B380',f,'--quiet'],capture_output=True,text=True,cwd='.')
+    r=subprocess.run(['.venv/bin/python','pilot/scripts/fs.py',D+'/b%d'%seed,'func_0001B380',f,'--quiet'],capture_output=True,text=True,cwd=ROOT)
     m=re.search(r'MATCH ([\d.]+)',r.stdout)
     return float(m.group(1)) if m else 0
 P=prods[:]; S=stores[:]

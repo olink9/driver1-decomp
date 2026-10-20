@@ -1,7 +1,9 @@
 # generic: permute lines between '//PERM{' and '//PERM}' markers (multiple groups)
 import random, subprocess, sys, re
+import os
+ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 tmpl, sym, iters, seed = sys.argv[1], sys.argv[2], int(sys.argv[3]), int(sys.argv[4])
-D='/tmp/claude-1000/d1r2/f-05/hc'
+D=os.path.join(ROOT, 'build', 'sweep')
 random.seed(seed)
 src=open(tmpl).read().split('\n')
 groups=[]; out=[]; cur=None
@@ -19,7 +21,7 @@ def gen(G):
 def score(G):
     f=D+'/v%d.c'%seed
     open(f,'w').write(gen(G))
-    r=subprocess.run(['.venv/bin/python','pilot/scripts/fs.py',D+'/b%d'%seed,sym,f,'--quiet'],capture_output=True,text=True,cwd='.')
+    r=subprocess.run(['.venv/bin/python','pilot/scripts/fs.py',D+'/b%d'%seed,sym,f,'--quiet'],capture_output=True,text=True,cwd=ROOT)
     m=re.search(r'MATCH ([\d.]+)',r.stdout)
     return float(m.group(1)) if m else 0
 G=[g[:] for g in groups]

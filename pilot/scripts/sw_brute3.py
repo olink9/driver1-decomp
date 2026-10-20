@@ -1,4 +1,6 @@
 import itertools,subprocess,re,sys
+import os
+ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 vals=['-1','0','1','3','7','8','9','0xFF0','0xFF1','0x7FFF','0x7FFE','0x8000']
 combos=[]
 for n in range(1,7):
@@ -15,9 +17,9 @@ for k,(c,mode) in enumerate(combos):
         rest=[v for v in c if v!='7']
         if rest: out.append("".join(f" case {v}:" for v in rest)+" break;")
     out.append(" } D=1; }")
-open('/tmp/claude-1000/d1r2/r2-019/swb.c','w').write("\n".join(out)+"\n")
-subprocess.run(["distrobox","enter","build","--","bash","-c","compilers/gcc-2.7.2-cdk/cc1 -O2 -G8 -quiet /tmp/claude-1000/d1r2/r2-019/swb.c -o /tmp/claude-1000/d1r2/r2-019/swb.s"],check=True)
-s=open('/tmp/claude-1000/d1r2/r2-019/swb.s').read()
+open(os.path.join(ROOT, 'build', 'sweep'),'w').write("\n".join(out)+"\n")
+subprocess.run(["distrobox","enter","build","--","bash","-c","compilers/gcc-2.7.2-cdk/cc1 -O2 -G8 -quiet build/sweep/swb.c -o build/sweep/swb.s"],check=True)
+s=open(os.path.join(ROOT, 'build', 'sweep')).read()
 from collections import Counter
 cnt=Counter()
 for k,(c,mode) in enumerate(combos):

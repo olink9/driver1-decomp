@@ -13,7 +13,7 @@ Follow AGENT.md's loop with these changes:
 - Append to `pilot/results.tsv`: `<UTC>\t<sym>\t<size>\t<best>\t<attempts>\t<matched|gave_up>\trun2-large`.
 - Tags as in AGENT.md (FAKEMATCH / HANDWRITTEN ASM), real C preferred.
 
-Scratch files under `/tmp/claude-1000/d1r2/<batch id>/`, never in `src/`.
+Scratch files under `build/scratch/<batch id>/`, never in `src/`.
 Final reply: `<batch>: <symbol> <best score> <matched|gave up>`, what is left if not matched, each systematic lesson in
 one line, and any library function identified with certainty.
 
