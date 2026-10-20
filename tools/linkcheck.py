@@ -20,7 +20,13 @@ How it works (all output under build/linkcheck/, nothing else is written):
     .rodata/.sdata/.data (string literals, jump tables, initialised local aggregates)
     is placed at the original address, found by pairing the C object's %lo/%gp_rel
     relocations against its sections with the asm's relocations at the same
-    instruction; the original data labels that range covers are dropped. Every symbol
+    instruction; the original data labels that range covers are dropped. If .rodata
+    pairs to several bases (its strings/jump tables live apart in the original), the
+    maspsx output is reassembled with .rodata cut at its labels: first one section per
+    label to pair each one alone, then one section .rodata.lc<k> per run of labels that
+    sit back to back in the original (C alignment), each placed at its own address and
+    re-paired to exactly one base (the unchanged reassembly must reproduce the fnscore
+    object first, and the .text must keep its size). Every symbol
     defined only in a dropped block gets PROVIDE(sym = original address), so remaining
     asm still links, but all relocations of the C object resolve through the linker.
     Merged string blocks are cut at line granularity when a C piece covers only part.
@@ -364,21 +370,13 @@ def imm16(text, off):
 DATASECS = (".rodata", ".sdata", ".data")
 
 
-def place_c(cobj, block, addrs):
-    """[(addr, size, obj, section, bytes)] for the C object's own data sections."""
-    with open(cobj, "rb") as f:
-        e = ELFFile(f)
-        secs = {s.name: s["sh_size"] for s in e.iter_sections()}
-        content = {s.name: s.data() for s in e.iter_sections() if s.name in DATASECS}
-    for bad in (".bss", ".sbss"):
-        if secs.get(bad):
-            raise LinkErr(f"C object has {bad} ({secs[bad]} bytes); not supported")
-    need = [s for s in DATASECS if secs.get(s)]
-    if not need:
-        return []
+def pair_bases(cobj, block, addrs, names):
+    """{section: set of original addresses its offset 0 maps to}, from pairing the C
+    object's %lo/%gp_rel relocations against `names` with the asm block's at the same
+    instruction."""
     cr, ct = text_relocs(cobj)
     tr, tt = text_relocs(block.o)
-    bases = {s: set() for s in need}
+    bases = {s: set() for s in names}
     for off, (typ, name, issec) in cr.items():
         if not issec or name not in bases or typ not in (6, 7):     # R_MIPS_LO16, R_MIPS_GPREL16
             continue
@@ -386,6 +384,24 @@ def place_c(cobj, block, addrs):
         if not t or t[1] not in addrs or off + 4 > len(tt):
             continue
         bases[name].add(addrs[t[1]] + imm16(tt, off) - imm16(ct, off))
+    return bases
+
+
+def place_c(cobj, block, addrs):
+    """[(addr, size, obj, section, bytes)] for the C object's own data sections
+    (.rodata, .sdata, .data, and .rodata.lc<k> pieces made by split_rodata)."""
+    with open(cobj, "rb") as f:
+        e = ELFFile(f)
+        secs = {s.name: s["sh_size"] for s in e.iter_sections()}
+        content = {s.name: s.data() for s in e.iter_sections()
+                   if s.name in DATASECS or s.name.startswith(".rodata.lc")}
+    for bad in (".bss", ".sbss"):
+        if secs.get(bad):
+            raise LinkErr(f"C object has {bad} ({secs[bad]} bytes); not supported")
+    need = [s for s in content if secs.get(s)]
+    if not need:
+        return []
+    bases = pair_bases(cobj, block, addrs, need)
     out = []
     for s in need:
         if len(bases[s]) != 1:
@@ -394,6 +410,124 @@ def place_c(cobj, block, addrs):
                            "inconsistent bases " + ",".join(f"0x{b:X}" for b in sorted(bases[s]))))
         out.append((bases[s].pop(), secs[s], cobj, s, content[s]))
     return out
+
+
+LABEL_RE = re.compile(r"\s*[A-Za-z_.$][\w.$]*:\s*$")
+SECDIR = (".section", ".text", ".data", ".sdata", ".rdata", ".bss", ".sbss")
+
+
+def _split_asm(ms, groups):
+    """maspsx output with every `.section .rodata` chunk cut at its labels into units
+    (a label plus the .align lines just before it). groups=None puts unit i in section
+    .rodata.u<i>; otherwise groups[i] is the piece number k (section .rodata.lc<k>).
+    Returns (text, number of units)."""
+    out, n, inro = [], 0, False
+    for l in ms.split("\n"):
+        st = l.strip()
+        if st.startswith(SECDIR):
+            if inro:
+                out += pend
+            inro = st == ".section .rodata"
+            if inro:
+                pend, started = [], False
+                continue
+        if not inro:
+            out.append(l)
+            continue
+        if st.startswith(".align") or not st or st.startswith("#"):
+            pend.append(l)
+            continue
+        if LABEL_RE.match(l) or not started:
+            name = f".rodata.u{n}" if groups is None else f".rodata.lc{groups[n]}"
+            out.append(f'.section {name},"a",@progbits')
+            n += 1
+            started = True
+        out += pend + [l]
+        pend = []
+    if inro:
+        out += pend
+    return "\n".join(out), n
+
+
+def _assemble_ms(text, o):
+    s = o[:-2] + ".m.s"
+    open(s, "w").write(text)
+    r = sh(AS + ["-o", o, s])
+    if r.returncode:
+        raise LinkErr("rodata split: as: " + r.stderr[-300:])
+
+
+def _sections(o):
+    with open(o, "rb") as f:
+        e = ELFFile(f)
+        return {s.name: (s["sh_size"], s["sh_addralign"], s.data() if s["sh_type"] != "SHT_NOBITS" else b"")
+                for s in e.iter_sections() if s.name}
+
+
+def split_rodata(cpath, cobj, block, addrs):
+    """For a C object whose .rodata pairs to several original ranges: rebuild it with
+    .rodata in one section per contiguous original range (.rodata.lc<k>) and return
+    (new object, its data pieces). Every unit (label) must pair to exactly one base."""
+    o_keep = cobj[:-2] + ".keep.o"
+    a = types.SimpleNamespace(cc="2.7.2-cdk", opt="-O2", G="8", aspsx="2.79", extra="", keep_s=True)
+    err = fnscore.compile_c(cpath, o_keep, a)
+    if err:
+        raise LinkErr("compile error: " + " ".join(err.split())[:200])
+    # the same maspsx step as fnscore.compile_c; checked below by reassembling unchanged
+    mx = [sys.executable, os.path.join(ROOT, "tools/maspsx/maspsx.py"), "--aspsx-version=2.79", "--expand-div", "-G8"]
+    env = dict(os.environ, MASPSX_EXTERN_G=os.environ.get("MASPSX_EXTERN_G", "4"))
+    r = subprocess.run(mx, stdin=open(o_keep[:-2] + ".cc1.s"), cwd=ROOT, capture_output=True, text=True, env=env)
+    if r.returncode:
+        raise LinkErr("rodata split: maspsx: " + r.stderr[-300:])
+    ms = '.include "macro.inc"\n' + r.stdout
+    same = cobj[:-2] + ".same.o"
+    _assemble_ms(ms, same)
+    if _sections(same) != _sections(cobj):
+        raise LinkErr("rodata split: reassembling the maspsx output does not reproduce the C object")
+    # 1) one section per unit, to learn each unit's original address
+    text, n = _split_asm(ms, None)
+    uo = cobj[:-2] + ".units.o"
+    _assemble_ms(text, uo)
+    usec = _sections(uo)
+    units = [f".rodata.u{i}" for i in range(n)]
+    if sum(usec[u][0] for u in units) == 0 or ".rodata" in usec and usec[".rodata"][0]:
+        raise LinkErr("rodata split: could not cut .rodata at its labels")
+    ub = pair_bases(uo, block, addrs, units)
+    for i, u in enumerate(units):
+        if len(ub[u]) > 1:
+            raise LinkErr(f"cannot place C .rodata: unit {i} ({usec[u][0]} bytes) has inconsistent bases " +
+                          ",".join(f"0x{b:X}" for b in sorted(ub[u])))
+    ubase = {u: min(b) for u, b in ub.items() if b}
+    # 2) group units that sit back to back (with C's alignment) in the original
+    groups, k, prev_end = [], -1, None
+    for i, u in enumerate(units):
+        size, align, _ = usec[u]
+        if size == 0:
+            groups.append(max(k, 0))
+            continue
+        if u not in ubase:
+            raise LinkErr(f"cannot place C .rodata: unit {i} ({size} bytes) has no paired relocation")
+        if prev_end is not None:
+            al = max(align, 1)
+            if ubase[u] == (prev_end + al - 1) // al * al:
+                groups.append(k)
+                prev_end = ubase[u] + size
+                continue
+        k += 1
+        groups.append(k)
+        prev_end = ubase[u] + size
+    if k < 0:
+        raise LinkErr("rodata split: no .rodata units")
+    if k == 0:
+        raise LinkErr("rodata split: every unit is contiguous, yet the bases disagree")
+    text, _ = _split_asm(ms, groups)
+    so = cobj[:-2] + ".split.o"
+    _assemble_ms(text, so)
+    ssec = _sections(so)
+    if ssec[".text"][0] != _sections(cobj)[".text"][0]:
+        raise LinkErr("rodata split: .text size changed")
+    # 3) every piece must again pair to exactly one base (place_c raises otherwise)
+    return so, place_c(so, block, addrs)
 
 
 def compile_one(sym, path):
@@ -485,7 +619,13 @@ def main():
         # padding (an alignment nop between objects); the byte compare covers it
         if pad < 0 or (pad and any(orig[lo + n:lo + b.size])):
             raise LinkErr(f"C .text is 0x{n:X} bytes, asm block is 0x{b.size:X}")
-        pieces = place_c(o, b, addrs)
+        try:
+            pieces = place_c(o, b, addrs)
+        except LinkErr as e:
+            # .rodata spread over several original ranges: one piece per range
+            if not str(e).startswith("cannot place C .rodata ") or "inconsistent bases" not in str(e):
+                raise
+            o, pieces = split_rodata(cpath, o, b, addrs)
         return o, pieces, pad
 
     def provides_for(repl, pieces):

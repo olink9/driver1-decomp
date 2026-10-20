@@ -1035,3 +1035,5 @@ time	symbol	size	best	attempts	status
 2026-10-20T05:21:12Z	func_00033870	648	93.65	17	gave_up	run2-r3
 2026-10-20T05:32:09Z	func_0004BD48	1044	94.47	13	gave_up	run2-r3
 2026-10-20T05:32:09Z	func_00061C58	644	93.57	15	gave_up	run2-r3
+2026-10-20T05:39:07	func_00068C6C	4252	100	1	matched	run2 coordinator (linkcheck rodata split) FAKEMATCH
+2026-10-20T05:39:07	func_0002360C	0	100	1	matched	run2 coordinator (linkcheck rodata split)
