@@ -31,7 +31,7 @@ or three Opus workers already. Its header says what was tried and the exact rema
 - On a match: write `src/pilot/SYMBOL.c` (delete the .wip.c), append to pilot/results.tsv with note `run3-r4`.
   Do NOT run linkcheck (the coordinator does). Do not touch other symbols' files. Scratch only under perm/ or
   build/<your batch id>/.
-- Kill your permuter before replying (`pkill -f "permuter.py perm/SYMBOL"` inside the container).
+- Kill your permuter before replying (`pkill -f "[p]ermuter.py perm/SYMBOL"` - the bracket keeps pkill from killing its own shell).
 
 Final reply: `<batch> SYMBOL: matched | best NN.NN`, the precise remaining cause in one line, the permuter's useful
 finding (if any) in one line, and each new systematic lesson in one line.

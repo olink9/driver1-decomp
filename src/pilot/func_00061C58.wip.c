@@ -1,9 +1,19 @@
-/* best 93.57 (run2-r3: inner op as b = v&1; v = (v>>25)&0x1e; c = v|b gives the exact or v0,v1,v0; else-branch src via a local). Remaining: x stays in t0 instead of a0 - x (priority 0 by integer division) loses its a0 preference because a local (ty chain / D_00097374 load) is put in a0 by local-alloc while x is live; the 64-count loop then takes a0. With `ty = D - ty; sel = (ty << 1) & 2` the magic/ty-chain regs match the target (a2/v0/v1) but the D load then lands in a0. Statement-order sweeps (1512 + 2520 orders) do not help. */
+/* FAKEMATCH-steering (not matched): best 95.65 (run3-r4). `i = ty * 60; y -= i;` reuses the loop counter as a temp
+   only to steer register allocation - real source most likely had `y -= ty * 60;` (93.51 with everything else here).
+   Fixed this run: ConvRow(src, dst, n) parameter order (was dst, src) gives the target's inner-loop regs (src t0,
+   n a2, dst a3) once x is in a0.
+   Remaining: block-0 local-alloc. Target: magic a2, y-sign v1, ty/quotient chain v0, x in a0. Plain source: the ty
+   chain is local-allocated to a0 (v0 = y-sign, v1 = magic), so global x loses a0 and goes to t0. Any change that makes
+   the ty*60 product (or ty's last use) a global/extra pseudo frees a0 for x (95.65), but then y-sign gets v0 and the
+   chain v1 - the chain never outranks the y-sign in local-alloc. Tried: 720+ header statement orders (with and
+   without the i temp), declaration orders, %, (y-32)/60 forms, ty = D - ty forms (168 instrs), static inline
+   helpers (no block split), separate px/py locals. Permuter (2 runs, ~10k iters) plateaus at the same chain/sign
+   swap, only via casts like (unsigned char)ty (semantics-changing). */
 extern long long D_00097374;
 extern int *D_0009D8F4[];
 extern int D_000C039C[];
 
-static inline void ConvRow(int *dst, int *src, int n)
+static inline void ConvRow(int *src, int *dst, int n)
 {
     int v, b, c;
     while (n--) {
@@ -25,7 +35,8 @@ void func_00061C58(int x, int y)
     tx = x / 60;
     y -= 32;
     ty = y / 60;
-    y -= ty * 60;
+    i = ty * 60;
+    y -= i;
     sel = ((*(int *)&D_00097374 - ty) << 1) & 2;
     row = y * 60;
     x -= tx * 60;
@@ -36,11 +47,11 @@ void func_00061C58(int x, int y)
         for (i = 0; i < 64; i++) {
             sel = (sel & 2) | (tx & 1);
             src = D_0009D8F4[sel] + row + x;
-            if (w) ConvRow(base, src, w);
+            if (w) ConvRow(src, base, w);
             base += 60 - x;
             src = D_0009D8F4[sel ^ 1] + row;
             n = x + 4;
-            if (n) ConvRow(base, src, n);
+            if (n) ConvRow(src, base, n);
             base += n;
             row += 60;
             if (i + y == 59) {
@@ -52,7 +63,7 @@ void func_00061C58(int x, int y)
         for (i = 0; i < 64; i++) {
             sel = (sel & 2) | (tx & 1);
             src = D_0009D8F4[sel] + row + x;
-            ConvRow(base, src, 64);
+            ConvRow(src, base, 64);
             base += 64;
             if (i + y == 59) {
                 row = 0;

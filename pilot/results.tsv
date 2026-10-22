@@ -1053,3 +1053,4 @@ time	symbol	size	best	attempts	status
 2026-10-22T20:31:04Z	func_000605D8	468	100.0	12	matched	run3-r4
 2026-10-22T20:34:26Z	func_00064DEC	500	100.0	22	matched	run3-r4
 2026-10-22T20:35:38Z	func_0005FA9C	324	100.0	14	matched	run3-r4 FAKEMATCH
+2026-10-22T20:43:35Z	func_00061C58	644	95.65	40	gave_up	run3-r4
