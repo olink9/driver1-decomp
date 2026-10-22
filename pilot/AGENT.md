@@ -291,3 +291,5 @@ real proof. fnscore 100 is necessary, linkcheck pass is what counts. Hand-writte
 - (r4-01) A pointer losing a -dS birthing boost (0x7f000001) is set twice (init + loop p++): copy it into a single-set local for its pre-loop use (`b = buf; call(b); for (p = b; ...)`) - global alloc ties both to one reg.
 - (r4-03) A loop-invariant flag tested before AND inside a loop loses its reg to short temps (long live range): a copy at loop entry (`int wide = big;`) splits it - FAKEMATCH steering. Permuter found it in ~2000 iterations.
 - (r4-03) Global-alloc priority here is floor_log2(refs)*refs/len compared as FLOAT (.1359 vs .1364 decides) - corrects (r3-12); read the `;; N regs to allocate:` order in .greg.
+- (r4-04) Near-tie reg swap: move a variable's first set one statement earlier to lengthen its life and drop its priority (`ax = dx; a = ...; if (dx < 0) ax = -dx;` beat if/else abs). A delay slot holding the later independent subtraction = the copy was assigned before it.
+- (r4-04) A permuter candidate that "improves" by reusing an unrelated variable as a load temp = the target loads into a separate short-lived reg: fix priorities, don't keep the temp.
