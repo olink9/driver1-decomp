@@ -1,16 +1,11 @@
-/* r3-11 (run2-r3) findings - two remaining diffs:
- * (1) Target computes tpage2send<<6 (s1) and &D_00087030 (s3) BEFORE the LoadImage call and adds them after it
- *     (addu a1,s1,s3). Assigning clutptr before the call gives one summed s-reg instead; two locals a,b assigned
- *     before the call are single-use and update_equiv_regs sinks them past the call. What reproduces the shape:
- *     the SAME two int locals reused in the else branch (b = (int)D_000BE278; a = tpage2send + b; loads/stores via
- *     *(unsigned char *)a and *(unsigned char *)(old + b)) - matches the target's s1/s3 use there too. Copy kept at
- *     build/scratch/r3-11/k5_keep.c (93.10). But then global-alloc order is b(.33) > a(.30) > slot(.30) > tpage(.107)
- *     while the target needs slot > a > tpage > b (b's priority < .107): only the register names are left wrong.
- * (2) cluts.w=64 / tpage.w/h stores and addr += 4 order in the then-branch: all 5040 orders of the 7 field stores on
- *     the a/b form leave it unchanged (93.10) - likely follows from the register choice (anti-deps), fix (1) first.
- * Tried without effect: D2 statement order, clutptr in for/inline/index forms (i/2, j, i>>1), decl order of a/b.
+/* func_00033870 - Driver 2: SendTPage
+ * Matched in run3-r4 (permuter + hand cleanup). What it took:
+ * - texture_cluts[tpage2send] is built from a byte offset and a base pointer that are both assigned BEFORE the
+ *   LoadImage call (clutofs = tpage2send << 6; clutbase = texture_cluts) and added after it.
+ * - tpage.w / tpage.h (D_0009721C/E) are struct fields (tpage is a RECT16 in the original): declared as 2-byte
+ *   structs so the stores get MEM_IN_STRUCT aliasing like the real tpage.w/h.
+ * - else branch: the tpageloaded[tpage2send] address is a local pointer (`loaded`) used for test and store.
  */
-/* func_00033870 - Driver 2: SendTPage */
 typedef struct {
     short x, y, w, h;
 } RECT16;
@@ -33,8 +28,11 @@ typedef struct {
     short x, y;
 } RECTXY;
 extern RECTXY D_00097218;           /* tpage.x/y */
-extern short D_0009721C;            /* tpage.w */
-extern short D_0009721E;            /* tpage.h */
+typedef struct {
+    short v;
+} SHORT1;
+extern SHORT1 D_0009721C;           /* tpage.w */
+extern SHORT1 D_0009721E;           /* tpage.h */
 extern int D_000A7F50[];            /* tsetinfo */
 extern unsigned char D_000BE278[];  /* tpageloaded */
 extern unsigned char D_000BE4F8[];  /* tpageslots */
@@ -59,6 +57,9 @@ void func_00033870(void)
     int i;
     char *addr;
     RECT16 cluts;
+    int clutofs;
+    char *clutbase;
+    unsigned char *loaded;
 
     addr = (char *)D_00097238 + 0xA000;
     tpage2send = D_000A7F50[D_00097250 * 2];
@@ -68,21 +69,20 @@ void func_00033870(void)
         addr += 0x4000;
         if (slot != D_000BE278[tpage2send] - 1) {
             npalettes = *(int *)addr;
-            addr += 4;
-
             D_00097218.x = D_000BE708[slot].vx;
-            D_0009721C = 64;
-            D_0009721E = 64;
+            addr += 4;
+            clutofs = tpage2send << 6;
+            clutbase = (char *)D_00087030;
             D_00097218.y = D_000BE708[slot].vy;
-
-            cluts.w = 64;
+            D_0009721C.v = 64;
+            D_0009721E.v = 64;
             cluts.x = D_000BE1BC[slot].vx;
             cluts.y = D_000BE1BC[slot].vy;
+            cluts.w = 64;
             cluts.h = npalettes / 4 + 1;
-
             func_00074404(&cluts, addr);
 
-            clutptr = D_00087030[tpage2send];
+            clutptr = (unsigned long *)(clutbase + clutofs);
             i = 0;
 
             while (i < npalettes) {
@@ -97,16 +97,17 @@ void func_00033870(void)
         }
     } else {
         addr += (D_00097244 & 1) << 13;
-        if (slot != D_000BE278[tpage2send] - 1) {
+        loaded = &D_000BE278[tpage2send];
+        if (slot != *loaded - 1) {
             func_00074404((RECT16 *)&D_00097218, addr);
-            D_00097218.y += D_0009721E;
+            D_00097218.y += D_0009721E.v;
         }
 
         if (D_00097208 == 4) {
             old = D_000BE4F8[slot];
             D_000BE4F8[slot] = tpage2send;
             D_000BE278[old] = 0;
-            D_000BE278[tpage2send] = slot + 1;
+            *loaded = slot + 1;
             D_00097250++;
             if (D_00097250 == D_000972B4) {
                 D_000972B4 = 0;
