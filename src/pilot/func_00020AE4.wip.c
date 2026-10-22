@@ -1,3 +1,8 @@
+/* run3-r4 (r4-cell, no improvement; 90.22 kept). One shared pointer-returning inline for both lookups
+   (sibling forms, separate remainder locals, all 20 valid statement orders, flat and 2D index) scores 75-85:
+   with params substituted, sched1 always issues the z divide first (its chain D - zq -> &1 -> <<1 is longer)
+   and finishes the x quotient before the z mult; the target overlaps them (mult x; mfhi; mult z) in both lookups.
+   Moving the wip's q60 form into a shared inline also drops to 83-85. */
 /* WIP 90.22 (run3-r4; was 88.33). Driver 2: unknown - road direction at (x, z).
    run3-r4 fixes: D_0009E714 as `int[]` with `t = D[3] + 750; cz = (t - z) / 1500;` (sibling form);
    first lookup `xc = cx / 60; zc = q60(cz);` - routing ONE quotient through a tiny static inline is what

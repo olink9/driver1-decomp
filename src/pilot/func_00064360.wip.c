@@ -1,3 +1,11 @@
+/* run3-r4 (r4-cell, no improvement; 97.07 kept). Measured with cc1 -dl -dg on the shared-cz form (95.49):
+   cz = 21 refs / 75 insns, cx = 21 / 94; px/pz are block-12 locals that local-alloc puts in s1/s0 first, so the
+   first global allocno takes s2 - cz wins it. Tried without a flip: cz/cx uses at the end via obj->cz /
+   D_0009774C reloads (81 combos, cse folds them back), `cx = a; cx += b` in top+both arms (27 refs but length
+   grows to 106), cx-only or cz-only in the flag arms (cz drops to 15/42 - length shrinks with refs), do{}while(0)
+   around single cx statements, sibling in-place GetCellType forms (89.4) and the 2D [z][x] index (85-89).
+   andi 0xffff: multi-set `t` (t = c[1]; t &= ..; t >>= 9; t |= ..; 64 variants incl. short/int), int* + narrowing,
+   and small struct/union/bitfield locals all fold it too. */
 /* run3-r4 (r4-09, no improvement; 97.07 kept). Diagnosed the three remaining causes separately:
    (1) ALLOC: with one shared cz (target: top cz and tail cz both s3) cz = 21 refs/75 insns beats cx = 21/94, so cz
        takes s2. Lengths come partly from RTL order, not only sched1: writing the lookup directly on cx/cz with the
