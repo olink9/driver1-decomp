@@ -1,6 +1,6 @@
 /* DrawCiv: Driver 2 counterpart DrawCiv (MOTION_C.C) - draw a pedestrian: shadow, interpolated
  * bone vertices into scratchpad, one POLY_FT4 sprite per bone, then the head model via func_0002E230.
- * The sprite cos lookups are written D_0008EAA8[i*2 + 1]: the target labels them D_0008EAAA (same
+ * The sprite cos lookups are written rcossin_tbl[i*2 + 1]: the target labels them D_0008EAAA (same
  * address); only this single-table form lets loop.c hoist the table base (rematerialised in $t9). */
 #include "gte.h"
 
@@ -65,17 +65,17 @@ typedef struct { unsigned addr:24; unsigned len:8; } P_TAG;
 #define getaddr(_p) (unsigned long)(((P_TAG *)(_p))->addr)
 #define addPrim(ot, p) setaddr(p, getaddr(ot)), setaddr(ot, p)
 
-extern VECTOR D_0008A8F0;
+extern VECTOR camera_position;
 extern short D_0008EAAA[];
-extern short D_0008EAA8[];
-extern long long D_00096850;
+extern short rcossin_tbl[];
+extern long long gNight;
 extern CVECTOR D_00096E48[];
-extern MATRIX D_000BBE84;
-extern MATRIX D_000A6E8C[];
+extern MATRIX inv_camera_matrix;
+extern MATRIX matrixtable[];
 extern long long D_000970E4, D_00096A48;
-extern long long D_00097530;
-#define current (*(DB **)&D_00097530)
-extern long long D_000971A0;
+extern long long current;
+#define current (*(DB **)&current)
+extern long long combointensity;
 extern long long D_00096C4A;
 extern int D_000BE9FC[][30][5];
 extern long long D_000970B0, D_000970B4, D_000970B8, D_000970BC;
@@ -157,14 +157,14 @@ void DrawCiv(PED *p, int idx)
     bl = p->bones;
     out = (SVECTOR *)0x1F800090;
 
-    pos.vx = p->pos.vx - D_0008A8F0.vx;
-    pos.vy = p->pos.vy - D_0008A8F0.vy;
-    pos.vz = p->pos.vz - D_0008A8F0.vz;
-    gte_SetRotMatrix(&D_000BBE84);
+    pos.vx = p->pos.vx - camera_position.vx;
+    pos.vy = p->pos.vy - camera_position.vy;
+    pos.vz = p->pos.vz - camera_position.vz;
+    gte_SetRotMatrix(&inv_camera_matrix);
     v.vy = pos.vy - 30;
     v.vx = pos.vx;
     v.vz = pos.vz;
-    if (*(int *)&D_00096850 == 0 && !(p->flags & 0x1000)) {
+    if (*(int *)&gNight == 0 && !(p->flags & 0x1000)) {
         VECTOR *pv = &v;
         CVECTOR *pcv = &cv;
         cv = D_00096E48[0];
@@ -189,13 +189,13 @@ void DrawCiv(PED *p, int idx)
             hm.m[0][2] = D_0008EAAA[(p->dir.vy & 0xfff) * 2 - 1]; /* sic: also writes the head matrix */
             m.m[0][2] = D_0008EAAA[(p->dir.vy & 0xfff) * 2 - 1];
             m.m[2][0] = -m.m[0][2];
-            MulMatrix0(&D_000BBE84, &m, &m);
+            MulMatrix0(&inv_camera_matrix, &m, &m);
         } else {
-            MulMatrix0(&D_000BBE84, &D_000A6E8C[(p->dir.vy & 0xFC0) >> 6], &m);
+            MulMatrix0(&inv_camera_matrix, &matrixtable[(p->dir.vy & 0xFC0) >> 6], &m);
         }
     } else {
         RotYXZ(&p->dir, &m);
-        MulMatrix0(&D_000BBE84, &m, &m);
+        MulMatrix0(&inv_camera_matrix, &m, &m);
     }
     gte_SetRotMatrix(&m);
 
@@ -298,7 +298,7 @@ void DrawCiv(PED *p, int idx)
             dx >>= b->v3 >> 4;
             oy = dy >> (b->v3 & 0xF);
             dy >>= b->v3 >> 4;
-            prim->rgbc = *(int *)&D_000971A0;
+            prim->rgbc = *(int *)&combointensity;
             s = size;
             if (i == 6) {
                 int o = ((*(short *)&D_00096C4A + p->f40 + 0x800) & 0xFFF) >> 7;
@@ -309,14 +309,14 @@ void DrawCiv(PED *p, int idx)
                 ang = o;
             } else {
                 if (i == 7)
-                    s += D_0008EAA8[((p->dir.vy + *(short *)&D_00096C4A) * 2 & 0xFFF) * 2 + 1] >> 6;
+                    s += rcossin_tbl[((p->dir.vy + *(short *)&D_00096C4A) * 2 & 0xFFF) * 2 + 1] >> 6;
                 prim->uvc0 = tex->uv0 | clut;
                 prim->uvt1 = tex->uv1 | tpage;
                 prim->uv2 = tex->uv2;
                 prim->uv3 = tex->uv3;
             }
-            c = D_0008EAA8[(ang & 0xFFF) * 2 + 1] * 3;
-            sn = D_0008EAA8[(ang & 0xFFF) * 2];
+            c = rcossin_tbl[(ang & 0xFFF) * 2 + 1] * 3;
+            sn = rcossin_tbl[(ang & 0xFFF) * 2];
             t1 = s * c;
             t2 = s * sn;
             w = b->v2;
@@ -362,7 +362,7 @@ void DrawCiv(PED *p, int idx)
                 hm.m[2][0] = -hm.m[0][2];
                 gte_SetRotMatrix(&hm);
             } else {
-                gte_SetRotMatrix(&D_000A6E8C[(p->dir.vy & 0xFC0) >> 6]);
+                gte_SetRotMatrix(&matrixtable[(p->dir.vy & 0xFC0) >> 6]);
             }
         } else {
             RotYXZ(&p->dir, &hm);
@@ -371,10 +371,10 @@ void DrawCiv(PED *p, int idx)
         gte_ldv0(a);
         gte_rtv0();
         gte_stlvnl(&hv);
-        gte_SetRotMatrix(&D_000BBE84);
-        sv.vx = hv.vx + (p->pos.vx - D_0008A8F0.vx);
-        sv.vy = hv.vy + (p->pos.vy - D_0008A8F0.vy);
-        sv.vz = hv.vz + (p->pos.vz - D_0008A8F0.vz);
+        gte_SetRotMatrix(&inv_camera_matrix);
+        sv.vx = hv.vx + (p->pos.vx - camera_position.vx);
+        sv.vy = hv.vy + (p->pos.vy - camera_position.vy);
+        sv.vz = hv.vz + (p->pos.vz - camera_position.vz);
         gte_ldv0(&sv);
         gte_rtv0();
         gte_stlvnl(&v);

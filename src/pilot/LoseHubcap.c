@@ -24,7 +24,7 @@ typedef struct {
     int wheel_speed;
 } CAR;
 
-extern CAR D_0009B0A4;
+extern CAR car_data;
 extern MATRIX D_000AF6A0;
 extern HUBCAP D_000B700C;
 extern void SetRotMatrix();
@@ -40,7 +40,7 @@ void LoseHubcap(int Hubcap)
     VECTOR VW;
     long AY;
 
-    if (D_0009B0A4.wheel_speed < 0 || !D_000B700C.Present[Hubcap])
+    if (car_data.wheel_speed < 0 || !D_000B700C.Present[Hubcap])
         return;
 
     D_000B700C.Present[Hubcap] = 0;
@@ -51,9 +51,9 @@ void LoseHubcap(int Hubcap)
     SetRotMatrix(&D_000AF6A0);
     func_0004EAC0(&D_000B700C.Position);
 
-    D_000B700C.Position.vx += D_0009B0A4.t[0];
-    D_000B700C.Position.vy -= D_0009B0A4.t[1];
-    D_000B700C.Position.vz += D_0009B0A4.t[2];
+    D_000B700C.Position.vx += car_data.t[0];
+    D_000B700C.Position.vy -= car_data.t[1];
+    D_000B700C.Position.vz += car_data.t[2];
 
     D_000B700C.Orientation = D_000AF6A0;
     func_0004E948(&D_000B700C.LocalOrientation, &InitialLocalAngle);
@@ -68,13 +68,13 @@ void LoseHubcap(int Hubcap)
     }
 
     R = D_000B700C.Offset[Hubcap];
-    AY = D_0009B0A4.angularVelocity[1] >> 12;
+    AY = car_data.angularVelocity[1] >> 12;
     VW.vx = (AY * R.vz) / 4096;
     VW.vy = 0;
     VW.vz = (-AY * R.vx) / 4096;
-    VW.vx += D_0009B0A4.linearVelocity[0] >> 12;
-    VW.vy = D_0009B0A4.linearVelocity[1] >> 12;
-    VW.vz += D_0009B0A4.linearVelocity[2] >> 12;
+    VW.vx += car_data.linearVelocity[0] >> 12;
+    VW.vy = car_data.linearVelocity[1] >> 12;
+    VW.vz += car_data.linearVelocity[2] >> 12;
     D_000B700C.Direction = VW;
     D_000B700C.Duration = 100;
 }

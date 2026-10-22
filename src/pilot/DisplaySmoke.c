@@ -6,8 +6,8 @@ typedef struct { short vx, vy, vz, pad; } SVECTOR;
 typedef struct { short m[3][3]; short pad; int t[3]; } MATRIX;
 
 typedef struct { char *primptr; unsigned int *ot; } DB;
-extern long long D_00097530;
-#define current (*(DB **)&D_00097530)
+extern long long current;
+#define current (*(DB **)&current)
 
 typedef struct {
     VECTOR position;
@@ -39,13 +39,13 @@ typedef struct {
 
 typedef struct { unsigned addr:24; unsigned len:8; } P_TAG;
 
-extern VECTOR D_0008A8F0;
+extern VECTOR camera_position;
 extern MATRIX D_000B8FE8;
 extern TEXINF D_000B91B0;
 extern long long D_00096834;
-extern long long D_00096850;
+extern long long gNight;
 #define gTimeOfDay (*(int *)&D_00096834)
-#define gNight (*(int *)&D_00096850)
+#define gNight (*(int *)&gNight)
 extern void func_0002C564(VECTOR *v);
 
 #define gte_SetTransVector(r0) __asm__ volatile ( \
@@ -79,9 +79,9 @@ void DisplaySmoke(SMOKE *smoke)
     x = smoke->start_w;
     negx = (x * 3) >> 1;
 
-    v.vx = smoke->position.vx - D_0008A8F0.vx;
-    v.vy = smoke->position.vy - D_0008A8F0.vy;
-    v.vz = smoke->position.vz - D_0008A8F0.vz;
+    v.vx = smoke->position.vx - camera_position.vx;
+    v.vy = smoke->position.vy - camera_position.vy;
+    v.vz = smoke->position.vz - camera_position.vz;
 
     func_0002C564(&v);
 

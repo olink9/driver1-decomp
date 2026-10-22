@@ -15,7 +15,7 @@ typedef struct {
 typedef void (*POLYFUNC)(int);
 extern POLYFUNC D_00089FFC[];
 extern int D_00089F1C[];
-extern MATRIX D_000BBE84;
+extern MATRIX inv_camera_matrix;
 extern long long D_000972F0;
 extern void MulMatrix0();
 extern void SetRotMatrix();
@@ -56,7 +56,7 @@ int func_0002E6B8(MODEL *model, MATRIX *rot, VECTOR *trans)
     zbuf = (short *)0x1F800240;
     sum = 0;
     gte_SetTransVector(trans);
-    MulMatrix0(&D_000BBE84, rot, &m);
+    MulMatrix0(&inv_camera_matrix, rot, &m);
     SetRotMatrix(&m);
     verts = model->vertices;
     i = 0;

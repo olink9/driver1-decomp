@@ -36,7 +36,7 @@ typedef struct {
 } SLOT;
 typedef struct { char p[0x28]; unsigned char f28; } PLY;
 
-extern CAR D_0009B0A4[];
+extern CAR car_data[];
 extern COP D_000C4E38[];
 extern char D_000C4CA8[];
 extern SLOT D_00098950[];
@@ -76,8 +76,8 @@ void func_000635C0(void)
     short s;
 
     tgt = D_000C4CA8;
-    pos.vx = D_0009B0A4[0].x;
-    pos.vz = D_0009B0A4[0].z;
+    pos.vx = car_data[0].x;
+    pos.vz = car_data[0].z;
     cop = D_000C4E38;
     func_0003A100(&pos, tgt, &a, &b);
     found = 0;
@@ -103,8 +103,8 @@ void func_000635C0(void)
             if (cop->active == 0 || cop->f798 != 0)
                 continue;
             D_00098950[cop->car->id - 1].f2 = 0;
-            dx = cop->x - D_0009B0A4[0].x >= 0 ? cop->x - D_0009B0A4[0].x : D_0009B0A4[0].x - cop->x;
-            dz = cop->z - D_0009B0A4[0].z >= 0 ? cop->z - D_0009B0A4[0].z : D_0009B0A4[0].z - cop->z;
+            dx = cop->x - car_data[0].x >= 0 ? cop->x - car_data[0].x : car_data[0].x - cop->x;
+            dz = cop->z - car_data[0].z >= 0 ? cop->z - car_data[0].z : car_data[0].z - cop->z;
             if (dz < dx)
                 cop->dist = dx + dz / 2;
             else
@@ -120,8 +120,8 @@ void func_000635C0(void)
                 } else {
                     VEC d;
                     CAR *c = cop->car;
-                    d.vx = D_0009B0A4[0].px - c->px;
-                    d.vz = D_0009B0A4[0].pz - c->pz;
+                    d.vx = car_data[0].px - c->px;
+                    d.vz = car_data[0].pz - c->pz;
                     s = *(short *)&D_0009775C;
                     if (ABS(ratan2(d.vx, d.vz) - cop->ang) < s
                         && SquareRoot0(d.vx * d.vx + d.vz * d.vz) < *(short *)&D_0009775A)

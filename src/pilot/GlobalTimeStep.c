@@ -44,7 +44,7 @@ typedef struct {
 } COS;
 
 extern long long D_00096834;
-extern CAR D_0009B0A4[];
+extern CAR car_data[];
 extern int D_00097000;
 extern int D_000C7004[];
 extern long long D_000967F4;
@@ -54,7 +54,7 @@ extern int D_0009679C;
 extern short D_0009B1D0[];
 extern int D_0009D8DC[];
 extern short D_0009AF48[];
-extern COS D_0009AF04[];
+extern COS car_cosmetics[];
 extern int D_0009D8E4[];
 extern int D_00097030;
 extern CAR *D_0009AC48[];
@@ -64,7 +64,7 @@ extern RBS D_0009A728[];
 extern long long D_00096854;
 extern long long D_00096870;
 extern long long D_00096898;
-extern long long D_000970D8;
+extern long long CameraCnt;
 
 extern void StepCars();
 extern void CheckCarToCarCollisions();
@@ -142,12 +142,12 @@ void GlobalTimeStep(void)
     int t;
     int u;
 
-    D_00097000 = *(int *)&D_00096834 == 5 && D_0009B0A4[0].t[2] < -445000 &&
-                 D_0009B0A4[0].t[0] > -123000;
+    D_00097000 = *(int *)&D_00096834 == 5 && car_data[0].t[2] < -445000 &&
+                 car_data[0].t[0] > -123000;
 
     if (D_000C7004[0] != 127 && (D_000C7004[0] < 170 || D_000C7004[0] >= 190)) {
-        if (D_0009B0A4[0].st.n.angularVelocity[1] > -6000 && D_0009B0A4[0].st.n.angularVelocity[1] < 6000)
-            D_0009B0A4[0].st.n.angularVelocity[1] = 0;
+        if (car_data[0].st.n.angularVelocity[1] > -6000 && car_data[0].st.n.angularVelocity[1] < 6000)
+            car_data[0].st.n.angularVelocity[1] = 0;
     }
     if (*(int *)&D_000967F4 == 22) {
         if (D_0009D438[0].st.n.angularVelocity[1] > -6000 && D_0009D438[0].st.n.angularVelocity[1] < 6000)
@@ -162,24 +162,24 @@ void GlobalTimeStep(void)
         D_0009B1D0[0] = 0;
 
     if (D_0009D8DC[0] == 0 ? D_0009AF48[0] < 0 : D_0009AF48[0] > 0) {
-        t = D_0009AF04[0].wheelDisp[1].vz;
-        u = D_0009AF04[0].wheelDisp[0].vz;
-        D_0009AF04[0].wheelDisp[0].vz = t;
-        D_0009AF04[0].wheelDisp[1].vz = u;
-        D_0009AF04[0].wheelDisp[2].vz = t;
-        D_0009AF04[0].wheelDisp[3].vz = u;
+        t = car_cosmetics[0].wheelDisp[1].vz;
+        u = car_cosmetics[0].wheelDisp[0].vz;
+        car_cosmetics[0].wheelDisp[0].vz = t;
+        car_cosmetics[0].wheelDisp[1].vz = u;
+        car_cosmetics[0].wheelDisp[2].vz = t;
+        car_cosmetics[0].wheelDisp[3].vz = u;
     }
 
     if (D_0009D8E4[0]) {
-        D_0009AF04[0].wheelDisp[0].vy = -245;
-        D_0009AF04[0].wheelDisp[1].vy = -245;
-        D_0009AF04[0].wheelDisp[2].vy = -245;
-        D_0009AF04[0].wheelDisp[3].vy = -245;
-    } else if (D_0009AF04[0].wheelDisp[0].vy < -200) {
-        D_0009AF04[0].wheelDisp[0].vy = -165;
-        D_0009AF04[0].wheelDisp[1].vy = -165;
-        D_0009AF04[0].wheelDisp[2].vy = -165;
-        D_0009AF04[0].wheelDisp[3].vy = -165;
+        car_cosmetics[0].wheelDisp[0].vy = -245;
+        car_cosmetics[0].wheelDisp[1].vy = -245;
+        car_cosmetics[0].wheelDisp[2].vy = -245;
+        car_cosmetics[0].wheelDisp[3].vy = -245;
+    } else if (car_cosmetics[0].wheelDisp[0].vy < -200) {
+        car_cosmetics[0].wheelDisp[0].vy = -165;
+        car_cosmetics[0].wheelDisp[1].vy = -165;
+        car_cosmetics[0].wheelDisp[2].vy = -165;
+        car_cosmetics[0].wheelDisp[3].vy = -165;
     }
 
     for (i = 0; i < D_00097030; i++) {
@@ -511,7 +511,7 @@ void GlobalTimeStep(void)
         CAR *cp;
         cp = D_0009AC48[i];
 
-        if (cp->needsDenting && ((*(int *)&D_000970D8 + i) & 3) == 0) {
+        if (cp->needsDenting && ((*(int *)&CameraCnt + i) & 3) == 0) {
             DentCar(cp->id);
             cp->needsDenting = 0;
         }

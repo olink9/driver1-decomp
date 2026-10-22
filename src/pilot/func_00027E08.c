@@ -1,8 +1,8 @@
 /* no Driver 2 counterpart: draws textured quads (POLY_FT4) from packed vertex indices, clipping via func_00028FA4 */
 typedef struct { char *primptr; unsigned long *ot; } DB;
 typedef struct { DB *p; int pad; } CUR;
-extern CUR D_00097530;
-#define current (D_00097530.p)
+extern CUR current;
+#define current (current.p)
 
 typedef struct { short x, y; } SXY;
 typedef struct { unsigned char u, v; } UV;
@@ -10,8 +10,8 @@ typedef struct { unsigned long tag, rgbc; unsigned long xy0, uv0, xy1, uv1, xy2,
 
 extern unsigned long D_0008904C[];
 extern unsigned long D_0008905C[];
-extern unsigned short D_00086F30[];
-extern unsigned short D_00087030[][32];
+extern unsigned short texture_pages[];
+extern unsigned short texture_cluts[][32];
 extern unsigned short *D_00096944;
 extern SXY *D_00096938;
 extern SXY *D_00096948;
@@ -37,8 +37,8 @@ void func_00027E08(int tex, int unused, int n, unsigned long *ot)
     else
         tab = D_0008904C;
 
-    D_00097134 = D_00086F30[(tex >> 8) & 0x7f] << 16;
-    D_00097130 = D_00087030[(tex >> 8) & 0x7f][(tex >> 16) & 0x7f] << 16;
+    D_00097134 = texture_pages[(tex >> 8) & 0x7f] << 16;
+    D_00097130 = texture_cluts[(tex >> 8) & 0x7f][(tex >> 16) & 0x7f] << 16;
 
     for (i = 0; i < n; i++) {
         w = tab[i];

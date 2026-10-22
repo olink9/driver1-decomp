@@ -56,9 +56,9 @@ typedef struct {
     unsigned short pad1;
 } POLY_FT3;
 
-extern long long D_00097530;
-#define current (*(DB **)&D_00097530)
-extern VECTOR D_0008A8F0;
+extern long long current;
+#define current (*(DB **)&current)
+extern VECTOR camera_position;
 extern TRI_POINT *D_0008A75C[];
 extern TEXTURE_DETAILS D_000B90D0;
 extern TEXTURE_DETAILS D_000B9260;
@@ -99,9 +99,9 @@ void DisplayDebris(DEBRIS *debris, unsigned char type)
 
     pos = debris->pos;
 
-    debrisvec.vx = debris->position.vx - D_0008A8F0.vx;
-    debrisvec.vy = debris->position.vy - D_0008A8F0.vy;
-    debrisvec.vz = debris->position.vz - D_0008A8F0.vz;
+    debrisvec.vx = debris->position.vx - camera_position.vx;
+    debrisvec.vy = debris->position.vy - camera_position.vy;
+    debrisvec.vz = debris->position.vz - camera_position.vz;
 
     if (debrisvec.vx < -10000 ||
         debrisvec.vz < -10000 ||

@@ -1,7 +1,7 @@
 typedef struct { unsigned addr:24; unsigned len:8; } TAG;
 typedef struct { char *primptr; unsigned int *ot; } DB;
-extern long long D_00097530;
-#define current (*(DB **)&D_00097530)
+extern long long current;
+#define current (*(DB **)&current)
 
 #define b075_ldv3c(r0) __asm__ volatile ( \
     "lwc2 $0, 0(%0);lwc2 $1, 4(%0);lwc2 $2, 8(%0);lwc2 $3, 12(%0);lwc2 $4, 16(%0);lwc2 $5, 20(%0)" : : "r"(r0))

@@ -1,7 +1,7 @@
 /* CameraBar (Driver 2 name) */
 typedef struct { char *primptr; unsigned int *ot; } DB;
-extern long long D_00097530;
-#define current (*(DB **)&D_00097530)
+extern long long current;
+#define current (*(DB **)&current)
 
 typedef struct { unsigned addr:24; unsigned len:8; } P_TAG;
 
@@ -33,7 +33,7 @@ struct PC {
     char pad3[2];
 };
 extern struct PC *D_00097608;
-extern int *D_00097668;
+extern int *ReplayParameterPtr;
 
 #define addPrim(ot, p) (((P_TAG *)(p))->addr = ((P_TAG *)(ot))->addr, ((P_TAG *)(ot))->addr = (unsigned)(p))
 
@@ -84,7 +84,7 @@ void CameraBar(int CameraCnt)
         else
             max_x = 200000;
 
-        frame = *D_00097668 + 1;
+        frame = *ReplayParameterPtr + 1;
         if (frame < max_x) {
             last = 2;
             max_x = frame;

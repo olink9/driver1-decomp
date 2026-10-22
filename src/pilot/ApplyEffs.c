@@ -42,14 +42,14 @@ typedef struct {
 
 extern MS *D_00097814;
 extern MH *D_00097818;
-extern XMCHANNEL *D_0009781C;
+extern XMCHANNEL *XMC;
 extern short func_00072C18();
 extern short func_00072E1C();
 extern void func_000732B4();
 
 #define ms D_00097814
 #define mh D_00097818
-#define XMC D_0009781C
+#define XMC XMC
 #define ABS(x) ((x) < 0 ? -(x) : (x))
 
 static inline short DoPan(short envpan, short pan)

@@ -16,7 +16,7 @@ typedef struct {
 extern int D_000976FC;
 extern long long D_0009703C;
 #define tab (*(int **)&D_0009703C)
-extern int D_0009B0A4[];
+extern int car_data[];
 extern CAR D_000C4E38[];
 
 static inline int dist(CAR *car, int a, int c)
@@ -45,8 +45,8 @@ int func_000641C0(CAR *car)
     if (D_000976FC != -1) {
         a = tab[D_000976FC * 2];
         b = -tab[D_000976FC * 2 + 1];
-        x2 = D_0009B0A4[50];
-        z2 = D_0009B0A4[52];
+        x2 = car_data[50];
+        z2 = car_data[52];
         if (dist(car, a, b) <= 0x9E33 &&
             dist(car, x2, z2) >= 0x6979) {
             p = D_000C4E38;

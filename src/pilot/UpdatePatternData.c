@@ -57,7 +57,7 @@ typedef struct {
 
 extern XMSONG *D_00097814;
 extern XMHEADER *D_00097818;
-extern XMCHANNEL *D_0009781C;
+extern XMCHANNEL *XMC;
 extern int D_0009783C;
 extern void func_00073738(int);
 extern int JPlayNote(unsigned char *j, int pmsk);
@@ -66,7 +66,7 @@ extern int func_0007220C(int n);
 
 #define ms D_00097814
 #define mh D_00097818
-#define XMC D_0009781C
+#define XMC XMC
 #define CurrentCh D_0009783C
 
 static inline int getWord(unsigned char *p)

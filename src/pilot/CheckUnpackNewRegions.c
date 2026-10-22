@@ -22,7 +22,7 @@ extern int D_0009733C;
 extern int D_00096A24;
 extern int D_0009731C;
 extern int D_00097314;
-extern int D_0009732C;
+extern int current_region;
 extern int D_000A8024[];
 extern short D_0009728C[];
 extern long long D_000972AC;
@@ -118,7 +118,7 @@ void CheckUnpackNewRegions(void)
         x = regions_to_unpack[i].xoffset;
         z = regions_to_unpack[i].zoffset;
 
-        region_to_unpack = D_0009732C + x + z * (D_00096A24 / D_0009733C);
+        region_to_unpack = current_region + x + z * (D_00096A24 / D_0009733C);
         target_region = ((D_0009730C + x) & 1) + ((D_00097314 + z) & 1) * 2;
 
         if (region_to_unpack != D_000A8024[target_region] && D_0009728C[target_region] == -1) {

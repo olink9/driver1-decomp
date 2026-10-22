@@ -46,7 +46,7 @@ typedef struct {
 
 extern OBJ **D_00089E84[];
 extern unsigned char D_00089EA4[];
-extern short D_0008EAA8[];
+extern short rcossin_tbl[];
 extern int D_000971CC, D_000971D0, D_000971D4, D_000971D8, D_000971DC;
 extern long long D_00096808;
 extern long long D_00096834;
@@ -272,8 +272,8 @@ void func_00032088(int idx)
                 o->x8 = 0;
             o->x8 = o->x8 >> 5;
         }
-        o->x14 -= (o->x8 * D_0008EAA8[(head & 0xFFF) * 2]) >> 12;
-        o->x1C -= (o->x8 * D_0008EAA8[(head & 0xFFF) * 2 + 1]) >> 12;
+        o->x14 -= (o->x8 * rcossin_tbl[(head & 0xFFF) * 2]) >> 12;
+        o->x1C -= (o->x8 * rcossin_tbl[(head & 0xFFF) * 2 + 1]) >> 12;
 
         if ((flags & 0x100) && o->x2C == 0) {
             d = -10;

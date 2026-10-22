@@ -5,7 +5,7 @@ typedef struct {
     char pad[0x50 - 0x34];
     unsigned char c50;
 } OBJ;
-extern short D_0008EAA8[];
+extern short rcossin_tbl[];
 extern int ratan2();
 
 void func_000604F8(OBJ *o) {
@@ -18,6 +18,6 @@ void func_000604F8(OBJ *o) {
     o->h1C = 0;
     o->h1A = -ratan2(dz, o->xC) - 0x400;
     o->h1A &= 0xfff;
-    o->h20 = (r * D_0008EAA8[((o->h1A + 0x800) & 0xfff) * 2]) >> 12;
-    o->h24 = (r * D_0008EAA8[((o->h1A + 0x800) & 0xfff) * 2 + 1]) >> 12;
+    o->h20 = (r * rcossin_tbl[((o->h1A + 0x800) & 0xfff) * 2]) >> 12;
+    o->h24 = (r * rcossin_tbl[((o->h1A + 0x800) & 0xfff) * 2 + 1]) >> 12;
 }

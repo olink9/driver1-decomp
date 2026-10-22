@@ -1,7 +1,7 @@
 /* sQuad (Driver 2 SHADOW.C) */
 typedef struct { char *primptr; unsigned int *ot; } DB;
-extern long long D_00097530;
-#define current (*(DB **)&D_00097530)
+extern long long current;
+#define current (*(DB **)&current)
 
 typedef struct { short vx, vy, vz, pad; } SVECTOR;
 
@@ -47,7 +47,7 @@ typedef struct { unsigned addr:24; unsigned len:8; } P_TAG;
     "swc2  $17, 0( %0 );" "swc2  $18, 4( %0 );" "swc2  $19, 8( %0 )" : : "r"(r0) : "memory")
 
 extern PG4 *D_0009717C;
-extern long long D_00097480;
+extern long long LightSortCorrect;
 extern long long D_00097484;
 extern SVECTOR D_000A1C58[];
 extern int D_00097160;
@@ -87,7 +87,7 @@ void sQuad(SVECTOR *v0, SVECTOR *v1, SVECTOR *v2, SVECTOR *v3)
         gte_stsxy(&poly->x3);
         gte_stsz(&z[3]);
 
-        z1 = (z[0] + z[1] + z[2] + z[3] >> 2) + *(int *)&D_00097480;
+        z1 = (z[0] + z[1] + z[2] + z[3] >> 2) + *(int *)&LightSortCorrect;
         if (z1 < 0)
             z1 = 0;
         zz = z1 >> 3;

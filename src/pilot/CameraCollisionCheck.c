@@ -25,9 +25,9 @@ typedef struct {
 } CELL_OBJECT;
 typedef struct { unsigned short obj; unsigned short next; } CELL_DATA;
 
-extern VEC D_0008A8F0;
-extern MODEL *D_000A0E20[];
-extern MAT D_000A6E8C[];
+extern VEC camera_position;
+extern MODEL *modelpointers[];
+extern MAT matrixtable[];
 extern long long D_000970E4;
 extern long long D_0009733C;
 extern long long D_00097398;
@@ -37,7 +37,7 @@ extern long long D_000970D4;
 extern long long D_00097108;
 extern int D_00096A60;
 
-#define camera_position D_0008A8F0
+#define camera_position camera_position
 #define scr_z (*(int *)&D_000970E4)
 #define cells_across (*(int *)&D_0009733C)
 #define units_across_halved (*(int *)&D_00097398)
@@ -45,8 +45,8 @@ extern int D_00096A60;
 #define cell_ptrs (*(unsigned short **)&D_000970E0)
 #define cell_data (*(CELL_DATA **)&D_000970D4)
 #define cell_objects (*(CELL_OBJECT **)&D_00097108)
-#define modelpointers D_000A0E20
-#define matrixtable D_000A6E8C
+#define modelpointers modelpointers
+#define matrixtable matrixtable
 
 #define FIXED(x) ((x) / 4096)
 

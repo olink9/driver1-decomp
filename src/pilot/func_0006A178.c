@@ -13,8 +13,8 @@ typedef struct { unsigned lo, hi; int pad[2]; V3 *pos; } TH;
 
 extern int D_0009686C, D_00096E78;
 extern int D_000BE9DC[];
-extern long long D_00096898, D_00097668, D_000970D8, D_0009D5B4, D_00097088;
-extern int D_0009B0A4[];
+extern long long D_00096898, ReplayParameterPtr, CameraCnt, D_0009D5B4, D_00097088;
+extern int car_data[];
 
 void func_0006A178(CAR *car, TH *th)
 {
@@ -23,15 +23,15 @@ void func_0006A178(CAR *car, TH *th)
     int t;
     int *q;
     V3 *pp = th->pos;
-    v.vx = D_0009B0A4[50] - pp->vx;
-    v.vz = D_0009B0A4[52] - pp->vz;
+    v.vx = car_data[50] - pp->vx;
+    v.vz = car_data[52] - pp->vz;
     d = v.vx * v.vx + v.vz * v.vz;
     if (D_0009686C != 0) {
         D_000BE9DC[0] = 1;
         if (car->b2e3 != 0)
             car->b2e3--;
         if (*(unsigned char *)&D_00096898 == 3) {
-            t = ((**(int **)&D_00097668 - *(int *)&D_000970D8) << 14) / 30;
+            t = ((**(int **)&ReplayParameterPtr - *(int *)&CameraCnt) << 14) / 30;
             q = &car->s29c;
             if (t < 0)
                 t = 0;
@@ -45,7 +45,7 @@ void func_0006A178(CAR *car, TH *th)
                 car->f10c = 5;
             else
                 car->f10c = 6;
-        } else if (**(int **)&D_00097668 < *(int *)&D_000970D8) {
+        } else if (**(int **)&ReplayParameterPtr < *(int *)&CameraCnt) {
             if (d < th->lo) {
                 car->f104 = 0x7FFF;
             } else {

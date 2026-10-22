@@ -19,7 +19,7 @@ typedef struct { int a; char *b; } ARG;
 extern PL D_000C6F04;
 extern int D_0009D8DC[];
 extern long long D_00097534, D_000967D4, D_000967F4, D_00096808, D_00096C90, D_00096C94;
-extern long long D_00096874, D_00096834, D_0009687C, D_000970A4, D_0008C388, D_00096A08;
+extern long long D_00096874, D_00096834, pauseflag, D_000970A4, D_0008C388, D_00096A08;
 extern long long D_000967E8, D_0009709C;
 extern char *D_0008C388_[] __asm__("D_0008C388");
 extern unsigned char D_000977BC, D_00096F1C, D_00096F1D, D_00096EFC, D_00096EFD;
@@ -193,7 +193,7 @@ next:
             SetMenu(D_0008C7F4, D_0008C784, 6);
         }
         first = 0;
-        *(int *)&D_0009687C = 1;
+        *(int *)&pauseflag = 1;
     }
 
     D_00096F08 = 1;
@@ -239,6 +239,6 @@ next:
         first = 0;
     }
     if (*(int *)&D_0009709C != 0 || D_00096F10 > 0)
-        *(int *)&D_0009687C = 1;
+        *(int *)&pauseflag = 1;
     return D_00096F10;
 }

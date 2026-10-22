@@ -11,19 +11,19 @@ typedef struct PLAYBACKCAMERA {
     unsigned char idx;              /* 0x23 */
 } PLAYBACKCAMERA;
 
-extern PLAYBACKCAMERA *D_00096DB4;      /* LastChange */
+extern PLAYBACKCAMERA *LastChange;      /* LastChange */
 extern PLAYBACKCAMERA *D_00096DAC;      /* ThisChange? */
 extern PLAYBACKCAMERA *D_00097608;      /* PlaybackCamera */
-extern unsigned char D_00097658;        /* tracking_car */
-extern long long D_00096897;            /* cameraview */
+extern unsigned char tracking_car;        /* tracking_car */
+extern long long cameraview;            /* cameraview */
 extern long long D_0009688C;
 extern long long D_00096878;
-extern long long D_0009687C;
+extern long long pauseflag;
 extern long long D_00096A60;
 extern long long D_00096A64;
 extern long long D_00096A6C;
 extern int D_0008A1E0[];
-extern int D_0008A8F0[];
+extern int camera_position[];
 typedef struct { short v; short pad[3]; } S8;
 extern S8 D_00096C48;
 extern S8 D_00096C4A;
@@ -31,7 +31,7 @@ extern S8 D_00096C4C;
 extern unsigned char D_00097660;
 extern int D_00097618;
 extern int D_00096DA4;
-extern int D_00096DC4;
+extern int FastForward;
 
 extern void DoAutoDirect();
 extern int func_0005BCE0();
@@ -75,12 +75,12 @@ int CheckCameraChange(int CameraCnt)
             return 0;
     }
 
-    *(unsigned char *)&D_00096897 = D_00096DAC->cameraview & 7;
+    *(unsigned char *)&cameraview = D_00096DAC->cameraview & 7;
     *(int *)&D_0009688C = D_00096DAC->apad;
-    D_00097658 = (D_00096DAC->cameraview & 8) >> 3;
-    D_0008A8F0[0] = D_00096DAC->px;
-    D_0008A8F0[1] = D_00096DAC->py;
-    D_0008A8F0[2] = D_00096DAC->pz;
+    tracking_car = (D_00096DAC->cameraview & 8) >> 3;
+    camera_position[0] = D_00096DAC->px;
+    camera_position[1] = D_00096DAC->py;
+    camera_position[2] = D_00096DAC->pz;
     D_00096C48.v = D_00096DAC->ax;
     D_00096C4A.v = D_00096DAC->ay;
     D_00096C4C.v = D_00096DAC->az;
@@ -90,15 +90,15 @@ int CheckCameraChange(int CameraCnt)
     D_0008A1E0[0] = D_00096DAC->scr_z;
 
     if (func_0005BCE0(*(int *)&D_0009688C) == 0) {
-        D_00096DB4 = D_00096DAC;
+        LastChange = D_00096DAC;
         FindNextChange(CameraCnt + 1);
     }
 
     D_00097660 = 1;
     if (D_00097618 == 1) {
         D_00096DA4 = 0;
-        D_00096DC4 = 0;
-        *(int *)&D_0009687C = D_00097618;
+        FastForward = 0;
+        *(int *)&pauseflag = D_00097618;
     }
     return 1;
 }

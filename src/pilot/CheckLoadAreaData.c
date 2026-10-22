@@ -25,8 +25,8 @@ typedef struct {
 
 typedef struct { int x; int y; } XYPAIR;
 
-extern long long D_0009732C;
-#define current_region (*(int *)&D_0009732C)
+extern long long current_region;
+#define current_region (*(int *)&current_region)
 extern unsigned short *D_000972AC;
 extern char *D_00097254;
 extern long long D_00097324;
@@ -43,7 +43,7 @@ extern char *D_000972D0;
 extern long long D_00096834;
 extern XYPAIR D_000BE0A4[][4];
 extern SPOOLQ D_000A7BA4[];
-extern int D_000972B0;
+extern int spoolcounter;
 extern void LoadInAreaTSets(int area);
 extern void func_00033F5C();
 
@@ -52,7 +52,7 @@ static inline void RequestSpool(int type, int data, int offset, int loadsize, ch
     SPOOLQ *next;
     int sector;
 
-    next = &D_000A7BA4[D_000972B0];
+    next = &D_000A7BA4[spoolcounter];
     sector = D_000BE0A4[*(int *)&D_00096834][3].x / 2048 + offset;
     next->type = type;
     next->data = data;
@@ -60,7 +60,7 @@ static inline void RequestSpool(int type, int data, int offset, int loadsize, ch
     next->nsectors = loadsize;
     next->addr = address;
     next->func = func;
-    D_000972B0++;
+    spoolcounter++;
 }
 
 static inline void LoadInAreaModels(int area)

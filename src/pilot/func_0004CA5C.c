@@ -40,8 +40,8 @@ typedef struct {
 } CHAN;
 
 extern CS D_00098950[];
-extern int D_0008A8F0[];
-extern CAR D_0009B0A4[];
+extern int camera_position[];
+extern CAR car_data[];
 extern CHAN D_000BD498[];
 typedef struct { int v; int pad; } W8;
 extern long long D_0009779C;
@@ -74,7 +74,7 @@ void func_0004CA5C(void)
     for (i = 0; i < 25; i++) {
         if (i != 0 && D_00098950[i - 1].f1 != 0 && D_00098950[i - 1].f1 != 1) {
             order[n++] = i;
-            dist[i] = ABS(D_0009B0A4[i].pos[0] - D_0008A8F0[0]) + ABS(D_0009B0A4[i].pos[2] - D_0008A8F0[2]);
+            dist[i] = ABS(car_data[i].pos[0] - camera_position[0]) + ABS(car_data[i].pos[2] - camera_position[2]);
         }
     }
 
@@ -94,7 +94,7 @@ void func_0004CA5C(void)
     for (i = 0; i < n; i++) {
         c = order[i];
         if (c < 25) {
-            cp = &D_0009B0A4[c];
+            cp = &car_data[c];
             pos = cp->pos;
             if (cp->f12E == 1) {
                 if (left5 && D_00098950[c - 1].f10 == 1 && (t = D_00098950[c - 1].fD) < 80) {
@@ -118,7 +118,7 @@ void func_0004CA5C(void)
     for (i = 0; i < n; i++) {
         c = order[i];
         if (c < 25) {
-            cp = &D_0009B0A4[c];
+            cp = &car_data[c];
             pos = cp->pos;
             if (cp->f12E != 1 && cp->f3 != 1 && left3) {
                 left3--;

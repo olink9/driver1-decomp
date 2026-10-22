@@ -33,14 +33,14 @@ typedef struct {
 
 extern ENT D_00098950[];
 extern CAR D_0009B230[];
-extern int D_0008A8F0[];
+extern int camera_position[];
 extern int D_0009784C[];
 extern long long D_000973B4;
 extern long long D_000973B8;
 extern long long D_00096990;
-extern long long D_00097530;
+extern long long current;
 typedef struct { char *primptr; unsigned long *ot; char *primtab; } DB;
-#define current (*(DB **)&D_00097530)
+#define current (*(DB **)&current)
 
 extern int func_000398B0();
 extern void func_0003A698();
@@ -69,8 +69,8 @@ void func_00014A8C(void)
     c = D_0009B230;
     e = D_00098950;
     *(int *)&D_000973B4 = 0;
-    camx = D_0008A8F0[0];
-    camz = D_0008A8F0[2];
+    camx = camera_position[0];
+    camz = camera_position[2];
     n = 0;
     for (i = 0; i < 25; i++, e++, c++) {
         if (e->f1 != 0 && func_000398B0((VECTOR *)D_0009B230[i].t) == 1) {
@@ -101,7 +101,7 @@ void func_00014A8C(void)
     for (m = 0; m < n; m++) {
         idx = order[m];
         e = &D_00098950[idx];
-        cur = *(int **)&D_00097530;
+        cur = *(int **)&current;
         p = current->primptr - 0x1E000; r = current->primtab - p - 3000;
         *(int *)&D_00096990 = e->f11;
         if (r < 0)

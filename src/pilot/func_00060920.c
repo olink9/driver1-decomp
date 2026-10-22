@@ -12,7 +12,7 @@ typedef struct {
     unsigned char type;
 } OBJ;
 
-extern long long D_0009687C;
+extern long long pauseflag;
 extern int D_000C015C[];
 extern int D_000C0164[];
 extern int MapHeight();
@@ -22,7 +22,7 @@ void func_00060920(OBJ *o)
 {
     int lim;
 
-    if (*(int *)&D_0009687C != 0)
+    if (*(int *)&pauseflag != 0)
         return;
     o->x += o->vx;
     o->z += o->vz;

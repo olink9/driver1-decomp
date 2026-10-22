@@ -30,7 +30,7 @@ typedef struct {
 } S0;
 
 extern int D_0009B16C[];
-extern short D_0008EAA8[];
+extern short rcossin_tbl[];
 extern short D_0008EAAA[];
 extern int D_00097794;
 extern long long D_0009770C;
@@ -38,7 +38,7 @@ extern long long D_00097708;
 extern long long D_00097738;
 extern long long D_0009773C;
 extern long long D_000975DC;
-extern int D_0009B0A4[];
+extern int car_data[];
 extern int D_000C6F04[];
 extern int D_0009B1AC[];
 extern int ratan2(int, int);
@@ -86,7 +86,7 @@ int func_00069D08(S1 *a, S0 *b)
         else
             t = (v << 12) / t;
     } else {
-        t = D_0008EAA8[(angle & 0xfff) * 2];
+        t = rcossin_tbl[(angle & 0xfff) * 2];
         v = d.vz;
         if (v > 0x7ffff)
             t = ((v << 9) / t) << 3;
@@ -111,8 +111,8 @@ int func_00069D08(S1 *a, S0 *b)
                 b->fC |= 2;
                 if (dist < b->f0) {
                     *(int *)&D_00097708 += 0x22;
-                    *(int *)&D_00097738 = D_0009B0A4[0xC8 / 4];
-                    *(int *)&D_0009773C = D_0009B0A4[0xD0 / 4];
+                    *(int *)&D_00097738 = car_data[0xC8 / 4];
+                    *(int *)&D_0009773C = car_data[0xD0 / 4];
                     if (*(int *)&D_00097708 > 0x1000)
                         *(int *)&D_00097708 = 0x1000;
                 }

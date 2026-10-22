@@ -16,7 +16,7 @@ typedef struct {
 } XMCHANNEL;
 
 extern XMSONG *D_00097814;
-extern XMCHANNEL *D_0009781C;
+extern XMCHANNEL *XMC;
 
 void DoS3MRetrig(unsigned char inf)
 {
@@ -26,54 +26,54 @@ void DoS3MRetrig(unsigned char inf)
     lo = inf & 0xf;
 
     if (lo) {
-        D_0009781C->s3mrtgslide = hi;
-        D_0009781C->s3mrtgspeed = lo;
+        XMC->s3mrtgslide = hi;
+        XMC->s3mrtgspeed = lo;
     }
 
     if (hi) {
-        D_0009781C->s3mrtgslide = hi;
+        XMC->s3mrtgslide = hi;
     }
 
-    if (D_0009781C->s3mrtgspeed > 0) {
-        if (D_0009781C->retrig == 0) {
-            D_0009781C->kick = 1;
-            D_0009781C->retrig = D_0009781C->s3mrtgspeed;
+    if (XMC->s3mrtgspeed > 0) {
+        if (XMC->retrig == 0) {
+            XMC->kick = 1;
+            XMC->retrig = XMC->s3mrtgspeed;
 
             if (D_00097814->vbtick) {
-                switch (D_0009781C->s3mrtgslide) {
+                switch (XMC->s3mrtgslide) {
                 case 1:
                 case 2:
                 case 3:
                 case 4:
                 case 5:
-                    D_0009781C->tmpvolume -= (1 << (D_0009781C->s3mrtgslide - 1));
+                    XMC->tmpvolume -= (1 << (XMC->s3mrtgslide - 1));
                     break;
                 case 6:
-                    D_0009781C->tmpvolume = (2 * D_0009781C->tmpvolume) / 3;
+                    XMC->tmpvolume = (2 * XMC->tmpvolume) / 3;
                     break;
                 case 7:
-                    D_0009781C->tmpvolume = D_0009781C->tmpvolume >> 1;
-                    if (D_0009781C->tmpvolume < 64)
-                        D_0009781C->tmpvolume = 64;
+                    XMC->tmpvolume = XMC->tmpvolume >> 1;
+                    if (XMC->tmpvolume < 64)
+                        XMC->tmpvolume = 64;
                     break;
                 case 9:
                 case 0xa:
                 case 0xb:
                 case 0xc:
                 case 0xd:
-                    D_0009781C->tmpvolume += (1 << (D_0009781C->s3mrtgslide - 9));
+                    XMC->tmpvolume += (1 << (XMC->s3mrtgslide - 9));
                     break;
                 case 0xe:
-                    D_0009781C->tmpvolume = (3 * D_0009781C->tmpvolume) / 2;
+                    XMC->tmpvolume = (3 * XMC->tmpvolume) / 2;
                     break;
                 case 0xf:
-                    D_0009781C->tmpvolume = D_0009781C->tmpvolume << 1;
+                    XMC->tmpvolume = XMC->tmpvolume << 1;
                     break;
                 }
-                if (D_0009781C->tmpvolume < 64) D_0009781C->tmpvolume = 64;
-                if (D_0009781C->tmpvolume > 128) D_0009781C->tmpvolume = 128;
+                if (XMC->tmpvolume < 64) XMC->tmpvolume = 64;
+                if (XMC->tmpvolume > 128) XMC->tmpvolume = 128;
             }
         }
-        D_0009781C->retrig--;
+        XMC->retrig--;
     }
 }

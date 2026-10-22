@@ -3,7 +3,7 @@ typedef struct { short m[3][3]; int t[3]; } MAT;
 typedef struct { int vx, vy, vz, pad; } VEC;
 typedef struct { short vx, vy, vz, pad; } SVEC;
 extern long long D_00096C4A;
-extern char D_000BBE84[];
+extern char inv_camera_matrix[];
 extern void RotMatrixYXZ();
 extern void MulMatrix0();
 extern void TransMatrix();
@@ -52,7 +52,7 @@ void ScaleCamera(void)
     scale.m[2][1] = 0;
     scale.m[2][2] = 0x1000;
 
-    MulMatrix0(&scale, D_000BBE84, &scaledcammat);
+    MulMatrix0(&scale, inv_camera_matrix, &scaledcammat);
     TransMatrix(&scaledcammat, &pos);
     SetRotMatrix(&scaledcammat);
     SetTransMatrix(&scaledcammat);

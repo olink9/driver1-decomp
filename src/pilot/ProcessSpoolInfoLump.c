@@ -1,6 +1,6 @@
 /* Driver 2: ProcessSpoolInfoLump */
 extern long long D_00097098;
-extern int D_00097238, D_0009723C, D_00097294, D_00097270, D_00097264, D_000972AC, D_00097254;
+extern int D_00097238, D_0009723C, D_00097294, AreaTPages, D_00097264, D_000972AC, D_00097254;
 extern int D_000AB040[], D_000AA7D4[], D_000AAF90[], D_000AA7E8[];
 extern int D_000AA7E4[], D_000AB050[];
 
@@ -26,7 +26,7 @@ void ProcessSpoolInfoLump(int *lump)
     n = *(int *)p;
     D_00097294 = (int)(p + 4);
     p += n * 16 + 4;
-    D_00097270 = (int)p;
+    AreaTPages = (int)p;
     p += n * 16;
     a1 = (int *)p;
     D_00097264 = n;

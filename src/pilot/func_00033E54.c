@@ -13,7 +13,7 @@ extern OBJ *D_00097238;
 extern int D_00097248;
 extern unsigned short *D_000972D0;
 extern int D_000969E8;
-extern OBJ *D_000A0E20[];
+extern OBJ *modelpointers[];
 
 void func_00033E54(void)
 {
@@ -28,7 +28,7 @@ void func_00033E54(void)
     for (i = 0; i < n; i++) {
         hdr = *(int *)p;
         p = (OBJ *)((int *)p + 1);
-        D_000A0E20[D_000972D0[i]] = p;
+        modelpointers[D_000972D0[i]] = p;
         o = p;
         if (p->pad4 == -1) {
             if (p->f20)
@@ -37,7 +37,7 @@ void func_00033E54(void)
             p->f18 += (int)p;
             p->f1c += (int)p;
         } else {
-            q = D_000A0E20[p->pad4];
+            q = modelpointers[p->pad4];
             if (q->f20)
                 p->f20 = q->f20;
             p->f10 = q->f10;

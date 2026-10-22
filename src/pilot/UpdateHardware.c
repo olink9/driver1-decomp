@@ -33,7 +33,7 @@ typedef struct {
 } MS;
 extern MS *D_00097814;
 extern MH *D_00097818;
-extern XMCHANNEL *D_0009781C;
+extern XMCHANNEL *XMC;
 extern int D_00097820;
 extern int D_00097824;
 extern void SpuSetKey();
@@ -61,23 +61,23 @@ void UpdateHardware(void)
         pmsk = D_00097814->PlayMask;
         pmsk &= (1 << t);
         if (pmsk != 0) {
-            D_0009781C = &D_00097814->XM_Chnl[t];
+            XMC = &D_00097814->XM_Chnl[t];
             MaxChans--;
-            if (D_0009781C->kick) {
-                Ch2 = D_0009781C->SPUChannel;
-                prd = D_0009781C->period;
+            if (XMC->kick) {
+                Ch2 = XMC->SPUChannel;
+                prd = XMC->period;
                 if (D_00097814->NotAmiga == 0)
                     prd = (0xA3BA68 / prd) >> 3;
                 else
                     prd = GetFreq2(prd);
                 SpuSetKey(0, 1 << Ch2);
-                D_0009781C->OldLVol = D_0009781C->LVol;
-                D_0009781C->OldRVol = D_0009781C->RVol;
+                XMC->OldLVol = XMC->LVol;
+                XMC->OldRVol = XMC->RVol;
                 DoDolbySS();
-                PlaySFX(D_00097814->VabID, Ch2, D_0009781C->sample, prd, D_00097824, D_00097820);
+                PlaySFX(D_00097814->VabID, Ch2, XMC->sample, prd, D_00097824, D_00097820);
                 SPUKeyOn |= (1 << Ch2);
-                D_0009781C->SPUPitch = prd;
-                D_0009781C->OldPeriod = D_0009781C->period;
+                XMC->SPUPitch = prd;
+                XMC->OldPeriod = XMC->period;
             }
         }
     }
@@ -93,31 +93,31 @@ void UpdateHardware(void)
         pmsk = D_00097814->PlayMask;
         pmsk &= (1 << t);
         if (pmsk != 0) {
-            D_0009781C = &D_00097814->XM_Chnl[t];
+            XMC = &D_00097814->XM_Chnl[t];
             MaxChans--;
-            if (!D_0009781C->ChDead) {
-                Ch2 = D_0009781C->SPUChannel;
-                if (D_0009781C->kick == 0) {
-                    if ((D_0009781C->LVol != D_0009781C->OldLVol) || (D_0009781C->RVol != D_0009781C->OldRVol)) {
-                        if (D_0009781C->OldLVol != D_0009781C->LVol)
-                            D_0009781C->OldLVol = IntVols(D_0009781C->LVol, D_0009781C->OldLVol);
-                        if (D_0009781C->OldRVol != D_0009781C->RVol)
-                            D_0009781C->OldRVol = IntVols(D_0009781C->RVol, D_0009781C->OldRVol);
+            if (!XMC->ChDead) {
+                Ch2 = XMC->SPUChannel;
+                if (XMC->kick == 0) {
+                    if ((XMC->LVol != XMC->OldLVol) || (XMC->RVol != XMC->OldRVol)) {
+                        if (XMC->OldLVol != XMC->LVol)
+                            XMC->OldLVol = IntVols(XMC->LVol, XMC->OldLVol);
+                        if (XMC->OldRVol != XMC->RVol)
+                            XMC->OldRVol = IntVols(XMC->RVol, XMC->OldRVol);
                         DoDolbySS();
                         SetVol(Ch2, D_00097824, D_00097820);
                     }
-                    if (D_0009781C->period != D_0009781C->OldPeriod) {
-                        D_0009781C->OldPeriod = D_0009781C->period;
-                        prd = D_0009781C->period;
+                    if (XMC->period != XMC->OldPeriod) {
+                        XMC->OldPeriod = XMC->period;
+                        prd = XMC->period;
                         if (D_00097814->NotAmiga == 0)
                             prd = (0xA3BA68 / prd) >> 3;
                         else
                             prd = GetFreq2(prd);
-                        D_0009781C->SPUPitch = prd;
+                        XMC->SPUPitch = prd;
                         SetFrq(Ch2, prd);
                     }
                 } else
-                    D_0009781C->kick = 0;
+                    XMC->kick = 0;
             }
         }
     }

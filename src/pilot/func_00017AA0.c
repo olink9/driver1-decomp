@@ -1,6 +1,6 @@
 typedef struct { char pad[0x18C]; } CAR;
 typedef struct { unsigned char c0, c1, p[3], c5; char pad[0x4A]; } ENT;
-extern CAR D_0009B0A4[];
+extern CAR car_data[];
 extern ENT D_00098950[];
 extern char D_00099120[];
 extern long long D_00096884;
@@ -20,12 +20,12 @@ int func_00017AA0(unsigned char type)
     unsigned char ok;
     int r;
 
-    base = D_0009B0A4;
+    base = car_data;
     car = base + 1;
     cur = base + *(int *)&D_00096884;
     e = D_00098950;
     i = 0;
-    for (; car < &D_0009B0A4[23]; car++, e++, i++) {
+    for (; car < &car_data[23]; car++, e++, i++) {
         ok = 0;
         switch (type) {
         case 0:

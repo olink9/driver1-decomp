@@ -25,13 +25,13 @@ typedef struct {
     short transparency;
 } SMOKE;
 
-extern long long D_00097530;
-#define current (*(DB **)&D_00097530)
-extern MATRIX D_000BBE84;
+extern long long current;
+#define current (*(DB **)&current)
+extern MATRIX inv_camera_matrix;
 extern VECTOR D_0008909C;
-extern VECTOR D_0008A8F0;
+extern VECTOR camera_position;
 extern long long D_00096834;
-extern long long D_00096850;
+extern long long gNight;
 
 #define gte_stsxy3(r0, r1, r2) __asm__ volatile ( \
     "swc2  $12, 0( %0 );" "swc2  $13, 0( %1 );" "swc2  $14, 0( %2 )" : : "r"(r0), "r"(r1), "r"(r2) : "memory")
@@ -52,16 +52,16 @@ void DisplaySpark(SMOKE *spark)
     int z;
     POLY_G3 *poly;
 
-    gte_SetRotMatrix(&D_000BBE84);
+    gte_SetRotMatrix(&inv_camera_matrix);
     gte_SetTransVec0(&D_0008909C);
 
-    v[2].vx = spark->position.vx - D_0008A8F0.vx;
-    v[2].vy = spark->position.vy - D_0008A8F0.vy;
-    v[2].vz = spark->position.vz - D_0008A8F0.vz;
+    v[2].vx = spark->position.vx - camera_position.vx;
+    v[2].vy = spark->position.vy - camera_position.vy;
+    v[2].vz = spark->position.vz - camera_position.vz;
 
-    v[0].vx = spark->final_tail_pos.vx - D_0008A8F0.vx;
-    v[0].vy = spark->final_tail_pos.vy - D_0008A8F0.vy;
-    v[0].vz = spark->final_tail_pos.vz - D_0008A8F0.vz;
+    v[0].vx = spark->final_tail_pos.vx - camera_position.vx;
+    v[0].vy = spark->final_tail_pos.vy - camera_position.vy;
+    v[0].vz = spark->final_tail_pos.vz - camera_position.vz;
 
     v[1].vx = v[0].vx + 5;
     v[1].vy = v[0].vy;
@@ -86,7 +86,7 @@ void DisplaySpark(SMOKE *spark)
             poly->r2 = 0xA0;
             poly->g2 = 0x3C;
             poly->b2 = 0x32;
-        } else if (*(int *)&D_00096850 == 0) {
+        } else if (*(int *)&gNight == 0) {
             poly->r0 = 0;
             poly->g0 = spark->transparency >> 2;
             poly->b0 = 0;

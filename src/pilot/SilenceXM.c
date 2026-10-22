@@ -20,7 +20,7 @@ extern SONG *D_000C7888[];
 extern HDR *D_000C7970[];
 extern SONG *D_00097810;
 extern HDR *D_00097828;
-extern CH *D_0009781C;
+extern CH *XMC;
 extern void SpuSetVoiceVolume();
 extern void SpuSetKey();
 
@@ -33,8 +33,8 @@ void SilenceXM(int id) {
         pmsk = D_00097810->mask;
         pmsk &= (1 << t);
         if (pmsk != 0) {
-            D_0009781C = &D_00097810->ch[t];
-            c = D_0009781C->spu;
+            XMC = &D_00097810->ch[t];
+            c = XMC->spu;
             i |= 1 << c;
             SpuSetVoiceVolume(c, 0, 0);
         }

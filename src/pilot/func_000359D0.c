@@ -4,7 +4,7 @@ extern unsigned char D_00096899[8];
 extern int D_00096A04;
 extern char D_00097028[8];
 typedef struct { char p0[0x50]; int f50; char p1[0xB4]; int f108; } S9;
-extern S9 D_0009B0A4;
+extern S9 car_data;
 extern unsigned char D_000972DC;
 extern unsigned char D_000972E0;
 extern unsigned char D_000972E8;
@@ -22,9 +22,9 @@ void func_000359D0(void) {
     }
     if (D_00097028[0] != 0) {
         int v;
-        a = D_0009B0A4.f50 >> 15;
+        a = car_data.f50 >> 15;
         if (a < 0) a = -a;
-        a = a + D_0009B0A4.f108;
+        a = a + car_data.f108;
         v = 0x3C;
         if (a < 0x3D) v = a;
         a = v;

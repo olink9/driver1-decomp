@@ -1,8 +1,8 @@
 extern int D_00097344;
 extern long long D_000972C0;
-extern int D_0009732C;
+extern int current_region;
 extern long long D_00097560;
-extern unsigned char D_000BE4F8[];
+extern unsigned char tpageslots[];
 extern unsigned char D_000BE278[];
 extern int D_000A8024[];
 extern void func_00039D94();
@@ -13,11 +13,11 @@ void func_0003A068(void) {
     unsigned char v;
     D_00097344 = -1;
     *(int *)&D_000972C0 = -1;
-    D_0009732C = -1;
+    current_region = -1;
     for (i = *(int *)&D_00097560; i < 15; i++) {
-        v = D_000BE4F8[i];
+        v = tpageslots[i];
         if (v != 0xff) D_000BE278[v] = 0;
-        D_000BE4F8[i] = 0xff;
+        tpageslots[i] = 0xff;
     }
     D_000A8024[3] = -1;
     D_000A8024[2] = -1;

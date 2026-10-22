@@ -2,7 +2,7 @@ extern int D_00097248;
 extern int D_000972D4;
 extern unsigned short D_00089118[];
 extern long long D_00097524;
-extern long long D_00097530;
+extern long long current;
 extern char D_000A7B3C[];
 extern void func_00033E54();
 extern int func_00032F98();
@@ -47,9 +47,9 @@ void func_000334B4(void)
             DrawSync(0);
             VSync(0);
         }
-        PutDrawEnv(*(int *)&D_00097530 + 0x10);
+        PutDrawEnv(*(int *)&current + 0x10);
         func_0004E024();
-        PutDrawEnv(*(int *)&D_00097530 + 0x10);
+        PutDrawEnv(*(int *)&current + 0x10);
         func_0004E024();
     }
 }

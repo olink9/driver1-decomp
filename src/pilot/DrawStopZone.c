@@ -33,14 +33,14 @@ typedef struct { unsigned addr:24; unsigned len:8; unsigned char r0, g0, b0, cod
 #define getaddr(_p) (unsigned long)(((P_TAG *)(_p))->addr)
 #define addPrim(ot, p) setaddr(p, getaddr(ot)), setaddr(ot, p)
 
-extern long long D_00097530;
-#define current (*(DB **)&D_00097530)
+extern long long current;
+#define current (*(DB **)&current)
 extern MATRIX D_000B8FE8;
 extern VECTOR D_0008909C;
-extern VECTOR D_0008A8F0;
-extern volatile long long D_000970D8;
-#define CameraCnt (*(volatile int *)&D_000970D8)
-extern long long D_00096850;
+extern VECTOR camera_position;
+extern volatile long long CameraCnt;
+#define CameraCnt (*(volatile int *)&CameraCnt)
+extern long long gNight;
 extern unsigned char D_000B9170[];
 extern unsigned short D_000B917A[];
 extern int MapHeight();
@@ -77,9 +77,9 @@ void DrawStopZone(VECTOR *pPosition)
         pVector->vx += pPosition->vx;
         pVector->vz += pPosition->vz;
         pVector->vy = -MapHeight(pVector);
-        pVector->vx -= D_0008A8F0.vx;
-        pVector->vy -= D_0008A8F0.vy;
-        pVector->vz -= D_0008A8F0.vz;
+        pVector->vx -= camera_position.vx;
+        pVector->vy -= camera_position.vy;
+        pVector->vz -= camera_position.vz;
         func_0002C564(pVector);
         temp.vx = pVector->vx;
         temp.vy = pVector->vy;
@@ -112,7 +112,7 @@ void DrawStopZone(VECTOR *pPosition)
     pPoly->u3 = D_000B9170[6];
     pPoly->v3 = D_000B9170[7];
 
-    if (*(int *)&D_00096850)
+    if (*(int *)&gNight)
         pPoly->tpage = *(unsigned short *)&D_000B9170[8] | 0x20;
     else
         pPoly->tpage = *(unsigned short *)&D_000B9170[8] | 0x40;

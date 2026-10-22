@@ -2,7 +2,7 @@
    loop.c leaves the pass-2 chain inside `if (pass)` and the D_000C039C lo_sum in the pass region, as in the target;
    (2) the pre-loop x is its own variable `px` (reusing the inner-loop x made it a global pseudo); (3) the inner loop
    does `x = (pos+K)/750 - m->x*2; ... x -= 9936;` (tied quotient reg); (4) pre-loop statement order from a
-   permute_dep2 sweep (px, z0, ns, stepx, c, len, stepz, x1, pos0, pos1) - stops the D_0008EAA8+2 spill (s5 = s4+2);
+   permute_dep2 sweep (px, z0, ns, stepx, c, len, stepz, x1, pos0, pos1) - stops the rcossin_tbl+2 spill (s5 = s4+2);
    (5) `unsigned char bits` gives `or bits,cell` operand order.
    Left: pure global-alloc priority order of the long-lived t/s regs: target is len t5 > magic t6 > K t7 > i t8 >
    stepz t9 > x1 s0 > stepx s1; ours ranks i (9 refs/187 insns, .144) above len/stepz/magic/K, and stepx above x1.
@@ -50,7 +50,7 @@ typedef struct {
 extern long long D_00098950;
 extern CAR D_0009B230[];
 extern CAM D_0009E714;
-extern short D_0008EAA8[];
+extern short rcossin_tbl[];
 extern CELL D_000C039C[];
 
 static inline int add750(int v) { return v + 750; }
@@ -84,9 +84,9 @@ void func_00062DB0(MAP *m)
         if (s->id == m->id + 1)
             continue;
         px = car->x + D_0009E714.x;
-        ns = -D_0008EAA8[(car->ang & 0xFFF) * 2];
+        ns = -rcossin_tbl[(car->ang & 0xFFF) * 2];
         stepx = FIX(ns * 750);
-        c = D_0008EAA8[(car->ang & 0xFFF) * 2 + 1];
+        c = rcossin_tbl[(car->ang & 0xFFF) * 2 + 1];
         stepz = FIX(c * 750);
         dz = c * -900 - ns * 180;
         len = car->len * 20 + 450;

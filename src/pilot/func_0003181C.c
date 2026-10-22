@@ -33,7 +33,7 @@ extern OBJ2_b062 **D_00089E84[];
 extern int D_000971DC, D_000971D4, D_000971CC, D_000971D8;
 extern long long D_00096808;
 extern long long D_00097534;
-extern int D_000A0E20[];
+extern int modelpointers[];
 extern int func_000396A8();
 int printf(const char *fmt, ...);
 
@@ -57,7 +57,7 @@ void func_0003181C(int idx, int load)
                     __asm__ volatile("break 1024");
             } else {
                 i = 0;
-                while (o->model != D_000A0E20[i])
+                while (o->model != modelpointers[i])
                     i++;
                 o->x28 = i;
             }

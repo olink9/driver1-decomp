@@ -17,8 +17,8 @@ typedef struct {
 } FT4;
 
 typedef struct { DB *p; int pad; } DBP8;
-extern DBP8 D_00097530;
-#define current (D_00097530.p)
+extern DBP8 current;
+#define current (current.p)
 
 #define addPrim(ot, p) (((P_TAG *)(p))->addr = ((P_TAG *)(ot))->addr, ((P_TAG *)(ot))->addr = (unsigned long)(p))
 

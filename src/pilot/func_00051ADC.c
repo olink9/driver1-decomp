@@ -29,10 +29,10 @@ extern int D_00097588;
 extern int D_0009758C;
 extern int D_00097590;
 extern TPENT *D_00097594;
-extern unsigned short D_00086F30[];
-extern unsigned short D_00087030[][32];
+extern unsigned short texture_pages[];
+extern unsigned short texture_cluts[][32];
 extern unsigned char D_000BE278[];
-extern unsigned char D_000BE4F8[];
+extern unsigned char tpageslots[];
 extern XY D_000BE708[];
 extern XY D_000BE1BC[];
 
@@ -47,7 +47,7 @@ extern void func_0005674C();
 static inline void RegisterTPage(int id)
 {
     int k = D_00097560;
-    D_000BE4F8[k] = id;
+    tpageslots[k] = id;
     D_000BE278[id] = k;
     D_000BE708[k].x = D_00097574.x;
     D_000BE708[k].y = D_00097574.y;
@@ -73,10 +73,10 @@ void func_00051ADC(int *sector)
     char *addr;
 
     for (i = 0; i < 128; i++)
-        D_00086F30[i] = GetTPage(0, 0, 0x3C0, 0);
+        texture_pages[i] = GetTPage(0, 0, 0x3C0, 0);
     for (i = 0; i < 128; i++)
         for (j = 0; j < 32; j++)
-            D_00087030[i][j] = func_0007A7F4(0x3C0, 0x10);
+            texture_cluts[i][j] = func_0007A7F4(0x3C0, 0x10);
     D_00097560 = 0;
     memset(D_000BE278, 0, 0x80);
     D_00097550.x = 0x3C0;
@@ -145,7 +145,7 @@ void func_00051ADC(int *sector)
         D_00097550.y++;
     }
     for (i = D_00097560; i < 15; i++) {
-        D_000BE4F8[i] = 0xFF;
+        tpageslots[i] = 0xFF;
         tp = &D_00097574;
         D_000BE1BC[i].x = D_00097550.x;
         D_000BE1BC[i].y = D_00097550.y;

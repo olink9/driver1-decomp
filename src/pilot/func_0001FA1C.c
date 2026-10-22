@@ -1,4 +1,4 @@
-extern char D_0009B0A4[];
+extern char car_data[];
 extern long long D_00096898;
 extern int D_0009700C, D_00097010, D_00097014, D_00097018, D_00097034;
 extern void memset();
@@ -8,7 +8,7 @@ extern void func_0001B4A4();
 void func_0001FA1C(void) {
     int buf[4];
     int i;
-    char *p = D_0009B0A4;
+    char *p = car_data;
     memset(buf, 0, 16);
     D_00097010 = 1;
     if ((*(unsigned char *)&D_00096898) == 0) {

@@ -33,9 +33,9 @@ typedef struct {
     SVECTOR *vertices;      /* 0x10 */
 } MODEL;
 
-extern CAR_DATA D_0009B0A4[];
-extern CAR_COSMETICS D_0009AF04[];
-extern long long D_0009687C;
+extern CAR_DATA car_data[];
+extern CAR_COSMETICS car_cosmetics[];
+extern long long pauseflag;
 extern int D_000AB654[];
 extern int D_000AB6C4[];
 extern long long D_000970AC;
@@ -48,7 +48,7 @@ extern void MulMatrix0();
 extern void SetRotMatrix();
 extern void DrawWheelObject();
 
-#define pauseflag (*(int *)&D_0009687C)
+#define pauseflag (*(int *)&pauseflag)
 #define gCleanWheelModelPtr (*(MODEL **)&D_000970AC)
 #define gFastWheelModelPtr (*(MODEL **)&D_000970C0)
 #define gDamWheelModelPtr (*(MODEL **)&D_000970C4)
@@ -79,14 +79,14 @@ void DrawCarWheels(int car, MATRIX *RearMatrix, VECTOR *pos, int unused, int cos
     int a, b; short c, d;
     int loop;
 
-    cp = &D_0009B0A4[car];
+    cp = &car_data[car];
     FrontWheelIncrement = cp->wheel_speed / 256;
     BackWheelIncrement = cp->wheel_speed / 256;
 
     if (car == 0)
-        car_cos = &D_0009AF04[0];
+        car_cos = &car_cosmetics[0];
     else
-        car_cos = &D_0009AF04[cosIdx];
+        car_cos = &car_cosmetics[cosIdx];
 
     if (cp->wheelspin != 0)
         BackWheelIncrement = -700;

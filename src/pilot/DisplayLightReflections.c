@@ -26,9 +26,9 @@ typedef struct {
     unsigned int uv3;
 } POLY_FT4;
 
-extern long long D_00097530;
-#define current (*(DB **)&D_00097530)
-extern int D_00097424;
+extern long long current;
+#define current (*(DB **)&current)
+extern int wetness;
 extern MATRIX D_000AF9C0;
 extern void func_0002C564(VECTOR *v);
 
@@ -59,7 +59,7 @@ void DisplayLightReflections(VECTOR *v1, CVECTOR *col, int size, TEXTURE_DETAILS
     tpage = (texture->tpageid | 0x20) << 16;
     clut = texture->clutid << 16;
 
-    if (D_00097424 > 9) {
+    if (wetness > 9) {
         pos.vx = v1->vx;
         pos.vz = v1->vz;
         pos.vy = v1->vy;

@@ -1,11 +1,11 @@
 /* Driver 2: DrawWheelObject (CARS.C) */
 typedef struct { char *primptr; unsigned int *ot; } DB;
-extern long long D_00097530;
-#define current (*(DB **)&D_00097530)
-extern long long D_000971A0;
-#define combointensity (*(unsigned int *)&D_000971A0)
-extern unsigned short D_00087030[][32];
-extern unsigned short D_00086F30[];
+extern long long current;
+#define current (*(DB **)&current)
+extern long long combointensity;
+#define combointensity (*(unsigned int *)&combointensity)
+extern unsigned short texture_cluts[][32];
+extern unsigned short texture_pages[];
 
 typedef struct { short vx, vy, vz, pad; } SVECTOR;
 
@@ -69,8 +69,8 @@ void DrawWheelObject(MODEL *model, SVECTOR *verts, int transparent)
     src = model->poly_block;
     prims = (PFT4 *)current->primptr;
     i = model->num_polys;
-    clut = D_00087030[src->texture_set][src->texture_id] << 16;
-    tpage = (D_00086F30[src->texture_set] | 0x20) << 16;
+    clut = texture_cluts[src->texture_set][src->texture_id] << 16;
+    tpage = (texture_pages[src->texture_set] | 0x20) << 16;
 
     while (--i != -1) {
         int flag1;

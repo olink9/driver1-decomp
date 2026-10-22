@@ -9,7 +9,7 @@ typedef struct { char pad[0xD]; unsigned char d; } SkyCfg;
 extern char D_00010898[];
 extern CV D_0008AA58[];
 extern long long D_00096834;
-extern long long D_00096850;
+extern long long gNight;
 extern B8 D_00096AA8;
 extern B8 D_00096AA9;
 extern CV D_00097090;
@@ -80,7 +80,7 @@ void func_0004ED34(void)
         (*(int *)&D_00096834 == 0 || *(int *)&D_00096834 == 5 || *(int *)&D_00096834 == 1)) {
         if (D_00096AA8.v || D_00096AA9.v)
             D_000974EC += 2;
-        else if (*(int *)&D_00096850)
+        else if (*(int *)&gNight)
             D_000974EC += 1;
     }
 

@@ -33,13 +33,13 @@ typedef struct {
 } SHORT1;
 extern SHORT1 D_0009721C;           /* tpage.w */
 extern SHORT1 D_0009721E;           /* tpage.h */
-extern int D_000A7F50[];            /* tsetinfo */
+extern int tsetinfo[];            /* tsetinfo */
 extern unsigned char D_000BE278[];  /* tpageloaded */
-extern unsigned char D_000BE4F8[];  /* tpageslots */
+extern unsigned char tpageslots[];  /* tpageslots */
 extern SXYPAIR D_000BE708[];        /* slot_tpagepos */
 extern SXYPAIR D_000BE1BC[];        /* slot_clutpos */
-extern unsigned long D_00087030[][16]; /* texture_cluts */
-extern unsigned short D_00086F30[]; /* texture_pages */
+extern unsigned long texture_cluts[][16]; /* texture_cluts */
+extern unsigned short texture_pages[]; /* texture_pages */
 
 extern void func_00074404(RECT16 *rect, void *p); /* LoadImage */
 
@@ -62,8 +62,8 @@ void SendTPage(void)
     unsigned char *loaded;
 
     addr = (char *)D_00097238 + 0xA000;
-    tpage2send = D_000A7F50[D_00097250 * 2];
-    slot = D_000A7F50[D_00097250 * 2 + 1];
+    tpage2send = tsetinfo[D_00097250 * 2];
+    slot = tsetinfo[D_00097250 * 2 + 1];
 
     if (D_00097208 == 0) {
         addr += 0x4000;
@@ -72,7 +72,7 @@ void SendTPage(void)
             D_00097218.x = D_000BE708[slot].vx;
             addr += 4;
             clutofs = tpage2send << 6;
-            clutbase = (char *)D_00087030;
+            clutbase = (char *)texture_cluts;
             D_00097218.y = D_000BE708[slot].vy;
             D_0009721C.v = 64;
             D_0009721E.v = 64;
@@ -93,7 +93,7 @@ void SendTPage(void)
                 i += 4;
             }
 
-            D_00086F30[tpage2send] = getTPage(0, 0, D_00097218.x, D_00097218.y);
+            texture_pages[tpage2send] = getTPage(0, 0, D_00097218.x, D_00097218.y);
         }
     } else {
         addr += (D_00097244 & 1) << 13;
@@ -104,8 +104,8 @@ void SendTPage(void)
         }
 
         if (D_00097208 == 4) {
-            old = D_000BE4F8[slot];
-            D_000BE4F8[slot] = tpage2send;
+            old = tpageslots[slot];
+            tpageslots[slot] = tpage2send;
             D_000BE278[old] = 0;
             *loaded = slot + 1;
             D_00097250++;

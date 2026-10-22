@@ -15,8 +15,8 @@ extern int D_00097184;
 extern int D_00097188;
 unsigned char D_00097174[4]; /* tentative definition -> .comm */
 extern unsigned char D_00097178[8];
-extern unsigned short D_00086F30[];
-extern unsigned short D_00087030[][32];
+extern unsigned short texture_pages[];
+extern unsigned short texture_cluts[][32];
 extern POLY_FT4 D_000A216C[2][25];
 extern TexInfo *GetTEXINFName();
 
@@ -49,8 +49,8 @@ void func_0002A5CC(void)
             p = &D_000A216C[i][j];
             setPolyFT4(p);
             setRGB0(p, 0x50, 0x50, 0x50);
-            p->tpage = D_00086F30[D_00097184] | 0x40;
-            p->clut = D_00087030[D_00097184][D_00097188];
+            p->tpage = texture_pages[D_00097184] | 0x40;
+            p->clut = texture_cluts[D_00097184][D_00097188];
             setSemiTrans(p, 1);
             p->u0 = D_00097174[0];
             p->v0 = D_00097174[1];

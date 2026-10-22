@@ -81,14 +81,14 @@ typedef struct { char pad[0xF8]; int dir; char pad2[0x18C - 0xFC]; } CAR18C;
 typedef struct { char pad[0x2D0]; int f2D0; } TGT;
 
 extern VECTOR D_00010C84;
-extern long long D_00097530;
-#define current (*(DB **)&D_00097530)
+extern long long current;
+#define current (*(DB **)&current)
 extern long long D_00097534;
 extern long long D_0009770C;
 extern long long D_00097708;
-extern long long D_000970D8;
+extern long long CameraCnt;
 extern long long D_000972E8;
-extern long long D_00096850;
+extern long long gNight;
 extern long long D_0009754C;
 extern long long D_00096888;
 extern int D_00096D24;
@@ -104,11 +104,11 @@ extern unsigned char D_00096D34;
 extern int D_0008B278[];
 extern int D_0008B2B8[];
 extern MAPPOS D_0008B140[];
-extern unsigned short D_00086F30[];
+extern unsigned short texture_pages[];
 extern unsigned char D_000BEEAC[4][4];
 extern CARX D_000C4E38[];
 extern MODELINF D_00098900[];
-extern CAR18C D_0009B0A4[];
+extern CAR18C car_data[];
 extern char D_0009B0BC[];
 extern char D_00096D1C[];
 extern long long D_00097758;
@@ -161,7 +161,7 @@ void DrawOverheadMap(void)
     draw_box();
 
     if (*(int *)&D_0009770C > 0 && *(int *)&D_00097708 >= 0x293) {
-        FlashOverheadMap(D_0008B278[*(volatile int *)&D_000970D8 & 0xF], 0, D_0008B278[*(volatile int *)&D_000970D8 + 8 & 0xF]);
+        FlashOverheadMap(D_0008B278[*(volatile int *)&CameraCnt & 0xF], 0, D_0008B278[*(volatile int *)&CameraCnt + 8 & 0xF]);
         if (*(int *)&D_0009770C == 1)
             *(char *)&D_000972E8 = 12;
     } else {
@@ -294,7 +294,7 @@ void DrawOverheadMap(void)
 
     direction.vy = 0;
     direction.vx = 0;
-    direction.vz = 0xC00 - D_0009B0A4[*(int *)&D_00096888].dir & 0xFFF;
+    direction.vz = 0xC00 - car_data[*(int *)&D_00096888].dir & 0xFFF;
     func_0004EA98(&map_matrix, &direction);
 
     map_matrix.m[0][0] *= 3;
@@ -325,7 +325,7 @@ void DrawOverheadMap(void)
             spt = (POLY_FT4 *)current->primptr;
             setlen(spt, 9);
             setcode(spt, 0x2C);
-            if (*(int *)&D_00096850)
+            if (*(int *)&gNight)
                 spt->b0 = spt->g0 = spt->r0 = 50;
             else
                 spt->b0 = spt->g0 = spt->r0 = 100;
@@ -339,7 +339,7 @@ void DrawOverheadMap(void)
             spt->x3 = MapMeshO[count + 1][count1 + 1].vx;
             spt->y3 = MapMeshO[count + 1][count1 + 1].vy;
             spt->clut = D_000975FC;
-            spt->tpage = D_00086F30[*(int *)&D_0009754C];
+            spt->tpage = texture_pages[*(int *)&D_0009754C];
             spt->u0 = MapTex[count].u + D_0008B140[D_000BEEAC[count][count1]].x * 4;
             spt->v0 = MapTex[count1].v + D_0008B140[D_000BEEAC[count][count1]].y;
             spt->u1 = MapTex[count].u + D_0008B140[D_000BEEAC[count][count1]].x * 4 + tw;

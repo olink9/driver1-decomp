@@ -1,9 +1,9 @@
 typedef struct { char pad[0x18]; int x; int pad2; int z; char pad3[0xF8-0x24]; int rot; char pad4[0x18C-0xFC]; } C;
 typedef struct { unsigned char f0, k, f2, f3, f4, on; char pad[0x50 - 6]; } P;
-extern C D_0009B0A4[];
+extern C car_data[];
 extern P D_00098950[];
 extern short D_0008EAAA[];
-extern long long D_000970D8;
+extern long long CameraCnt;
 extern void func_000555F4();
 
 void func_00055820(void)
@@ -14,17 +14,17 @@ void func_00055820(void)
     int big = 0x3FFF0;
      P *pl = D_00098950;
 
-    *(volatile int *)&D_000970D8;
-    *(volatile int *)&D_000970D8;
-    idx = D_0009B0A4[0].rot & 0xFFF;
+    *(volatile int *)&CameraCnt;
+    *(volatile int *)&CameraCnt;
+    idx = car_data[0].rot & 0xFFF;
     s = D_0008EAAA[idx * 2];
     c = D_0008EAAA[idx * 2 - 1];
     for (i = 0; i < 22; i++, pl++) {
         k = pl->k;
         if (k && pl->on) {
-            C *car = (C *)((i + 1) * 0x18C + (int)D_0009B0A4);
-            dx = car->x - D_0009B0A4[0].x;
-            dz = car->z - D_0009B0A4[0].z;
+            C *car = (C *)((i + 1) * 0x18C + (int)car_data);
+            dx = car->x - car_data[0].x;
+            dz = car->z - car_data[0].z;
             vx = ((dx * s - dz * c + 0x800) >> 12) * 3 / 4;
             vy = -((dx * c + dz * s + 0x800) >> 12);
             if (vx < 0) ax = -vx; else ax = vx;

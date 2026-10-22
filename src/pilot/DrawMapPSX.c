@@ -45,25 +45,25 @@ extern long long D_00096804, D_00097534, D_0009707C, D_0009733C;
 extern long long D_00097318, D_00097310, D_00097328;
 extern long long D_00096A24, D_00096A28;
 extern long long D_000970E0, D_000970D4, D_00097108;
-extern long long D_00097424, D_00096850, D_00096834, D_0009715C, D_00097364, D_00096AA8;
+extern long long wetness, gNight, D_00096834, D_0009715C, D_00097364, D_00096AA8;
 extern long long D_00096C4A;
 extern int D_000971B4;
 
-extern long long D_00097530;
+extern long long current;
 extern int D_00096998, D_00096984;
 extern CELL_OBJECT **D_0009697C;
 extern CELL_OBJECT **D_0009719C;
 extern CELL_OBJECT *D_000A5E0C[];
 extern CELL_OBJECT *D_000A663C[];
 extern CELL_OBJECT *D_000A76AC[];
-extern MODEL *D_000A0E20[];
-extern MATRIX D_000BBE84;
+extern MODEL *modelpointers[];
+extern MATRIX inv_camera_matrix;
 extern MATRIX D_000AF9C0;
-extern MATRIX2 D_000A5E3C[];
-extern MATRIX D_000A6E8C[];
+extern MATRIX2 CompoundMatrix[];
+extern MATRIX matrixtable[];
 extern unsigned char D_000A80C4[];
 extern short D_0008EAAA[];
-extern VECTOR D_0008A8F0;
+extern VECTOR camera_position;
 
 extern void func_00053828();
 extern void func_0002D7C4();
@@ -88,7 +88,7 @@ extern long long func_00031048_b __asm__("func_00031048");
 extern long long func_00031048_c __asm__("func_00031048");
 extern long long func_00031048_d __asm__("func_00031048");
 
-#define current (*(DB **)&D_00097530)
+#define current (*(DB **)&current)
 #define cells_across (*(int *)&D_00096A24)
 #define cells_down (*(int *)&D_00096A28)
 #define region (*(int *)&D_0009733C)
@@ -201,24 +201,24 @@ void DrawMapPSX(void)
                         cd = &(*(CELL_DATA **)&D_000970D4)[idx];
                         cop = &(*(CELL_OBJECT **)&D_00097108)[cd->num];
                         if (cop->computed != frame) {
-                            model = D_000A0E20[cop->type];
+                            model = modelpointers[cop->type];
                             flags = model->shape_flags;
                             if (cop->vx != 0xFD46FEC0 && !(flags & 0x10) &&
                                 func_0002C5F0(cop, model->bounding_sphere) != -1) {
                                 if (flags & 0x4000) {
                                     current->primptr = (char *)func_0002C6DC(model, current->primptr, current->ot, cop->yang);
                                     gte_ReadTransZ(&z);
-                                    if (*(int *)&D_00097424 == 0 && *(int *)&D_00096850 == 0 &&
+                                    if (*(int *)&wetness == 0 && *(int *)&gNight == 0 &&
                                         !(cop->yang & 0x20) && z < 10000) {
-                                        gte_SetRotMatrix(&D_000BBE84);
+                                        gte_SetRotMatrix(&inv_camera_matrix);
                                         if (z < 2000) {
-                                            func_0002BDB0(D_000A0E20[cop->type]->f14, D_000A0E20[cop->type]->f10);
+                                            func_0002BDB0(modelpointers[cop->type]->f14, modelpointers[cop->type]->f10);
                                             if (model->fE == 2)
-                                                func_0002BDB0(D_000A0E20[cop->type]->f14 + 0x14, D_000A0E20[cop->type]->f10);
+                                                func_0002BDB0(modelpointers[cop->type]->f14 + 0x14, modelpointers[cop->type]->f10);
                                         } else {
-                                            func_0002C29C(D_000A0E20[cop->type]->f14, D_000A0E20[cop->type]->f10);
+                                            func_0002C29C(modelpointers[cop->type]->f14, modelpointers[cop->type]->f10);
                                             if (model->fE == 2)
-                                                func_0002C29C(D_000A0E20[cop->type]->f14 + 0x14, D_000A0E20[cop->type]->f10);
+                                                func_0002C29C(modelpointers[cop->type]->f14 + 0x14, modelpointers[cop->type]->f10);
                                         }
                                         gte_SetRotMatrix(&D_000AF9C0);
                                     }
@@ -253,9 +253,9 @@ void DrawMapPSX(void)
                                     D_0009719C[tiles++] = cop;
                                 } else {
                                     if (cop->yang & 0xf) {
-                                        if (D_000A5E3C[cop->yang].computed != frame) {
-                                            D_000A5E3C[cop->yang].computed = frame;
-                                            MulMatrix0(&D_000BBE84, &D_000A6E8C[cop->yang], (MATRIX *)&D_000A5E3C[cop->yang]);
+                                        if (CompoundMatrix[cop->yang].computed != frame) {
+                                            CompoundMatrix[cop->yang].computed = frame;
+                                            MulMatrix0(&inv_camera_matrix, &matrixtable[cop->yang], (MATRIX *)&CompoundMatrix[cop->yang]);
                                         }
                                         gte_SetRotMatrix(&D_000AF9C0);
                                     }
@@ -318,7 +318,7 @@ void DrawMapPSX(void)
         } else {
             *(unsigned int *)0x1F800000 = current->ot[0x107E] & 0xFFFFFF;
             p = (int *)0x1F800024;
-            if (*(unsigned char *)&D_00096AA8 == 0 && *(int *)&D_00096850 == 0) {
+            if (*(unsigned char *)&D_00096AA8 == 0 && *(int *)&gNight == 0) {
                 p[0] = 0x808080;
                 p[1] = 0x707070;
                 p[2] = 0x606060;
@@ -370,12 +370,12 @@ void DrawMapPSX(void)
 
     for (i = 0; i < nanim; i++) {
         cop = D_000A663C[i];
-        pos.vx = cop->vx - D_0008A8F0.vx;
-        pos.vy = cop->vy - D_0008A8F0.vy;
-        pos.vz = cop->vz - D_0008A8F0.vz;
+        pos.vx = cop->vx - camera_position.vx;
+        pos.vy = cop->vy - camera_position.vy;
+        pos.vz = cop->vz - camera_position.vz;
         func_0002C564(&pos);
-        gte_SetRotMatrix(&D_000A6E8C[cop->yang]);
-        DrawAnimatingObject(D_000A0E20[cop->type], cop, &pos);
+        gte_SetRotMatrix(&matrixtable[cop->yang]);
+        DrawAnimatingObject(modelpointers[cop->type], cop, &pos);
     }
 
     if (tiles)

@@ -108,13 +108,13 @@ extern I4 D_00096E60;
 extern int D_00097700;
 extern long long D_00097004;
 extern long long D_00096870;
-extern long long D_000970D8;
+extern long long CameraCnt;
 extern int D_000C4C8C[];
 extern int D_0009B1AC[];
 extern int D_0008BBD8[];
 extern int D_0008BBE4[];
 extern ENT D_00098950[];
-extern CAR D_0009B0A4;
+extern CAR car_data;
 extern MAPINFO D_0009E714;
 extern VEC D_000C4C6C;
 extern S7C D_000C4C7C;
@@ -170,7 +170,7 @@ void func_00065424(COP *cp)
     s->f764 = car->fD0;
     s->f28 = car->f108;
     s->fC = car->fF8;
-    pl = &D_0009B0A4;
+    pl = &car_data;
     dir = (car->f104 + 0x800) >> 12;
     px = car->fC8;
     pz = car->fD0;
@@ -204,25 +204,25 @@ void func_00065424(COP *cp)
             if (D_00096E68 == 0)
                 t = t * 3 / 4;
             t = t < 0 ? 0 : (t > 60 ? 60 : t);
-            D_000C4C6C.vx = D_0009B0A4.fC8 + ((D_0009B0A4.f40 * t + 0x800) >> 12);
-            D_000C4C6C.vz = D_0009B0A4.fD0 + ((D_0009B0A4.f48 * t + 0x800) >> 12);
+            D_000C4C6C.vx = car_data.fC8 + ((car_data.f40 * t + 0x800) >> 12);
+            D_000C4C6C.vz = car_data.fD0 + ((car_data.f48 * t + 0x800) >> 12);
             if (D_00096E68 == 0) {
-                D_000C4C6C.vx -= D_0009B0A4.f8 / 16;
-                D_000C4C6C.vz -= D_0009B0A4.f14 / 16;
+                D_000C4C6C.vx -= car_data.f8 / 16;
+                D_000C4C6C.vz -= car_data.f14 / 16;
             } else {
-                D_000C4C6C.vx += D_0009B0A4.f4 / 32;
-                D_000C4C6C.vz += D_0009B0A4.f10 / 32;
+                D_000C4C6C.vx += car_data.f4 / 32;
+                D_000C4C6C.vz += car_data.f10 / 32;
             }
         } else {
-            D_000C4C6C.vx = D_0009B0A4.fC8;
-            D_000C4C6C.vz = D_0009B0A4.fD0;
+            D_000C4C6C.vx = car_data.fC8;
+            D_000C4C6C.vz = car_data.fD0;
         }
         if (s->f7A0) {
             target.vx = D_000C4C6C.vx;
             target.vz = D_000C4C6C.vz;
             s->f790 = 0;
-            s->f48 = D_0009B0A4.fC8;
-            s->f4C = D_0009B0A4.fD0;
+            s->f48 = car_data.fC8;
+            s->f4C = car_data.fD0;
             x = (s->f48 + D_0009E714.f8) / 1500;
             k = D_0009E714.fC + 750;
             z = (k - s->f4C) / 1500;
@@ -345,7 +345,7 @@ void func_00065424(COP *cp)
     d2 = s->f20 - car->fF4;
     d2 = d2 < -200 ? -200 : (d2 > 200 ? 200 : d2);
     car->fF4 += d2;
-    n2 = *(int *)&D_000970D8;
+    n2 = *(int *)&CameraCnt;
     s->f2C--;
     if (n2 % 4 == cp->f5 - 1) {
         if (s->f2C < 0)

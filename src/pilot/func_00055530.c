@@ -1,7 +1,7 @@
 /* Driver 2-like: draw a TILE_1 dot at a transformed world position */
 typedef struct { char *primptr; unsigned int *ot; } DB;
-extern long long D_00097530;
-#define current (*(DB **)&D_00097530)
+extern long long current;
+#define current (*(DB **)&current)
 typedef struct { int vx, vy, vz, pad; } VECTOR;
 typedef struct { unsigned addr:24; unsigned len:8; } P_TAG;
 #define setaddr(_p, _addr) (((P_TAG *)(_p))->addr = (unsigned long)(_addr))

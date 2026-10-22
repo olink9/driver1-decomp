@@ -1,6 +1,6 @@
 typedef struct BUF { unsigned a; int ot; unsigned c; } BUF;
 extern volatile int D_00097534;
-extern BUF *D_00097530;
+extern BUF *current;
 extern BUF *D_00097524;
 extern int D_00096CB0;
 extern char D_000BDFA4[];
@@ -16,26 +16,26 @@ void func_000513D4(void)
 {
     unsigned a, c, lim;
     if (D_00097534 & 1) {
-        D_00097530 = (BUF *)D_000BDFA4;
+        current = (BUF *)D_000BDFA4;
         D_00097524 = (BUF *)(D_000BDFA4 + 0x80);
     } else {
-        D_00097530 = (BUF *)D_000BE024;
+        current = (BUF *)D_000BE024;
         D_00097524 = (BUF *)(D_000BE024 - 0x80);
     }
     if (D_00096CB0 == 0) {
-        PutDispEnv((char *)D_00097530 + 0x6C);
-        PutDrawEnv((char *)D_00097530 + 0x10);
+        PutDispEnv((char *)current + 0x6C);
+        PutDrawEnv((char *)current + 0x10);
     }
     D_00096CB0 = 0;
     lim = 0x1E000;
-    c = D_00097530->c;
-    a = D_00097530->a;
+    c = current->c;
+    a = current->a;
     if (c + lim < a) {
         printf(D_00010954, c - (a - lim));
         while (D_00097534 != 0x78654321)
             __asm__ volatile("break 1024");
     }
-    D_00097530->a = D_00097530->c;
+    current->a = current->c;
     func_00074684(D_00097524->ot + 0x41FC);
-    func_0007457C(D_00097530->ot, 0x1080);
+    func_0007457C(current->ot, 0x1080);
 }

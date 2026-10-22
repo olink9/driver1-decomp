@@ -33,18 +33,18 @@ typedef struct {
 
 extern int D_00097428;
 typedef struct { unsigned char b[8]; } B8;
-extern B8 D_00096897;
+extern B8 cameraview;
 extern short D_0009B1AA[];
-extern long long D_00096850;
+extern long long gNight;
 extern int D_00097474;
-extern long long D_0009687C;
-extern long long D_00097530;
-#define current (*(DB **)&D_00097530)
-extern MATRIX D_000BBE84;
+extern long long pauseflag;
+extern long long current;
+#define current (*(DB **)&current)
+extern MATRIX inv_camera_matrix;
 extern VECTOR D_0008909C;
 extern RAIN_TYPE D_000B81C8[];
 extern TEXTURE_DETAILS D_000B9170;
-extern VECTOR D_0008A8F0;
+extern VECTOR camera_position;
 extern short D_000B8028[];
 extern void GetSmokeDrift(VECTOR *v);
 extern void DisplaySplashes(void);
@@ -91,7 +91,7 @@ void DrawRainDrops(void)
 
     GetSmokeDrift(&drift);
 
-    if (D_00096897.b[0] != 1)
+    if (cameraview.b[0] != 1)
         col = 70 - D_0009B1AA[0];
     else
         col = 70;
@@ -99,7 +99,7 @@ void DrawRainDrops(void)
     if (col < 50)
         col = 50;
 
-    if (*(int *)&D_00096850 != 0)
+    if (*(int *)&gNight != 0)
         col -= 15;
 
     col = col >> 1;
@@ -109,7 +109,7 @@ void DrawRainDrops(void)
     if (D_00097474 == 0)
         DisplaySplashes();
 
-    gte_SetRotMatrix(&D_000BBE84);
+    gte_SetRotMatrix(&inv_camera_matrix);
     gte_SetTransVector(&D_0008909C);
 
     RainPtr = D_000B81C8;
@@ -118,15 +118,15 @@ void DrawRainDrops(void)
     Count = D_00097428;
 
     while (Count--) {
-        if (*(int *)&D_0009687C == 0) {
+        if (*(int *)&pauseflag == 0) {
             RainPtr->vy += 30;
             RainPtr->vx -= drift.vx * 2;
             RainPtr->vz -= drift.vz * 2;
         }
 
-        v[0].vx = RainPtr->vx - D_0008A8F0.vx;
-        v[0].vy = RainPtr->vy - D_0008A8F0.vy;
-        v[0].vz = RainPtr->vz - D_0008A8F0.vz;
+        v[0].vx = RainPtr->vx - camera_position.vx;
+        v[0].vy = RainPtr->vy - camera_position.vy;
+        v[0].vz = RainPtr->vz - camera_position.vz;
 
         poly = (POLY_GT3 *)current->primptr;
         notfirst = *(int *)&RainPtr->oldposition;

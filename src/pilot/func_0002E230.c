@@ -16,7 +16,7 @@ typedef void (*POLYFUNC)(int);
 extern POLYFUNC D_00089FFC[];
 extern POLYFUNC D_0008A1BC[];
 extern int D_00089F1C[];
-extern MATRIX D_000BBE84;
+extern MATRIX inv_camera_matrix;
 extern int D_00096990;
 extern char D_00096978;
 typedef struct { unsigned char v; char pad[7]; } B8;
@@ -59,7 +59,7 @@ void func_0002E230(MODEL *model, MATRIX *rot, VECTOR *trans, int zbias)
     sxy = (long *)0x1F800044;
     zbuf = (short *)0x1F800240;
     gte_SetTransVector(trans);
-    MulMatrix0(&D_000BBE84, rot, &m);
+    MulMatrix0(&inv_camera_matrix, rot, &m);
     SetRotMatrix(&m);
     verts = model->vertices;
     i = 0;

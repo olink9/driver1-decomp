@@ -20,13 +20,13 @@ typedef struct {
 
 typedef struct { int nx, ny, nz, d; } PLANE;
 
-extern short D_0008EAA8[];
+extern short rcossin_tbl[];
 extern long long D_00096898;
-extern long long D_000970D8;
+extern long long CameraCnt;
 extern short D_000978B0[];
 extern unsigned char D_000988B0[];
 extern CIV D_00098900[];
-extern CAR D_0009B0A4;
+extern CAR car_data;
 extern CAR D_0009B230[];
 
 int func_0001262C(CIV *cp)
@@ -53,7 +53,7 @@ int func_0001262C(CIV *cp)
     done = 0;
     slot = cp->id;
     id = slot;
-    if ((*(int *)&D_000970D8 ^ slot) & 1)
+    if ((*(int *)&CameraCnt ^ slot) & 1)
         return D_000988B0[slot];
 
     if (cp->type == 3 && cp->f34 != 0) {
@@ -83,8 +83,8 @@ int func_0001262C(CIV *cp)
             x = D_0009B230[other].x;
             z = D_0009B230[other].z;
         } else {
-            x = D_0009B0A4.x;
-            z = D_0009B0A4.z;
+            x = car_data.x;
+            z = car_data.z;
         }
         if (x - px >= 0) {
             if (x - px < dist) ; else continue;
@@ -97,8 +97,8 @@ int func_0001262C(CIV *cp)
 
         if (!done) {
             ang = -D_0009B230[id].dir & 0xFFF;
-            c = D_0008EAA8[ang * 2 + 1];
-            s = D_0008EAA8[ang * 2];
+            c = rcossin_tbl[ang * 2 + 1];
+            s = rcossin_tbl[ang * 2];
             ox = (-range * c) >> 12;
             oz = (-range * s) >> 12;
             ox += px;
@@ -122,7 +122,7 @@ int func_0001262C(CIV *cp)
             done = 1;
         }
 
-        ang = (i != 0 ? -D_0009B230[other].dir : -D_0009B0A4.dir) & 0xFFF;
+        ang = (i != 0 ? -D_0009B230[other].dir : -car_data.dir) & 0xFFF;
         box = &D_000978B0[((ang & 0x3FF) / 4) * 8];
 
         switch (ang & 0xC00) {

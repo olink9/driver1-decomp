@@ -19,7 +19,7 @@ extern POS D_00099720[];
 extern ENT D_000BFA7C[];
 extern int D_000C0340[];
 extern short D_000C0390[];
-extern SURF *D_000A0E20[];
+extern SURF *modelpointers[];
 extern void FindSeated(void);
 extern short func_00021558(int, int);
 extern void ROADS_GetRouteData(int, int, short *);
@@ -89,7 +89,7 @@ void func_0005F0EC(void)
             D_000C0390[3] = func_00021558(e->x + 1500, e->z);
             D_000C0390[4] = func_00021558(e->x - 1500, e->z);
             ROADS_GetRouteData(e->x, e->z, &surf);
-            if ((func_0004FFE8(1) & 1) || !(D_000A0E20[surf]->f2 & 0x4000)) {
+            if ((func_0004FFE8(1) & 1) || !(modelpointers[surf]->f2 & 0x4000)) {
                 e->f56 = 2;
                 e->f50 = 10;
             } else {

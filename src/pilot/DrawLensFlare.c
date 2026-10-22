@@ -47,10 +47,10 @@ typedef struct {
     short gapmod;
 } FLAREREC;
 
-extern long long D_00097530;
-#define current (*(DB **)&D_00097530)
-extern long long D_00096850;
-#define gTimeOfDay (*(int *)&D_00096850)
+extern long long current;
+#define current (*(DB **)&current)
+extern long long gNight;
+#define gTimeOfDay (*(int *)&gNight)
 extern long long D_00096834;
 #define GameLevel (*(int *)&D_00096834)
 extern unsigned char D_00096AA8;
@@ -58,7 +58,7 @@ extern unsigned char D_000973F8;
 extern RECT16 D_00096C34[];
 extern SVECTOR D_00096C2C;
 extern SVECTOR D_00096C24;
-extern MATRIX D_000BBE84;
+extern MATRIX inv_camera_matrix;
 extern VECTOR D_0008909C;
 extern short D_000B722C[];
 extern FLAREREC D_0008A878[];
@@ -103,7 +103,7 @@ void DrawLensFlare(void)
 
     if (gTimeOfDay != 0) { col.r = 0x60; col.b = 0x60; col.g = 0x60; } else { col.r = 0xFF; col.b = 0xFF; col.g = 0xFF; }
 
-    gte_SetRotMatrix(&D_000BBE84);
+    gte_SetRotMatrix(&inv_camera_matrix);
     gte_SetTransVec0(&D_0008909C);
 
     if (gTimeOfDay != 0)

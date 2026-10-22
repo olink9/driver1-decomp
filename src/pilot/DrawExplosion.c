@@ -6,8 +6,8 @@ typedef struct { short vx, vy, vz, pad; } SVECTOR;
 typedef struct { short m[3][3]; short pad; int t[3]; } MATRIX;
 
 typedef struct { char *primptr; unsigned int *ot; } DB;
-extern long long D_00097530;
-#define current (*(DB **)&D_00097530)
+extern long long current;
+#define current (*(DB **)&current)
 
 typedef struct {
     unsigned short u0, u1, u2, u3;
@@ -35,15 +35,15 @@ typedef struct { unsigned addr:24; unsigned len:8; } P_TAG;
 
 extern TEXTURE_DETAILS D_000B91B0;
 extern int D_00096E74;
-extern long long D_000970D8;
-#define CameraCnt (*(int *)&D_000970D8)
+extern long long CameraCnt;
+#define CameraCnt (*(int *)&CameraCnt)
 extern VECTOR D_000C6CD8;
 extern VECTOR D_000C6CE8;
-extern VECTOR D_0008A8F0;
+extern VECTOR camera_position;
 extern MATRIX D_0008BCC4;
-extern MATRIX D_000BBE84;
-extern SVECTOR D_000C6CF8[];
-extern short D_0008EAA8[];
+extern MATRIX inv_camera_matrix;
+extern SVECTOR globemesh[];
+extern short rcossin_tbl[];
 extern short D_0008EAAA[];
 
 extern void func_00066CCC();
@@ -99,9 +99,9 @@ void DrawExplosion(int time)
         rgb |= 0x2e000000;
     }
 
-    v.vx = (D_000C6CD8.vx + D_000C6CE8.vx) / 2 - D_0008A8F0.vx;
-    v.vy = (D_000C6CD8.vy + D_000C6CE8.vy) / 2 - D_0008A8F0.vy;
-    v.vz = (D_000C6CD8.vz + D_000C6CE8.vz) / 2 - D_0008A8F0.vz;
+    v.vx = (D_000C6CD8.vx + D_000C6CE8.vx) / 2 - camera_position.vx;
+    v.vy = (D_000C6CD8.vy + D_000C6CE8.vy) / 2 - camera_position.vy;
+    v.vz = (D_000C6CD8.vz + D_000C6CE8.vz) / 2 - camera_position.vz;
 
     func_0002C564(&v);
     gte_SetTransVector(&v);
@@ -113,17 +113,17 @@ void DrawExplosion(int time)
         sf1 = ((time * (14240 - time) + 0x800) >> 12) + 12;
         sf = CameraCnt * (64 - i * 90);
 
-        c = (sf1 * D_0008EAA8[(sf & 0xfff) * 2 + 1] + 0x800) >> 12;
-        s = (sf1 * D_0008EAA8[(sf & 0xfff) * 2] + 0x800) >> 12;
+        c = (sf1 * rcossin_tbl[(sf & 0xfff) * 2 + 1] + 0x800) >> 12;
+        s = (sf1 * rcossin_tbl[(sf & 0xfff) * 2] + 0x800) >> 12;
         D_0008BCC4.m[1][1] = sf1;
         D_0008BCC4.m[2][2] = c;
         D_0008BCC4.m[0][0] = c;
         D_0008BCC4.m[0][2] = -(D_0008BCC4.m[2][0] = s);
 
-        MulMatrix0(&D_000BBE84, &D_0008BCC4, &workmatrix);
+        MulMatrix0(&inv_camera_matrix, &D_0008BCC4, &workmatrix);
         gte_SetRotMatrix(&workmatrix);
 
-        src = D_000C6CF8;
+        src = globemesh;
 
         for (j = 0; j < 12; j++) {
             poly = (POLY_FT4 *)current->primptr;
@@ -193,17 +193,17 @@ void DrawExplosion(int time)
         sf2 = ((time * (26240 - time) + 0x800) >> 12) + 12;
         sf = CameraCnt * (64 - i * 90);
 
-        c = (sf2 * D_0008EAA8[(sf & 0xfff) * 2 + 1] + 0x800) >> 12;
-        s = (sf2 * D_0008EAA8[(sf & 0xfff) * 2] + 0x800) >> 12;
+        c = (sf2 * rcossin_tbl[(sf & 0xfff) * 2 + 1] + 0x800) >> 12;
+        s = (sf2 * rcossin_tbl[(sf & 0xfff) * 2] + 0x800) >> 12;
         D_0008BCC4.m[2][2] = c;
         D_0008BCC4.m[0][0] = c;
         D_0008BCC4.m[0][2] = -(D_0008BCC4.m[2][0] = s);
         D_0008BCC4.m[1][1] = sf2 / 16;
 
-        MulMatrix0(&D_000BBE84, &D_0008BCC4, &workmatrix);
+        MulMatrix0(&inv_camera_matrix, &D_0008BCC4, &workmatrix);
         gte_SetRotMatrix(&workmatrix);
 
-        src = D_000C6CF8;
+        src = globemesh;
 
         for (j = 0; j < 8; j++) {
             poly = (POLY_FT4 *)current->primptr;

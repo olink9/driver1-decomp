@@ -1,5 +1,5 @@
 extern long long D_00097670;
-extern long long D_00097530;
+extern long long current;
 extern long long D_00097524;
 extern int D_00096F08;
 extern int D_000BDFA4[];
@@ -27,12 +27,12 @@ int func_0006C1E4(void)
     func_EC280(1);
     a = D_000BDFA4;
     b = a + 0x20;
-    *(int *)&D_00097530 = (int)a;
+    *(int *)&current = (int)a;
     *(int *)&D_00097524 = (int)b;
     D_000BDFA4[0] = a[2];
     b[0] = b[2];
     func_E7508(5, *(int *)&D_00097670, 0x3E00);
-    *(int *)&D_00097530 = (int)a;
+    *(int *)&current = (int)a;
     *(int *)&D_00097524 = (int)b;
     func_0003A068();
     func_00033AF8();

@@ -1,16 +1,16 @@
 /* Driver 2: add_haze */
 #include "common.h"
 typedef struct { unsigned char *primptr; unsigned long *ot; } DB;
-extern long long D_00096DC4;
-extern long long D_00097530;
-#define current (*(DB **)&D_00097530)
+extern long long FastForward;
+extern long long current;
+#define current (*(DB **)&current)
 
 void add_haze(int top_col, int bot_col, short ot_pos)
 {
     TILE *polys;
     POLY_FT3 *null;
 
-    if (top_col > 9 && *(int *)&D_00096DC4 == 0) {
+    if (top_col > 9 && *(int *)&FastForward == 0) {
         polys = (TILE *)current->primptr;
         polys->code = 0x60;
         setlen(polys, 3);

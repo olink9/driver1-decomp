@@ -27,20 +27,20 @@ typedef struct {
 
 extern OBJ D_0008BC34;
 extern MATRIX D_000AF6A0;
-extern CAR D_0009B0A4;
+extern CAR car_data;
 extern VECTOR D_000C6CD8;
 extern VECTOR D_000C6CE8;
-extern VECTOR D_0008A8F0;
-extern MATRIX D_000BBE84;
+extern VECTOR camera_position;
+extern MATRIX inv_camera_matrix;
 extern int D_00097768;
 extern int D_00097778;
 extern int D_00096E6C;
-extern long long D_00096897;
+extern long long cameraview;
 extern long long D_0009688C;
 extern long long D_000970C8;
 extern long long D_000970CC;
-extern long long D_00097530;
-#define current (*(DB **)&D_00097530)
+extern long long current;
+#define current (*(DB **)&current)
 
 extern void SetRotMatrix();
 extern void func_0004EAC0();
@@ -65,21 +65,21 @@ void func_000669B8(void)
     pos.vz = D_0008BC34.f34 + D_0008BC34.f18;
     SetRotMatrix(&D_000AF6A0);
     func_0004EAC0(&pos);
-    pos.vx += D_0009B0A4.x;
-    pos.vy -= D_0009B0A4.y;
-    pos.vz += D_0009B0A4.z;
+    pos.vx += car_data.x;
+    pos.vy -= car_data.y;
+    pos.vz += car_data.z;
     D_000C6CD8 = pos;
     D_000C6CD8.vy -= D_0008BC34.f2C / 2;
 
     if (D_00097768 < 100) {
-        if (*(unsigned char *)&D_00096897 == 2 && *(int *)&D_0009688C == 0)
+        if (*(unsigned char *)&cameraview == 2 && *(int *)&D_0009688C == 0)
             return;
-        pos.vx -= D_0008A8F0.vx;
-        pos.vy -= D_0008A8F0.vy;
-        pos.vz -= D_0008A8F0.vz;
-        SetRotMatrix(&D_000BBE84);
+        pos.vx -= camera_position.vx;
+        pos.vy -= camera_position.vy;
+        pos.vz -= camera_position.vz;
+        SetRotMatrix(&inv_camera_matrix);
         func_0004EAC0(&pos);
-        MulMatrix0(&D_000BBE84, &D_000AF6A0, &m);
+        MulMatrix0(&inv_camera_matrix, &D_000AF6A0, &m);
         for (i = 8; i >= 0; i--)
             m.m[0][i] = (D_0008BC34.scale * m.m[0][i] + 0x800) >> 12;
         SetRotMatrix(&m);

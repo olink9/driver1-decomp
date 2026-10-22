@@ -93,7 +93,7 @@ extern short D_0008D218[];   /* XMSongIDs */
 extern short D_0008D248[];   /* XMSPU_SFX */
 extern int D_00096FAC;       /* XM_NSA */
 extern XMSONG *D_00097810;   /* mu */
-extern XMCHANNEL *D_0009781C; /* XMCU */
+extern XMCHANNEL *XMC; /* XMCU */
 extern XMHEADER *D_00097828; /* mhu */
 extern int D_000C7888[];     /* XM_SngAddress */
 extern int D_000C7970[];     /* XM_HeaderAddress */
@@ -105,7 +105,7 @@ extern void JPClearSPUFlags(int);
 
 #define mu D_00097810
 #define mhu D_00097828
-#define XMCU D_0009781C
+#define XMCU XMC
 
 int XM_Init(int VabID, int XM_ID, int SongID, int FirstCh,
                   int Loop, int PlayMask, int PlayType, int SFXNum)

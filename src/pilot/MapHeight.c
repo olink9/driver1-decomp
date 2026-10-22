@@ -30,8 +30,8 @@ extern long long D_00097374;
 extern long long D_00096858;
 extern int *D_0009D8F4[];
 extern SURF *D_0009D904[];
-extern unsigned short *D_000A0E20[];
-extern short D_0008EAA8[];
+extern unsigned short *modelpointers[];
+extern short rcossin_tbl[];
 extern int *D_000967A0;
 extern int func_00024418();
 extern int func_00024370();
@@ -124,8 +124,8 @@ int MapHeight(VEC *pos)
                     r = 0;
                 else
                     r = 0;
-                if (D_000A0E20[(info >> 16) & 0x3ff][1] & 0x4000)
-                    ht += D_0008EAA8[((x + z) << 2) & 0x1ffc] >> 9;
+                if (modelpointers[(info >> 16) & 0x3ff][1] & 0x4000)
+                    ht += rcossin_tbl[((x + z) << 2) & 0x1ffc] >> 9;
                 return ht;
             }
         }

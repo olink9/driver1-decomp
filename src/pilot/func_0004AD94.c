@@ -58,21 +58,21 @@ typedef struct {
 
 typedef struct { unsigned short num, next; } PACKED_CELL_OBJECT_LINK;
 
-extern CAR_DATA D_0009B0A4[];
+extern CAR_DATA car_data[];
 extern BUILDING_BOX D_000BC004[];
 extern CELL_OBJECT *D_000BBF14[];
 extern int D_000BC784[];
 extern int D_000BC798[];
-extern int D_0009E734[];
-extern MODEL *D_000A0E20[];
-extern MATRIX D_000A6E8C[];
+extern int RoadMapRegions[];
+extern MODEL *modelpointers[];
+extern MATRIX matrixtable[];
 extern CELL_OBJECT D_000A7ABC[];
-extern short D_0008EAA8[];
+extern short rcossin_tbl[];
 extern short D_0008EAAA[];
 
 extern long long D_00096880, D_00096798, D_00097398, D_00097368, D_0009733C, D_00096A24;
 extern long long D_000970E0, D_000970D4, D_00097108, D_000971D0, D_000967F4, D_00096834;
-extern long long D_0008A8F8, D_00096A60, D_00096A64, D_0009687C, D_00096899;
+extern long long D_0008A8F8, D_00096A60, D_00096A64, pauseflag, D_00096899;
 extern int D_0009B1AC[];
 
 extern CELL_OBJECT **D_000974A4;
@@ -112,14 +112,14 @@ void func_0004AD94(int car)
     MATRIX *mat;
     int extra, distx, distz;
 
-    x0 = D_0009B0A4[0].where[0];
-    z0 = D_0009B0A4[0].where[2];
+    x0 = car_data[0].where[0];
+    z0 = car_data[0].where[2];
     if (*(unsigned char *)&D_00096880 || (car == 0 && *(int *)&D_00096798))
         return;
 
     D_000974B0 = 0;
     D_000974AC = -1;
-    cp = &D_0009B0A4[car];
+    cp = &car_data[car];
     for (b0 = D_000BC004; b0 < &D_000BC004[60]; b0++)
         b0->xsize = 0;
 
@@ -140,7 +140,7 @@ void func_0004AD94(int car)
             cbr = (cbrx & 1) + (cbrz & 1) * 2;
             cell = ((unsigned short *)*(int *)&D_000970E0)[cbr * r * r + cx + cz * r];
             *lst = num;
-            if (D_0009E734[cbr] == cbrx + cbrz * (*(int *)&D_00096A24 / *(int *)&D_0009733C)) {
+            if (RoadMapRegions[cbr] == cbrx + cbrz * (*(int *)&D_00096A24 / *(int *)&D_0009733C)) {
                 while (cell != 0xFFFF && num < 296) {
                     ptr = &((PACKED_CELL_OBJECT_LINK *)*(int *)&D_000970D4)[cell];
                     cop = &((CELL_OBJECT *)*(int *)&D_00097108)[ptr->num];
@@ -167,7 +167,7 @@ void func_0004AD94(int car)
             cop = &D_000A7ABC[i - num];
         else
             cop = D_000974A4[D_000BC798[4] + i];
-        model = D_000A0E20[cop->type];
+        model = modelpointers[cop->type];
         if (car == 0x17 && *(int *)&D_000967F4 == 0x16 && (model->flags2 & 0x800))
             continue;
         if ((unsigned)model->num_vertices - 3 < 300 && model->num_point_normals < 300 &&
@@ -193,7 +193,7 @@ void func_0004AD94(int car)
                 for (k = 0; k < num_cb; k++, collide++) {
                     switch (collide->type) {
                     case 0:
-                        mat = &D_000A6E8C[-cop->yang & 0x3f];
+                        mat = &matrixtable[-cop->yang & 0x3f];
                         offset.vx = (collide->xpos * mat->m[0][0] + collide->zpos * mat->m[2][0]) / 4096;
                         offset.vz = (collide->xpos * mat->m[0][2] + collide->zpos * mat->m[2][2]) / 4096;
                         bbox.pos.vx = cop->vx + offset.vx;
@@ -209,7 +209,7 @@ void func_0004AD94(int car)
                         offset.vx = collide->xpos;
                         offset.vy = collide->ypos;
                         offset.vz = collide->zpos;
-                        gte_SetRotMatrix(&D_000A6E8C[-cop->yang & 0x3f]);
+                        gte_SetRotMatrix(&matrixtable[-cop->yang & 0x3f]);
                         func_0004EAC0(&offset);
                         bbox.pos.vx = cop->vx + offset.vx;
                         bbox.pos.vy = cop->vy + offset.vy;
@@ -222,7 +222,7 @@ void func_0004AD94(int car)
                         break;
                     }
                     if (car == 0x19) {
-                        if (D_000A0E20[cop->type]->flags2 & 0xA00)
+                        if (modelpointers[cop->type]->flags2 & 0xA00)
                             goto next;
                         if (bbox.xsize > 100 || bbox.zsize > 100) {
                             bbox.xsize += 100;
@@ -238,8 +238,8 @@ void func_0004AD94(int car)
                                     cam_dist -= D_000974AC;
                                     if (cam_dist < 0x104)
                                         cam_dist = 0x104;
-                                    cp->where[0] = x0 + ((cam_dist * D_0008EAA8[(cp->direction & 0xfff) * 2] / 2 + 0x800) >> 12);
-                                    cp->where[2] = z0 + ((cam_dist * D_0008EAA8[(cp->direction & 0xfff) * 2 + 1] / 2 + 0x800) >> 12);
+                                    cp->where[0] = x0 + ((cam_dist * rcossin_tbl[(cp->direction & 0xfff) * 2] / 2 + 0x800) >> 12);
+                                    cp->where[2] = z0 + ((cam_dist * rcossin_tbl[(cp->direction & 0xfff) * 2 + 1] / 2 + 0x800) >> 12);
                                     count--;
                                     if (cam_dist < 0x104)
                                         goto next;
@@ -248,7 +248,7 @@ void func_0004AD94(int car)
                             }
                         }
                     } else {
-                        if (D_000974B0 < 60 && !(D_000A0E20[cop->type]->flags2 & 0x800)) {
+                        if (D_000974B0 < 60 && !(modelpointers[cop->type]->flags2 & 0x800)) {
                             D_000BC004[D_000974B0] = bbox;
                             D_000BBF14[D_000974B0] = cop;
                                 D_000974B0++;
@@ -283,7 +283,7 @@ void func_0004AD94(int car)
                     cam_dist -= D_000974AC;
                     if (cam_dist < 0x104)
                         cam_dist = 0x104;
-                    cp->where[0] = x0 + ((cam_dist * D_0008EAA8[(cp->direction & 0xfff) * 2] / 2 + 0x800) >> 12);
+                    cp->where[0] = x0 + ((cam_dist * rcossin_tbl[(cp->direction & 0xfff) * 2] / 2 + 0x800) >> 12);
                     cp->where[2] = z0 + ((cam_dist * D_0008EAAA[(cp->direction & 0xfff) * 2] / 2 + 0x800) >> 12);
                     count--;
                     if (cam_dist < 0x104)
@@ -292,7 +292,7 @@ void func_0004AD94(int car)
             }
         }
         if (D_000974AC == -1 && cam_dist < *(int *)&D_00096A64 &&
-            (!*(int *)&D_0009687C || !*(unsigned char *)&D_00096899)) {
+            (!*(int *)&pauseflag || !*(unsigned char *)&D_00096899)) {
             int ox = cp->where[0];
             int oz = cp->where[2];
             step = 10;
@@ -301,8 +301,8 @@ void func_0004AD94(int car)
             cam_dist += step;
             if (cam_dist > *(int *)&D_00096A64)
                 cam_dist = *(int *)&D_00096A64;
-            cp->where[0] = D_0009B0A4[0].where[0] + ((cam_dist * D_0008EAA8[(cp->direction & 0xfff) * 2] / 2 + 0x800) >> 12);
-            cp->where[2] = D_0009B0A4[0].where[2] + ((cam_dist * D_0008EAA8[(cp->direction & 0xfff) * 2 + 1] / 2 + 0x800) >> 12);
+            cp->where[0] = car_data[0].where[0] + ((cam_dist * rcossin_tbl[(cp->direction & 0xfff) * 2] / 2 + 0x800) >> 12);
+            cp->where[2] = car_data[0].where[2] + ((cam_dist * rcossin_tbl[(cp->direction & 0xfff) * 2 + 1] / 2 + 0x800) >> 12);
             bb = D_000BC004;
             for (pi = 0; pi < D_000974B0; pi++, bb++) {
                 if (bb->xsize && CarBuildingCollision(cp, bb, D_000BBF14[pi])) {

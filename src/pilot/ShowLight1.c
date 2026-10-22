@@ -5,9 +5,9 @@ typedef struct { unsigned char *primptr; unsigned long **ot; } DB;
 typedef struct { unsigned long tag; unsigned char r0, g0, b0, code; short x0, y0; unsigned char u0, v0; unsigned short clut;
   short x1, y1; unsigned char u1, v1; unsigned short tpage; short x2, y2; unsigned char u2, v2; unsigned short pad2;
   short x3, y3; unsigned char u3, v3; unsigned short pad3; } PFT4;
-extern long long D_00097530;
-#define current (*(DB **)&D_00097530)
-extern int D_00097480;
+extern long long current;
+#define current (*(DB **)&current)
+extern int LightSortCorrect;
 
 #define ldv3() __asm__ volatile("lwc2 $0,%0;lwc2 $1,%1;lwc2 $2,%2;lwc2 $3,%3;lwc2 $4,%4;lwc2 $5,%5" : : "m"(vert[0].vx),"m"(vert[0].vz),"m"(vert[1].vx),"m"(vert[1].vz),"m"(vert[2].vx),"m"(vert[2].vz))
 #define rtpt() __asm__ volatile("nop;nop;rtpt")
@@ -57,7 +57,7 @@ void ShowLight1(void *v1, unsigned char *col, short size, TD *texture) {
         rtps();
         poly->tpage = texture->tpageid | 0x20;
         poly->clut = texture->clutid;
-        z = (z >> 3) + D_00097480;
+        z = (z >> 3) + LightSortCorrect;
         if (z < 0) z = 0;
         stsxy(&poly->x3);
         poly->tag = (poly->tag & 0xff000000) | ((unsigned long)current->ot[z] & 0xffffff);

@@ -4,8 +4,8 @@
     "swc2  $19, 0( %0 )" : : "r"(r0) : "memory")
 
 typedef struct { char *primptr; unsigned int *ot; } DB;
-extern long long D_00097530;
-#define current (*(DB **)&D_00097530)
+extern long long current;
+#define current (*(DB **)&current)
 typedef struct { short vx, vy, vz, pad; } SVEC;
 typedef struct { int vx, vy, vz, pad; } VEC;
 typedef struct { short m[3][3]; int t[3]; } MAT;
@@ -19,7 +19,7 @@ typedef struct {
     short x2, y2;
 } PG3;
 
-extern VEC D_0008A8F0;
+extern VEC camera_position;
 extern MAT D_000B8FE8;
 extern int func_000398B0();
 extern int func_0002C5F0();
@@ -53,9 +53,9 @@ void func_00057510(VEC *pos)
     v[2].vx = 150;
     v[2].vy = -300;
     v[2].vz = 0;
-    t.vy = -MapHeight(pos) - D_0008A8F0.vy;
-    t.vx = pos->vx - D_0008A8F0.vx;
-    t.vz = pos->vz - D_0008A8F0.vz;
+    t.vy = -MapHeight(pos) - camera_position.vy;
+    t.vx = pos->vx - camera_position.vx;
+    t.vz = pos->vz - camera_position.vz;
     func_0002C564(&t);
     vp = v;
     poly = (PG3 *)current->primptr;

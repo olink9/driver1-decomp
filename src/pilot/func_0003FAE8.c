@@ -1,5 +1,5 @@
 typedef struct { char pad0[0x114]; int dmg[6]; char pad1[0x12E - 0x12C]; unsigned char mode; char pad2[0x17C - 0x12F]; short total; } CP;
-extern CP D_0009B0A4;
+extern CP car_data;
 extern long long D_000977B0, D_00096870;
 extern char D_000C6F00[];
 
@@ -8,7 +8,7 @@ void func_0003FAE8(CP *cp, signed char zone, int damage, unsigned char flag)
     int *dp;
 
     dp = &cp->dmg[zone];
-    if (cp == &D_0009B0A4) {
+    if (cp == &car_data) {
         D_000C6F00[0] = 1;
         damage = (damage * *(int *)&D_000977B0 + 0x800) >> 12;
     }

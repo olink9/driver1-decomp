@@ -142,3 +142,6 @@ func_0005DB30	DrawAllCivs	low confidence: b129 (no Driver 2 match in queue.tsv/d
 func_0001F490	ConvertTorqueToAngularAcceleration	low confidence: b130 (no Driver 2 match in queue.tsv/d2map.tsv, no unqualified confirmation)
 func_0004D208	InitMusic	low confidence: r3-09 (no Driver 2 match in queue.tsv/d2map.tsv, no unqualified confirmation)
 func_00037C9C	wjmDraw4	name not found in the Driver 2 debug symbols or REDRIVER2 source; unverifiable
+D_000970D8	VSyncCounter	data pass 2026-10-23: rejected, guess (b060 "data guess"), no Driver 2 symbol; same address named CameraCnt from the D2 symbols
+D_00096A60	camera distance	data pass 2026-10-23: rejected, a description not an identifier, one batch; D2 has gCameraDistance/maxCameraDist but nothing ties either to this address
+D_000BC004	building box list [60]	data pass 2026-10-23: rejected, a description not an identifier, one batch, no Driver 2 symbol

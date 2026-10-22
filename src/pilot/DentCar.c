@@ -21,7 +21,7 @@ typedef struct {
     char pad2[80 - 0x11];
 } CAR_INFO;
 
-extern CAR_DATA D_0009B0A4[];
+extern CAR_DATA car_data[];
 extern CAR_INFO D_00098950[];
 extern long long D_0009683C;
 extern MODEL *D_000A1AD0[];
@@ -73,7 +73,7 @@ void DentCar(int id)
     VertPtr = D_000B09BC[id];
 
     for (Zone = 0; Zone < 6; Zone++) {
-        Damage = D_0009B0A4[id].damage[Zone];
+        Damage = car_data[id].damage[Zone];
         if (Damage > MaxDamage)
             MaxDamage = Damage;
 
@@ -111,7 +111,7 @@ void DentCar(int id)
         DamPtr[c2] = 0;
 
     for (Zone = 0; Zone < 6; Zone++) {
-        Damage = D_0009B0A4[id].damage[Zone] >> 10;
+        Damage = car_data[id].damage[Zone] >> 10;
 
         for (c3 = 0; c3 < 70; c3++) {
             if (id == 0)

@@ -1,12 +1,12 @@
 extern long long D_00096898, D_00096899, D_000BEED8;
 #define B98 (*(unsigned char *)&D_00096898)
 #define B99 (*(unsigned char *)&D_00096899)
-extern int D_0009761C, D_00097670, D_00097614, D_00097664, D_0009766C;
+extern int DirectorMenuActive, D_00097670, D_00097614, D_00097664, D_0009766C;
 extern char D_00096DA0, D_00097660;
-extern int D_00096DC8, D_00097668, D_0009765C, D_00097608, D_00096DCC, D_00097618;
-extern int D_00096DE0, D_00096DDC, D_00096DD8, D_00096DA8, D_0009762C, D_00097648, D_00097624;
+extern int D_00096DC8, ReplayParameterPtr, D_0009765C, D_00097608, D_00096DCC, D_00097618;
+extern int D_00096DE0, D_00096DDC, D_00096DD8, D_00096DA8, D_0009762C, D_00097648, CursorX;
 extern short D_00097634;
-extern int D_00097620, D_00096DB4;
+extern int D_00097620, LastChange;
 extern char D_00097654[3];
 extern int D_000BEED4[];
 extern int D_000BEEE0[];
@@ -20,7 +20,7 @@ void func_00058814(void)
     unsigned char c;
     int e8;
 
-    D_0009761C = 1;
+    DirectorMenuActive = 1;
     D_00096DA0 = 1;
     D_00097670 = base;
     D_00097614 = 0;
@@ -43,7 +43,7 @@ void func_00058814(void)
     base += 0x2328;
     D_00096DC8 = base;
     base += 0x640;
-    D_00097668 = base;
+    ReplayParameterPtr = base;
     base += 0x14;
     D_0009765C = base;
     base += 0x258;
@@ -62,7 +62,7 @@ void func_00058814(void)
     D_0009762C = 150;
     D_00097634 = 0;
     D_00097648 = 0;
-    D_00097624 = 0;
+    CursorX = 0;
     if ((unsigned)(B98 - 7) < 2) {
         D_00097620 = 150;
     } else {
@@ -75,5 +75,5 @@ void func_00058814(void)
         for (i = 23; i >= 0; i--)
             *p-- = 0;
     }
-    D_00096DB4 = 0;
+    LastChange = 0;
 }

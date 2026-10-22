@@ -26,7 +26,7 @@ typedef struct {
     char pad[0x50 - 2];
 } ENT50;
 
-extern CAR_DATA D_0009B0A4[];
+extern CAR_DATA car_data[];
 extern BOUND_BOX D_0009ACAC[];
 extern ENT50 D_00098950[];
 extern long long D_00096898;
@@ -42,7 +42,7 @@ void CheckCarToCarCollisions(void)
     CAR_DATA *cp;
     BOUND_BOX *bb, *bb1, *bb2;
 
-    cp = D_0009B0A4;
+    cp = car_data;
     if (*(unsigned char *)&D_00096898 == 3 || *(unsigned char *)&D_00096898 == 6)
         cp[23].mayBeColliding = 1;
 
@@ -88,8 +88,8 @@ void CheckCarToCarCollisions(void)
                 bb1->z0 < bb2->z1 && bb1->y1 > bb2->y0 && bb1->y0 < bb2->y1 &&
                 (loop1 == 0 || D_00098950[loop1 - 1].active != 0) &&
                 D_00098950[loop2 - 1].active != 0) {
-                D_0009B0A4[loop1].mayBeColliding = 1;
-                D_0009B0A4[loop2].mayBeColliding = 1;
+                car_data[loop1].mayBeColliding = 1;
+                car_data[loop2].mayBeColliding = 1;
             }
             loop2++;
             bb2++;

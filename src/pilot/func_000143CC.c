@@ -19,7 +19,7 @@ extern int D_00096FD8;
 extern long long D_000967A8;
 extern long long D_00097044;
 extern long long D_00097374;
-extern int D_0009B0A4[];
+extern int car_data[];
 extern int D_0009E714[];
 extern short *D_0009E724[];
 extern int *D_0009D8F4[];
@@ -54,11 +54,11 @@ void func_000143CC(void)
     D_00096FD4 = 0;
     D_00096FD8 = 0;
     if (D_00096780 != 0 || D_0009677C != 0) {
-        cx = (D_0009B0A4[0x245C / 4] + D_0009E714[0] * 750) / 1500;
-        cz = (D_0009E714[1] * 750 - D_0009B0A4[0x2464 / 4]) / 1500;
+        cx = (car_data[0x245C / 4] + D_0009E714[0] * 750) / 1500;
+        cz = (D_0009E714[1] * 750 - car_data[0x2464 / 4]) / 1500;
     } else {
-        cx = (D_0009B0A4[0xC8 / 4] + D_0009E714[0] * 750) / 1500;
-        cz = (D_0009E714[1] * 750 - D_0009B0A4[0xD0 / 4]) / 1500;
+        cx = (car_data[0xC8 / 4] + D_0009E714[0] * 750) / 1500;
+        cz = (D_0009E714[1] * 750 - car_data[0xD0 / 4]) / 1500;
     }
     for (i = 0; i < 120; i++, ofs += 2) {
         x = cx + ofs[0];

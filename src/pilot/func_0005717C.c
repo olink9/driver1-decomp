@@ -1,8 +1,8 @@
 #include "common.h"
 
 typedef struct { char *primptr; unsigned long *ot; } DB;
-extern long long D_00097530;
-#define current (*(DB **)&D_00097530)
+extern long long current;
+#define current (*(DB **)&current)
 
 typedef struct {
     unsigned char u0, v0, u1, v1, u2, v2, u3, v3;

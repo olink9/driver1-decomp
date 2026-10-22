@@ -2,15 +2,15 @@
 typedef struct { int x, y, z, w; } V;
 typedef struct { int x, y, z; unsigned char pad, rot; } O;
 struct L { int a, b, c, d, id; char e, g, set; char f; };
-extern int D_0008A8F0[];
+extern int camera_position[];
 extern int D_0008A8F4[];
 extern long long D_00096C48, D_00096C4A;
-extern long long D_00096850;
+extern long long gNight;
 extern long long D_00096834;
-extern int D_00097480;
+extern int LightSortCorrect;
 extern int D_00097464;
 extern int D_00097448;
-extern struct L D_000B738C[];
+extern struct L Known_Lamps[];
 extern int D_000BBDD0[];
 extern int D_000B9170[];
 extern int D_000B9230[];
@@ -24,8 +24,8 @@ static inline int find_lamp_streak(int id)
 {
     int i;
     for (i = 0; i < 20; i++) {
-        if (D_000B738C[i].id == id) {
-            D_000B738C[i].set = 1;
+        if (Known_Lamps[i].id == id) {
+            Known_Lamps[i].set = 1;
             return i;
         }
     }
@@ -65,20 +65,20 @@ void func_0004343C(O *o, int a1, int a2, int a3, int flags)
 
     switch ((o->rot + 8) >> 4) {
     case 0:
-        pos.x = o->x - D_0008A8F0[0] + a1;
-        pos.z = o->z - D_0008A8F0[2] + a3;
+        pos.x = o->x - camera_position[0] + a1;
+        pos.z = o->z - camera_position[2] + a3;
         break;
     case 1:
-        pos.x = o->x - D_0008A8F0[0] + a3;
-        pos.z = o->z - D_0008A8F0[2] - a1;
+        pos.x = o->x - camera_position[0] + a3;
+        pos.z = o->z - camera_position[2] - a1;
         break;
     case 2:
-        pos.x = o->x - D_0008A8F0[0] - a1;
-        pos.z = o->z - D_0008A8F0[2] - a3;
+        pos.x = o->x - camera_position[0] - a1;
+        pos.z = o->z - camera_position[2] - a3;
         break;
     case 3:
-        pos.x = o->x - D_0008A8F0[0] - a3;
-        pos.z = o->z - D_0008A8F0[2] + a1;
+        pos.x = o->x - camera_position[0] - a3;
+        pos.z = o->z - camera_position[2] + a1;
         break;
     }
     angx = ((*(short *)&D_00096C48 + 0x800) & 0xFFF) - 0x800;
@@ -111,7 +111,7 @@ void func_0004343C(O *o, int a1, int a2, int a3, int flags)
             col2[0] = col[0];
             col2[2] = col[2];
             col2[1] = col[1];
-            D_00097480 = -140;
+            LightSortCorrect = -140;
             D_00097464 = find_lamp_streak((int)o + a1 + a2);
             if (D_00097464 >= 0)
                 col[3] = 0x20;
@@ -121,13 +121,13 @@ void func_0004343C(O *o, int a1, int a2, int a3, int flags)
             col[0] >>= 1;
             col[2] >>= 1;
             col[1] >>= 1;
-            if (*(int *)&D_00096850 || *(int *)&D_00096834 == 3)
+            if (*(int *)&gNight || *(int *)&D_00096834 == 3)
                 ShowFlare(&pos, col, 300, ((angx + angy + (pos.x + pos.z)) >> 3) & 0x1FFE);
         }
         v2.y = -MapHeight(&pos) - D_0008A8F4[0];
-        if (*(int *)&D_00096850)
+        if (*(int *)&gNight)
             RoundShadow(&v2, col3, 400);
         DisplayLightReflections(&v2, col, 100, D_000B9230);
-        D_00097480 = -10;
+        LightSortCorrect = -10;
     }
 }

@@ -1,7 +1,7 @@
 /* ShowIcons (Driver 2, director.c) */
 typedef struct { char *primptr; unsigned int *ot; } DB;
-extern long long D_00097530;
-#define current (*(DB **)&D_00097530)
+extern long long current;
+#define current (*(DB **)&current)
 typedef struct { unsigned addr:24; unsigned len:8; } P_TAG;
 
 typedef struct {
@@ -42,18 +42,18 @@ typedef struct {
 
 typedef struct { int RecordingEnd; } REPLAY_PARAMETER_BLOCK;
 
-extern REPLAY_PARAMETER_BLOCK *D_00097668;
-extern long long D_000970D8;
-#define CameraCnt (*(int *)&D_000970D8)
+extern REPLAY_PARAMETER_BLOCK *ReplayParameterPtr;
+extern long long CameraCnt;
+#define CameraCnt (*(int *)&CameraCnt)
 extern int D_0009760C;
-extern long long D_00097540;
-#define vblcounter (*(int *)&D_00097540)
-extern int D_00096DA4, D_00096DC4, D_00096DA8, D_00097604;
+extern long long vblcounter;
+#define vblcounter (*(int *)&vblcounter)
+extern int D_00096DA4, FastForward, D_00096DA8, D_00097604;
 extern unsigned char D_000BEEBC[];
 extern unsigned char D_000BEEC3[];
 extern unsigned char D_000BEECE[];
 extern long long D_00096F1C;
-extern unsigned char D_00097658;
+extern unsigned char tracking_car;
 extern REPLAY_ICON D_0008B528[];
 
 extern int NoMoreCamerasErrorMessage();
@@ -77,11 +77,11 @@ void ShowIcons(unsigned char *menu, int selected, int x_offset)
     count = 0;
     x_offset++;
 
-    if (CameraCnt >= D_00097668->RecordingEnd) {
+    if (CameraCnt >= ReplayParameterPtr->RecordingEnd) {
         if (D_0009760C == 0)
             D_0009760C = vblcounter;
         D_00096DA4 = 0;
-        D_00096DC4 = 0;
+        FastForward = 0;
         D_000BEEBC[8] = 1;
         D_000BEEBC[5] = 1;
         D_000BEEBC[4] = 1;
@@ -105,7 +105,7 @@ void ShowIcons(unsigned char *menu, int selected, int x_offset)
     else
         D_000BEEC3[0] = 0;
 
-    if (D_00097658 && OK_To_Zoom())
+    if (tracking_car && OK_To_Zoom())
         D_000BEECE[0] = 0;
     else
         D_000BEECE[0] = 1;
@@ -195,6 +195,6 @@ void ShowIcons(unsigned char *menu, int selected, int x_offset)
 
     if (D_00096DA4) {
         if (--D_00096DA4 == 0)
-            D_00096DC4 = 1;
+            FastForward = 1;
     }
 }

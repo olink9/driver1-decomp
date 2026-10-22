@@ -12,7 +12,7 @@ typedef struct {
     char pad[0xE];
     unsigned short fE;
 } CO;
-extern M *D_000A0E20[];
+extern M *modelpointers[];
 extern AO *D_0008AE3C[];
 extern long long D_00096834;
 extern int D_000975AC;
@@ -27,7 +27,7 @@ void DrawAnimatingObject(int a0, CO *cop)
 
     M *model;
     aop = D_0008AE3C[*(int *)&D_00096834];
-    model = D_000A0E20[cop->fE];
+    model = modelpointers[cop->fE];
     type = model->f4 == -1 ? cop->fE : model->f4;
     for (loop = 0; loop < D_000975AC; loop++, aop++) {
         if (type == aop->f4) {

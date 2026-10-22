@@ -3,9 +3,9 @@ typedef struct { int x, y; } XP;
 typedef struct { unsigned long *ot; } DBX;
 typedef struct { char *primptr; unsigned long *ot; } DBY;
 extern XP D_0008B218[];
-extern long long D_00097530;
-extern long long D_00096850;
-#define current (*(DBY **)&D_00097530)
+extern long long current;
+extern long long gNight;
+#define current (*(DBY **)&current)
 extern void DrawPrim();
 
 /* DrawN */
@@ -29,7 +29,7 @@ void DrawN(VECTOR *pScreenPosition, int direct)
 		lastPoint.y = pPoint->y + pScreenPosition->vz;
 		linef2->x1 = lastPoint.x;
 		linef2->y1 = lastPoint.y;
-		if (*(int *)&D_00096850) {
+		if (*(int *)&gNight) {
 			linef2->r0 = 75; linef2->g0 = 75; linef2->b0 = 75;
 		} else {
 			linef2->r0 = 96; linef2->g0 = 96; linef2->b0 = 96;

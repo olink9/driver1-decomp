@@ -1,7 +1,7 @@
 /* PlacePoolForCar (Driver 2 DEBRIS.C): car headlight / brake light pools */
 typedef struct { char *primptr; unsigned int *ot; } DB;
-extern long long D_00097530;
-#define current (*(DB **)&D_00097530)
+extern long long current;
+#define current (*(DB **)&current)
 
 typedef struct { short vx, vy, vz, pad; } SVECTOR;
 typedef struct { int vx, vy, vz, pad; } VECTOR;
@@ -40,22 +40,22 @@ typedef struct {
 
 typedef struct { unsigned char v; char pad[7]; } B8;
 
-extern CAR_DATA D_0009B0A4[];
+extern CAR_DATA car_data[];
 extern MATRIX D_000AF6A0[];
-extern B8 D_00096897;
+extern B8 cameraview;
 extern long long D_0009688C;
-extern VECTOR D_0008A8F0;
+extern VECTOR camera_position;
 extern int D_0008A8F4[];
-extern int D_00097480;
+extern int LightSortCorrect;
 extern short D_00097484;
 extern unsigned char D_00097458;
 extern unsigned char D_00097460;
 extern long long D_0009717C;
-extern MATRIX D_000BBE84;
+extern MATRIX inv_camera_matrix;
 extern VECTOR D_0008909C;
 extern MATRIX D_000890BC;
 extern TEXINF D_000B91E0;
-extern char D_0008A73C[];
+extern char PoolPrimData[];
 
 extern void SetRotMatrix();
 extern void func_0004EAC0();
@@ -107,10 +107,10 @@ void PlacePoolForCar(int idx, CVECTOR *col, int front)
     POLY_FT4 *poly;
     char *VertIdx;
 
-    cp = &D_0009B0A4[idx];
+    cp = &car_data[idx];
     in_car = 0;
     sub_level = 0;
-    if (D_00096897.v == 2)
+    if (cameraview.v == 2)
         in_car = (idx == *(int *)&D_0009688C);
 
     if (front) {
@@ -139,7 +139,7 @@ void PlacePoolForCar(int idx, CVECTOR *col, int front)
             s1[9].vz = -540;
             s1[11].vx = 120;
             s1[11].vz = -540;
-            D_00097480 = -800;
+            LightSortCorrect = -800;
             sub_level = 3;
         } else {
             s1[0].vx = 200;
@@ -166,7 +166,7 @@ void PlacePoolForCar(int idx, CVECTOR *col, int front)
             s1[9].vz = -550;
             s1[11].vx = 120;
             s1[11].vz = -550;
-            D_00097480 = -90;
+            LightSortCorrect = -90;
             sub_level = 3;
         }
     } else {
@@ -199,8 +199,8 @@ void PlacePoolForCar(int idx, CVECTOR *col, int front)
         func_0004EAC0(ptr1);
         toss.vx = ptr1->vx + cp->t[0];
         toss.vz = ptr1->vz + cp->t[2];
-        ptr->vx = toss.vx - D_0008A8F0.vx;
-        ptr->vz = toss.vz - D_0008A8F0.vz;
+        ptr->vx = toss.vx - camera_position.vx;
+        ptr->vz = toss.vz - camera_position.vz;
         averagepos.vx += ptr->vx;
         averagepos.vz += ptr->vz;
         temp_y = -MapHeight(&toss);
@@ -209,7 +209,7 @@ void PlacePoolForCar(int idx, CVECTOR *col, int front)
         s[i].vy = temp_y - D_0008A8F4[0];
     }
 
-    gte_SetRotMatrix(&D_000BBE84);
+    gte_SetRotMatrix(&inv_camera_matrix);
     gte_SetTransVector(&D_0008909C);
 
     switch (sub_level) {
@@ -255,7 +255,7 @@ void PlacePoolForCar(int idx, CVECTOR *col, int front)
             gte_stsv(&sout[i]);
         }
         for (i = 0; i < 4; i++) {
-            VertIdx = D_0008A73C + i * 4;
+            VertIdx = PoolPrimData + i * 4;
             *(char **)&D_0009717C = current->primptr;
             SetRotMatrix(&D_000890BC);
             gte_SetTransVector(&D_0008909C);
@@ -275,5 +275,5 @@ void PlacePoolForCar(int idx, CVECTOR *col, int front)
         break;
     }
 
-    D_00097480 = -10;
+    LightSortCorrect = -10;
 }

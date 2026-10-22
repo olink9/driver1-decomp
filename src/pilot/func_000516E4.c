@@ -1,5 +1,5 @@
-extern short D_00086F30[];
-extern short D_00087030[][32];
+extern short texture_pages[];
+extern short texture_cluts[][32];
 extern int D_0009757C;
 extern void func_00035B5C();
 extern void func_00074404();
@@ -17,7 +17,7 @@ int func_000516E4(short *a0, short *a1, int a2, int *a3)
     for (i = 0; i < n; i++) {
         func_00074404(a1, a3);
         a3 += 8;
-        D_00087030[a2][i] = func_0007A7F4(a1[0], a1[1]);
+        texture_cluts[a2][i] = func_0007A7F4(a1[0], a1[1]);
         a1[0] += 16;
         if (a1[0] == 0x400) {
             a1[0] = 0x3C0;
@@ -30,7 +30,7 @@ int func_000516E4(short *a0, short *a1, int a2, int *a3)
     r[3] = 0x100;
     func_00035B5C(0xD0200, a3);
     func_00074404(r, 0xD0200);
-    D_00086F30[a2] = GetTPage(0, 0, a0[0], a0[1]);
+    texture_pages[a2] = GetTPage(0, 0, a0[0], a0[1]);
     a0[0] += 0x40;
     if (a0[0] == 0x400) {
         a0[0] = 0x200;

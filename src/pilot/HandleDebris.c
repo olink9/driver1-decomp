@@ -56,27 +56,27 @@ typedef struct { short type; short height; short objectAngle; short pad; } ROUTE
 typedef struct { unsigned short shape_flags; } MODEL;
 typedef struct { short m[3][3]; int t[3]; } MATRIX;
 
-extern short D_0008EAA8[];         /* rcossin_tbl */
+extern short rcossin_tbl[];         /* rcossin_tbl */
 extern long long D_00096854;
-extern long long D_0009687C;       /* pauseflag */
+extern long long pauseflag;       /* pauseflag */
 extern unsigned char D_00096AA8;
 extern unsigned char D_00096AA9;
 extern int D_00096AB0;             /* variable_weather */
-extern int D_00096C3C;             /* weather_level */
-extern long long D_000970D8;       /* CameraCnt */
+extern int weather_level;             /* weather_level */
+extern long long CameraCnt;       /* CameraCnt */
 extern int D_00097414;             /* next_debris */
 extern int D_0009742C;             /* next_smoke */
 extern int D_00097430;             /* next_leaf */
 extern int D_00097488;             /* main_cop_light_pos */
-extern MODEL *D_000A0E20[];        /* modelpointers */
+extern MODEL *modelpointers[];        /* modelpointers */
 extern LEAF D_000B7584[];          /* leaf */
 extern short D_000B7EC8[];         /* leaf_alloc */
 extern MATRIX D_000B8FE8;
 extern short D_000B9048[];         /* debris_alloc */
 extern SMOKE D_000B92A0[];         /* smoke */
-extern DEBRIS D_000BABC0[];        /* debris */
+extern DEBRIS debris[];        /* debris */
 extern short D_000BB530[];         /* smoke_alloc */
-extern MATRIX D_000BBE84;          /* inv_camera_matrix */
+extern MATRIX inv_camera_matrix;          /* inv_camera_matrix */
 
 extern void ROADS_GetRouteData();
 extern void MoveHubcap();
@@ -89,7 +89,7 @@ extern void DisplaySmoke();
 extern void memset();
 extern void SetRotMatrix();
 
-#define pauseflag (*(int *)&D_0009687C)
+#define pauseflag (*(int *)&pauseflag)
 
 void HandleDebris(void)
 {
@@ -109,12 +109,12 @@ void HandleDebris(void)
     GetSmokeDrift(&Drift);
     MoveHubcap();
     func_00041690();
-    SetRotMatrix(&D_000BBE84);
+    SetRotMatrix(&inv_camera_matrix);
     gte_SetTransVec0(&dummy);
 
     if (D_00097414 != 0) {
         count = D_00097414;
-        lpDebris = D_000BABC0;
+        lpDebris = debris;
         if (pauseflag != 0) {
             do {
                 if (lpDebris->flags & 2) {
@@ -171,10 +171,10 @@ void HandleDebris(void)
                             lpLeaf->sin_index2 += lpLeaf->sin_addition2;
                             lpLeaf->sin_index1 &= 0xfff;
                             lpLeaf->sin_index2 &= 0xfff;
-                            sn1 = D_0008EAA8[(lpLeaf->sin_index1 & 0xfff) * 2];
-                            sn2 = D_0008EAA8[(lpLeaf->sin_index2 & 0xfff) * 2];
-                            cs1 = D_0008EAA8[(lpLeaf->sin_index1 & 0xfff) * 2 + 1];
-                            cs2 = D_0008EAA8[(lpLeaf->sin_index2 & 0xfff) * 2 + 1];
+                            sn1 = rcossin_tbl[(lpLeaf->sin_index1 & 0xfff) * 2];
+                            sn2 = rcossin_tbl[(lpLeaf->sin_index2 & 0xfff) * 2];
+                            cs1 = rcossin_tbl[(lpLeaf->sin_index1 & 0xfff) * 2 + 1];
+                            cs2 = rcossin_tbl[(lpLeaf->sin_index2 & 0xfff) * 2 + 1];
                             SinX = sn1 + sn2;
                             CosX = cs1 + cs2;
                             lpLeaf->direction.vx = (SinX * 5) >> 11;
@@ -228,10 +228,10 @@ void HandleDebris(void)
                         ROUTE_DATA routeData;
                         ROADS_GetRouteData(smokeptr->position.vx - smokeptr->start_w,
                                       smokeptr->position.vz - smokeptr->start_w, &routeData);
-                        offshore = D_000A0E20[routeData.type]->shape_flags & 0x80;
+                        offshore = modelpointers[routeData.type]->shape_flags & 0x80;
                         ROADS_GetRouteData(smokeptr->position.vx + smokeptr->start_w,
                                       smokeptr->position.vz + smokeptr->start_w, &routeData);
-                        offshore &= D_000A0E20[routeData.type]->shape_flags & 0x80;
+                        offshore &= modelpointers[routeData.type]->shape_flags & 0x80;
                         if (smokeptr->start_w < 800 && offshore)
                             smokeptr->start_w += smokeptr->step;
                         else
@@ -282,15 +282,15 @@ void HandleDebris(void)
     D_00097488 = (D_00097488 + 1) & 7;
 
     if (D_00096AB0 != 0) {
-        D_00096C3C = D_0008EAA8[(*(int *)&D_000970D8 & 0xfff) * 2] +
-                     D_0008EAA8[((*(int *)&D_000970D8 >> 2) & 0xfff) * 2];
-        if (D_00096C3C > 0) {
-            D_00096AA8 = D_00096C3C >> 8;
+        weather_level = rcossin_tbl[(*(int *)&CameraCnt & 0xfff) * 2] +
+                     rcossin_tbl[((*(int *)&CameraCnt >> 2) & 0xfff) * 2];
+        if (weather_level > 0) {
+            D_00096AA8 = weather_level >> 8;
             D_00096AA9 = 0;
             if (D_00096AA8 > 180)
                 D_00096AA8 = 180;
         } else {
-            D_00096AA9 = -D_00096C3C >> 8;
+            D_00096AA9 = -weather_level >> 8;
             if (D_00096AA9 > 180)
                 D_00096AA9 = 180;
             D_00096AA8 = 0;

@@ -7,33 +7,33 @@ typedef struct {
     unsigned char Dolby;
 } XMCH;
 extern unsigned char D_00096FA8;
-extern XMCH *D_0009781C;
+extern XMCH *XMC;
 extern int D_00097820;
 extern int D_00097824;
 
 void DoDolbySS(void)
 {
     if (D_00096FA8 == 0) {
-        D_00097824 = (D_0009781C->OldLVol + D_0009781C->OldRVol) / 2;
+        D_00097824 = (XMC->OldLVol + XMC->OldRVol) / 2;
         D_00097820 = D_00097824;
         return;
     }
-    if (D_0009781C->Dolby == 1) {
-        D_00097824 = D_0009781C->OldLVol;
-        if (D_0009781C->OldRVol > D_0009781C->OldLVol) {
-            D_00097820 = -D_0009781C->OldRVol;
-            D_00097824 = D_0009781C->OldRVol;
+    if (XMC->Dolby == 1) {
+        D_00097824 = XMC->OldLVol;
+        if (XMC->OldRVol > XMC->OldLVol) {
+            D_00097820 = -XMC->OldRVol;
+            D_00097824 = XMC->OldRVol;
         } else
-            D_00097820 = -D_0009781C->OldRVol;
-    } else if (D_0009781C->Dolby == 2) {
-        D_00097820 = D_0009781C->OldLVol;
-        if (D_0009781C->OldRVol > D_0009781C->OldLVol) {
-            D_00097824 = -D_0009781C->OldRVol;
-            D_00097820 = D_0009781C->OldRVol;
+            D_00097820 = -XMC->OldRVol;
+    } else if (XMC->Dolby == 2) {
+        D_00097820 = XMC->OldLVol;
+        if (XMC->OldRVol > XMC->OldLVol) {
+            D_00097824 = -XMC->OldRVol;
+            D_00097820 = XMC->OldRVol;
         } else
-            D_00097824 = -D_0009781C->OldRVol;
+            D_00097824 = -XMC->OldRVol;
     } else {
-        D_00097824 = D_0009781C->OldLVol;
-        D_00097820 = D_0009781C->OldRVol;
+        D_00097824 = XMC->OldLVol;
+        D_00097820 = XMC->OldRVol;
     }
 }

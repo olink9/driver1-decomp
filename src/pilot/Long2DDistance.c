@@ -1,6 +1,6 @@
 /* Driver 2: Long2DDistance */
 typedef struct { int vx, vy, vz, pad; } VECTOR;
-extern short D_0008EAA8[];
+extern short rcossin_tbl[];
 extern short D_0008EAAA[];
 extern int ratan2();
 
@@ -27,7 +27,7 @@ int Long2DDistance(VECTOR *pPoint1, VECTOR *pPoint2)
         else
             result = (delta.vx << 12) / cos;
     } else {
-        int sin = D_0008EAA8[(theta & 4095) * 2];
+        int sin = rcossin_tbl[(theta & 4095) * 2];
         if (delta.vz > 0x7FFFF)
             result = (delta.vz << 9) / sin << 3;
         else

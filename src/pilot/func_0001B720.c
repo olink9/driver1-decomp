@@ -44,7 +44,7 @@ typedef struct {
     char pad4E[0x64 - 0x4E];
 } COS;
 
-extern COS D_0009AF04[];
+extern COS car_cosmetics[];
 extern long long D_00096858;
 extern COS D_000853D8[];
 extern CAR D_0009D438;
@@ -88,7 +88,7 @@ void func_0001B720(CAR *cp, int init)
     int i;
 
     i = cp->model;
-    dz = D_0009AF04[i].d0 + D_0009AF04[i].d1;
+    dz = car_cosmetics[i].d0 + car_cosmetics[i].d1;
     if (cp == &D_0009D438) {
         if (*(unsigned char *)&D_00096898 == 3 || *(unsigned char *)&D_00096898 == 6) {
             i = func_000525B8();

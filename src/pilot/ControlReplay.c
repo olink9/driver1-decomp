@@ -20,37 +20,37 @@ typedef struct { short v; short pad[3]; } S8;
 typedef struct { int vx, vy, vz, pad; } VEC;
 
 extern int D_0009763C;                  /* quick_replay */
-extern long long D_00096844;            /* AttractMode */
+extern long long AttractMode;            /* AttractMode */
 extern long long D_0009752C;            /* padd */
-extern long long D_000970D8;            /* CameraCnt */
-extern REPLAY_PARAMETER_BLOCK *D_00097668;  /* ReplayParameterPtr */
-extern volatile long long D_00097540;            /* vblcounter */
+extern long long CameraCnt;            /* CameraCnt */
+extern REPLAY_PARAMETER_BLOCK *ReplayParameterPtr;  /* ReplayParameterPtr */
+extern volatile long long vblcounter;            /* vblcounter */
 extern long long D_0009709C;
-extern long long D_0009687C;            /* pauseflag */
+extern long long pauseflag;            /* pauseflag */
 extern int D_0009760C;
 extern int D_00096E18;                  /* debounce */
 extern int D_00096E1C;                  /* first_time */
-extern int D_0009761C;                  /* DirectorMenuActive */
-extern int D_00096DC4, D_00096DA4;
+extern int DirectorMenuActive;                  /* DirectorMenuActive */
+extern int FastForward, D_00096DA4;
 extern int D_00096DA8;                  /* EditMode */
-extern PLAYBACKCAMERA *D_00096DB4;      /* LastChange */
+extern PLAYBACKCAMERA *LastChange;      /* LastChange */
 extern PLAYBACKCAMERA *D_00096DB0;      /* ThisChange */
 extern PLAYBACKCAMERA *D_00097608;      /* PlaybackCamera */
 extern long long D_00096A60, D_00096A64, D_00096A6C;
 extern VEC D_0008A1DC;                  /* gCameraOffset */
 extern int D_0008A1E0[];
-extern int D_0008A8F0[];                /* cameraPos */
+extern int camera_position[];                /* cameraPos */
 extern long long D_00096834;
-extern MODEL *D_000A0E20[];             /* modelpointers */
+extern MODEL *modelpointers[];             /* modelpointers */
 extern int D_0009B170[];
 extern int D_0009B16C[];
-extern CARP D_0009B0A4;
-extern unsigned char D_00097658;        /* tracking_car */
+extern CARP car_data;
+extern unsigned char tracking_car;        /* tracking_car */
 extern S8 D_00096C48, D_00096C4A, D_00096C4C;   /* camera_angle */
-extern short D_0008EAA8[];              /* rcossin_tbl */
-extern long long D_00096897;            /* cameraview */
-extern int D_00097624;                  /* CursorX */
-extern int D_00097628;                  /* CursorY */
+extern short rcossin_tbl[];              /* rcossin_tbl */
+extern long long cameraview;            /* cameraview */
+extern int CursorX;                  /* CursorX */
+extern int CursorY;                  /* CursorY */
 extern long long D_00096F1C;
 extern int D_00097650;                  /* MenuOffset */
 extern int D_00097618;                  /* PlayMode */
@@ -60,7 +60,7 @@ extern int D_0009764C;                  /* frame_advance_count */
 extern int D_00096DC0;                  /* editing_existing_camera */
 extern long long D_0009688C;
 extern int D_00097670;
-extern long long D_00097530, D_00097524;
+extern long long current, D_00097524;
 extern DB80 D_000BDFA4[];
 extern char D_00010E2C[];
 extern char D_00096E20[];
@@ -88,10 +88,10 @@ extern void func_0003A068();
 extern int printf();
 
 #define padd (*(short *)&D_0009752C)
-#define CameraCnt (*(int *)&D_000970D8)
-#define pauseflag (*(int *)&D_0009687C)
-#define CAMVIEW (*(unsigned char *)&D_00096897)
-#define current (*(DB80 **)&D_00097530)
+#define CameraCnt (*(int *)&CameraCnt)
+#define pauseflag (*(int *)&pauseflag)
+#define CAMVIEW (*(unsigned char *)&cameraview)
+#define current (*(DB80 **)&current)
 #define last (*(DB80 **)&D_00097524)
 
 static inline PLAYBACKCAMERA *FindFreeCamera(void)
@@ -108,10 +108,10 @@ static inline void setCameraInline(PLAYBACKCAMERA *Change)
     int pad = Change->apad;
     int x = Change->px;
     CAMVIEW = Change->cameraview & 7;
-    D_00097658 = (Change->cameraview & 8) >> 3;
-    D_0008A8F0[0] = x;
-    D_0008A8F0[1] = Change->py;
-    D_0008A8F0[2] = Change->pz;
+    tracking_car = (Change->cameraview & 8) >> 3;
+    camera_position[0] = x;
+    camera_position[1] = Change->py;
+    camera_position[2] = Change->pz;
     D_00096C48.v = Change->ax;
     D_00096C4A.v = Change->ay;
     D_00096C4C.v = Change->az;
@@ -124,11 +124,11 @@ static inline void setCameraInline(PLAYBACKCAMERA *Change)
 
 static inline void EditCamera(void)
 {
-    D_00096DB0 = D_00096DB4;
-    D_00096DB4->cameraview = (CAMVIEW & 7) | (D_00097658 << 3);
-    D_00096DB0->px = D_0008A8F0[0];
-    D_00096DB0->py = D_0008A8F0[1];
-    D_00096DB0->pz = D_0008A8F0[2];
+    D_00096DB0 = LastChange;
+    LastChange->cameraview = (CAMVIEW & 7) | (tracking_car << 3);
+    D_00096DB0->px = camera_position[0];
+    D_00096DB0->py = camera_position[1];
+    D_00096DB0->pz = camera_position[2];
     D_00096DB0->ax = D_00096C48.v;
     D_00096DB0->ay = D_00096C4A.v;
     D_00096DB0->az = D_00096C4C.v;
@@ -144,14 +144,14 @@ static inline void DeleteCurrentCamera(void)
     int prev;
     int next;
 
-    prev = D_00096DB4->prev;
-    next = D_00096DB4->next;
+    prev = LastChange->prev;
+    next = LastChange->next;
     if (prev != 0xFF) {
         D_00097608[prev].next = next;
         D_00097608[next].prev = prev;
-        D_00096DB4->FrameCnt = 100000;
+        LastChange->FrameCnt = 100000;
         setCamera(D_00097608 + prev);
-        D_00096DB4 = D_00097608 + prev;
+        LastChange = D_00097608 + prev;
     }
 }
 
@@ -161,9 +161,9 @@ void ControlReplay(void)
 
     move = 0;
 
-    if (D_0009763C || *(int *)&D_00096844) {
-        if ((padd != 0 || CameraCnt >= D_00097668->RecordingEnd) && CameraCnt > 2) {
-            D_0009760C = *(volatile int *)&D_00097540;
+    if (D_0009763C || *(int *)&AttractMode) {
+        if ((padd != 0 || CameraCnt >= ReplayParameterPtr->RecordingEnd) && CameraCnt > 2) {
+            D_0009760C = *(volatile int *)&vblcounter;
             *(int *)&D_0009709C = 4;
             pauseflag = 1;
         } else
@@ -188,11 +188,11 @@ void ControlReplay(void)
         D_00096E18 = 1;
     }
     if ((padd & 0x40) && D_00096E18 == 0) {
-        if (D_0009761C == 0)
+        if (DirectorMenuActive == 0)
             pauseflag = 1;
         else
             move = 5;
-        D_00096DC4 = 0;
+        FastForward = 0;
         D_00096DA4 = 0;
         D_00096E18 = 1;
     }
@@ -208,10 +208,10 @@ void ControlReplay(void)
 
         switch (D_00096DA8) {
         case 1:
-            if ((padd & 0x2000) && D_00096DB4->FrameCnt < CameraCnt)
-                D_00096DB4->FrameCnt++;
-            if ((padd & 0x8000) && D_00097608[D_00096DB4->prev].FrameCnt < D_00096DB4->FrameCnt)
-                D_00096DB4->FrameCnt--;
+            if ((padd & 0x2000) && LastChange->FrameCnt < CameraCnt)
+                LastChange->FrameCnt++;
+            if ((padd & 0x8000) && D_00097608[LastChange->prev].FrameCnt < LastChange->FrameCnt)
+                LastChange->FrameCnt--;
             break;
         case 2:
             if ((padd & 0x1000) && *(int *)&D_00096A60 > 1000) {
@@ -234,14 +234,14 @@ void ControlReplay(void)
                 ROUTE_DATA routeData;
                 int road_height;
 
-                road_height = -MapHeight(D_0008A8F0);
-                ROADS_GetRouteData(D_0008A8F0[0], D_0008A8F0[2], &routeData);
-                if (*(int *)&D_00096834 == 2 || (D_000A0E20[routeData.type]->flags2 & 0x100)) {
+                road_height = -MapHeight(camera_position);
+                ROADS_GetRouteData(camera_position[0], camera_position[2], &routeData);
+                if (*(int *)&D_00096834 == 2 || (modelpointers[routeData.type]->flags2 & 0x100)) {
                     int py = D_0009B170[0];
-                    D_0008A8F0[1] = D_0008A1DC.vy - py;
-                    if (D_0008A8F0[1] < road_height - 450) {
-                        D_0008A8F0[1] = road_height - 450;
-                        D_0008A1DC.vy = D_0008A8F0[1] + py;
+                    camera_position[1] = D_0008A1DC.vy - py;
+                    if (camera_position[1] < road_height - 450) {
+                        camera_position[1] = road_height - 450;
+                        D_0008A1DC.vy = camera_position[1] + py;
 
                     }
                 }
@@ -258,75 +258,75 @@ void ControlReplay(void)
             int dz;
             int height;
 
-            dx = D_0009B0A4.x - D_0008A8F0[0];
-            dz = D_0009B0A4.z - D_0008A8F0[2];
+            dx = car_data.x - camera_position[0];
+            dz = car_data.z - camera_position[2];
             z = x = 0;
-            old_camera.vx = D_0008A8F0[0];
-            old_camera.vz = D_0008A8F0[2];
-            old_camera.vy = D_0008A8F0[1];
+            old_camera.vx = camera_position[0];
+            old_camera.vz = camera_position[2];
+            old_camera.vy = camera_position[1];
             d = SquareRoot0(dx * dx + dz * dz);
-            if (D_00097658)
+            if (tracking_car)
                 angle = ratan2(dz, dx);
             else
                 angle = D_00096C4A.v;
 
-            if ((padd & 0x1000) && (D_00097658 == 0 || d > 500))
+            if ((padd & 0x1000) && (tracking_car == 0 || d > 500))
                 x = -speed * 16;
             if (padd & 0x4000)
                 x = speed * 16;
-            if ((padd & 0x8000) && (D_00097658 == 0 || d > 500))
+            if ((padd & 0x8000) && (tracking_car == 0 || d > 500))
                 z = -speed * 16;
             if (padd & 0x2000)
                 z = speed * 16;
 
-            if (D_00097658 == 0) {
+            if (tracking_car == 0) {
                 int t = x;
                 x = -z;
                 z = t;
             }
 
 
-            D_0008A8F0[0] += (z * D_0008EAA8[(angle & 0xfff) * 2]) >> 12;
-            D_0008A8F0[2] -= (z * D_0008EAA8[(angle & 0xfff) * 2 + 1]) >> 12;
-            D_0008A8F0[0] -= (x * D_0008EAA8[(angle & 0xfff) * 2 + 1]) >> 12;
-            D_0008A8F0[2] -= (x * D_0008EAA8[(angle & 0xfff) * 2]) >> 12;
+            camera_position[0] += (z * rcossin_tbl[(angle & 0xfff) * 2]) >> 12;
+            camera_position[2] -= (z * rcossin_tbl[(angle & 0xfff) * 2 + 1]) >> 12;
+            camera_position[0] -= (x * rcossin_tbl[(angle & 0xfff) * 2 + 1]) >> 12;
+            camera_position[2] -= (x * rcossin_tbl[(angle & 0xfff) * 2]) >> 12;
 
-            if (dist(D_0009B16C, D_0008A8F0) >= 19001) {
-                D_0008A8F0[0] = old_camera.vx;
-                D_0008A8F0[1] = old_camera.vy;
-                D_0008A8F0[2] = old_camera.vz;
+            if (dist(D_0009B16C, camera_position) >= 19001) {
+                camera_position[0] = old_camera.vx;
+                camera_position[1] = old_camera.vy;
+                camera_position[2] = old_camera.vz;
             } else {
                 if (CameraCollisionCheck()) {
                     z = z / speed * 20;
                     x = x / speed * 20;
-                    D_0008A8F0[1] = old_camera.vy;
-                    D_0008A8F0[0] = old_camera.vx + ((z * D_0008EAA8[(angle & 0xfff) * 2]) >> 12);
-                    D_0008A8F0[2] = old_camera.vz - ((z * D_0008EAA8[(angle & 0xfff) * 2 + 1]) >> 12);
-                    D_0008A8F0[0] -= (x * D_0008EAA8[(angle & 0xfff) * 2 + 1]) >> 12;
-                    D_0008A8F0[2] -= (x * D_0008EAA8[(angle & 0xfff) * 2]) >> 12;
+                    camera_position[1] = old_camera.vy;
+                    camera_position[0] = old_camera.vx + ((z * rcossin_tbl[(angle & 0xfff) * 2]) >> 12);
+                    camera_position[2] = old_camera.vz - ((z * rcossin_tbl[(angle & 0xfff) * 2 + 1]) >> 12);
+                    camera_position[0] -= (x * rcossin_tbl[(angle & 0xfff) * 2 + 1]) >> 12;
+                    camera_position[2] -= (x * rcossin_tbl[(angle & 0xfff) * 2]) >> 12;
                     if (CameraCollisionCheck()) {
-                        D_0008A8F0[0] = old_camera.vx;
-                        D_0008A8F0[2] = old_camera.vz;
+                        camera_position[0] = old_camera.vx;
+                        camera_position[2] = old_camera.vz;
                     }
                 }
             }
 
-            height = -MapHeight(D_0008A8F0);
+            height = -MapHeight(camera_position);
             if (padd & 4)
-                D_0008A8F0[1] -= speed * 16;
+                camera_position[1] -= speed * 16;
             if (padd & 1)
-                D_0008A8F0[1] += speed * 16;
-            if (D_0008A8F0[1] > height - 250)
-                D_0008A8F0[1] = height - 250;
-            if (D_0008A8F0[1] < height - 1500)
-                D_0008A8F0[1] = height - 1500;
+                camera_position[1] += speed * 16;
+            if (camera_position[1] > height - 250)
+                camera_position[1] = height - 250;
+            if (camera_position[1] < height - 1500)
+                camera_position[1] = height - 1500;
             {
                 ROUTE_DATA routeData;
 
-                ROADS_GetRouteData(D_0008A8F0[0], D_0008A8F0[2], &routeData);
-                if (*(int *)&D_00096834 == 2 || (D_000A0E20[routeData.type]->flags2 & 0x100)) {
-                    if (D_0008A8F0[1] < height - 450)
-                        D_0008A8F0[1] = height - 450;
+                ROADS_GetRouteData(camera_position[0], camera_position[2], &routeData);
+                if (*(int *)&D_00096834 == 2 || (modelpointers[routeData.type]->flags2 & 0x100)) {
+                    if (camera_position[1] < height - 450)
+                        camera_position[1] = height - 450;
                 }
             }
             if (CAMVIEW == 1 && OK_To_Zoom() == 0)
@@ -358,32 +358,32 @@ void ControlReplay(void)
 
     switch (move) {
     case 1:
-        D_00097624++;
-        if (CameraCnt >= D_00097668->RecordingEnd && D_0009761C == 1 && D_00097624 == 5)
-            D_00097624 = 7;
-        else if (FindFreeCamera() == 0 && D_0009761C == 1 && D_00097624 == 5)
-            D_00097624 = 6;
-        if (D_00097624 == 7 && D_0009761C == 1 && *(unsigned char *)&D_00096F1C)
-            D_00097624 = 8;
+        CursorX++;
+        if (CameraCnt >= ReplayParameterPtr->RecordingEnd && DirectorMenuActive == 1 && CursorX == 5)
+            CursorX = 7;
+        else if (FindFreeCamera() == 0 && DirectorMenuActive == 1 && CursorX == 5)
+            CursorX = 6;
+        if (CursorX == 7 && DirectorMenuActive == 1 && *(unsigned char *)&D_00096F1C)
+            CursorX = 8;
         break;
     case 2:
-        D_00097624--;
-        if (D_00097624 == 7 && D_0009761C == 1 && *(unsigned char *)&D_00096F1C)
-            D_00097624 = 6;
-        if (CameraCnt >= D_00097668->RecordingEnd && D_0009761C == 1 && D_00097624 == 6)
-            D_00097624 = 4;
-        else if (FindFreeCamera() == 0 && D_0009761C == 1 && D_00097624 == 5)
-            D_00097624 = 4;
+        CursorX--;
+        if (CursorX == 7 && DirectorMenuActive == 1 && *(unsigned char *)&D_00096F1C)
+            CursorX = 6;
+        if (CameraCnt >= ReplayParameterPtr->RecordingEnd && DirectorMenuActive == 1 && CursorX == 6)
+            CursorX = 4;
+        else if (FindFreeCamera() == 0 && DirectorMenuActive == 1 && CursorX == 5)
+            CursorX = 4;
         break;
     case 3:
-        D_00097628--;
-        if (FirstCamera() && D_0009761C == 2 && D_00097650 && D_00097628 == 5)
-            D_00097628 = 3;
+        CursorY--;
+        if (FirstCamera() && DirectorMenuActive == 2 && D_00097650 && CursorY == 5)
+            CursorY = 3;
         break;
     case 4:
-        D_00097628++;
-        if (FirstCamera() && D_0009761C == 2 && D_00097650 && D_00097628 == 4)
-            D_00097628 = 6;
+        CursorY++;
+        if (FirstCamera() && DirectorMenuActive == 2 && D_00097650 && CursorY == 4)
+            CursorY = 6;
         break;
     }
 
@@ -392,39 +392,39 @@ void ControlReplay(void)
 
     if (pauseflag != 0) {
     if (D_00096E1C) {
-        if (CameraCnt >= D_00097668->RecordingEnd && (D_00097624 < 4 || D_00097624 == 5))
-            D_00097624 = 4;
-        D_0009761C = 1;
+        if (CameraCnt >= ReplayParameterPtr->RecordingEnd && (CursorX < 4 || CursorX == 5))
+            CursorX = 4;
+        DirectorMenuActive = 1;
     }
     D_00096E1C = 0;
     D_00097678 = 0;
 
-    switch (D_0009761C) {
+    switch (DirectorMenuActive) {
     case 1:
-        D_00097628 = 0;
-        if (CameraCnt < D_00097668->RecordingEnd) {
-            if (D_00097624 < 0)
-                D_00097624 = 8;
-            if (D_00097624 > 8)
-                D_00097624 = 0;
+        CursorY = 0;
+        if (CameraCnt < ReplayParameterPtr->RecordingEnd) {
+            if (CursorX < 0)
+                CursorX = 8;
+            if (CursorX > 8)
+                CursorX = 0;
         } else {
-            if (D_00097624 < 4)
-                D_00097624 = 8;
-            if (D_00097624 > 8)
-                D_00097624 = 4;
+            if (CursorX < 4)
+                CursorX = 8;
+            if (CursorX > 8)
+                CursorX = 4;
         }
-        switch (D_00097624) {
+        switch (CursorX) {
         case 0:
-            if (move == 5 && CameraCnt < D_00097668->RecordingEnd) {
+            if (move == 5 && CameraCnt < ReplayParameterPtr->RecordingEnd) {
                 pauseflag = 0;
                 D_00097678 = 1;
                 D_00097618 = 0;
                 D_00097648 = 0;
-                *(int *)&D_00097540 = 0;
+                *(int *)&vblcounter = 0;
             }
             break;
         case 1:
-            if (move == 5 && CameraCnt < D_00097668->RecordingEnd) {
+            if (move == 5 && CameraCnt < ReplayParameterPtr->RecordingEnd) {
                 pauseflag = 0;
                 D_00097678 = 1;
                 D_00097618 = 0;
@@ -432,7 +432,7 @@ void ControlReplay(void)
             }
             break;
         case 2:
-            if (move == 5 && CameraCnt < D_00097668->RecordingEnd) {
+            if (move == 5 && CameraCnt < ReplayParameterPtr->RecordingEnd) {
                 D_00097678 = 1;
                 D_00097618 = 1;
                 pauseflag = 0;
@@ -441,7 +441,7 @@ void ControlReplay(void)
             }
             break;
         case 3:
-            if (CameraCnt < D_00097668->RecordingEnd) {
+            if (CameraCnt < ReplayParameterPtr->RecordingEnd) {
                 if (move == 5) {
                     D_00097618 = 2;
                     pauseflag = 0;
@@ -466,19 +466,19 @@ void ControlReplay(void)
             }
             break;
         case 5:
-            if (CameraCnt < D_00097668->RecordingEnd && move == 5) {
-                D_0009761C = 2;
+            if (CameraCnt < ReplayParameterPtr->RecordingEnd && move == 5) {
+                DirectorMenuActive = 2;
                 D_00097650 = 0;
                 D_00096DC0 = 0;
-                D_00097628++;
+                CursorY++;
             }
             break;
         case 6:
             if (move == 5) {
-                D_0009761C = 2;
+                DirectorMenuActive = 2;
                 D_00097650 = 40;
                 D_00096DC0 = 1;
-                D_00097628++;
+                CursorY++;
             }
             break;
         case 7:
@@ -511,25 +511,25 @@ void ControlReplay(void)
         }
         break;
     case 2:
-        D_00097624 = 5;
-        switch (D_00097628) {
+        CursorX = 5;
+        switch (CursorY) {
         case 0:
             if (D_00097650)
-                D_00097624 = 6;
-            D_0009761C = 1;
-            if (D_00096DB4)
-                setCameraInline(D_00096DB4);
+                CursorX = 6;
+            DirectorMenuActive = 1;
+            if (LastChange)
+                setCameraInline(LastChange);
             break;
         case 1:
             if (move == 5) {
-                D_0009761C = 3;
+                DirectorMenuActive = 3;
                 CAMVIEW = 2;
-                D_00097624++;
+                CursorX++;
             }
             break;
         case 2:
             if (move == 5) {
-                D_0009761C = 4;
+                DirectorMenuActive = 4;
                 *(int *)&D_00096A60 = 1600;
                 *(int *)&D_00096A64 = 1600;
                 *(int *)&D_00096A6C = 2048;
@@ -538,33 +538,33 @@ void ControlReplay(void)
                 CAMVIEW = 0;
                 D_0008A1DC.vz = -125;
 
-                D_00097624++;
+                CursorX++;
             }
             break;
         case 3:
             if (move == 5) {
                 if (CAMVIEW == 2) {
-                    D_0008A8F0[1] = -(D_0009B0A4.y + 500);
-                    D_0008A8F0[0] = D_0009B0A4.x;
-                    D_0008A8F0[2] = D_0009B0A4.z;
+                    camera_position[1] = -(car_data.y + 500);
+                    camera_position[0] = car_data.x;
+                    camera_position[2] = car_data.z;
                 }
                 if (CAMVIEW != 5 && CAMVIEW != 1)
                     CAMVIEW = 1;
-                D_0009761C = 5;
-                D_00097624++;
+                DirectorMenuActive = 5;
+                CursorX++;
             }
             break;
         case 4:
             if (D_00097650) {
-                if (D_00096DB4->prev != 0xFF && move == 5) {
+                if (LastChange->prev != 0xFF && move == 5) {
                     if (D_00096DA8) {
-                        int prev = D_00096DB4->prev;
-                        if (D_00096DB4->FrameCnt == D_00097608[prev].FrameCnt) {
+                        int prev = LastChange->prev;
+                        if (LastChange->FrameCnt == D_00097608[prev].FrameCnt) {
                             int pp = D_00097608[prev].prev;
                             printf(D_00096E20);
                             if (pp != 0xFF) {
-                                D_00097608[pp].next = D_00097608[D_00096DB4->prev].next;
-                                D_00096DB4->prev = pp;
+                                D_00097608[pp].next = D_00097608[LastChange->prev].next;
+                                LastChange->prev = pp;
                                 D_00097608[prev].FrameCnt = 100000;
                             }
                         }
@@ -575,27 +575,27 @@ void ControlReplay(void)
                 break;
             }
             if (move == 5) {
-                D_0009761C = 1;
+                DirectorMenuActive = 1;
                 if (D_00096DC0 == 0) {
                     RecordCamera(CameraCnt);
                     if (NoMoreCamerasErrorMessage())
-                        D_00097624 = 6;
+                        CursorX = 6;
                 } else
                     EditCamera();
             }
             break;
         case 5:
             if (move == 5) {
-                D_00097624 = 6;
+                CursorX = 6;
                 DeleteCurrentCamera();
                 if (FirstCamera)
-                    D_00097628 = 6;
+                    CursorY = 6;
             }
             break;
         case 6:
             if (move == 5) {
-                D_00097624 = 6;
-                D_0009761C = 1;
+                CursorX = 6;
+                DirectorMenuActive = 1;
                 if (D_00096DC0)
                     EditCamera();
                 else
@@ -604,32 +604,32 @@ void ControlReplay(void)
             break;
         }
         if (D_00097650) {
-            if (D_00097628 > 6)
-                D_00097628 = 6;
+            if (CursorY > 6)
+                CursorY = 6;
         } else {
-            if (D_00097628 > 4)
-                D_00097628 = 4;
+            if (CursorY > 4)
+                CursorY = 4;
         }
         break;
     case 3:
-        D_00097628 = 1;
-        switch (D_00097624 - 5) {
+        CursorY = 1;
+        switch (CursorX - 5) {
         case 0:
-            D_0009761C = 2;
+            DirectorMenuActive = 2;
             break;
         case 1:
             if (move == 5)
                 *(int *)&D_0009688C = SelectCameraCar(*(int *)&D_0009688C);
             break;
         }
-        if (D_00097624 > 6)
-            D_00097624 = 6;
+        if (CursorX > 6)
+            CursorX = 6;
         break;
     case 4:
-        D_00097628 = 2;
-        switch (D_00097624 - 5) {
+        CursorY = 2;
+        switch (CursorX - 5) {
         case 0:
-            D_0009761C = 2;
+            DirectorMenuActive = 2;
             break;
         case 1:
             if (move == 5) {
@@ -640,14 +640,14 @@ void ControlReplay(void)
             }
             break;
         }
-        if (D_00097624 > 6)
-            D_00097624 = 6;
+        if (CursorX > 6)
+            CursorX = 6;
         break;
     case 5:
-        D_00097628 = 3;
-        switch (D_00097624) {
+        CursorY = 3;
+        switch (CursorX) {
         case 5:
-            D_0009761C = 2;
+            DirectorMenuActive = 2;
             break;
         case 6:
             if (move == 5) {
@@ -659,11 +659,11 @@ void ControlReplay(void)
             break;
         case 7:
             if (move == 5)
-                D_00097658 = 1;
+                tracking_car = 1;
             break;
         case 8:
             if (move == 5) {
-                D_00097658 = 0;
+                tracking_car = 0;
                 if (D_00096DA8)
                     D_00096DA8 = 0;
                 else
@@ -671,7 +671,7 @@ void ControlReplay(void)
             }
             break;
         case 9:
-            if (D_00097658 && move == 5) {
+            if (tracking_car && move == 5) {
                 if (CAMVIEW == 1)
                     CAMVIEW = 5;
                 else
@@ -679,18 +679,18 @@ void ControlReplay(void)
             }
             break;
         }
-        if (D_00097658 && OK_To_Zoom()) {
-            if (D_00097624 > 8)
-                D_00097624 = 9;
+        if (tracking_car && OK_To_Zoom()) {
+            if (CursorX > 8)
+                CursorX = 9;
         } else {
-            if (D_00097624 > 7)
-                D_00097624 = 8;
+            if (CursorX > 7)
+                CursorX = 8;
         }
         break;
     }
     } else {
         D_00096E1C = 1;
-        D_0009761C = 0;
+        DirectorMenuActive = 0;
         if (D_00097618 == 2)
             pauseflag = 1;
     }

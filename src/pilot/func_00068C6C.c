@@ -170,7 +170,7 @@ extern E D_0008BD58[];
 extern H D_000BE9C4;
 extern H D_000BE9E0;
 extern ENT D_000C7034[];
-extern CAR D_0009B0A4[];
+extern CAR car_data[];
 extern unsigned char D_000C024C[];
 extern T17C D_000C017C;
 extern T38 D_000C01B4;
@@ -417,8 +417,8 @@ void func_00068C6C(OBJ *obj)
                 int t = (q[0] - 1) * 430 + 659;
                 if (*(int *)&D_00097708 < t)
                     *(int *)&D_00097708 = t;
-                *(int *)&D_00097738 = D_0009B0A4[0].pos.vx;
-                *(int *)&D_0009773C = D_0009B0A4[0].pos.vz;
+                *(int *)&D_00097738 = car_data[0].pos.vx;
+                *(int *)&D_0009773C = car_data[0].pos.vz;
             }
             break;
         case 54:
@@ -553,7 +553,7 @@ void func_00068C6C(OBJ *obj)
         case 88:
             {
                 CP *cp = &obj->saved;
-                CAR *c = &D_0009B0A4[0];
+                CAR *c = &car_data[0];
                 int *src;
                 short *dst;
                 cp->x = c->pos.vx;
@@ -562,7 +562,7 @@ void func_00068C6C(OBJ *obj)
                 cp->dir = c->fF8;
                 cp->g = *(int *)&D_00097708;
                 cp->s17C = c->f17C;
-                for (src = c->f114, dst = cp->s; src < &D_0009B0A4[0].f114[6]; src++, dst++)
+                for (src = c->f114, dst = cp->s; src < &car_data[0].f114[6]; src++, dst++)
                     *dst = *src;
                 cp->h = *(int *)&D_00097118;
                 cp->i = obj->f2A0;
@@ -590,7 +590,7 @@ void func_00068C6C(OBJ *obj)
             break;
         case 65:
             {
-                CAR *c = &D_0009B0A4[*(int *)&D_00096888];
+                CAR *c = &car_data[*(int *)&D_00096888];
                 int v = q[0];
                 c->f114[0] = v;
                 c->f114[1] = v;
@@ -620,7 +620,7 @@ void func_00068C6C(OBJ *obj)
                 ENT *e = &obj->ent[q[0]];
                 int v = q[1];
                 if (v >= 0)
-                    e->e = &D_0009B0A4[v].pos;
+                    e->e = &car_data[v].pos;
                 else switch (v) {
                 case -1:
                     e->e = &D_000A7AAC;
@@ -762,7 +762,7 @@ void func_00068C6C(OBJ *obj)
         case 113:
             {
                 CD *d = &obj->d[q[0]];
-                CAR *c = &D_0009B0A4[q[1]];
+                CAR *c = &car_data[q[1]];
                 d->x = c->pos.vx;
                 d->y = c->pos.vy;
                 d->z = c->pos.vz;

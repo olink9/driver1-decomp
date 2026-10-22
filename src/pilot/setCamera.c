@@ -11,30 +11,30 @@ typedef struct PLAYBACKCAMERA {
     unsigned char idx;              /* 0x23 */
 } PLAYBACKCAMERA;
 
-extern unsigned char D_00097658;        /* tracking_car */
-extern long long D_00096897;
+extern unsigned char tracking_car;        /* tracking_car */
+extern long long cameraview;
 extern long long D_0009688C;
 extern long long D_00096A60;
 extern long long D_00096A64;
 extern long long D_00096A6C;
 extern int D_0008A1E0[];
-extern int D_0008A8F0[];
+extern int camera_position[];
 typedef struct { short v; short pad[3]; } S8;   /* camera_angle.vx/vy/vz */
 extern S8 D_00096C48;
 extern S8 D_00096C4A;
 extern S8 D_00096C4C;
 
-#define CAMVIEW (*(unsigned char *)&D_00096897)
+#define CAMVIEW (*(unsigned char *)&cameraview)
 
 void setCamera(PLAYBACKCAMERA *Change)
 {
     int pad = Change->apad;
     int x = Change->px;
     CAMVIEW = Change->cameraview & 7;
-    D_00097658 = (Change->cameraview & 8) >> 3;
-    D_0008A8F0[0] = x;
-    D_0008A8F0[1] = Change->py;
-    D_0008A8F0[2] = Change->pz;
+    tracking_car = (Change->cameraview & 8) >> 3;
+    camera_position[0] = x;
+    camera_position[1] = Change->py;
+    camera_position[2] = Change->pz;
     D_00096C48.v = Change->ax;
     D_00096C4A.v = Change->ay;
     D_00096C4C.v = Change->az;

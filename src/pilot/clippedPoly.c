@@ -1,7 +1,7 @@
 /* clippedPoly (Driver 2, shadow.c) */
 typedef struct { char *primptr; unsigned int *ot; } DB;
-extern long long D_00097530;
-#define current (*(DB **)&D_00097530)
+extern long long current;
+#define current (*(DB **)&current)
 typedef struct { unsigned addr:24; unsigned len:8; } P_TAG;
 
 typedef struct { short vx, vy, vz, pad; } SVECTOR;
@@ -34,8 +34,8 @@ extern POLY_G3 *D_0009717C;
 extern int D_00097160;
 extern int D_00097170;
 extern SVECTOR D_000A1C58[];
-extern long long D_00097480;
-#define LightSortCorrect (*(int *)&D_00097480)
+extern long long LightSortCorrect;
+#define LightSortCorrect (*(int *)&LightSortCorrect)
 extern void clipAgainstZ();
 
 #define gte_ldv3(r0, r1, r2) __asm__ volatile ( \

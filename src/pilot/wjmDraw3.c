@@ -1,10 +1,10 @@
 /* Driver 2: wjmDraw3 */
 typedef struct { char *primptr; unsigned int *ot; } DB;
-extern long long D_00097530;
-#define current (*(DB **)&D_00097530)
-extern long long D_000971A0;
-extern unsigned short D_00087030[][32];
-extern unsigned short D_00086F30[];
+extern long long current;
+#define current (*(DB **)&current)
+extern long long combointensity;
+extern unsigned short texture_cluts[][32];
+extern unsigned short texture_pages[];
 extern int NormalClip();
 
 typedef struct {
@@ -38,11 +38,11 @@ void wjmDraw3(void)
     prims = (PGT3 *)current->primptr;
 
     if (NormalClip(outlongs[src->v0], outlongs[src->v1], outlongs[src->v2]) > 0) {
-        clut = D_00087030[src->texture_set][src->texture_id];
-        tpage = D_00086F30[src->texture_set];
-        prims->rgb0 = *(int *)&D_000971A0;
-        prims->rgb1 = *(int *)&D_000971A0;
-        prims->rgb2 = *(int *)&D_000971A0;
+        clut = texture_cluts[src->texture_set][src->texture_id];
+        tpage = texture_pages[src->texture_set];
+        prims->rgb0 = *(int *)&combointensity;
+        prims->rgb1 = *(int *)&combointensity;
+        prims->rgb2 = *(int *)&combointensity;
         ((unsigned char *)prims)[3] = 9;
         ((unsigned char *)prims)[7] = 0x34;
         prims->xy0 = outlongs[src->v0];

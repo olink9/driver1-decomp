@@ -7,8 +7,8 @@ typedef struct { short vx, vy, vz, pad; } SVECTOR;
 typedef struct { short m[3][3]; short pad; int t[3]; } MATRIX;
 
 typedef struct { char *primptr; unsigned int *ot; } DB;
-extern long long D_00097530;
-#define current (*(DB **)&D_00097530)
+extern long long current;
+#define current (*(DB **)&current)
 
 typedef struct {
     unsigned char type;
@@ -41,12 +41,12 @@ typedef struct {
 
 typedef struct { unsigned addr:24; unsigned len:8; } P_TAG;
 
-extern MATRIX D_000BBE84;
+extern MATRIX inv_camera_matrix;
 extern VECTOR D_0008909C;
-extern VECTOR D_0008A8F0;
+extern VECTOR camera_position;
 extern int D_000A1CCC[4];
 extern int D_000A5D7C[4];
-extern TYRE_TRACK D_000A295C[4][64];
+extern TYRE_TRACK track_buffer[4][64];
 extern TEXTURE_DETAILS D_000BBE44;
 
 #define gte_SetTransVector(r0) __asm__ volatile ( \
@@ -76,7 +76,7 @@ void DrawTyreTracks(void)
     POLY_FT4 *lasttyre;
     int t;
 
-    gte_SetRotMatrix(&D_000BBE84);
+    gte_SetRotMatrix(&inv_camera_matrix);
     gte_SetTransVector(&D_0008909C);
 
     for (wheel_loop = 0; wheel_loop < 4; wheel_loop++) {
@@ -87,34 +87,34 @@ void DrawTyreTracks(void)
         index = D_000A5D7C[wheel_loop];
 
         for (loop = 0; loop < D_000A1CCC[wheel_loop]; loop++) {
-            tt_p = &D_000A295C[wheel_loop][index];
+            tt_p = &track_buffer[wheel_loop][index];
             index++;
             if (index == 64)
                 index = 0;
 
             if (lasttyre == 0 || tt_p->type == 0 || last_duff) {
                 last_duff = 1;
-                t = tt_p->p1.vx - D_0008A8F0.vx;
+                t = tt_p->p1.vx - camera_position.vx;
                 if (t < -9000 || t > 9000)
                     continue;
                 ps[0].vx = t;
-                t = tt_p->p1.vz - D_0008A8F0.vz;
+                t = tt_p->p1.vz - camera_position.vz;
                 if (t < -9000 || t > 9000)
                     continue;
                 ps[0].vz = t;
-                ps[0].vy = -tt_p->p1.vy - D_0008A8F0.vy;
-                ps[2].vx = tt_p->p3.vx - D_0008A8F0.vx;
-                ps[2].vz = tt_p->p3.vz - D_0008A8F0.vz;
-                ps[2].vy = -tt_p->p3.vy - D_0008A8F0.vy;
-                ps[1].vx = tt_p->p2.vx - D_0008A8F0.vx;
-                ps[1].vy = -tt_p->p2.vy - D_0008A8F0.vy;
-                ps[1].vz = tt_p->p2.vz - D_0008A8F0.vz;
+                ps[0].vy = -tt_p->p1.vy - camera_position.vy;
+                ps[2].vx = tt_p->p3.vx - camera_position.vx;
+                ps[2].vz = tt_p->p3.vz - camera_position.vz;
+                ps[2].vy = -tt_p->p3.vy - camera_position.vy;
+                ps[1].vx = tt_p->p2.vx - camera_position.vx;
+                ps[1].vy = -tt_p->p2.vy - camera_position.vy;
+                ps[1].vz = tt_p->p2.vz - camera_position.vz;
                 poly = (POLY_FT4 *)current->primptr;
                 gte_ldv3c(&ps[0]);
                 gte_rtpt();
-                ps[3].vx = tt_p->p4.vx - D_0008A8F0.vx;
-                ps[3].vy = -tt_p->p4.vy - D_0008A8F0.vy;
-                ps[3].vz = tt_p->p4.vz - D_0008A8F0.vz;
+                ps[3].vx = tt_p->p4.vx - camera_position.vx;
+                ps[3].vy = -tt_p->p4.vy - camera_position.vy;
+                ps[3].vz = tt_p->p4.vz - camera_position.vz;
                 gte_stsxy3(&poly->x0, &poly->x1, &poly->x2);
                 gte_stsz(&z);
                 gte_ldv0(&ps[3]);
@@ -126,20 +126,20 @@ void DrawTyreTracks(void)
             } else {
                 poly = (POLY_FT4 *)current->primptr;
                 last_duff = 1;
-                t = tt_p->p3.vx - D_0008A8F0.vx;
+                t = tt_p->p3.vx - camera_position.vx;
                 if (t < -9000 || t > 9000)
                     continue;
                 ps[2].vx = t;
-                t = tt_p->p3.vz - D_0008A8F0.vz;
+                t = tt_p->p3.vz - camera_position.vz;
                 if (t < -9000 || t > 9000)
                     continue;
                 ps[2].vz = t;
-                ps[2].vy = -tt_p->p3.vy - D_0008A8F0.vy;
+                ps[2].vy = -tt_p->p3.vy - camera_position.vy;
                 gte_ldv0(&ps[2]);
                 gte_rtps();
-                ps[3].vx = tt_p->p4.vx - D_0008A8F0.vx;
-                ps[3].vy = -tt_p->p4.vy - D_0008A8F0.vy;
-                ps[3].vz = tt_p->p4.vz - D_0008A8F0.vz;
+                ps[3].vx = tt_p->p4.vx - camera_position.vx;
+                ps[3].vy = -tt_p->p4.vy - camera_position.vy;
+                ps[3].vz = tt_p->p4.vz - camera_position.vz;
                 gte_stsxy(&poly->x2);
                 gte_stsz(&z);
                 gte_ldv0(&ps[3]);

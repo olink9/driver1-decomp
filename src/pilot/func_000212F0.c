@@ -1,7 +1,7 @@
 extern long long D_00097098;
 extern int D_0009D8F4[];
 extern int D_0009E724[];
-extern int D_0009E734[];
+extern int RoadMapRegions[];
 extern void ClearMem();
 
 void func_000212F0(void)
@@ -11,7 +11,7 @@ void func_000212F0(void)
     unsigned short *base = (unsigned short *)*(int *)&D_00097098;
 
     for (i = 0; i < 4; i++) {
-        D_0009E734[i] = -1;
+        RoadMapRegions[i] = -1;
         D_0009E724[i] = (int)base;
         for (q = base; q < base + 0x1C20 / 2; q++)
             *q = 0x4000;

@@ -1,8 +1,8 @@
 /* FlashOverheadMap */
 #include "common.h"
 typedef struct { char *primptr; unsigned long *ot; } BUF;
-extern long long D_00097530;
-#define cur (*(BUF **)&D_00097530)
+extern long long current;
+#define cur (*(BUF **)&current)
 
 void FlashOverheadMap(int r, int g, int b)
 {

@@ -1,5 +1,5 @@
 typedef struct { char c[4]; } COL;
-extern long long D_000970D8;
+extern long long CameraCnt;
 extern void memset();
 extern int func_000776E4();
 extern void GetSmokeDrift();
@@ -15,7 +15,7 @@ void func_0004A718(int *p)
 	col.c[0] = (func_000776E4() & 0xF) + 0x10;
 	col.c[1] = func_000776E4() & 0xF;
 	col2 = col;
-	if ((*(int *)&D_000970D8 & 7) == 0) {
+	if ((*(int *)&CameraCnt & 7) == 0) {
 		v[0] = p[0] - 0x20;
 		v[2] = p[2] - 0x20;
 		v[1] = p[1] - 0x30;

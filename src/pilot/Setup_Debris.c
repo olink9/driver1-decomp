@@ -24,10 +24,10 @@ typedef struct {
 
 extern int D_00097414;
 extern short D_000B9048[];
-extern DEBRIS D_000BABC0[];
+extern DEBRIS debris[];
 extern CIV D_00098950[];
 extern RGB D_0008A770[];
-extern long long D_00096850;
+extern long long gNight;
 extern int func_000776E4(void);
 
 static inline int AllocateDebris(void)
@@ -54,7 +54,7 @@ void Setup_Debris(VECTOR *ipos, VECTOR *ispeed, int num_debris, int type)
         if (num == -1)
             return;
 
-        mydebris = &D_000BABC0[num];
+        mydebris = &debris[num];
         mydebris->position[0] = ipos->vx;
         mydebris->position[1] = ipos->vy;
         mydebris->position[2] = ipos->vz;
@@ -70,7 +70,7 @@ void Setup_Debris(VECTOR *ipos, VECTOR *ispeed, int num_debris, int type)
             mydebris->rgb.r = D_0008A770[col].r;
             mydebris->rgb.g = D_0008A770[col].g;
             mydebris->rgb.b = D_0008A770[col].b;
-            if (*(int *)&D_00096850 != 0) {
+            if (*(int *)&gNight != 0) {
                 mydebris->rgb.r >>= 1;
                 mydebris->rgb.g >>= 1;
                 mydebris->rgb.b >>= 1;

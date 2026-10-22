@@ -2,12 +2,12 @@
 typedef struct { char pad[0x10]; unsigned short vbtick; } MS;
 typedef struct { char pad[0x60]; unsigned char tmpvolume; } XM;
 extern MS *D_00097814;
-extern XM *D_0009781C;
+extern XM *XMC;
 
 void DoVolSlide(unsigned char dat) {
     if (!D_00097814->vbtick) return;
-    D_0009781C->tmpvolume += dat >> 4;
-    if (D_0009781C->tmpvolume > 128) D_0009781C->tmpvolume = 128;
-    D_0009781C->tmpvolume -= dat & 0xf;
-    if (D_0009781C->tmpvolume < 64) D_0009781C->tmpvolume = 64;
+    XMC->tmpvolume += dat >> 4;
+    if (XMC->tmpvolume > 128) XMC->tmpvolume = 128;
+    XMC->tmpvolume -= dat & 0xf;
+    if (XMC->tmpvolume < 64) XMC->tmpvolume = 64;
 }

@@ -3,8 +3,8 @@ typedef struct { unsigned addr:24; unsigned len:8; } P_TAG;
 typedef struct { unsigned int tag; unsigned char r0,g0,b0,code; short x0,y0,x1,y1,x2,y2,x3,y3; int pad; } LF4;
 typedef struct { unsigned int tag; unsigned char r0,g0,b0,code; short x0,y0,x1,y1; } LF2;
 typedef struct { char *primptr; unsigned int *ot; } DBX;
-extern long long D_00097530;
-#define current (*(DBX **)&D_00097530)
+extern long long current;
+#define current (*(DBX **)&current)
 extern void SetLineF4(), SetLineF2();
 
 #define addPrim(ot, p) ((P_TAG *)(p))->addr = ((P_TAG *)(ot))->addr, ((P_TAG *)(ot))->addr = (unsigned int)(p)

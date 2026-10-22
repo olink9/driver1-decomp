@@ -4,21 +4,21 @@ typedef struct { int w[4]; } Q16;
 typedef struct { char c[396]; } CAR396;
 typedef struct { unsigned char v; char pad[7]; } B8;
 
-extern int D_0009683C, D_00096834, D_00096840, D_0009709C, D_000970D8, D_00096800;
-extern int D_00096850, D_00096874, D_00096888, D_0009688C, D_00096890, D_000970E4;
-extern int D_000970DC, D_00096878, D_000970E8, D_00096854, D_00097118, D_00097128;
-extern int D_00096844, D_0009687C, D_000967F4, D_00096858, D_00096924, D_00097080;
+extern int D_0009683C, D_00096834, D_00096840, D_0009709C, CameraCnt, D_00096800;
+extern int gNight, D_00096874, D_00096888, D_0009688C, D_00096890, D_000970E4;
+extern int D_000970DC, D_00096878, gLightsOn, D_00096854, D_00097118, D_00097128;
+extern int AttractMode, pauseflag, D_000967F4, D_00096858, D_00096924, D_00097080;
 extern short D_00097124;
-extern unsigned char D_00096897, D_00096899, D_00096894, D_00096895, D_00096898;
+extern unsigned char cameraview, D_00096899, D_00096894, D_00096895, D_00096898;
 
 extern long long D_00097534, D_0009757C, D_00096F80, D_0009763C, D_00096C94, D_00096C90;
 extern long long D_0009752C, D_00096FE4, D_00097148, D_00097144, D_000971B4, D_00097004;
-extern long long D_00096A6C, D_00096A60, D_00096A64, D_000977A8, D_000977A4, D_000971A0;
-extern long long D_00096DC4, D_00096980, D_00097668, D_00097538, D_00096A08;
-extern B8 D_00097658, D_00096AA8, D_00096AA9, D_00097660;
+extern long long D_00096A6C, D_00096A60, D_00096A64, D_000977A8, D_000977A4, combointensity;
+extern long long FastForward, D_00096980, ReplayParameterPtr, D_00097538, D_00096A08;
+extern B8 tracking_car, D_00096AA8, D_00096AA9, D_00097660;
 
-extern CAR396 D_0009B0A4[];
-extern Q16 D_000BDCD8, D_0008A8F0;
+extern CAR396 car_data[];
+extern Q16 D_000BDCD8, camera_position;
 extern int D_0008A1DC[];
 extern unsigned char D_000BDF94[];
 extern char D_000C017C[];
@@ -79,7 +79,7 @@ void DrawSync(int);
 void func_0004E170();
 
 #define I(x) (*(int *)&(x))
-#define ReplayPtr (*(int **)&D_00097668)
+#define ReplayPtr (*(int **)&ReplayParameterPtr)
 
 void func_0002360C(void)
 {
@@ -99,7 +99,7 @@ void func_0002360C(void)
     func_00051540();
     func_00051374();
     func_00077D7C(0x1234);
-    D_00096897 = 0;
+    cameraview = 0;
     I(D_00097534) = 0;
     I(D_0009757C) = 0;
     func_00033AF8();
@@ -111,12 +111,12 @@ void func_0002360C(void)
     func_0004E454(I(D_00096C90));
 
     while (D_0009709C == 0) {
-        if (D_000970D8 == 3 && D_00096834 != 2)
+        if (CameraCnt == 3 && D_00096834 != 2)
             StartXM(1);
         func_000334B4();
         if (D_00096800 == 1 && func_1E19B4())
             D_0009709C = 7;
-        if (D_00096850 || D_00096834 == 3)
+        if (gNight || D_00096834 == 3)
             func_000430B8();
         func_000513D4();
         func_000514E0();
@@ -137,7 +137,7 @@ void func_0002360C(void)
         if (D_00096874 == 0 && I(D_00096F80) == 5)
             func_00022168();
 
-        switch (D_00096897) {
+        switch (cameraview) {
         case 0:
             if (D_00096899 == 0)
                 func_0003CFE8(D_00096888);
@@ -146,26 +146,26 @@ void func_0002360C(void)
             break;
         case 1:
             if (D_00096899 == 0 && I(D_00096F80) == 5)
-                D_00097658.v = 1;
+                tracking_car.v = 1;
             PlaceCameraAtLocation(D_00096890, 1);
             break;
         case 3:
-            func_0001D590(&D_0009B0A4[D_0009688C]);
+            func_0001D590(&car_data[D_0009688C]);
             func_0003D810(D_0009688C, 1);
             break;
         case 2:
-            func_0001D590(&D_0009B0A4[D_0009688C]);
+            func_0001D590(&car_data[D_0009688C]);
             func_0003D810(D_0009688C, 0);
             break;
         case 4:
-            func_0001D590(&D_0009B0A4[D_0009688C]);
+            func_0001D590(&car_data[D_0009688C]);
             func_0003D810(D_0009688C, 0);
             break;
         case 5:
             if (I(D_00096F80) == 3)
                 func_0006DBC8();
             else if (D_00096899 == 0 && I(D_00096F80) == 5)
-                D_00097658.v = 1;
+                tracking_car.v = 1;
             if (D_00096899 == 0)
                 D_00096890 = 0;
             PlaceCameraAtLocation(D_00096890, 0);
@@ -181,7 +181,7 @@ void func_0002360C(void)
             break;
         }
 
-        D_000BDCD8 = D_0008A8F0;
+        D_000BDCD8 = camera_position;
         I(D_00097148) = 7000;
         I(D_00097144) = 9000;
         I(D_000971B4) = 500 - (((D_000970E4 - 256) * 5) >> 4);
@@ -190,7 +190,7 @@ void func_0002360C(void)
             D_000970DC--;
             D_00096878 = 1;
             D_00096890 = 0;
-            D_00096897 = 0;
+            cameraview = 0;
             I(D_00096A6C) = (I(D_00096A6C) - 22) & 0xFFF;
             if (I(D_00096A60) < 1000) {
                 I(D_00096A60) += 8;
@@ -202,7 +202,7 @@ void func_0002360C(void)
                 D_0009709C = 1;
         }
 
-        D_000970E8 = 0;
+        gLightsOn = 0;
         if (D_00096854) {
             D_00097128 = 60;
         } else if (I(D_000977A8) || I(D_000977A4)) {
@@ -220,11 +220,11 @@ void func_0002360C(void)
                     D_00097128 = 26;
             }
             if (I(D_000977A8) && D_00097128 < 50)
-                D_000970E8 = 1;
+                gLightsOn = 1;
             if (I(D_000977A4) && D_00097128 < 80)
-                D_000970E8 = 1;
-            D_00096850 = 1;
-        } else if (D_00096850 == 0) {
+                gLightsOn = 1;
+            gNight = 1;
+        } else if (gNight == 0) {
             if (D_00096AA8.v) {
                 D_00097128 = 78;
                 if (D_00096AA9.v == 0)
@@ -233,31 +233,31 @@ void func_0002360C(void)
                 D_00097128 = 128;
             }
         } else {
-            D_000970E8 = 1;
+            gLightsOn = 1;
             D_00097128 = 26;
             if (D_00096AA8.v && D_00096AA9.v == 0)
                 DoLightning();
         }
 
         if (D_00096834 == 3)
-            D_000970E8 = 1;
+            gLightsOn = 1;
         D_000BDF94[4] = D_00097128;
         D_000BDF94[5] = D_00097128;
         D_000BDF94[6] = D_00097128;
-        I(D_000971A0) = D_00097128 | (D_00097128 << 8) | (D_00097128 << 16);
+        I(combointensity) = D_00097128 | (D_00097128 << 8) | (D_00097128 << 16);
 
-        if (I(D_00096DC4) == 0) {
+        if (I(FastForward) == 0) {
             func_00025748();
             I(D_00096980) = 0;
         } else {
             func_0002D79C();
         }
-        if (D_00096899 && D_00096844 == 0)
+        if (D_00096899 && AttractMode == 0)
             func_00059B84();
-        if (I(D_00096DC4) == 0) {
+        if (I(FastForward) == 0) {
             HandleDebris();
-        } else if (D_000970D8 < *ReplayPtr - 1) {
-            int f = D_000970D8 & 0x1F;
+        } else if (CameraCnt < *ReplayPtr - 1) {
+            int f = CameraCnt & 0x1F;
             int c;
             if (f < 16)
                 c = f;
@@ -266,14 +266,14 @@ void func_0002360C(void)
             SetTextColour(c * 8, 0, 0);
             func_0005D164("Fast Forward", 100, 30, 0x1000, 0x1000, 0);
         }
-        if (I(D_00096DC4))
+        if (I(FastForward))
             func_0005B70C();
 
-        if (D_00096844 == 0 && *(short *)&D_00097538 == 0x800 && D_0009687C == 0 && D_00096899 == 0) {
+        if (AttractMode == 0 && *(short *)&D_00097538 == 0x800 && pauseflag == 0 && D_00096899 == 0) {
             if (D_00096800 == 1) {
                 D_0009709C = 7;
             } else if (I(D_00096F80) == 5 && I(D_00097534) >= 3) {
-                D_0009687C = 1;
+                pauseflag = 1;
                 func_0004DF28();
                 r = func_0006C964(0);
                 if (r == 1)
@@ -288,7 +288,7 @@ void func_0002360C(void)
         }
         if (D_00096899 == 0) {
             if (I(D_00096A08) == 0) {
-                D_0009687C = 1;
+                pauseflag = 1;
                 func_0004DF28();
             }
             if (D_00096899 == 0 && I(D_0009757C))
@@ -296,23 +296,23 @@ void func_0002360C(void)
         }
 
         D_00097660.v = 0;
-        if (D_0009687C == 0 && D_00096899)
-            CheckCameraChange(D_000970D8);
-        if (D_0009687C == 0) {
+        if (pauseflag == 0 && D_00096899)
+            CheckCameraChange(CameraCnt);
+        if (pauseflag == 0) {
             if (I(D_00096F80) == 5 || I(D_00096F80) == 1)
                 func_000230B0();
             if (D_000967F4 == 0x16 && D_00096834 == 6)
                 func_1E2E70();
             if (D_00096894) {
                 D_00096895 = 1;
-                if (D_00096899 == 0 && D_00096844 == 0)
+                if (D_00096899 == 0 && AttractMode == 0)
                     func_00025C68();
                 D_00096894 = 0;
             }
         } else {
             func_000359BC();
             func_0006C8CC();
-            if (D_00096899 == 0 && D_00096844 == 0) {
+            if (D_00096899 == 0 && AttractMode == 0) {
                 if (I(D_00096A08) == 0) {
                     SetTextColour(255, 255, 255);
                     func_0005C8F4("No Controller Connected", 120);
@@ -320,7 +320,7 @@ void func_0002360C(void)
                     SetTextColour(255, 255, 255);
                     func_0005C8F4("Unsupported Controller Connected", 120);
                 } else if (D_0009709C == 0) {
-                    D_0009687C = 1;
+                    pauseflag = 1;
                     func_0004DF28();
                     r = func_0006C964(0);
                     if (r == 1)
@@ -346,23 +346,23 @@ void func_0002360C(void)
             *(volatile int *)&D_00097534;
         if (I(D_00096F80) != 5 && D_00096899 == 0)
             func_0006E040();
-        if (D_00096899 && D_00096844 == 0)
+        if (D_00096899 && AttractMode == 0)
             ControlReplay();
-        if (I(D_00096DC4) == 0) {
+        if (I(FastForward) == 0) {
             while ((unsigned)(VSync(-1) - D_00096924) < 2)
                 ;
             D_00096924 = VSync(-1);
         }
         (*(volatile int *)&D_00097534)++;
         DrawSync(0);
-        if (D_00096844 && (*(short *)&D_00097538 != 0 || D_000970D8 >= *ReplayPtr)) {
-            D_0009687C = 1;
+        if (AttractMode && (*(short *)&D_00097538 != 0 || CameraCnt >= *ReplayPtr)) {
+            pauseflag = 1;
             D_0009709C = 1;
         }
     }
 
     if ((D_00096898 == 3 || D_000967F4 == 0x16) && D_00096899 == 0)
-        *ReplayPtr = D_000970D8;
+        *ReplayPtr = CameraCnt;
     func_000359BC();
     func_0004E170();
 }

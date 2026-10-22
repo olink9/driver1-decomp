@@ -26,7 +26,7 @@ typedef struct {
 } XMCHANNEL;
 
 extern XMSONG *D_00097814;
-extern XMCHANNEL *D_0009781C;
+extern XMCHANNEL *XMC;
 extern void SPE(unsigned char, unsigned char);
 extern void SetNote(unsigned char);
 extern void DoXMPanSlide(unsigned char);
@@ -38,12 +38,12 @@ void JPlayEffects(void)
     unsigned char eff;
     unsigned char dat;
 
-    vol = D_0009781C->vol;
-    eff = D_0009781C->eff;
-    dat = D_0009781C->dat;
+    vol = XMC->vol;
+    eff = XMC->eff;
+    dat = XMC->dat;
 
-    D_0009781C->ownper = 0;
-    D_0009781C->ownvol = 0;
+    XMC->ownper = 0;
+    XMC->ownvol = 0;
 
     switch (vol >> 4) {
     case 0x6:
@@ -67,7 +67,7 @@ void JPlayEffects(void)
         SPE(0x4, vol & 0xf);
         break;
     case 0xc:
-        D_0009781C->panning = (vol & 0xf) << 4;
+        XMC->panning = (vol & 0xf) << 4;
         break;
     case 0xd:
         if (vol & 0xf)
@@ -97,7 +97,7 @@ void JPlayEffects(void)
     case 'L' - 55:
         break;
     case 'P' - 55:
-        D_0009781C->panning = dat;
+        XMC->panning = dat;
         break;
     case 'R' - 55:
         DoS3MRetrig(dat);
@@ -113,8 +113,8 @@ void JPlayEffects(void)
         break;
     }
 
-    if (!D_0009781C->ownper)
-        D_0009781C->period = D_0009781C->tmpperiod;
-    if (!D_0009781C->ownvol)
-        D_0009781C->volume = D_0009781C->tmpvolume;
+    if (!XMC->ownper)
+        XMC->period = XMC->tmpperiod;
+    if (!XMC->ownvol)
+        XMC->volume = XMC->tmpvolume;
 }

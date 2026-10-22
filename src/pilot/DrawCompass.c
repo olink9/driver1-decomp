@@ -19,8 +19,8 @@ typedef struct { unsigned addr:24; unsigned len:8; } P_TAG;
 #define getaddr(_p) (unsigned long)(((P_TAG *)(_p))->addr)
 #define addPrim(ot, p) setaddr(p, getaddr(ot)), setaddr(ot, p)
 
-extern long long D_00097530;
-#define current (*(DB **)&D_00097530)
+extern long long current;
+#define current (*(DB **)&current)
 extern long long D_00096834;
 #define GameLevel (*(int *)&D_00096834)
 extern XYPAIR D_0008B230[];

@@ -4,18 +4,18 @@ typedef struct { int vx, vy, vz, pad; } VEC;
 typedef struct { unsigned char r, g, b, cd; } CVEC;
 typedef struct { short m[3][3]; int t[3]; } MAT;
 
-extern long long D_0009687C;           /* pauseflag */
+extern long long pauseflag;           /* pauseflag */
 extern unsigned char D_00096AA8, D_00096AA9;
 extern long long D_000971B4;           /* FrAng */
 extern long long D_00096C4A;           /* camera_angle.vy */
 extern MAT D_000B8FE8;                 /* identity */
-extern VEC D_0008A8F0;                 /* camera_position */
-extern short D_0008EAA8[];             /* rcossin_tbl */
+extern VEC camera_position;                 /* camera_position */
+extern short rcossin_tbl[];             /* rcossin_tbl */
 extern unsigned int D_00096C44;        /* rand */
 extern char D_000B90F0[];              /* drop_texture */
 extern int MapHeight();
-#define RSIN(a) D_0008EAA8[((a) & 0xfff) * 2]
-#define RCOS(a) D_0008EAA8[((a) & 0xfff) * 2 + 1]            /* MapHeight */
+#define RSIN(a) rcossin_tbl[((a) & 0xfff) * 2]
+#define RCOS(a) rcossin_tbl[((a) & 0xfff) * 2 + 1]            /* MapHeight */
 extern void ShowLight();
 
 void DisplaySplashes(void)
@@ -31,7 +31,7 @@ void DisplaySplashes(void)
     unsigned int r;
     int SplashFrac;
 
-    if (*(int *)&D_0009687C != 0)
+    if (*(int *)&pauseflag != 0)
         return;
 
     SplashNo = (D_00096AA8 + D_00096AA9) >> 2;
@@ -42,20 +42,20 @@ void DisplaySplashes(void)
 
     gte_SetRotMatrix(&D_000B8FE8);
 
-    CamGnd.vx = D_0008A8F0.vx;
-    CamGnd.vz = D_0008A8F0.vz;
-    CamGnd.vy = -MapHeight(&CamGnd) - D_0008A8F0.vy;
+    CamGnd.vx = camera_position.vx;
+    CamGnd.vz = camera_position.vz;
+    CamGnd.vy = -MapHeight(&CamGnd) - camera_position.vy;
 
-    Gnd1.vx = RSIN(*(int *)&D_000971B4 - *(short *)&D_00096C4A) + D_0008A8F0.vx;
-    Gnd1.vz = RCOS(*(int *)&D_000971B4 - *(short *)&D_00096C4A) + D_0008A8F0.vz;
-    Gnd1.vy = -MapHeight(&Gnd1) - D_0008A8F0.vy;
+    Gnd1.vx = RSIN(*(int *)&D_000971B4 - *(short *)&D_00096C4A) + camera_position.vx;
+    Gnd1.vz = RCOS(*(int *)&D_000971B4 - *(short *)&D_00096C4A) + camera_position.vz;
+    Gnd1.vy = -MapHeight(&Gnd1) - camera_position.vy;
     Gnd1.vx -= CamGnd.vx;
     Gnd1.vy -= CamGnd.vy;
     Gnd1.vz -= CamGnd.vz;
 
-    Gnd2.vx = RSIN(-*(short *)&D_00096C4A - *(int *)&D_000971B4) + D_0008A8F0.vx;
-    Gnd2.vz = RCOS(-*(short *)&D_00096C4A - *(int *)&D_000971B4) + D_0008A8F0.vz;
-    Gnd2.vy = -MapHeight(&Gnd2) - D_0008A8F0.vy;
+    Gnd2.vx = RSIN(-*(short *)&D_00096C4A - *(int *)&D_000971B4) + camera_position.vx;
+    Gnd2.vz = RCOS(-*(short *)&D_00096C4A - *(int *)&D_000971B4) + camera_position.vz;
+    Gnd2.vy = -MapHeight(&Gnd2) - camera_position.vy;
     Gnd2.vx -= CamGnd.vx;
     Gnd2.vy -= CamGnd.vy;
     Gnd2.vz -= CamGnd.vz;

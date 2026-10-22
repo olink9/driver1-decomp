@@ -1,7 +1,7 @@
 /* func_00050024 - Driver 2 DrawSkyDome-like: draw sky segments by camera heading, then fill the gap with a TILE */
 typedef struct { char *primptr; unsigned int *ot; } DB;
-extern long long D_00097530;
-#define current (*(DB **)&D_00097530)
+extern long long current;
+#define current (*(DB **)&current)
 
 typedef struct { unsigned addr:24; unsigned len:8; } P_TAG;
 
@@ -15,7 +15,7 @@ typedef struct {
 extern long long D_000967FC;
 extern int D_000A1AA0[];
 extern long long D_00096C4A;            /* camera_angle.vy */
-extern int D_000A0E20[], D_000A0E24[], D_000A0E28[], D_000A0E2C[];
+extern int modelpointers[], D_000A0E24[], D_000A0E28[], D_000A0E2C[];
 extern int D_000974E8;
 extern long long D_000977A8;
 extern long long D_000977A4;
@@ -54,7 +54,7 @@ void func_00050024(void)
             func_0004FBA0(D_000A1AA0[0], 3);
     }
     if (ANG < 1450 || ANG > 3700)
-        tops[n++] = func_0004F7C8(D_000A0E20[0], 0);
+        tops[n++] = func_0004F7C8(modelpointers[0], 0);
     if (ANG > 650 && ANG < 2450)
         tops[n++] = func_0004F7C8(D_000A0E24[0], 12);
     if (ANG > 1700 && ANG < 3450)

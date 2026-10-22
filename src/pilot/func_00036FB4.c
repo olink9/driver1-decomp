@@ -1,7 +1,7 @@
 /* Flat black triangle (POLY_F3) from scratchpad vertex list, optional semi-trans with dummy POLY_FT3 tpage reset */
 typedef struct { char *primptr; unsigned int *ot; } DB;
-extern long long D_00097530;
-#define current (*(DB **)&D_00097530)
+extern long long current;
+#define current (*(DB **)&current)
 extern long long D_00096978;
 #define semitrans (*(unsigned char *)&D_00096978)
 extern int NormalClip();

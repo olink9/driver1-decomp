@@ -5,7 +5,7 @@ typedef struct { short s, c; } SC;
 extern int D_000976C0;
 extern E *D_000976CC;
 extern int D_000C0340[];
-extern short D_0008EAA8[];
+extern short rcossin_tbl[];
 extern int ratan2();
 extern void func_00061408();
 
@@ -35,6 +35,6 @@ void func_00060C9C(A *a, B *b)
     }
     ang = -ratan2(dz, dx) - 0x400 & 0xFFF;
     a->r1 = ang;
-    a->s20 = sp * D_0008EAA8[(a->r1 + 0x800 & 0xFFF) * 2] >> 12;
-    a->s24 = sp * D_0008EAA8[(a->r1 + 0x800 & 0xFFF) * 2 + 1] >> 12;
+    a->s20 = sp * rcossin_tbl[(a->r1 + 0x800 & 0xFFF) * 2] >> 12;
+    a->s24 = sp * rcossin_tbl[(a->r1 + 0x800 & 0xFFF) * 2 + 1] >> 12;
 }

@@ -20,7 +20,7 @@ typedef struct {
 
 extern long long D_000967F4;
 extern long long D_00096F80;
-extern long long D_0009687C;
+extern long long pauseflag;
 extern int D_000C7040[];
 extern int D_000C71A0[];
 extern GS D_000C6F04;
@@ -151,10 +151,10 @@ void func_0006B4AC(GS *gs)
         if (snd >= 0) {
             MSG *m = &D_0008BD58[snd];
             if ((s = m->s1) != 0 || (s = m->s2) != 0) {
-                if (*(int *)&D_0009687C == 0)
+                if (*(int *)&pauseflag == 0)
                     func_0005C8F4(s, 0x54);
             }
-        } else if ((s = D_000C6F04.f124) != 0 && *(int *)&D_0009687C != 1) {
+        } else if ((s = D_000C6F04.f124) != 0 && *(int *)&pauseflag != 1) {
             func_0005C8F4(s, 0x54);
         }
     } else {

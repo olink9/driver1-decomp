@@ -85,9 +85,9 @@ extern long long D_0009D508;
 extern long long D_0009B16C;
 extern long long D_0009B174;
 extern B8 D_00096898;
-extern volatile long long D_000970D8;
+extern volatile long long CameraCnt;
 extern long long D_00096834;
-extern long long D_000970E8;
+extern long long gLightsOn;
 extern int D_00096FF4;
 extern CAR *D_00096FC0;
 extern int D_00096774;
@@ -337,13 +337,13 @@ int func_000154A8(int id, int road, unsigned char flag, int x, int z)
     cp->x38 = 0;
     cp->x3C = 0x82;
     if (mode)
-        cp->x10 = *(int *)&D_000970D8 % 2 + 2;
+        cp->x10 = *(int *)&CameraCnt % 2 + 2;
     else
         cp->x10 = func_0004FFE8(id) % 2 + 2;
     if (cp->x10 == 3 && *(int *)&D_00096834 == 5)
         cp->x11 = 5;
     else
-        cp->x11 = *(int *)&D_000970D8 % 4 + 1;
+        cp->x11 = *(int *)&CameraCnt % 4 + 1;
     cp->f5 = 0;
     if (D_00096FF4 == 1 && !mode && func_00063B74(cp, car)) {
         D_00096FF4 = 0;
@@ -371,7 +371,7 @@ int func_000154A8(int id, int road, unsigned char flag, int x, int z)
     cp->x4C = D_0009B230[cp->id].xD0 / 1500;
     cp->f9 = func_00015338(cp);
     cp->x17 = 2;
-    if (*(int *)&D_000970E8)
+    if (*(int *)&gLightsOn)
         cp->x17 = 0x42;
     return 1;
 }

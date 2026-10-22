@@ -5,9 +5,9 @@ typedef struct { short a; unsigned short flags2; } MOD;
 extern long long D_0009B1A8;
 extern long long D_0009697C;
 #define G_COPP (*(COP ***)&D_0009697C)
-extern V3s D_0008A8F0;
+extern V3s camera_position;
 extern int D_00097430;
-extern MOD *D_000A0E20[];
+extern MOD *modelpointers[];
 extern COP *D_000A5DCC[];
 extern int func_000776E4();
 extern void ROADS_GetRouteData(), func_00041AC4();
@@ -29,9 +29,9 @@ void AddGroundDebris(void)
     do {
         cop = *G_COPP;
         if (cop == 0) return;
-        model = D_000A0E20[cop->type];
-        xb = cop->x - D_0008A8F0.x;
-        zb = cop->z - D_0008A8F0.z;
+        model = modelpointers[cop->type];
+        xb = cop->x - camera_position.x;
+        zb = cop->z - camera_position.z;
         if (xb < 0) xb = -xb;
         if (zb < 0) zb = -zb;
         if (xb > 9000 || zb > 9000) return;

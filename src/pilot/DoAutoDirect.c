@@ -6,19 +6,19 @@ typedef struct { unsigned char v; char pad[7]; } B8;
 extern int D_0009763C;          /* AutoDirect */
 extern int D_00097648;
 extern long long D_00096878;    /* gStopPadReads */
-extern char D_00097658;         /* tracking_car */
+extern char tracking_car;         /* tracking_car */
 extern int D_00097620;          /* way_distance */
 extern int D_0009762C;          /* TimeToWay */
 extern WAYREC *D_0009765C;      /* PlayerWayRecordPtr */
-extern B8 D_00096897;           /* cameraview */
+extern B8 cameraview;           /* cameraview */
 extern long long D_00096A6C;    /* gCameraAngle */
 extern int D_0008A1E0[];        /* gCameraOffset.vy */
 extern long long D_00096A60;    /* gCameraDistance */
 extern long long D_00096A64;    /* gCameraMaxDistance */
 extern long long D_0009688C;    /* cameraCarId */
-extern int *D_00097668;         /* ReplayParameterPtr */
-extern long long D_000970D8;    /* CameraCnt */
-extern VECTOR D_0008A8F0;
+extern int *ReplayParameterPtr;         /* ReplayParameterPtr */
+extern long long CameraCnt;    /* CameraCnt */
+extern VECTOR camera_position;
 extern int D_0008A8F4[];       /* MainPlayer.cameraPos */
 extern long long D_00096834;    /* playerType */
 extern char D_0009B16C[];       /* car_data */
@@ -34,12 +34,12 @@ extern int CameraCollisionCheck();
 extern int NoMoreCamerasErrorMessage();
 extern void RecordCamera();
 
-#define cameraview D_00096897.v
+#define cameraview cameraview.v
 #define gCameraAngle (*(int *)&D_00096A6C)
 #define gCameraDistance (*(int *)&D_00096A60)
 #define gCameraMaxDistance (*(int *)&D_00096A64)
 #define cameraCarId (*(int *)&D_0009688C)
-#define CameraCnt (*(int *)&D_000970D8)
+#define CameraCnt (*(int *)&CameraCnt)
 #define savemapinfo (*(unsigned int **)&D_000967A0)
 
 void DoAutoDirect(void)
@@ -49,7 +49,7 @@ void DoAutoDirect(void)
     int id;
 
     if ((D_0009763C != 0 || D_00097648 != 0) && *(int *)&D_00096878 == 0) {
-        D_00097658 = 1;
+        tracking_car = 1;
 
         if (D_0009762C == D_00097620 / 2 + 15 &&
             D_0009765C->x != 0x7fff && D_0009765C->y != 0x7fff) {
@@ -84,32 +84,32 @@ void DoAutoDirect(void)
                 break;
             }
 
-            if (CameraCnt + D_00097620 > *D_00097668) {
+            if (CameraCnt + D_00097620 > *ReplayParameterPtr) {
                 cameraview = 0;
                 cameraCarId = 0;
             } else {
-                pos.vx = D_0008A8F0.vx = D_0009765C->x << 10;
-                pos.vz = D_0008A8F0.vz = D_0009765C->y << 10;
+                pos.vx = camera_position.vx = D_0009765C->x << 10;
+                pos.vz = camera_position.vz = D_0009765C->y << 10;
             }
 
             if (*(int *)&D_00096834 != 2)
             {
-                height = MapHeight(&D_0008A8F0);
-                D_0008A8F0.vy = -70 - (func_000776E4() & 0x3ff) - height;
+                height = MapHeight(&camera_position);
+                camera_position.vy = -70 - (func_000776E4() & 0x3ff) - height;
             }
             else
                 D_0008A8F4[0] = -200;
 
             height = MapHeight(D_0009B16C + cameraCarId * 396);
-            if (-height < D_0008A8F0.vy)
-                D_0008A8F0.vy = -height - 100;
+            if (-height < camera_position.vy)
+                camera_position.vy = -height - 100;
 
-            D_00097630 = MapHeight(&D_0008A8F0);
+            D_00097630 = MapHeight(&camera_position);
             D_00097630 = -D_00097630;
-            if (D_00097630 < D_0008A8F0.vy)
-                D_0008A8F0.vy = D_00097630 - 100;
+            if (D_00097630 < camera_position.vy)
+                camera_position.vy = D_00097630 - 100;
 
-            MapHeight(&D_0008A8F0);
+            MapHeight(&camera_position);
 
             if (savemapinfo != 0)
                 D_0009767C = *savemapinfo;

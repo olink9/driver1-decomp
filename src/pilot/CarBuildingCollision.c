@@ -70,12 +70,12 @@ typedef struct {
     int pitch;
 } SMASHABLE_OBJECT;
 
-extern MODEL *D_000A0E20[];
+extern MODEL *modelpointers[];
 extern CDATA2D D_000B70C4[2];
 extern CRET2D D_000B7184;
 extern VECTOR D_000B7194;
 extern long long D_00096A60;
-extern long long D_00096850;
+extern long long gNight;
 extern long long D_000974A8;
 extern SMASHABLE_OBJECT D_0008AE8C[];
 extern SMASHABLE_OBJECT D_0008AEB4;
@@ -156,7 +156,7 @@ int CarBuildingCollision(CAR_DATA *cp, BUILDING_BOX *building, CELL_OBJECT *cop)
     int lever_dot_n;
     int ret;
 
-    model = D_000A0E20[cop->type];
+    model = modelpointers[cop->type];
 
     boxDiffY = abs(cp->where[1] + building->vy);
 
@@ -311,7 +311,7 @@ int CarBuildingCollision(CAR_DATA *cp, BUILDING_BOX *building, CELL_OBJECT *cop)
                         func_0004157C(&LeafPosition, (rnd >> 8) & 3);
                     }
                 } else {
-                    if (*(int *)&D_00096850 && (D_000A0E20[*(unsigned short *)&D_000974A8]->flags2 & 0x1000)) {
+                    if (*(int *)&gNight && (modelpointers[*(unsigned short *)&D_000974A8]->flags2 & 0x1000)) {
                         if (damage_lamp(cop)) {
                             VECTOR lamp_velocity;
 

@@ -8,7 +8,7 @@ typedef struct {
 
 typedef struct { int a; char pad[52]; } S38;
 
-extern int D_000967C8, D_00096844, D_000967F4, D_00096814, D_000967C4, D_00096820, D_0009681C;
+extern int D_000967C8, AttractMode, D_000967F4, D_00096814, D_000967C4, D_00096820, D_0009681C;
 extern int D_00096808, D_000967E4, D_00096854, D_00096858, D_00096870, D_00096834, D_00096884;
 extern int D_00097110, D_00096888, D_00096874, D_0009709C, D_000967CC, D_000967F0, D_000970A8;
 extern int D_00097068, D_000967E0, D_00096800, D_000967F8, D_000967D8, D_00096810;
@@ -45,7 +45,7 @@ void func_00024754(void)
     DrawSync(0);
     VSync(0);
     D_000967C8 = 0;
-    D_00096844 = 0;
+    AttractMode = 0;
     func_0004E170();
     func_0004E348();
     func_0006F4D8();
@@ -177,7 +177,7 @@ void func_00024754(void)
         D_00096858 = 0;
         D_00096898 = 0;
         *(int *)&D_00096778 = 0;
-        D_00096844 = 0;
+        AttractMode = 0;
         D_00096899 = 0;
         break;
     case 2:
@@ -254,7 +254,7 @@ void func_00024754(void)
     case 7:
         saved784 = *(int *)&D_00096784;
         saved870 = D_00096870;
-        D_00096844 = 1;
+        AttractMode = 1;
         D_00096895 = 1;
         D_00096899 = 1;
         D_00096870 = 1;
@@ -297,7 +297,7 @@ void func_00024754(void)
             D_00096800 = 0;
         }
         ReInitFrontend();
-        D_00096844 = 0;
+        AttractMode = 0;
         D_00096870 = saved870;
         *(int *)&D_00096784 = saved784;
         return;

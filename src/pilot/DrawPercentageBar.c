@@ -1,7 +1,7 @@
 /* DrawPercentageBar (Driver 2, overlay.c) */
 typedef struct { char *primptr; unsigned int *ot; } DB;
-extern long long D_00097530;
-#define current (*(DB **)&D_00097530)
+extern long long current;
+#define current (*(DB **)&current)
 typedef struct { unsigned addr:24; unsigned len:8; } P_TAG;
 
 #define addPrim(ot, p) (((P_TAG *)(p))->addr = ((P_TAG *)(ot))->addr, ((P_TAG *)(ot))->addr = (unsigned)(p))

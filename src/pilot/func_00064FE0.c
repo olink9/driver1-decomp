@@ -3,7 +3,7 @@ typedef struct { int f_0; int f_4; int f_8; int f_c; char pad[0x18]; int f_28; c
 typedef struct { unsigned char a, b, c, d, e, f; } SLOT;
 extern int D_00097708;
 extern int D_0009770C;
-extern long long D_000970D8;
+extern long long CameraCnt;
 extern CARDEF D_0009B230[];
 extern CAR D_000C4690[];
 extern void func_00064360();
@@ -25,7 +25,7 @@ void func_00064FE0(SLOT *p)
         a = d->f_f8;
         c->f_794 = 0;
         c->f_c = a;
-        if (*(int *)&D_000970D8 % 4 == p->f - 1)
+        if (*(int *)&CameraCnt % 4 == p->f - 1)
             func_00064360(c, &b[0], &b[1], 1);
     }
 }

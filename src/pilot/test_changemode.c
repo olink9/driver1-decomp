@@ -3,7 +3,7 @@ typedef struct { unsigned char type; unsigned char data; unsigned short nsectors
 typedef struct { int a; int nsectors; int c; int d; int e; } RI;
 extern SQ D_000A7BA4[];
 extern RI D_000A7EA4[];
-extern volatile int D_000969EC; extern int D_000972B0, D_000971F4, D_00097204, D_000971F0, D_000971F8, D_000971FC;
+extern volatile int D_000969EC; extern int spoolcounter, D_000971F4, D_00097204, D_000971F0, D_000971F8, D_000971FC;
 extern int D_000972BC, D_0009720C, D_00097210, D_00097220, D_000972B4, D_00097268, D_00097274, D_00097280;
 extern void ready_cb_textures(), ready_cb_regions(), ready_cb_soundbank(), func_000352D4();
 extern void func_0007A12C(), func_0007A27C();
@@ -13,7 +13,7 @@ void test_changemode(void)
     SQ *current = &D_000A7BA4[D_000969EC];
     int ta;
 
-    if (D_000969EC != D_000972B0) {
+    if (D_000969EC != spoolcounter) {
       if (D_000971F4 == current->sector) {
         ta = current->addr;
         D_000971F0 = ta;

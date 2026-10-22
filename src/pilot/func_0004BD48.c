@@ -1,6 +1,6 @@
 /* FAKEMATCH: `rg = 0;` after the second y test is a dead store whose only job is to invalidate CSE's
  * copy of the region address sum (base + r*396), so the .x access recomputes it from the still-live
- * &D_0009B0A4 (s7) and r*396 (s6) pseudos as the target does. No natural reassignment of rg was found
+ * &car_data (s7) and r*396 (s6) pseudos as the target does. No natural reassignment of rg was found
  * (re-assigning rg = base + r, rg += r on a copy, assignment inside the condition all get CSE'd away).
  * Driver 2 name unknown. Merges two axis-aligned boxes b into a when they touch along x or z
  * (run3-r4: MAX/MIN macros fixed the load order, duplicated merge bodies (cross-jumped) fixed the
@@ -19,7 +19,7 @@ typedef struct {
     char pad2[396 - 0x24];
 } REGION;
 
-extern REGION D_0009B0A4[];
+extern REGION car_data[];
 
 #define MAX(A,B) ((A) > (B) ? (A) : (B))
 #define MIN(A,B) ((A) < (B) ? (A) : (B))
@@ -39,7 +39,7 @@ int func_0004BD48(BOX *boxes, int i, int j, int r) {
     if (a->flags & 0x3ff) return 0;
     if (b->flags & 0x3ff) return 0;
 
-    base = D_0009B0A4;
+    base = car_data;
     rg = base + r;
     if (abs(rg->y + a->y) <= a->h / 2) {
         if (abs(rg->y + b->y) > b->h / 2) return 0;
@@ -64,7 +64,7 @@ int func_0004BD48(BOX *boxes, int i, int j, int r) {
         minz = MIN(a->z - a->d, b->z - b->d);
         miny = MIN(a->y - a->h / 2, b->y - b->h / 2);
 
-        t = D_0009B0A4[r].x;
+        t = car_data[r].x;
         sa = (t - a->x > 0) ? 1 : -1;
         sb = (t - b->x > 0) ? 1 : -1;
         if (sa == sb) {
@@ -81,7 +81,7 @@ int func_0004BD48(BOX *boxes, int i, int j, int r) {
                 return 1;
             }
         }
-        t = D_0009B0A4[r].z;
+        t = car_data[r].z;
         sa = (t - a->z > 0) ? 1 : -1;
         sb = (t - b->z > 0) ? 1 : -1;
         if (sa == sb) {

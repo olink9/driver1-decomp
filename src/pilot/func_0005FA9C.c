@@ -15,7 +15,7 @@ typedef struct {
     short dist;
 } OBJ;
 typedef struct { char pad[0xC8]; int x; int y; int z; } CAM;
-extern CAM D_0009B0A4[];
+extern CAM car_data[];
 extern int D_000976BC;
 extern int ratan2();
 
@@ -26,7 +26,7 @@ void func_0005FA9C(OBJ *o)
     unsigned t;
     int k;
 
-    k = (int)D_0009B0A4;
+    k = (int)car_data;
     d.vx = o->x - ((CAM *)k)->x;
     d.vz = o->z - ((CAM *)k)->z;
     a.vx = abs(d.vx);

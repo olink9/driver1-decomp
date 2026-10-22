@@ -8,7 +8,7 @@ extern long long D_00097320;
 extern long long D_0009731C;
 extern long long D_0009730C;
 extern long long D_00097314;
-extern long long D_0009732C;
+extern long long current_region;
 extern long long D_0009733C;
 extern long long D_00096A24;
 extern long long D_00096834;
@@ -21,7 +21,7 @@ extern int D_00097230;
 #define cellZ      (*(int *)&D_0009731C)
 #define regionX    (*(int *)&D_0009730C)
 #define regionZ    (*(int *)&D_00097314)
-#define regionIdx  (*(int *)&D_0009732C)
+#define regionIdx  (*(int *)&current_region)
 #define regionSize (*(int *)&D_0009733C)
 #define regionsAll (*(int *)&D_00096A24)
 #define gameMode   (*(int *)&D_00096834)

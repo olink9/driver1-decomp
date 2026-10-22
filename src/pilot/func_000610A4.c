@@ -1,4 +1,4 @@
-extern char D_0008EAA8[];
+extern char rcossin_tbl[];
 #define SN(i) (*(short *)(S + ((i) & 0xfff) * 4))
 #define CS(i) (*(short *)(C + ((i) & 0xfff) * 4))
 extern short func_00060AD4();
@@ -11,9 +11,9 @@ typedef struct {
 void func_000610A4(CarX *c)
 {
     int t = c->sp;
-    char *S = D_0008EAA8;
+    char *S = rcossin_tbl;
     int s = t + 7;
-    char *C = D_0008EAA8 + 2;
+    char *C = rcossin_tbl + 2;
     while (1) {
         int a = SN(c->rot + 0x800) * 125 >> 9;
         int b = CS(c->rot + 0x800) * 125 >> 9;

@@ -27,8 +27,8 @@ typedef struct { char pad[0xA]; unsigned char fA; char padB; } SLOT;
 typedef struct { int vx, vy, vz, pad; } VEC;
 
 extern PED D_000BFA7C[];
-extern CAR D_0009B0A4[];
-extern short D_0008EAA8[];
+extern CAR car_data[];
+extern short rcossin_tbl[];
 extern int D_000976BC;
 extern int D_000976C0;
 extern unsigned char D_000976C8;
@@ -82,8 +82,8 @@ void func_0005F3F8(void)
     int off;
     int b;
 
-    D_000976BC = D_0009B0A4[0].f104 >> 10;
-    D_000976BC = D_000976BC + D_0009B0A4[0].s17C;
+    D_000976BC = car_data[0].f104 >> 10;
+    D_000976BC = D_000976BC + car_data[0].s17C;
     func_000605D8();
     if (D_000976C8 != 0)
         func_0005F0EC();
@@ -106,18 +106,18 @@ void func_0005F3F8(void)
                     spd = p->speed;
                     if (p->c51 == 0 && p->c52 == 9) {
                         int t = (p->angle + 0x800) & 0xFFF;
-                        ox = (D_0008EAA8[t * 2] * r) >> 12;
-                        oz = (D_0008EAA8[t * 2 + 1] * r) >> 12;
+                        ox = (rcossin_tbl[t * 2] * r) >> 12;
+                        oz = (rcossin_tbl[t * 2 + 1] * r) >> 12;
                     } else {
                         int t = (p->angle + 0x73A) & 0xFFF;
-                        ox = (D_0008EAA8[t * 2] * r) >> 12;
-                        oz = (D_0008EAA8[t * 2 + 1] * r) >> 12;
+                        ox = (rcossin_tbl[t * 2] * r) >> 12;
+                        oz = (rcossin_tbl[t * 2 + 1] * r) >> 12;
                     }
                     if (func_00060AD4(p->x + ox, p->z + oz) == 0) {
                         if (p->c51 == 0 && p->c52 == 9) {
                             b = (p->angle + 0xA00) & 0xFFF;
-                            ox = (D_0008EAA8[b * 2] * r) >> 12;
-                            oz = (D_0008EAA8[b * 2 + 1] * r) >> 12;
+                            ox = (rcossin_tbl[b * 2] * r) >> 12;
+                            oz = (rcossin_tbl[b * 2 + 1] * r) >> 12;
                             if (func_00060AD4(p->x + ox, p->z + oz) != 0)
                                 p->flags |= 0x2000;
                             else
@@ -130,16 +130,16 @@ void func_0005F3F8(void)
                             SetPedestrianTurn(p, turn);
                             p->c51++;
                         } else {
-                            p->vx = (spd * D_0008EAA8[((p->angle + 0x800) & 0xFFF) * 2]) >> 12;
-                            p->vz = (spd * D_0008EAA8[((p->angle + 0x800) & 0xFFF) * 2 + 1]) >> 12;
+                            p->vx = (spd * rcossin_tbl[((p->angle + 0x800) & 0xFFF) * 2]) >> 12;
+                            p->vz = (spd * rcossin_tbl[((p->angle + 0x800) & 0xFFF) * 2 + 1]) >> 12;
                         }
                         p->c52 = 0;
                     } else {
                         p->c51 = 0;
                         if (p->c52++ >= 9) {
                             p->angle = (p->angle + 0x200) & 0xFC00;
-                            p->vx = (spd * D_0008EAA8[((p->angle + 0x800) & 0xFFF) * 2]) >> 12;
-                            p->vz = (spd * D_0008EAA8[((p->angle + 0x800) & 0xFFF) * 2 + 1]) >> 12;
+                            p->vx = (spd * rcossin_tbl[((p->angle + 0x800) & 0xFFF) * 2]) >> 12;
+                            p->vz = (spd * rcossin_tbl[((p->angle + 0x800) & 0xFFF) * 2 + 1]) >> 12;
                             p->c52 = 9;
                         }
                     }
@@ -148,7 +148,7 @@ void func_0005F3F8(void)
             car = func_000607AC(p);
             if (car != 0) {
                 spd2 = 0x19;
-                if (car == &D_0009B0A4[0] && !(p->flags & 0x1000)) {
+                if (car == &car_data[0] && !(p->flags & 0x1000)) {
                     snd = 0x1000;
                     if (*(int *)&D_00097080 != 0)
                         snd = 0x800;
@@ -173,8 +173,8 @@ void func_0005F3F8(void)
                     else
                         spd2 = 0x32;
                 }
-                p->vx = (spd2 * D_0008EAA8[((p->angle + 0x800) & 0xFFF) * 2]) >> 12;
-                p->vz = (spd2 * D_0008EAA8[((p->angle + 0x800) & 0xFFF) * 2 + 1]) >> 12;
+                p->vx = (spd2 * rcossin_tbl[((p->angle + 0x800) & 0xFFF) * 2]) >> 12;
+                p->vz = (spd2 * rcossin_tbl[((p->angle + 0x800) & 0xFFF) * 2 + 1]) >> 12;
                 if (!(p->flags & 0x1000)) {
                     p->i4C = *(int *)&D_000C0160;
                     p->b48 = 0;
@@ -202,8 +202,8 @@ void func_0005F3F8(void)
             break;
         }
         if (p->flags & 0x10) {
-            int dx = p->x - D_0009B0A4[0].x;
-            int dz = p->z - D_0009B0A4[0].z;
+            int dx = p->x - car_data[0].x;
+            int dz = p->z - car_data[0].z;
             if (dx * dx + dz * dz > 0x2B80D840) {
                 kill(p);
             }

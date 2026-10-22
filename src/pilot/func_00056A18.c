@@ -7,7 +7,7 @@ typedef struct {
     V3 off;
 } OBJ;
 extern int D_0008B4F8[];
-extern long long D_000970D8;
+extern long long CameraCnt;
 extern V3 D_000BE9B4;
 extern void func_00067E58(), func_00056754();
 
@@ -37,6 +37,6 @@ void func_00056A18(OBJ *o)
         v.z = D_000BE9B4.z;
         fl = 0;
     }
-    v.y -= (*(int *)&D_000970D8 % 16) * 64;
+    v.y -= (*(int *)&CameraCnt % 16) * 64;
     func_00056754(s1, &v, fl & 0x80);
 }

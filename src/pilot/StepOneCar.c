@@ -68,24 +68,24 @@ typedef struct {
     char pad60[4];
 } COS;
 
-extern CAR D_0009B0A4;
-extern COS D_0009AF04[];
+extern CAR car_data;
+extern COS car_cosmetics[];
 extern SVECTOR D_00086698[];
 extern int D_000866F8[];
-extern short D_0008EAA8[];
+extern short rcossin_tbl[];
 extern short D_0008EAAA[];
 extern int D_0009B094[];
 extern VECTOR D_00010034;
 extern VECTOR D_00010044;
 extern long long D_0009D8E8;
-extern long long D_00096850;
+extern long long gNight;
 extern int D_00097024;
 extern long long D_00096834;
 extern long long D_000967F4;
 extern int D_00096784;
 extern unsigned char D_00096FFC;
-extern long long D_00097424;
-extern long long D_00096897;
+extern long long wetness;
+extern long long cameraview;
 extern long long D_00096870;
 extern long long D_0009776C;
 
@@ -119,8 +119,8 @@ static inline int sub20(int v)
     return v - 20;
 }
 
-#define RSIN(a) D_0008EAA8[((a) & 0xFFF) * 2]
-#define RCOS(a) D_0008EAA8[((a) & 0xFFF) * 2 + 1]
+#define RSIN(a) rcossin_tbl[((a) & 0xFFF) * 2]
+#define RCOS(a) rcossin_tbl[((a) & 0xFFF) * 2 + 1]
 
 void StepOneCar(CAR *cp, int aggressive)
 {
@@ -171,10 +171,10 @@ void StepOneCar(CAR *cp, int aggressive)
     cl = &_cl;
     cl->extraangulardamping = 0;
 
-    if (cp == &D_0009B0A4)
-        car_cos = &D_0009AF04[0];
+    if (cp == &car_data)
+        car_cos = &car_cosmetics[0];
     else
-        car_cos = &D_0009AF04[cp->model];
+        car_cos = &car_cosmetics[cp->model];
 
     for (i = 2; i >= 0; i--) {
         cp->fpos[i] &= 0xF;
@@ -265,7 +265,7 @@ void StepOneCar(CAR *cp, int aggressive)
             if (impulse > 20000) {
                 D_00097024 = impulse;
 
-                if (*(int *)&D_00096850 == 1) {
+                if (*(int *)&gNight == 1) {
                     VECTOR direction;
                     direction = D_00010034;
                     func_00047FA4(C, &direction, 15, 1);
@@ -275,7 +275,7 @@ void StepOneCar(CAR *cp, int aggressive)
                     Setup_Debris(C, &direction, 10, 0);
                 }
 
-                if (cp == &D_0009B0A4 && impulse > 30000)
+                if (cp == &car_data && impulse > 30000)
                     Start3DSoundVolPitch(2, 0, 0, C[0], -C[1], C[2], 9000, 4096);
             }
 
@@ -434,10 +434,10 @@ void StepOneCar(CAR *cp, int aggressive)
         gte_stlvnl(A);
 
         forcefac = func_0001EEB4(A, C, B, cp->id);
-        friction_coef = forcefac * (32400 - *(int *)&D_00097424) >> 15;
+        friction_coef = forcefac * (32400 - *(int *)&wetness) >> 15;
 
-        if (cp == &D_0009B0A4) {
-            int quiet = *(unsigned char *)&D_00096897 == 2;
+        if (cp == &car_data) {
+            int quiet = *(unsigned char *)&cameraview == 2;
             y = B[1];
             if (y - D_0009B094[i] > 12)
                 Start3DSoundVolPitch(-1, 0, 11, B[0], y, B[2], quiet ? 0 : -7000, 400);

@@ -6,11 +6,11 @@ extern CAR D_0009B1D4[];
 extern unsigned char D_0008A8D8[];
 extern char D_000B9210[];
 extern long long D_0009688C;
-extern long long D_00096897;
-extern long long D_00096DC4;
-extern long long D_00096850;
-extern long long D_0009687C;
-extern long long D_000970D8;
+extern long long cameraview;
+extern long long FastForward;
+extern long long gNight;
+extern long long pauseflag;
+extern long long CameraCnt;
 extern int D_00097488;
 extern void func_00043FDC();
 
@@ -24,9 +24,9 @@ void func_00046000(int player)
 
     sign = 1;
     flash = &D_0009B1D4[player].flash;
-    if (*(int *)&D_0009688C == player && *(unsigned char *)&D_00096897 == 2)
+    if (*(int *)&D_0009688C == player && *(unsigned char *)&cameraview == 2)
         return;
-    if (*(int *)&D_00096DC4 != 0)
+    if (*(int *)&FastForward != 0)
         return;
     if (*(short *)(&D_0009B1D4[player].flash - 0x125) < 100)
         return;
@@ -36,9 +36,9 @@ void func_00046000(int player)
             v.vx = D_0008A8D8[k] * sign;
             v.vy = -164;
             c = 90;
-            if (*(int *)&D_00096850 != 0)
+            if (*(int *)&gNight != 0)
                 c = 50;
-            if (*(int *)&D_0009687C == 0 && (*(int *)&D_000970D8 & 1))
+            if (*(int *)&pauseflag == 0 && (*(int *)&CameraCnt & 1))
                 k++;
             v.vz = 15;
             k &= 7;
@@ -52,10 +52,10 @@ void func_00046000(int player)
                 col.g = c;
                 col.b = 255;
             }
-            if (*(int *)&D_0009687C == 0)
+            if (*(int *)&pauseflag == 0)
                 *flash += 16;
             func_00043FDC(&v, player, &col, size, D_000B9210, 255);
-            if (*(int *)&D_0009687C == 0 && (*(int *)&D_000970D8 & 1))
+            if (*(int *)&pauseflag == 0 && (*(int *)&CameraCnt & 1))
                 k++;
             k &= 7;
         }

@@ -25,7 +25,7 @@ extern XMSONG *D_000C7888[];
 extern XMHEADER *D_000C7970[];
 extern XMSONG *D_00097810;
 extern XMHEADER *D_00097828;
-extern XMCHN *D_0009781C;
+extern XMCHN *XMC;
 extern void SpuSetVoicePitch();
 
 void XM_Restart(int Song_ID)
@@ -39,9 +39,9 @@ void XM_Restart(int Song_ID)
     if (D_00097810->XMPlay == 2) {
         D_00097810->XMPlay = 1;
         for (t = 0; t < D_00097828->XMPSXChannels; t++) {
-            D_0009781C = &D_00097810->XM_Chnl[t];
-            if (!D_0009781C->ChDead)
-                SpuSetVoicePitch(D_0009781C->SPUChannel, D_0009781C->SPUPitch);
+            XMC = &D_00097810->XM_Chnl[t];
+            if (!XMC->ChDead)
+                SpuSetVoicePitch(XMC->SPUChannel, XMC->SPUPitch);
         }
     }
 }

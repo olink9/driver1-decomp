@@ -31,12 +31,12 @@ typedef struct {
 
 extern long long D_00096874;
 extern long long D_00096834;
-extern long long D_00097530;
-#define current (*(DB **)&D_00097530)
-extern CAR D_0009B0A4[];
-extern VECTOR D_0008A8F0;
+extern long long current;
+#define current (*(DB **)&current)
+extern CAR car_data[];
+extern VECTOR camera_position;
 extern VECTOR D_0008909C;
-extern MATRIX D_000BBE84;
+extern MATRIX inv_camera_matrix;
 extern POLY_FT4 D_000A216C[2][25];
 
 extern void SubdivShadow();
@@ -70,29 +70,29 @@ void PlaceShadowForCar(int slot)
     if (slot == 0 && *(int *)&D_00096874 == 1)
         return;
 
-    cp = &D_0009B0A4[slot];
+    cp = &car_data[slot];
 
-    points[0].vx = sp[0].vx - D_0008A8F0.vx;
-    points[0].vy = -sp[0].vy - D_0008A8F0.vy;
-    points[0].vz = sp[0].vz - D_0008A8F0.vz;
-    points[1].vx = sp[1].vx - D_0008A8F0.vx;
-    points[1].vy = -sp[1].vy - D_0008A8F0.vy;
-    points[1].vz = sp[1].vz - D_0008A8F0.vz;
-    points[2].vx = sp[3].vx - D_0008A8F0.vx;
-    points[2].vy = -sp[3].vy - D_0008A8F0.vy;
-    points[2].vz = sp[3].vz - D_0008A8F0.vz;
+    points[0].vx = sp[0].vx - camera_position.vx;
+    points[0].vy = -sp[0].vy - camera_position.vy;
+    points[0].vz = sp[0].vz - camera_position.vz;
+    points[1].vx = sp[1].vx - camera_position.vx;
+    points[1].vy = -sp[1].vy - camera_position.vy;
+    points[1].vz = sp[1].vz - camera_position.vz;
+    points[2].vx = sp[3].vx - camera_position.vx;
+    points[2].vy = -sp[3].vy - camera_position.vy;
+    points[2].vz = sp[3].vz - camera_position.vz;
 
     gte_SetTransVec0(&D_0008909C);
-    gte_SetRotMatrix(&D_000BBE84);
+    gte_SetRotMatrix(&inv_camera_matrix);
 
     spt = &D_000A216C[current->id][slot];
 
     gte_ldv3c(&points[0]);
     gte_rtpt();
 
-    points[3].vx = sp[2].vx - D_0008A8F0.vx;
-    points[3].vy = -sp[2].vy - D_0008A8F0.vy;
-    points[3].vz = sp[2].vz - D_0008A8F0.vz;
+    points[3].vx = sp[2].vx - camera_position.vx;
+    points[3].vy = -sp[2].vy - camera_position.vy;
+    points[3].vz = sp[2].vz - camera_position.vz;
 
     gte_stsxy3(&spt->x0, &spt->x1, &spt->x3);
     gte_stsz3(&z0, &z1, &z2);

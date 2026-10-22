@@ -1,6 +1,6 @@
 /* CloseShutters */
 #include "common.h"
-extern int D_00097530, D_00097524;
+extern int current, D_00097524;
 extern void DrawPrim(), func_0007457C(), SetDispMask();
 
 void CloseShutters(int speed, int width, int height)
@@ -22,7 +22,7 @@ void CloseShutters(int speed, int width, int height)
         h += speed;
         if (h >= 256) done = 1;
     } while (!done);
-    func_0007457C(*(int *)(D_00097530 + 4), 0x1080);
+    func_0007457C(*(int *)(current + 4), 0x1080);
     func_0007457C(*(int *)(D_00097524 + 4), 0x1080);
     SetDispMask(0);
 }

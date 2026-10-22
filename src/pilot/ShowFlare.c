@@ -30,10 +30,10 @@ typedef struct {
     unsigned short clutid;
 } TEXINF;
 
-extern long long D_00097530;
-#define current (*(DB **)&D_00097530)
+extern long long current;
+#define current (*(DB **)&current)
 extern TEXINF D_000B9130;
-extern int D_00097480;
+extern int LightSortCorrect;
 extern void func_0004EA98();
 
 #define gte_stsxy3(r0, r1, r2) __asm__ volatile ( \
@@ -120,7 +120,7 @@ void ShowFlare(VECTOR *v1, CVECTOR *col, short size, int rotation)
 
     z >>= 3;
     if (z > 39) {
-        z += D_00097480;
+        z += LightSortCorrect;
         if (z < 1)
             z = 1;
 

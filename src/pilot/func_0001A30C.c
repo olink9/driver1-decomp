@@ -2,7 +2,7 @@
  * Remaining: dz*dz product lands in v0 (target v1). Cause (.greg): dz*dz pseudo wins LO, dx*dx gets a2, then
  * reload spills LO for the dx*dx mult and retries dz*dz into the first free GPR (v0). In the target dx*dx must win
  * LO instead. Tried: operand/statement order, sq() inline, dist2() inline, in-place *=, 730 <= ..., !(<).
- * Plus reloc D_0008EAA8+2 vs D_0008EAAA (same bytes). */
+ * Plus reloc rcossin_tbl+2 vs D_0008EAAA (same bytes). */
 /* Driver 2 name: unknown (per-frame civ car update / cull loop) */
 typedef struct {
     unsigned char id;     /* 0x00 */
@@ -46,12 +46,12 @@ extern CAR D_0009B230[];
 extern S1960 D_000C4690[];
 extern unsigned char D_00099AF0[];
 extern char D_00099120[];
-extern short D_0008EAA8[];
+extern short rcossin_tbl[];
 extern short D_0008EAAA[];
 extern void (*D_0008539C[])();
 extern int D_0009677C;
 extern int D_00096780;
-extern long long D_000970D8;
+extern long long CameraCnt;
 extern int D_00096FD0;
 extern int D_00096FF0;
 extern int D_00096FCC;
@@ -72,9 +72,9 @@ static inline void remove_civ(int i)
     S80 *s = &D_00098950[i];
     int a = s->f5;
     if (s->t != 0 && D_0009677C != 0) {
-        if (*(int *)&D_000970D8 != D_00096FD0 || i != D_00096FF0) {
+        if (*(int *)&CameraCnt != D_00096FD0 || i != D_00096FF0) {
             D_00096FF0 = i;
-            D_00096FD0 = *(volatile int *)&D_000970D8;
+            D_00096FD0 = *(volatile int *)&CameraCnt;
         }
     }
     if (a != 0)
@@ -93,8 +93,8 @@ static inline void remove_civ(int i)
 static inline void step_car(CAR *car, int idx)
 {
     idx &= 0xFFF;
-    car->xC8 += (D_0008EAA8[idx * 2] * 500 + 0x800) >> 12;
-    car->xD0 += (D_0008EAA8[idx * 2 + 1] * 500 + 0x800) >> 12;
+    car->xC8 += (rcossin_tbl[idx * 2] * 500 + 0x800) >> 12;
+    car->xD0 += (rcossin_tbl[idx * 2 + 1] * 500 + 0x800) >> 12;
 }
 void func_0001A30C(void)
 {
@@ -164,7 +164,7 @@ void func_0001A30C(void)
                     func_00013D88(civ, car);
                     func_0001D608(car, 0);
                 }
-                if (civ->t == 2 && (*(int *)&D_000970D8 & 1)) {
+                if (civ->t == 2 && (*(int *)&CameraCnt & 1)) {
                     if (civ->f18 > 0x4650 && civ->f40 == 0x7FFFFFFF && civ->f44 == 0x7FFFFFFF)
                         func_00018C74(civ);
                     else

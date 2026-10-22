@@ -10,8 +10,8 @@ typedef struct {
     unsigned char eff;          /* 0x38 */
 } XMCHANNEL;
 
-extern XMCHANNEL *D_0009781C;
-#define XMC D_0009781C
+extern XMCHANNEL *XMC;
+#define XMC XMC
 
 extern void SetNote(unsigned char note);
 extern void SetInstr(unsigned char ins);

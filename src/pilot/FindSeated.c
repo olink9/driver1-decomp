@@ -9,7 +9,7 @@ typedef struct { char pad[0xC8]; int pos[3]; } PLAYER;
 extern SEATED *D_000976CC;     /* seated_pedestrian */
 extern int D_000976B8;         /* seated_count */
 extern long long D_00096834;
-extern PLAYER D_0009B0A4[];    /* player */
+extern PLAYER car_data[];    /* player */
 extern int func_0004FFE8(unsigned char);
 extern void func_00060F54(SEATED *, int);
 
@@ -28,7 +28,7 @@ SEATED *FindSeated(void)
         return 0;
 
     count1 = 3;
-    pl = D_0009B0A4;
+    pl = car_data;
 loop:
     seatedptr = D_000976CC + ++D_000976B8;
     if (seatedptr->rotation == 9999) {

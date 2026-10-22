@@ -1,0 +1,43 @@
+old_symbol	name	evidence
+D_00086F30	texture_pages	b058; REDRIVER2 draw.c ushort texture_pages[128]; D1 ushort[] used as tpage table, ends exactly at texture_cluts (+0x100 = 128 x u16)
+D_00087030	texture_cluts	b058; REDRIVER2 draw.c/objanim.c ushort texture_cluts[128][32]; D1 ushort[][32] indexed [tpage][id]
+D_0008A73C	PoolPrimData	b106; D2 sym char PoolPrimData[16]; D1 char[] read in PlacePoolForCar (D2 user)
+D_0008A8F0	camera_position	b075; D2 sym VECTOR camera_position; D1 VECTOR in 63 files
+D_0008EAA8	rcossin_tbl	b025; PsyQ libgte rcossin_tbl / REDRIVER2 short rcossin_tbl[8192]; D1 short[] indexed (ang&0xfff)*2 (+1) = RSIN/RCOS
+D_00096844	AttractMode	b132; D2 sym int AttractMode; D1 int/long long scalar
+D_00096850	gNight	b056 + b130; D2 sym int gNight; D1 only tested ==0/!=0 (gTimeOfDay is D_00096834); 2 files had a local gTimeOfDay macro on it, kept as-is
+D_0009687C	pauseflag	b094 + b132; D2 sym int pauseflag; D1 scalar flag
+D_00096897	cameraview	b053; D2 sym char cameraview; D1 byte at odd address 0x96897
+D_000969F0	spoolpos_writing	b029; D2 sym int spoolpos_writing; D1 volatile int in data_cb_* spool callbacks
+D_00096C3C	weather_level	b108; D2 debug sym static int weather_level (debris.c); D1 HandleDebris computes RSIN(CameraCnt)+RSIN(CameraCnt>>2) into it exactly as D2
+D_00096DB4	LastChange	b053; D2 sym PLAYBACKCAMERA *LastChange; D1 pointer in camera/replay code
+D_00096DC4	FastForward	b029; D2 sym int FastForward; D1 scalar
+D_000970D8	CameraCnt	b075; D2 sym int CameraCnt; D1 frame counter used with RSIN/& 15 like D2 (the b060 VSyncCounter guess rejected)
+D_000970E8	gLightsOn	b120; D2 sym int gLightsOn; D1 scalar
+D_000971A0	combointensity	b054; D2 sym int combointensity; D1 scalar (rgb word)
+D_00097270	AreaTPages	f-05; D2 sym unsigned char *AreaTPages; D1 unsigned char * in LoadInAreaTSets/ProcessSpoolInfoLump
+D_000972B0	spoolcounter	f-05; D2 sym int spoolcounter; D1 volatile int across spooling
+D_0009732C	current_region	b081; D2 sym int current_region; D1 int index (one file has a local regionIdx macro on it)
+D_00097424	wetness	b130; D2 sym int wetness; D1 scalar in rain/reflection code
+D_00097480	LightSortCorrect	b078; D2 sym int LightSortCorrect; D1 int added to OT z
+D_00097530	current	b029; D2 sym struct DB *current; D1 pointer with ->primptr/->ot in ~90 files
+D_00097540	vblcounter	b132 (certain); D2 sym int vblcounter; D1 volatile scalar
+D_0009761C	DirectorMenuActive	b132; REDRIVER2 director.c int DirectorMenuActive; D1 int in ControlReplay/ShowReplayMenu
+D_00097624	CursorX	b132; D2 sym int CursorX; D1 int in ShowReplayMenu/ControlReplay
+D_00097628	CursorY	b132; D2 sym int CursorY; D1 int in ShowReplayMenu/ControlReplay
+D_00097658	tracking_car	b053; D2 sym char tracking_car; D1 unsigned char
+D_00097668	ReplayParameterPtr	b102; D2 sym REPLAY_PARAMETER_BLOCK *ReplayParameterPtr; D1 pointer (->RecordingEnd)
+D_0009781C	XMC	b054; D2 sym XMCHANNEL *XMC; D1 pointer in the XM player
+D_0009AF04	car_cosmetics	b131; D2 sym CAR_COSMETICS car_cosmetics[5]; D1 array indexed by car model (DrawCarWheels as in D2). D1 stride 100 vs D2 236: the D1 struct is smaller, consistent across D1 users
+D_0009B0A4	car_data	b081; D2 sym _CAR_DATA car_data[22]; D1 CAR array indexed by player/car id in ~88 files (D1 struct layout differs from D2)
+D_0009E734	RoadMapRegions	b127; D2 sym int RoadMapRegions[4]; D1 int[] in UnpackRegion
+D_000A0E20	modelpointers	b103 + b127; D2 sym MODEL *modelpointers[1536]; D1 pointer array
+D_000A295C	track_buffer	b096; D2 sym TYRE_TRACK track_buffer[4][64]; D1 [4][64] in DrawTyreTracks
+D_000A5E3C	CompoundMatrix	b126 (with ?); D2 sym MATRIX2 CompoundMatrix[64]; D1 DrawMapPSX does .computed!=frame -> MulMatrix0(inv_camera_matrix, matrixtable[yang], CompoundMatrix[yang]) exactly as D2; 32-byte stride
+D_000A6E8C	matrixtable	b127; D2 sym MATRIX2 matrixtable[64]; D1 32-byte MATRIX array indexed by yang (see CompoundMatrix)
+D_000A7F50	tsetinfo	b058; D2 sym int tsetinfo[32]; D1 int[] in SendTPage
+D_000B738C	Known_Lamps	b120; D2 sym LAMP_STREAK Known_Lamps[21] (24 B); D1 24-byte struct (S24) in find_lamp_streak
+D_000BABC0	debris	b056; D2 sym DEBRIS debris[60] (40 B); D1 40-byte struct (S40/DEBRIS) in HandleDebris/Setup_Debris
+D_000BBE84	inv_camera_matrix	b081 + b126; D2 sym MATRIX inv_camera_matrix; D1 MATRIX, first arg of MulMatrix0 into CompoundMatrix
+D_000BE4F8	tpageslots	f-05; D2 sym unsigned char tpageslots[19]; D1 unsigned char[] in LoadInAreaTSets/SendTPage
+D_000C6CF8	globemesh	b109; D2 sym SVECTOR globemesh[54]; D1 SVECTOR[] in DrawExplosion

@@ -4,7 +4,7 @@ typedef struct M {
 } M;
 extern long long D_0009712C;
 extern long long D_00097370;
-extern int D_000A0E20[];
+extern int modelpointers[];
 
 void func_00052434(int *p)
 {
@@ -15,13 +15,13 @@ void func_00052434(int *p)
     *(int *)&D_00097370 = n;
     for (i = 0; i < n; i++) {
         int sz = *p++;
-        D_000A0E20[i] = (int)p;
+        modelpointers[i] = (int)p;
         p = (int *)((char *)p + sz);
     }
     for (i = 0; i < n; i++) {
-        char *a = (char *)D_000A0E20[i];
+        char *a = (char *)modelpointers[i];
         if (*(int *)(a - 4) != 0 && *(short *)(a + 4) != -1) {
-            char *b = (char *)D_000A0E20[*(short *)(a + 4)];
+            char *b = (char *)modelpointers[*(short *)(a + 4)];
             if (*(int *)(b + 0x20) != 0)
                 *(int *)(a + 0x20) = *(int *)(b + 0x20) + (int)b;
             *(int *)(a + 0x10) = *(int *)(b + 0x10) + (int)b;
@@ -30,7 +30,7 @@ void func_00052434(int *p)
         }
     }
     for (i = 0; i < n; i++) {
-        char *a = (char *)D_000A0E20[i];
+        char *a = (char *)modelpointers[i];
         if (*(int *)(a - 4) != 0) {
             if (*(short *)(a + 4) == -1) {
                 if (*(int *)(a + 0x20) != 0)

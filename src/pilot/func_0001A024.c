@@ -6,7 +6,7 @@ extern S1960 D_000C4690[];
 extern unsigned char D_00099AF0[];
 extern char D_00099120[];
 extern int D_0009677C;
-extern long long D_000970D8;
+extern long long CameraCnt;
 extern int D_00096FD0;
 extern int D_00096FF0;
 extern unsigned char D_00096FC4;
@@ -23,9 +23,9 @@ void func_0001A024(P *p)
         S80 *s = &D_00098950[i];
         int a = s->id;
         if (s->t != 0 && D_0009677C != 0) {
-            if (*(int *)&D_000970D8 != D_00096FD0 || i != D_00096FF0) {
+            if (*(int *)&CameraCnt != D_00096FD0 || i != D_00096FF0) {
                 D_00096FF0 = i;
-                D_00096FD0 = *(volatile int *)&D_000970D8;
+                D_00096FD0 = *(volatile int *)&CameraCnt;
             }
         }
         if (a != 0)

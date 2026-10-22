@@ -14,7 +14,7 @@ typedef struct {
     int pad;        /* 0x5C */
 } CDATA2D;
 
-extern short D_0008EAA8[];
+extern short rcossin_tbl[];
 extern long long D_000974AC;
 
 #define ABS(x) (((x) < 0) ? -(x) : (x))
@@ -32,8 +32,8 @@ int bcollided2d(CDATA2D *body)
     VEC delta;
 
     dtheta = body[1].theta - body[0].theta;
-    ac = D_0008EAA8[(dtheta + 1024 & 2047) * 2];
-    as = D_0008EAA8[(dtheta & 2047) * 2];
+    ac = rcossin_tbl[(dtheta + 1024 & 2047) * 2];
+    as = rcossin_tbl[(dtheta & 2047) * 2];
 
     needOverlap = 0;
     if (body[0].length[1] < 0) {
@@ -42,8 +42,8 @@ int bcollided2d(CDATA2D *body)
     }
 
     for (i = 1; i != -1; i--) {
-        body[i].axis[0].vx = D_0008EAA8[(body[i].theta & 4095) * 2];
-        body[i].axis[1].vx = body[i].axis[0].vz = D_0008EAA8[(body[i].theta & 4095) * 2 + 1];
+        body[i].axis[0].vx = rcossin_tbl[(body[i].theta & 4095) * 2];
+        body[i].axis[1].vx = body[i].axis[0].vz = rcossin_tbl[(body[i].theta & 4095) * 2 + 1];
         body[i].axis[1].vz = -body[i].axis[0].vx;
     }
 

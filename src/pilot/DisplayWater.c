@@ -35,11 +35,11 @@ typedef struct {
     short start_w;
 } SMOKE;
 
-extern long long D_00097530;
-#define current (*(DB **)&D_00097530)
-extern MATRIX D_000BBE84;
+extern long long current;
+#define current (*(DB **)&current)
+extern MATRIX inv_camera_matrix;
 extern VECTOR D_0008909C;
-extern VECTOR D_0008A8F0;
+extern VECTOR camera_position;
 extern long long D_00097128;
 extern TEXINF D_000B9200;
 
@@ -71,26 +71,26 @@ void DisplayWater(SMOKE *smoke)
     int z3;
     int z4;
 
-    gte_SetRotMatrix(&D_000BBE84);
+    gte_SetRotMatrix(&inv_camera_matrix);
     gte_SetTransVec0(&D_0008909C);
 
     size = smoke->start_w;
 
-    vert[0].vx = (smoke->position.vx - size) - D_0008A8F0.vx;
-    vert[0].vy = 50 - D_0008A8F0.vy;
-    vert[0].vz = (smoke->position.vz + size) - D_0008A8F0.vz;
+    vert[0].vx = (smoke->position.vx - size) - camera_position.vx;
+    vert[0].vy = 50 - camera_position.vy;
+    vert[0].vz = (smoke->position.vz + size) - camera_position.vz;
 
-    vert[1].vx = (smoke->position.vx + size) - D_0008A8F0.vx;
-    vert[1].vy = 50 - D_0008A8F0.vy;
-    vert[1].vz = (smoke->position.vz + size) - D_0008A8F0.vz;
+    vert[1].vx = (smoke->position.vx + size) - camera_position.vx;
+    vert[1].vy = 50 - camera_position.vy;
+    vert[1].vz = (smoke->position.vz + size) - camera_position.vz;
 
-    vert[2].vx = (smoke->position.vx - size) - D_0008A8F0.vx;
-    vert[2].vy = 50 - D_0008A8F0.vy;
-    vert[2].vz = (smoke->position.vz - size) - D_0008A8F0.vz;
+    vert[2].vx = (smoke->position.vx - size) - camera_position.vx;
+    vert[2].vy = 50 - camera_position.vy;
+    vert[2].vz = (smoke->position.vz - size) - camera_position.vz;
 
-    vert[3].vx = (smoke->position.vx + size) - D_0008A8F0.vx;
-    vert[3].vy = 50 - D_0008A8F0.vy;
-    vert[3].vz = (smoke->position.vz - size) - D_0008A8F0.vz;
+    vert[3].vx = (smoke->position.vx + size) - camera_position.vx;
+    vert[3].vy = 50 - camera_position.vy;
+    vert[3].vz = (smoke->position.vz - size) - camera_position.vz;
 
     poly = (POLY_FT4 *)current->primptr;
 

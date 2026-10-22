@@ -4,7 +4,7 @@ struct Ch { char pad[0x18]; unsigned char nothing; unsigned char dead; char pad2
 struct MS { char pad[0x58]; struct Ch ch[1]; };
 extern struct MS *D_00097814;
 extern struct MH *D_00097818;
-extern struct Ch *D_0009781C;
+extern struct Ch *XMC;
 extern void SpuGetAllKeysStatus();
 
 void CurrentKeyStat(void) {
@@ -12,10 +12,10 @@ void CurrentKeyStat(void) {
     char key[24];
     SpuGetAllKeysStatus(key);
     for (t = 0; t < D_00097818->n; t++) {
-        D_0009781C = &D_00097814->ch[t];
-        if (key[D_0009781C->spu] != 1 && D_0009781C->dead == 0) {
-            D_0009781C->dead = 1;
-            D_0009781C->nothing = 1;
+        XMC = &D_00097814->ch[t];
+        if (key[XMC->spu] != 1 && XMC->dead == 0) {
+            XMC->dead = 1;
+            XMC->nothing = 1;
         }
     }
 }

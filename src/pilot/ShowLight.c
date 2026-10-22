@@ -16,17 +16,17 @@ typedef struct { SXY trails[4]; int pad; short clock; short pad2; } LAMP;
 typedef struct { char pad[0x134]; SXY trails[4][4]; short old_clock[4]; char pad2[16]; } CAR;
 typedef struct { unsigned char v; char pad[7]; } B8;
 
-extern long long D_00097530;
-#define current (*(DB **)&D_00097530)
-extern int D_00097480;
+extern long long current;
+#define current (*(DB **)&current)
+extern int LightSortCorrect;
 extern long long D_00097534;
 #define FrameCnt (*(volatile int *)&D_00097534)
-extern long long D_000970E8;
+extern long long gLightsOn;
 extern B8 D_00097660;
 extern int D_00097464;
 extern int D_0009740C;
-extern LAMP D_000B738C[];
-extern CAR D_0009B0A4[];
+extern LAMP Known_Lamps[];
+extern CAR car_data[];
 extern short D_0008EAAA[];
 extern int D_000B8FE8[];
 extern void func_0002C564();
@@ -99,7 +99,7 @@ void ShowLight(void *v1, CV *col, short size, TD *texture) {
     rtps();
     poly->tpage = texture->tpageid | 0x20;
     poly->clut = texture->clutid;
-    z = (z >> 3) + D_00097480;
+    z = (z >> 3) + LightSortCorrect;
     if (z < 0) z = 0;
     stsxy(&poly->x3);
     if (z < 10000)
@@ -110,27 +110,27 @@ void ShowLight(void *v1, CV *col, short size, TD *texture) {
     current->primptr += 0x28;
 
     index = -1;
-    if ((col->cd & 0x20) && *(int *)&D_000970E8) {
-        if (D_00097660.v || D_000B738C[D_00097464].clock != (FrameCnt & 0xffff) - 1) {
+    if ((col->cd & 0x20) && *(int *)&gLightsOn) {
+        if (D_00097660.v || Known_Lamps[D_00097464].clock != (FrameCnt & 0xffff) - 1) {
             int i;
             for (i = 0; i < 4; i++) {
-                D_000B738C[D_00097464].trails[i].x = (poly->x0 + poly->x3) >> 1;
-                D_000B738C[D_00097464].trails[i].y = (poly->y0 + poly->y3) >> 1;
+                Known_Lamps[D_00097464].trails[i].x = (poly->x0 + poly->x3) >> 1;
+                Known_Lamps[D_00097464].trails[i].y = (poly->y0 + poly->y3) >> 1;
             }
-            D_000B738C[D_00097464].clock = FrameCnt;
+            Known_Lamps[D_00097464].clock = FrameCnt;
         } else {
             PG4 *trail;
             PFT3 *null;
             int angle, width, dx, dy, length;
             SV tail;
             SV head;
-            tail.vx = D_000B738C[D_00097464].trails[(FrameCnt - 3) & 3].x;
-            tail.vy = D_000B738C[D_00097464].trails[(FrameCnt - 3) & 3].y;
+            tail.vx = Known_Lamps[D_00097464].trails[(FrameCnt - 3) & 3].x;
+            tail.vy = Known_Lamps[D_00097464].trails[(FrameCnt - 3) & 3].y;
             head.vx = (poly->x0 + poly->x3) >> 1;
             head.vy = (poly->y0 + poly->y3) >> 1;
-            D_000B738C[D_00097464].clock = FrameCnt;
-            D_000B738C[D_00097464].trails[FrameCnt & 3].x = head.vx;
-            D_000B738C[D_00097464].trails[FrameCnt & 3].y = head.vy;
+            Known_Lamps[D_00097464].clock = FrameCnt;
+            Known_Lamps[D_00097464].trails[FrameCnt & 3].x = head.vx;
+            Known_Lamps[D_00097464].trails[FrameCnt & 3].y = head.vy;
             width = poly->x0 - poly->x3;
             width = abs(width);
             length = tail.vx - head.vx;
@@ -189,26 +189,26 @@ void ShowLight(void *v1, CV *col, short size, TD *texture) {
     if (index < 0)
         return;
 
-    if (D_00097660.v || D_0009B0A4[D_0009740C].old_clock[index] != (FrameCnt & 0xffff) - 1) {
+    if (D_00097660.v || car_data[D_0009740C].old_clock[index] != (FrameCnt & 0xffff) - 1) {
         int i;
         for (i = 0; i < 4; i++) {
-            D_0009B0A4[D_0009740C].trails[index][i].x = (poly->x0 + poly->x3) >> 1;
-            D_0009B0A4[D_0009740C].trails[index][i].y = (poly->y0 + poly->y3) >> 1;
+            car_data[D_0009740C].trails[index][i].x = (poly->x0 + poly->x3) >> 1;
+            car_data[D_0009740C].trails[index][i].y = (poly->y0 + poly->y3) >> 1;
         }
-        D_0009B0A4[D_0009740C].old_clock[index] = FrameCnt;
+        car_data[D_0009740C].old_clock[index] = FrameCnt;
     } else {
         PG4 *trail;
         PFT3 *null;
         int angle, width, dx, dy, length, c, sn;
         SV tail;
         SV head;
-        tail.vx = D_0009B0A4[D_0009740C].trails[index][(FrameCnt - 3) & 3].x;
-        tail.vy = D_0009B0A4[D_0009740C].trails[index][(FrameCnt - 3) & 3].y;
+        tail.vx = car_data[D_0009740C].trails[index][(FrameCnt - 3) & 3].x;
+        tail.vy = car_data[D_0009740C].trails[index][(FrameCnt - 3) & 3].y;
         head.vx = (poly->x0 + poly->x3) >> 1;
         head.vy = (poly->y0 + poly->y3) >> 1;
-        D_0009B0A4[D_0009740C].old_clock[index] = FrameCnt;
-        D_0009B0A4[D_0009740C].trails[index][FrameCnt & 3].x = head.vx;
-        D_0009B0A4[D_0009740C].trails[index][FrameCnt & 3].y = head.vy;
+        car_data[D_0009740C].old_clock[index] = FrameCnt;
+        car_data[D_0009740C].trails[index][FrameCnt & 3].x = head.vx;
+        car_data[D_0009740C].trails[index][FrameCnt & 3].y = head.vy;
         width = poly->x0 - poly->x3;
             width = abs(width);
         dx = tail.vx - head.vx;

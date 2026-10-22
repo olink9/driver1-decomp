@@ -52,8 +52,8 @@ typedef struct {
 
 typedef struct { short vx, vy, vz, pad; } ANGLE8;
 
-extern long long D_00097530;
-#define current (*(DB **)&D_00097530)
+extern long long current;
+#define current (*(DB **)&current)
 extern SPRTEX D_000B9240;
 extern SPRTEX D_000B9130;
 extern short D_0008EAAA[];

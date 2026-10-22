@@ -18,7 +18,7 @@ typedef struct {
 extern MS D_000C6F04;
 extern int D_000977A8;
 extern int D_000977A4;
-extern long long D_00096850;
+extern long long gNight;
 extern long long D_00096AA8;
 extern long long D_00096834;
 extern long long D_00096898;
@@ -47,7 +47,7 @@ void func_00068928(int *pp, int *end)
         case 40:
             D_000977A8 = 1;
         case 31:
-            *(int *)&D_00096850 = 1;
+            *(int *)&gNight = 1;
             break;
         case 39:
             D_000977A4 = 1;

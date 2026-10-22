@@ -24,8 +24,8 @@ extern long long D_00096A24;    /* cells across */
 extern long long D_000970E0;    /* cell ptrs */
 extern long long D_000970D4;    /* cells */
 extern long long D_00097108;    /* cell objects */
-extern int D_0009E734[];        /* regions present */
-extern MODEL *D_000A0E20[];     /* models */
+extern int RoadMapRegions[];        /* regions present */
+extern MODEL *modelpointers[];     /* models */
 
 static inline int GetCell(int cx, int cz)
 {
@@ -40,7 +40,7 @@ static inline int GetCell(int cx, int cz)
     cz -= rz * rs;
     region = rx + rz * ra;
 
-    if (D_0009E734[idx] == region)
+    if (RoadMapRegions[idx] == region)
         return (*(unsigned short **)&D_000970E0)[idx * rs * rs + cx + cz * rs];
     return -1;
 }
@@ -61,7 +61,7 @@ int func_0004A9F4(int *pos)
         while (num != 0xFFFF) {
             pc = &(*(PACKED_CELL **)&D_000970D4)[num];
             co = &(*(CELL_OBJECT **)&D_00097108)[pc->num];
-            m = D_000A0E20[co->type];
+            m = modelpointers[co->type];
             if (m->solid != 0) {
                 dx = co->x - pos[0];
                 dz = co->z - pos[2];

@@ -1,7 +1,7 @@
 /* flat black quad (POLY_F4), same family as func_00035FF4 */
 typedef struct { char *primptr; unsigned int *ot; } DB;
-extern long long D_00097530;
-#define current (*(DB **)&D_00097530)
+extern long long current;
+#define current (*(DB **)&current)
 extern int NormalClip();
 
 typedef struct {

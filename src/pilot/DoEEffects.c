@@ -30,9 +30,9 @@ typedef struct {
 } XMCHANNEL;
 
 extern XMSONG *D_00097814;
-extern XMCHANNEL *D_0009781C;
+extern XMCHANNEL *XMC;
 #define ms D_00097814
-#define XMC D_0009781C
+#define XMC XMC
 
 void DoEEffects(unsigned char dat)
 {

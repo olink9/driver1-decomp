@@ -1,10 +1,10 @@
 /* gouraud textured quad (POLY_GT4), same family as func_00036A18 */
 typedef struct { char *primptr; unsigned int *ot; } DB;
-extern long long D_00097530;
-#define current (*(DB **)&D_00097530)
-extern long long D_000971A0;
-extern unsigned short D_00087030[][32];
-extern unsigned short D_00086F30[];
+extern long long current;
+#define current (*(DB **)&current)
+extern long long combointensity;
+extern unsigned short texture_cluts[][32];
+extern unsigned short texture_pages[];
 extern int NormalClip();
 
 typedef struct {
@@ -49,10 +49,10 @@ void func_00036CB4(void)
     prims = (PGT4 *)current->primptr;
 
     if (NormalClip(outlongs[src->v0], outlongs[src->v1], outlongs[src->v2]) > 0) {
-        prims->rgb0 = *(int *)&D_000971A0;
-        prims->rgb1 = *(int *)&D_000971A0;
-        prims->rgb2 = *(int *)&D_000971A0;
-        prims->rgb3 = *(int *)&D_000971A0;
+        prims->rgb0 = *(int *)&combointensity;
+        prims->rgb1 = *(int *)&combointensity;
+        prims->rgb2 = *(int *)&combointensity;
+        prims->rgb3 = *(int *)&combointensity;
         ((unsigned char *)prims)[3] = 12;
         ((unsigned char *)prims)[7] = 0x3C;
         prims->x0 = ((short *)&outlongs[src->v0])[0];
@@ -71,8 +71,8 @@ void func_00036CB4(void)
         prims->v2 = src->uv3[1];
         prims->u3 = src->uv2[0];
         prims->v3 = src->uv2[1];
-        prims->clut = D_00087030[src->page][src->clut];
-        prims->tpage = D_00086F30[src->page];
+        prims->clut = texture_cluts[src->page][src->clut];
+        prims->tpage = texture_pages[src->page];
         z = (zbuff[src->v0] + zbuff[src->v1] + zbuff[src->v2] + zbuff[src->v3]) / 4;
         ((P_TAG *)prims)->addr = ((P_TAG *)&current->ot[z])->addr;
         ((P_TAG *)&current->ot[z])->addr = (unsigned int)prims;

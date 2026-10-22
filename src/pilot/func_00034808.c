@@ -1,5 +1,5 @@
 typedef struct { short x, y, w, h; } RECT;
-extern long long D_00097524, D_00097530;
+extern long long D_00097524, current;
 extern unsigned short D_00089118[];
 extern char D_000A7B3C[];
 extern int func_0007A12C(), func_000359BC(), func_00079F70();
@@ -32,7 +32,7 @@ void func_00034808(void)
         DrawSync(0);
         VSync(0);
     }
-    PutDrawEnv(*(int *)&D_00097530 + 0x10);
+    PutDrawEnv(*(int *)&current + 0x10);
     func_0004E024();
     func_0007A12C(s0);
 }

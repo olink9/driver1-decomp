@@ -30,9 +30,9 @@ typedef struct {
     unsigned short clutid;
 } TEXINF;
 
-extern long long D_00097530;
-#define current (*(DB **)&D_00097530)
-extern MATRIX D_000BBE84;
+extern long long current;
+#define current (*(DB **)&current)
+extern MATRIX inv_camera_matrix;
 extern VECTOR D_0008909C;
 extern unsigned char D_000B9170[];
 extern TEXINF D_000B9110;
@@ -60,7 +60,7 @@ void RoundShadow(VECTOR *v1, CVECTOR *col, short size)
     SVECTOR vert[4];
     int z;
 
-    gte_SetRotMatrix(&D_000BBE84);
+    gte_SetRotMatrix(&inv_camera_matrix);
     gte_SetTransVec0(&D_0008909C);
 
     vert[0].vx = v1->vx - size;

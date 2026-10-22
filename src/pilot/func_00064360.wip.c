@@ -32,7 +32,7 @@ extern int D_00097738;
 extern int D_0009773C;
 extern int D_00097748;
 extern int D_0009774C;
-extern int D_0009B0A4[];
+extern int car_data[];
 extern int (*D_0009D8F4[])[60];
 extern int D_0009E714[];
 extern int func_000641C0();
@@ -75,7 +75,7 @@ void func_00064360(OBJ *obj, int *dx, int *dz, int force)
     int v;
     int *car;
 
-    car = D_0009B0A4;
+    car = car_data;
     tz = D_0009E714[3] - (car[52] - 750);
     tz /= 1500;
     cx = car[50] + D_0009E714[2];

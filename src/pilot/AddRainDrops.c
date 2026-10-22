@@ -5,14 +5,14 @@ typedef struct { int vx, vy, vz, pad; } VEC;
 typedef struct { VEC position; short oldx; short index; } RAIN_TYPE;
 typedef struct { short type; short a, b, c; } ROUTE_DATA;
 typedef struct { short flags; unsigned short flags2; } MODEL;
-extern long long D_0009687C;
+extern long long pauseflag;
 extern unsigned char D_00096AA8, D_00096AA9;
-extern int D_00097474, D_00097424, D_00097428, D_000973FC;
+extern int D_00097474, wetness, D_00097428, D_000973FC;
 extern short D_000B8028[];
 extern RAIN_TYPE D_000B81C8[];
 extern int D_000BBEA4[];
-extern int D_0008A8F0[];
-extern MODEL *D_000A0E20[];
+extern int camera_position[];
+extern MODEL *modelpointers[];
 extern void ROADS_GetRouteData();
 
 static inline int AllocateRainDrop(void)
@@ -37,7 +37,7 @@ void AddRainDrops(void)
     int first;
 
     first = 1;
-    if (*(int *)&D_0009687C != 0)
+    if (*(int *)&pauseflag != 0)
         return;
     D_00097474 = 0;
     if (D_00096AA8 != 0)
@@ -45,12 +45,12 @@ void AddRainDrops(void)
     else
         count = D_00096AA9;
 
-    D_00097424 += 5;
-    if (D_00097424 > 7000)
-        D_00097424 = 7000;
+    wetness += 5;
+    if (wetness > 7000)
+        wetness = 7000;
 
     gte_SetRotMatrix(D_000BBEA4);
-    gte_SetTransVec0(D_0008A8F0);
+    gte_SetTransVec0(camera_position);
 
     while (count-- != 0) {
         RainIndex = AllocateRainDrop();
@@ -82,7 +82,7 @@ void AddRainDrops(void)
 
         if (first) {
             ROADS_GetRouteData(rt->position.vx, rt->position.vz, &routeData);
-            if (D_000A0E20[routeData.type]->flags2 & 0x100) {
+            if (modelpointers[routeData.type]->flags2 & 0x100) {
                 D_00097474 = 1;
                 ReleaseRainDrop(RainIndex);
                 return;

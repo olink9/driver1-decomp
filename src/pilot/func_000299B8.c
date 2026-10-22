@@ -4,10 +4,10 @@ typedef struct { int a, b, c, d; } Q16;
 typedef struct { char pad[16]; unsigned char idx; char rest[63]; } E80;
 typedef struct { char c[100]; } E100;
 typedef struct { char c[32]; } E32;
-extern char D_0009B0A4[];
+extern char car_data[];
 extern E80 D_00098950[];
 extern E32 D_000AF6A0[];
-extern E100 D_0009AF04[];
+extern E100 car_cosmetics[];
 extern E100 D_0009AF68[];
 extern Q16 D_000A211C[];
 extern P8 D_0009B094[];
@@ -24,10 +24,10 @@ void func_000299B8(int n)
 	int i;
 	Q16 *p, *q;
 
-	s6 = D_0009B0A4;
+	s6 = car_data;
 	if (n != 0) {
 		s6 += n * 396;
-		s5 = (char *)&D_0009AF04[D_00098950[n - 1].idx];
+		s5 = (char *)&car_cosmetics[D_00098950[n - 1].idx];
 		SetRotMatrix(&D_000AF6A0[n]);
 		n = 2;
 	} else {

@@ -14,7 +14,7 @@ typedef struct {
 typedef struct { char p[0x30]; int flags; } MH0;
 typedef struct { char p[0x818]; unsigned char *inst[1]; } MH;
 extern int D_0009783C;
-extern XM *D_0009781C;
+extern XM *XMC;
 extern MH *D_00097818;
 extern MH0 *D_00097814;
 extern int func_0006F81C();
@@ -26,7 +26,7 @@ static inline unsigned short GetPeriod(unsigned short fine, unsigned char note) 
     }
     return func_0006F81C(note, fine);
 }
-#define XMC D_0009781C
+#define XMC XMC
 #define mh D_00097818
 
 void SetPer(void) {

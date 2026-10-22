@@ -1,12 +1,12 @@
 /* FAKEMATCH: second extern name (__asm__ alias) for the same symbol to defeat CSE */
 /* Overmap target arrow (D2 overmap.c DrawTargetArrow-like): G4/G3 arrow + DR_TPAGE into ot[0] */
 typedef struct { char *primptr; unsigned int *ot; } DB;
-extern long long D_00097530;
-#define current (*(DB **)&D_00097530)
+extern long long current;
+#define current (*(DB **)&current)
 extern long long D_00096834;
 #define GameLevel (*(int *)&D_00096834)
-extern long long D_00096850;
-#define gTimeOfDay (*(int *)&D_00096850)
+extern long long gNight;
+#define gTimeOfDay (*(int *)&gNight)
 
 typedef struct { int vx, vy, vz, pad; } VECTOR;
 typedef struct { unsigned addr:24; unsigned len:8; } TAG;
@@ -36,7 +36,7 @@ typedef struct { int pad[5]; int scale; } OVERMAP;
 typedef struct { char pad[0xC8]; int x; int y; int z; char pad2[0x18C - 0xD4]; } CAR;
 
 extern OVERMAP D_0008B080[];
-extern CAR D_0009B0A4[];
+extern CAR car_data[];
 extern VECTOR D_0008909C;
 /* second name for the same object: the target rebuilds &D_0008909C for the second call instead of CSE-ing it */
 extern VECTOR camb __asm__("D_0008909C");
@@ -60,8 +60,8 @@ void func_00055CA0(VECTOR *pos)
     POLY_G3 *poly3;
     DR_TPAGE *tp;
 
-    vertex[2].vx = pos->vx - D_0009B0A4[0].x;
-    vertex[2].vz = pos->vz - D_0009B0A4[0].z;
+    vertex[2].vx = pos->vx - car_data[0].x;
+    vertex[2].vz = pos->vz - car_data[0].z;
     vertex[0].vx = (vertex[2].vz + 2) >> 2;
     vertex[0].vz = (2 - vertex[2].vx) >> 2;
 

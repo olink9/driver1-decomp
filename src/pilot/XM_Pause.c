@@ -21,7 +21,7 @@ extern SONG *D_000C7888[];
 extern HDR *D_000C7970[];
 extern SONG *D_00097810;
 extern HDR *D_00097828;
-extern CH *D_0009781C;
+extern CH *XMC;
 extern void SpuSetVoicePitch();
 
 void XM_Pause(int id) {
@@ -32,8 +32,8 @@ void XM_Pause(int id) {
     if (D_00097810->play == 1) {
         D_00097810->play = 2;
         for (t = 0; t < D_00097828->n; t++) {
-            D_0009781C = &D_00097810->ch[t];
-            SpuSetVoicePitch(D_0009781C->spu, 0);
+            XMC = &D_00097810->ch[t];
+            SpuSetVoicePitch(XMC->spu, 0);
         }
     }
 }

@@ -100,7 +100,7 @@ What that means for you:
 - **The C is not "the original source".** Like any matching decomp, it is *a* source that compiles to the
   same code. Names, types and structure are best guesses, informed by Driver 2's debug symbols where the two
   games share code.
-- **Readability is not there yet.** Per-function files, placeholder names (`func_00020AE4`, `D_00097530`)
+- **Readability is not there yet.** Per-function files, placeholder names (`func_00020AE4`, `D_00097524`)
   and local struct definitions are expected at this stage. Cleanup into real source files is on the roadmap.
 - If you prefer not to use or contribute to AI-assisted projects, that's completely fine. The tools and
   findings here (compiler identification, the maspsx patch, the Driver 2 symbol mapping) may still be useful

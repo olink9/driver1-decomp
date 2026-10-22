@@ -3,7 +3,7 @@ typedef struct {
 	char p0[0x1A]; short h1A; char p1[2]; short h1E; char p2[4];
 	unsigned char b24; char p3; unsigned char b26; unsigned char b27; unsigned char b28;
 } OBJ;
-extern int D_0009B0A4[];
+extern int car_data[];
 extern long long D_00097044;
 extern long long D_0009704C;
 extern unsigned char D_0009E744[];
@@ -17,7 +17,7 @@ int func_00019314(OBJ *p, int dir)
 	fail:
 		return 0;
 	}
-	r = func_00021558(D_0009B0A4[50], D_0009B0A4[52]);
+	r = func_00021558(car_data[50], car_data[52]);
 	if (r & 0xC000)
 		goto fail;
 	idx = r & 0xFFFF;

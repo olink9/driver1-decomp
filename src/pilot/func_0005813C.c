@@ -6,8 +6,8 @@ typedef struct {
     short x2, y2; unsigned char u2, v2; unsigned short pad2;
     short x3, y3; unsigned char u3, v3; unsigned short pad3;
 } PF4;
-extern short D_0008EAA8[];
-extern long long D_00097530;
+extern short rcossin_tbl[];
+extern long long current;
 extern long long D_00097534;
 extern UVS D_000B9170;
 extern void DrawPrim();
@@ -17,10 +17,10 @@ void func_0005813C(unsigned char *col, int *pos)
     int x, y, d;
     PF4 *p;
     UVS *uv;
-    PF4 **pp = (PF4 **)*(int *)&D_00097530;
+    PF4 **pp = (PF4 **)*(int *)&current;
     x = pos[0];
     y = pos[1];
-    d = (D_0008EAA8[(*(int *)&D_00097534 << 9) & 0x1E00] + 0x1388) >> 11;
+    d = (rcossin_tbl[(*(int *)&D_00097534 << 9) & 0x1E00] + 0x1388) >> 11;
     p = *pp;
     ((unsigned char *)p)[3] = 9;
     p->code = 0x2C;

@@ -1,7 +1,7 @@
 /* Driver 2: DrawSightCone (overmap.c) - D1 version: no tile, ot[0], fixed TransparencyOn */
 typedef struct { char *primptr; unsigned int *ot; } DB;
-extern long long D_00097530;
-#define current (*(DB **)&D_00097530)
+extern long long current;
+#define current (*(DB **)&current)
 
 typedef struct { int vx, vy, vz, pad; } VECTOR;
 typedef struct { unsigned addr:24; unsigned len:8; } TAG;
@@ -22,7 +22,7 @@ typedef struct {
     short frontViewAngle;
 } COP_SIGHT_DATA;
 
-extern short D_0008EAA8[];
+extern short rcossin_tbl[];
 extern void func_000539C8();
 
 #define setlen(p, _len) (((TAG *)(p))->len = (unsigned char)(_len))
@@ -60,8 +60,8 @@ void DrawSightCone(COP_SIGHT_DATA *pCopSightData, VECTOR *pPosition, int directi
 
         dir = angle + direction & 0xfff;
         angle += 512;
-        pVertex->vx = vertex[0].vx + ((D_0008EAA8[dir * 2] * temp + 0x800) >> 12);
-        pVertex->vz = vertex[0].vz + ((D_0008EAA8[dir * 2 + 1] * temp + 0x800) >> 12);
+        pVertex->vx = vertex[0].vx + ((rcossin_tbl[dir * 2] * temp + 0x800) >> 12);
+        pVertex->vz = vertex[0].vz + ((rcossin_tbl[dir * 2 + 1] * temp + 0x800) >> 12);
         pVertex++;
     } while (angle < 4096);
 

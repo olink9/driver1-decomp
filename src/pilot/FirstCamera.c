@@ -1,8 +1,8 @@
 struct S { char pad[0x22]; unsigned char prev; };
-extern struct S *D_00096DB4;
+extern struct S *LastChange;
 int FirstCamera(void)
 {
-    if (!D_00096DB4 || D_00096DB4->prev == 255)
+    if (!LastChange || LastChange->prev == 255)
         return 1;
     return 0;
 }

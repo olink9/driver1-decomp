@@ -5,8 +5,8 @@
    null->tpage via digit_texture.tpageid assembles as D_000B9140+8 (= D_000B9148, bytes identical). */
 /* Driver 2: PrintDigit (PRES.C) */
 typedef struct { char *primptr; unsigned int *ot; } DB;
-extern long long D_00097530;
-#define current (*(DB **)&D_00097530)
+extern long long current;
+#define current (*(DB **)&current)
 
 typedef struct { unsigned char xOffset, width; } FONT_DIGIT;
 extern FONT_DIGIT D_0008B6EC[];

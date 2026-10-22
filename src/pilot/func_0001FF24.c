@@ -20,7 +20,7 @@ typedef struct {
     unsigned int lastPad;           /* 0x188 */
 } CAR;
 
-extern CAR D_0009B0A4[];
+extern CAR car_data[];
 extern long long D_00096780;
 extern int D_00096788;
 extern long long D_000967F4;
@@ -43,7 +43,7 @@ void func_0001FF24(int n, unsigned int pad, signed char PadSteer, unsigned char 
     int v;
     int int_steer;
 
-    cp = &D_0009B0A4[n];
+    cp = &car_data[n];
 
     if (n == 0) {
         if (*(int *)&D_00096840 == 0)
@@ -145,13 +145,13 @@ void func_0001FF24(int n, unsigned int pad, signed char PadSteer, unsigned char 
 
         if (*(int *)&D_00096780 && n == 0) {
             int dx, dz, angle, diff, dist;
-            dx = D_0009B0A4[0].x - D_0009B0A4[23].x;
-            dz = D_0009B0A4[0].z - D_0009B0A4[23].z;
+            dx = car_data[0].x - car_data[23].x;
+            dz = car_data[0].z - car_data[23].z;
             angle = ratan2(dx, dz);
             dx >>= 10;
             dz >>= 10;
             dist = dx * dx + dz * dz;
-            diff = ((D_0009B0A4[0].direction - angle + 0x800) & 0xFFF) - 0x800;
+            diff = ((car_data[0].direction - angle + 0x800) & 0xFFF) - 0x800;
             if (dist > 30)
                 cp->thrust = 8000;
             else if (dist > 9)

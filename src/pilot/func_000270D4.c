@@ -25,7 +25,7 @@ typedef struct {
 } DB;
 
 extern unsigned char D_00096AA8[];
-extern long long D_00096850;
+extern long long gNight;
 extern long long D_00097128;
 extern unsigned int D_00097138;
 typedef struct { unsigned char v; char pad[7]; } B8;
@@ -39,10 +39,10 @@ extern unsigned short *D_00097140;
 extern int D_00097144;
 extern int D_00097148;
 extern CELL_OBJECT **D_0009715C;
-extern long long D_00097530;
-#define current (*(DB **)&D_00097530)
-extern MODEL *D_000A0E20[];
-extern MAT32 D_000A5E3C[];
+extern long long current;
+#define current (*(DB **)&current)
+extern MODEL *modelpointers[];
+extern MAT32 CompoundMatrix[];
 
 extern int func_00026794();
 extern int func_0002680C();
@@ -71,7 +71,7 @@ void func_000270D4(int num)
     save = (int *)0x1F800000;
     prev = -1;
 
-    if (D_00096AA8[0] == 0 && *(int *)&D_00096850 == 0) {
+    if (D_00096AA8[0] == 0 && *(int *)&gNight == 0) {
         col[0] = 0x2C808080;
         col[1] = D_00097138 | 0x28000000;
         col[2] = D_00097150 | 0x28000000;
@@ -93,13 +93,13 @@ void func_000270D4(int num)
 
         if (prev != cop->yang) {
             prev = cop->yang;
-            z = func_00026794(cop, &D_000A5E3C[prev]);
+            z = func_00026794(cop, &CompoundMatrix[prev]);
         } else {
             z = func_0002680C(cop);
         }
 
         type = cop->type;
-        model = D_000A0E20[type];
+        model = modelpointers[type];
 
         if ((*(int *)model & 0x40000080) && !(model->shape_flags & 0x400)) {
             if (model->shape_flags & 0x80)
@@ -140,7 +140,7 @@ void func_000270D4(int num)
                 if (D_00097140[type] != 0xFFFF)
                     type = D_00097140[type];
             }
-            model = D_000A0E20[type];
+            model = modelpointers[type];
             if (!(model->shape_flags & 0x20)) {
                 current->primptr = func_00026FF0(model, current->primptr);
             } else {
@@ -150,7 +150,7 @@ void func_000270D4(int num)
         } else {
             if (D_0009713C[type] != 0xFFFF)
                 type = D_0009713C[type];
-            model = D_000A0E20[type];
+            model = modelpointers[type];
             if (z < 2000)
                 func_000287A4(model, z);
             else if (!(model->shape_flags & 0x20))

@@ -19,25 +19,25 @@ typedef struct {
     unsigned char **JAP_InstrumentOffset;
 } XMH;
 extern int D_0009783C;
-extern XMCH *D_0009781C;
+extern XMCH *XMC;
 extern int D_00097818;
 
 void SetNote(unsigned char note) {
     unsigned char *j;
     if (D_0009783C > 23) return;
     if (note == 96) {
-        D_0009781C->keyon = 0;
-        if (D_0009781C->sample == 254) {
-            D_0009781C->tmpvolume = 64;
+        XMC->keyon = 0;
+        if (XMC->sample == 254) {
+            XMC->tmpvolume = 64;
         } else {
-            j = *(unsigned char **)(D_00097818 + D_0009781C->sample * 4 + 0x818);
+            j = *(unsigned char **)(D_00097818 + XMC->sample * 4 + 0x818);
             if (!(j[233] & 1))
-                D_0009781C->tmpvolume = 64;
+                XMC->tmpvolume = 64;
         }
     } else {
-        D_0009781C->note = note;
-        D_0009781C->kick = 1;
-        if (!(D_0009781C->wavecontrol & 0x80)) D_0009781C->trmpos = 0;
-        if (!(D_0009781C->wavecontrol & 0x08)) D_0009781C->vibpos = 0;
+        XMC->note = note;
+        XMC->kick = 1;
+        if (!(XMC->wavecontrol & 0x80)) XMC->trmpos = 0;
+        if (!(XMC->wavecontrol & 0x08)) XMC->vibpos = 0;
     }
 }
