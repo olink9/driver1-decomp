@@ -1,11 +1,14 @@
-/* WIP 90.17 (run3-r4; was 88.33). Driver 2: unknown - road direction at (x, z).
+/* WIP 90.22 (run3-r4; was 88.33). Driver 2: unknown - road direction at (x, z).
    run3-r4 fixes: D_0009E714 as `int[]` with `t = D[3] + 750; cz = (t - z) / 1500;` (sibling form);
    first lookup `xc = cx / 60; zc = q60(cz);` - routing ONE quotient through a tiny static inline is what
    makes sched1 issue the cx divide first (no statement order does); loop lookup order swept (zq, D, xr, xq, zr);
-   `int count = 0;` declared before `unsigned char dir`. Rows 0-45 (prologue, bounds, allocation of
-   base/hi/cx/cz/count/dir) now identical.
-   Remaining: lookup scheduling - target is xq, zq, xr, zr, then D - zq in BOTH lookups (same code twice,
-   probably one inline); ours differs by the sra (z>>31) and andi placement and the loop's register use. */
+   `int count = 0;` declared before `unsigned char dir`; `while (cell == GetCell(..))` gives `bne t6, v0`.
+   Rows 0-45 (prologue, bounds, allocation of base/hi/cx/cz) now identical.
+   Remaining: (1) lookup scheduling - target is xq, zq, xr, zr, then D - zq in BOTH lookups (same code twice,
+   probably one inline); ours differs in the z>>31 sra / andi placement, and the loop lookup uses other temps.
+   (2) dir/count swap: target dir=t4 (inited first), count=t3 (`addu t3,t4,zero`), ours dir=t3, count=t4;
+   every init order/decl order/`count = dir` variant either swaps the regs or the copy. Permuter (2 runs, ~25 min)
+   found only semantics-breaking candidates (dropping `& 1`, assignments inside conditions). */
 typedef struct {
     short x0;
     short junction;
@@ -80,7 +83,7 @@ int func_00020AE4(int x, int z)
         dir ^= 1;
     }
 
-    while (GetCell(cx, cz) == cell)
+    while (cell == GetCell(cx, cz))
     {
         count++;
         if (dir)
