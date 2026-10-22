@@ -115,7 +115,7 @@ def reloc_target(row):
     """(name, addend) of an instruction's relocation target from objdiff's text:
     '%hi(D_000A8014+0xd)' -> ('D_000A8014', 13); '%lo([.rodata]+0x10)' -> ('.rodata', 16)."""
     t = (row.get("instruction") or {}).get("formatted", "")
-    m = re.search(r"%(?:hi|lo|gp_rel)\(\[?([^)\]+]+)\]?(?:\+(0x[0-9a-fA-F]+|\d+))?\)", t)
+    m = re.search(r"%(?:hi|lo|gp_rel)\(\[?([^)\]+-]+)\]?(?:([+-]0x[0-9a-fA-F]+|[+-]\d+))?\)", t)  # signed addend (run 3)
     if not m:
         m = re.search(r"\b(jtbl_\w+|D_[0-9A-F]{8})\b()", t)
     if not m:

@@ -1067,3 +1067,5 @@ time	symbol	size	best	attempts	status
 2026-10-22T21:19:03Z	func_0005F3F8	1700	100.0	30	matched	run3-r4
 2026-10-22T21:23:04Z	func_0005CF10	596	100.0	5	matched	run3-r4
 2026-10-22T21:24:46Z	func_00029448	1128	99.84	40	gave_up	run3-r4
+2026-10-22T21:25:17Z	func_0004AD94	4020	99.98	40	gave_up	run3-r4 (byte-identical, see review.tsv)
+2026-10-22	func_0004AD94	4020	100.0	-	matched run3-r4 (after fnscore negative-addend fix; link-verified)

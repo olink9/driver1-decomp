@@ -1,10 +1,11 @@
-/* run2-r3: remaining is allocation only. dx*dx in a fresh local gives target a0 (cellz keeps t0) but then sched1
- * puts the dz chain first; bs-first sums (bs + (speed+580)) tie the sum to bs but sched the speed lw first. Swept:
- * 19x2 reuse vars, 13x11 var pairs, 160 bs/s/sum statement placements, inline add580(), short/int bs. */
-/* best 99.95 (run2-large b127). Only diff: 4 rows of block-local registers in the bounding-sphere test
- * (target: dx*dx in a0, sphere sum written into the bounding_sphere reg - addu v1,v1,v0; here a1/t2 and addu v0,v0,v1).
- * dz*dz stored into cellz reproduces the target t0 (reuse of the cell variable is probably original).
- * BC7A8/BBFE4/EAAA relocs are same-address splat labels (scorer accepts). */
+/* run3-r4 (r4-19): BYTE-IDENTICAL. tools/fnscore.py prints 99.98 only because reloc_target() cannot parse a
+ * NEGATIVE addend: row 757/759 is %hi/%lo(D_000BC004-0x20) (= &D_000BC004[D_000974B0 - 1]) vs the splat label
+ * D_000BBFE4 at the same address 0xBBFE4. With the regex accepting [+-] addends the scorer gives MATCH 100.0;
+ * rows 240/247 (D_000BC798+0x10 vs D_000BC7A8) already pass. Needs linkcheck, then promote to .c.
+ * Fix of the last 4 register rows (bounding-sphere test): the D2 shape with fresh single-set locals -
+ * distx = dx*dx; distz = dz*dz; extra = speed + 580; sphere = bs + extra; sphere *= sphere; if (distx + distz < sphere).
+ * `sphere *= sphere` ties the product into the sum's quantity, which drops bs/sum below the speed quantity in
+ * local-alloc priority (speed -> v0, bs/sum -> v1) and restores the lh-before-lw order and dx*dx in a0. */
 /* Driver 2: CheckScenaryCollisions (Driver 1 version; car 0x19 = camera) */
 #include "gte.h"
 
@@ -109,6 +110,7 @@ void func_0004AD94(int car)
     int dx, dz, sphere;
     int *lst;
     MATRIX *mat;
+    int extra, distx, distz;
 
     x0 = D_0009B0A4[0].where[0];
     z0 = D_0009B0A4[0].where[2];
@@ -180,11 +182,12 @@ void func_0004AD94(int car)
             }
             dx = cop->vx - player_pos.vx;
             dz = cop->vz - player_pos.vz;
-            cellx = dx * dx;
-            cellz = dz * dz;
-            sphere = cp->speed + 580;
-            sphere += model->bounding_sphere;
-            if (cellx + cellz < sphere * sphere) {
+            distx = dx * dx;
+            distz = dz * dz;
+            extra = cp->speed + 580;
+            sphere = model->bounding_sphere + extra;
+            sphere *= sphere;
+            if (distx + distz < sphere) {
                 num_cb = *(int *)model->collision_block;
                 collide = (COLLISION_PACKET *)(model->collision_block + 4);
                 for (k = 0; k < num_cb; k++, collide++) {
