@@ -1,16 +1,20 @@
-/* WIP 88.33 (run2-r3 r3-cell; was 84.58). Driver 2: unknown - road direction at (x, z).
-   Now: `%` remainders + `rz = D_00097374 - rz;` reassigned (form of matched func_00021558/00021690/000143CC).
-   Remaining: (1) sched1 puts the cz divide first; the target keeps cx first with the whole lookup in RTL order
-   (xq, zq, xr, zr, D) - all 120 statement orders x {%, x - q*60} x {expr, reassign, local m} swept, none gives
-   cx first; a pointer-returning inline CellPtr(x, z) with in-place params is worse (75). (2) global alloc:
-   target has base(&D_0009E714)=a3, cz=t0, cx=t1, hi=t2, count=t3, dir=t4 - i.e. base/hi outrank cx/cz/dir/count,
-   which their refs/live (-dl) cannot explain; `count` is a copy of dir's zero (`addu t3,t4,zero`). */
+/* WIP 90.17 (run3-r4; was 88.33). Driver 2: unknown - road direction at (x, z).
+   run3-r4 fixes: D_0009E714 as `int[]` with `t = D[3] + 750; cz = (t - z) / 1500;` (sibling form);
+   first lookup `xc = cx / 60; zc = q60(cz);` - routing ONE quotient through a tiny static inline is what
+   makes sched1 issue the cx divide first (no statement order does); loop lookup order swept (zq, D, xr, xq, zr);
+   `int count = 0;` declared before `unsigned char dir`. Rows 0-45 (prologue, bounds, allocation of
+   base/hi/cx/cz/count/dir) now identical.
+   Remaining: lookup scheduling - target is xq, zq, xr, zr, then D - zq in BOTH lookups (same code twice,
+   probably one inline); ours differs by the sra (z>>31) and andi placement and the loop's register use. */
 typedef struct {
-    int width;
-    int height;
-    int ofs_x;
-    int ofs_z;
-} MAPINFO;
+    short x0;
+    short junction;
+    short x4;
+    unsigned char x6;
+    unsigned char x7;
+    int x8;
+    int xC;
+} CELLINFO;
 
 typedef struct {
     short a;
@@ -25,35 +29,27 @@ typedef struct {
     int x28;
 } JUNCTION;
 
-typedef struct {
-    short x0;
-    short junction;
-    short x4;
-    unsigned char x6;
-    unsigned char x7;
-    int x8;
-    int xC;
-} CELLINFO;
-
 extern int D_000967A8;
-extern MAPINFO D_0009E714;
+extern int D_0009E714[];
 extern short (*D_0009E724[])[60];
 extern long long D_00097374;
 extern JUNCTION *D_00097040;
 extern CELLINFO *D_00097044;
 
-static inline short GetCell(int cx, int cz)
+static inline int q60(int v) { return v / 60; }
+
+static inline short GetCell(int x, int z)
 {
-    int rx, rz, lx, lz, m;
-    rz = cz / 60; lx = cx % 60; rx = cx / 60; lz = cz % 60; rz = *(int *)&D_00097374 - rz;
-    return D_0009E724[(rx & 1) + ((rz & 1) << 1)][lz][lx];
+    int xc, zc, lx, lz;
+    zc = z / 60; zc = *(int *)&D_00097374 - zc; lx = x % 60; xc = x / 60; lz = z % 60;
+    return D_0009E724[(xc & 1) + ((zc & 1) << 1)][lz][lx];
 }
 
 int func_00020AE4(int x, int z)
 {
-    unsigned char dir = 0;
     int count = 0;
-    int cx, cz, i;
+    unsigned char dir = 0;
+    int cx, cz, t, i;
     short cell;
     JUNCTION *j;
     CELLINFO *ci;
@@ -61,22 +57,21 @@ int func_00020AE4(int x, int z)
     if (D_000967A8 == 0)
         return -1;
 
-    cx = (x + D_0009E714.ofs_x) / 1500;
-    cz = (750 - z + D_0009E714.ofs_z) / 1500;
-
-    if (cx < 0 || cx >= D_0009E714.width || cz < 0 || cz >= D_0009E714.height)
+    cx = (x + D_0009E714[2]) / 1500;
+    t = D_0009E714[3] + 750;
+    cz = (t - z) / 1500;
+    if (cx < 0 || cx >= D_0009E714[0] || cz < 0 || cz >= D_0009E714[1])
         return -1;
 
     {
         short *cp;
-        int rx, rz, lx, lz, m;
-        rz = cz / 60; lx = cx % 60; rx = cx / 60; lz = cz % 60; rz = *(int *)&D_00097374 - rz;
-        cp = &D_0009E724[(rx & 1) + ((rz & 1) << 1)][lz][lx];
+        int xc, zc, lx, lz;
+        xc = cx / 60; zc = q60(cz); zc = *(int *)&D_00097374 - zc; lz = cz % 60; lx = cx % 60;
+        cp = &D_0009E724[(xc & 1) + ((zc & 1) << 1)][lz][lx];
         cell = *cp;
         if (*cp & 0xC000)
             return *cp;
     }
-
     j = &D_00097040[D_00097044[cell].junction];
     for (i = 0; i < 4; i++)
     {
