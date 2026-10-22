@@ -1,8 +1,11 @@
 /* FAKEMATCH (if it ever matches): do { } while (0) wrappers here only shift register priorities. */
-/* r3-06 (99.16): do{}while(0) from poly1's primptr += to the end (loop-depth ref weights for local-alloc) fixes poly2=t0 /
- * current#2=a2. LEFT: the CSE'd len constant 9 gets t1 (target t4) ahead of the 0xFFFFFF mask (target t1), and the
- * angle block (idx v1/&tbl a3/-35 in a1 in the target). Statement permutations (3 groups) and do-while placement
- * sweeps (single + pairs + addPrim wraps) found nothing better. */
+/* r4-14 (99.22, was 99.16): the angle block's table reads through two pointers (p0 = &tbl[i*2], p1 = &tbl[i*2-1])
+ * and do{}while(0) moved to start after size.vx. Diagnosis (local-alloc qty priority floor_log2(refs)*refs/len, all
+ * one block): mask 0xFFFFFF loses t1 because the angle block's &tbl[i*2] pseudo takes t1 first; that happens because
+ * -35 grabs a3, because the idx chain (lhu/sll/andi/+tbl-2) loses v1 to the [0]-value pair, because the [-1] value
+ * (2 refs, life 1) outranks everything. Loading [-1] FIRST (`sn = *p1; c = *p0;`, g5/01int0) puts the chain in v1 and
+ * fixes mask/ff00/9 = t2?/t3/t4 but then r.vx (sra, prio 2.67) takes a1 before -35 (1.71) -> -35 in a3, &[0] in t0.
+ * LEFT: target needs -35 in a1 ahead of r.vx and the [-1] value - no source form found that raises -35's priority. */
 /* (no Driver 2 counterpart) - HUD sprite pair + rotating overlay */
 
 typedef struct { short vx, vy, vz, pad; } SVECTOR;
@@ -101,7 +104,6 @@ void func_000473F0(DVECTOR *pos, int a1, int a2, int intensity)
     poly->clut = D_000B9240.clut;
     poly->tpage = D_000B9240.tpage | 0x20;
     addPrim(current->ot + 0x1079, poly);
-    do {
     current->primptr += sizeof(POLY_FT4);
 
     poly = (POLY_FT4 *)current->primptr;
@@ -112,10 +114,13 @@ void func_000473F0(DVECTOR *pos, int a1, int a2, int intensity)
     poly->b0 = intensity >> 2;
 
     size.vx = -35;
+    do {
     size.vy = -35;
     idx = (angle >> 1) & 0xFFF;
-    r.vx = ((D_0008EAAA[idx * 2] - D_0008EAAA[idx * 2 - 1]) * size.vx) >> 12;
-    r.vy = ((D_0008EAAA[idx * 2] + D_0008EAAA[idx * 2 - 1]) * size.vy) >> 12;
+    { short *p0 = &D_0008EAAA[idx * 2]; short *p1 = &D_0008EAAA[idx * 2 - 1]; int c, sn;
+    c = *p0; sn = *p1;
+    r.vx = ((c - sn) * size.vx) >> 12;
+    r.vy = ((*p0 + *p1) * size.vy) >> 12; }
 
     poly->x0 = pos->vx + ((r.vx * 3) >> 1);
     poly->y0 = pos->vy + r.vy;
