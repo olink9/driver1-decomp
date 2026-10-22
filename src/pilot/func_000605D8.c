@@ -1,8 +1,7 @@
-/* r3-14 (99.36): statement order from a dependency-safe permutation sweep + loop rects via D_000C0280[idx]
-   (loop.c's hoisted base becomes the 'addu a1,t3' copy). Left: only big (F80 copy) vs the car field loads:
-   target big=t5 above a[52]/a[16]/a[50]=t6/t7/t8, ours fields t5/t6/t7 and big t8. Global-alloc priority:
-   big 5 refs/103 insns = .097 vs fields 3 refs/22-24 = .125-.136; big would need 7-8 refs. ?:, if/else,
-   block-local loop lim, asm("" : "+r"(big)) placements all tried. */
+/* FAKEMATCH: the loop tests a copy `wide = big;` made at loop entry. The copy only steers global-alloc:
+   the copy pseudo takes the loop use, so big's live range shrinks to before the loop (4 refs/51 insns =
+   .157 priority) and big (t5) outranks the car field loads (3/22 = .136; they get t6/t7/t8). Without it: 99.36 (big 5 refs/103 insns = .097). Found by decomp-permuter (run3-r4); a real C form would be welcome.
+   Earlier: statement order from a dependency-safe permutation sweep + loop rects via D_000C0280[idx]. */
 typedef struct { int a[99]; } CAR;
 typedef struct { char a[80]; } ENT;
 typedef struct { int x0, x1, z0, z1; } R;
@@ -57,6 +56,8 @@ void func_000605D8(void)
     q->z1 = pos[2] + lim2;
     D_000C0250[1] = car;
     if (i < 25) {
+        int wide = big;
+
         rl = rb;
         cb = car - 1;
         for (; i < 25; i += 4) {
@@ -64,7 +65,7 @@ void func_000605D8(void)
                 idx = cnt++;
                 p = &cb[i];
                 lim = 400;
-                if (big)
+                if (wide)
                     lim = 1200;
                 pos[0] = p->a[50] + (p->a[16] >> 8);
                 pos[2] = p->a[52] + (p->a[18] >> 8);
