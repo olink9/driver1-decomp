@@ -1,3 +1,15 @@
+/* run3 r4-11b (98.41 kept; structural lead found, not yet above 98.41):
+   The target is a REAL pass loop. With `for (pass = 0; pass < 2; pass++) { if (pass) { pos[0] = px + FIX(c*180 + ns*-900);
+   pos[1] = z0 + FIX(ns*180 - c*900); } for (d...) }` and NO x1 variable, loop.c hoists the x chain first and then finds
+   the z chain "not desirable": move_movables does `threshold -= 3` per moved insn, so the second chain fails
+   threshold*savings*life >= insn_count. cse2 then shares -900ns/180c with pos[0] (= the target's s0). This gives
+   EXACTLY the target global order: len t5 > magic t6 > K t7 > i t8 > stepz t9 > x1 s0 > stepx s1 (depth-4 weights).
+   Best real-C form so far (94.10, build/r4-11b/r4-11b_best_real_pass_loop.c): that loop + pre-loop
+   `dz = c * -900 - ns * 180;` (pos[1] = z0 + FIX(dz)) + inner `x = (pos[0]+K)/750; z = (pos[1]+K)/750;
+   x -= m->x*2; x -= 9936; z -= m->z*2; z -= 9936;` (gets x-sum v0 / z-sum v1 right).
+   Left in that form: x/z a0/a1 swap (z 32 refs/17 outranks x 32/23 and takes a0; target needs x first),
+   mfhi a2/a1 follow from it; z0 t0 vs D_000C039C t3 swap; z0's cam.z/car->z loads scheduled after the pos[0] store
+   (target: before); i-loop top `andi a1` (old). A do{}while(0) around if-block+d-loop (FAKEMATCH, not kept) gives 94.22. */
 /* run3 r4-11: 83.35 -> 98.41. Fixes: (1) the pass loop is goto-built (`again: ... if (++pass < 2) goto again;`) so
    loop.c leaves the pass-2 chain inside `if (pass)` and the D_000C039C lo_sum in the pass region, as in the target;
    (2) the pre-loop x is its own variable `px` (reusing the inner-loop x made it a global pseudo); (3) the inner loop
