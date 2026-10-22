@@ -1,6 +1,15 @@
-/* r3-14 (94.09): tpage read as a struct field (D_000B9148.tpageid) keeps the global loads below the -1 stores;
-   setSemiTrans(null) after the tpage store gives the code reload. Left: sched2 places sw s1 (prologue), the
-   loop's y0 store (sh s1) one slot early, and the 0xFFFFFF mask lui/ori + tpage lhu vs lbu code at the tail. */
+/* FAKEMATCH-CANDIDATE (not matched): r4-05 best 99.72. The do { } while (0) around the r0 store is a pure steering
+   hint (its loop notes act as a sched barrier); without it the clean C scores 98.68 (best store order: r0,g0,b0,u0,
+   y0,v0,... ) / 98.41 (this order).
+   Fixed this run: (1) `null->tpage = digit_texture.tpageid` (D_000B9140+8; fnscore's relaxed check accepts the label)
+   fixes the whole tail (mask lui/ori order, lhu before lbu code). (2) y copied into a user local `ypos` AFTER the
+   width/current setup: the copy insn's later luid lets sched2 place `sw s1` after `lw current; move t4` (prologue rows).
+   (3) the do-while(0) around r0 puts `sh y0` after `sh x0`.
+   LEFT: s0/s1 swap (ypos vs the hoisted fontDigit base). Global-alloc priority: fontDigit base has a REG_EQUIV const,
+   so local-alloc doubles its live length (3 refs/162 insns = 185); a param pseudo (REG_EQUIV stack slot) is doubled too
+   (3/176 = 170 -> loses, = target) but the user var ypos isn't (3/85 = 352 -> wins s0). Wrapping `pDigit = ...` in a
+   second do-while(0) fixes s0/s1 (loop-depth ref weight) but shuffles t1/t2/a0 (99.63). Need: a late y copy that keeps
+   a REG_EQUIV / long live length, or more refs on the fontDigit base. */
 /* Driver 2: PrintDigit (PRES.C) */
 typedef struct { char *primptr; unsigned int *ot; } DB;
 extern long long D_00097530;
@@ -69,7 +78,9 @@ short func_0005CF10(int x, int y, char *string)
     char fixedWidth;
     char vOff, h;
     POLY_FT3 *null;
+    int ypos;
 
+    ypos = y;
     width = x;
     font = (SPRT *)current->primptr;
 
@@ -102,11 +113,13 @@ short func_0005CF10(int x, int y, char *string)
         }
 
         setSprt(font);
+        do {
         font->r0 = D_00097698;
+        } while (0);
         font->g0 = *(unsigned char *)&D_00097699;
         font->b0 = *(unsigned char *)&D_0009769A;
         font->x0 = width + ((fixedWidth - w) >> 1);
-        font->y0 = y;
+        font->y0 = ypos;
         font->u0 = digit_texture.u0 + pDigit->xOffset;
         font->v0 = digit_texture.v0 + vOff;
         font->clut = digit_texture.clutid;
@@ -130,7 +143,7 @@ short func_0005CF10(int x, int y, char *string)
     null->y1 = -1;
     null->x2 = -1;
     null->y2 = -1;
-    null->tpage = D_000B9148.tpageid;
+    null->tpage = digit_texture.tpageid;
     setSemiTrans(null, 1);
     addPrim(current->ot, null);
     current->primptr += sizeof(POLY_FT3);
