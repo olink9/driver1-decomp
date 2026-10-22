@@ -1,15 +1,23 @@
-/* run3 r4-11b (98.41 kept; structural lead found, not yet above 98.41):
-   The target is a REAL pass loop. With `for (pass = 0; pass < 2; pass++) { if (pass) { pos[0] = px + FIX(c*180 + ns*-900);
-   pos[1] = z0 + FIX(ns*180 - c*900); } for (d...) }` and NO x1 variable, loop.c hoists the x chain first and then finds
-   the z chain "not desirable": move_movables does `threshold -= 3` per moved insn, so the second chain fails
-   threshold*savings*life >= insn_count. cse2 then shares -900ns/180c with pos[0] (= the target's s0). This gives
-   EXACTLY the target global order: len t5 > magic t6 > K t7 > i t8 > stepz t9 > x1 s0 > stepx s1 (depth-4 weights).
-   Best real-C form so far (94.10, build/r4-11b/r4-11b_best_real_pass_loop.c): that loop + pre-loop
-   `dz = c * -900 - ns * 180;` (pos[1] = z0 + FIX(dz)) + inner `x = (pos[0]+K)/750; z = (pos[1]+K)/750;
-   x -= m->x*2; x -= 9936; z -= m->z*2; z -= 9936;` (gets x-sum v0 / z-sum v1 right).
-   Left in that form: x/z a0/a1 swap (z 32 refs/17 outranks x 32/23 and takes a0; target needs x first),
-   mfhi a2/a1 follow from it; z0 t0 vs D_000C039C t3 swap; z0's cam.z/car->z loads scheduled after the pos[0] store
-   (target: before); i-loop top `andi a1` (old). A do{}while(0) around if-block+d-loop (FAKEMATCH, not kept) gives 94.22. */
+/* run3 r4-11c: 98.41 -> 99.12, REAL pass loop (no goto) - this is now the long-term base.
+   Fixes from the r4-11b real-loop form (94.10): (1) `dx = c * 180; pos[0] = px + FIX(ns * -900 - dx);` - the c*180
+   product as its own statement (permuter find; 94.10 -> 97.17) fixes car->x load position and the a1/a2 product regs;
+   (2) pre-loop order from a def-use-safe sweep: ns, stepx, z0, c, len, px, stepz, dx, dz, pos0, pos1 - z0 computed
+   EARLY lengthens its life so the hoisted D_000C039C base (REG_EQUIV, doubled length) outranks it in global-alloc
+   (z0 t3 / base t0 as target) and its cam.z/car->z loads land before the pos[0] store (97.17 -> 99.12).
+   Left (both pure allocation, schedule identical):
+   (a) i-loop top: andi a1 vs v1. local-alloc (block 1): chain {i<<2, *5, <<4} = 3*12/8 = 4.5 beats the la
+       D_00098950 qty (2*4/2 = 4), so it takes v0 and the andi pseudo ends in v1; target needs la first. Lengths/refs
+       of both are fixed by the target's own insn order - unreachable with a block-local andi pseudo. Making it a
+       global pseudo by reusing x (`x = (unsigned char)i; car = &D[x]; s = &S[x];`) gives 99.26 (fixes andi a1, not the
+       v0/v1 la pair) - variable reuse for steering (r4-04), not kept; file build/r4-11c/r4-11c_99.26_xreuse.c.
+   (b) inner loop: x/z a1/a0 swapped (target x a0, z a1; mfhi a2/a1). In local-alloc (block 8) 248 (x sra) and 255
+       (z sra) both get a0 (non-overlapping lives); z (32 refs/17) is global-allocated before x (32/23) and takes a0
+       by preference. The target has 255 in a1, i.e. a0 busy over z's sra life = a different sched1 order in that
+       block. 246/253 (the hi pseudos) are local-alloc'd to HI, then reload spills HI (s7 saved = spill reg, as in
+       target) and re-allocates them. 8 inner-loop form variants (split/merged -= m->x*2, -= 9936) all worse.
+   Tried: z0 forms ((cam.z - car->z) + 750 reassociates; add750() keeps the target addiu-then-subu), 5! pre-loop
+   orders x 3 z0 forms, slot/car index forms (unsigned char k, i & 0xFF, s before car, SLOT D_00098950[] = hoisted).
+   Earlier history: */
 /* run3 r4-11: 83.35 -> 98.41. Fixes: (1) the pass loop is goto-built (`again: ... if (++pass < 2) goto again;`) so
    loop.c leaves the pass-2 chain inside `if (pass)` and the D_000C039C lo_sum in the pass region, as in the target;
    (2) the pre-loop x is its own variable `px` (reusing the inner-loop x made it a global pseudo); (3) the inner loop
@@ -79,8 +87,9 @@ void func_00062DB0(MAP *m)
     int px;
     int ns, c;
     int stepx, stepz;
-    int x1;
+    int dx;
     int z0;
+    int dz;
     int idx;
     unsigned char bits;
     int pos[2];
@@ -94,27 +103,28 @@ void func_00062DB0(MAP *m)
             continue;
         if (s->id == m->id + 1)
             continue;
-        px = car->x + D_0009E714.x;
-        z0 = add750(D_0009E714.z) - car->z;
         ns = -D_0008EAA8[(car->ang & 0xFFF) * 2];
         stepx = FIX(ns * 750);
+        z0 = add750(D_0009E714.z) - car->z;
         c = D_0008EAA8[(car->ang & 0xFFF) * 2 + 1];
         len = car->len * 20 + 450;
+        px = car->x + D_0009E714.x;
         stepz = FIX(c * 750);
-        x1 = px + FIX(c * 180 + ns * -900);
-        pos[0] = px + FIX(ns * -900 - c * 180);
-        pos[1] = z0 + FIX(c * -900 - ns * 180);
-        pass = 0;
-    again:
-        {
+        dx = c * 180;
+        dz = c * -900 - ns * 180;
+        pos[0] = px + FIX(ns * -900 - dx);
+        pos[1] = z0 + FIX(dz);
+        for (pass = 0; pass < 2; pass++) {
             if (pass) {
-                pos[0] = x1;
+                pos[0] = px + FIX(c * 180 + ns * -900);
                 pos[1] = z0 + FIX(ns * 180 - c * 900);
             }
             for (d = -900; d < len; d += 750) {
-                x = (pos[0] + 0x7270E0) / 750 - m->x * 2;
-                z = (pos[1] + 0x7270E0) / 750 - m->z * 2;
+                x = (pos[0] + 0x7270E0) / 750;
+                z = (pos[1] + 0x7270E0) / 750;
+                x -= m->x * 2;
                 x -= 9936;
+                z -= m->z * 2;
                 z -= 9936;
                 if ((unsigned)x < 128 && (unsigned)z < 128) {
                     idx = (x >> 1) + ((z >> 1) << 6);
@@ -139,7 +149,8 @@ void func_00062DB0(MAP *m)
                 pos[1] += stepz;
             }
         }
-        if (++pass < 2) goto again;
     }
 }
+
+
 

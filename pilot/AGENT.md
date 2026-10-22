@@ -13,9 +13,10 @@ Work through them in order. For each one:
    it also prints that function's **debug-symbol prototype** (source file, parameter names and registers,
    locals, stack frame) and its **REDRIVER2 C source**. Driver 2 runs on the same engine, so start from
    that code, but Driver 1's version often differs (other constants, fields, extra or missing branches).
-2. Write `src/pilot/<SYMBOL>.c`, defining `SYMBOL` with exactly that name (keep the `func_XXXXXXXX`
-   name; put the Driver 2 name in a comment). Declare every global and function you use with the exact
-   name the asm uses (`D_000BE754`, `func_00012498`, `DrawPrim`, ...).
+2. Write `src/pilot/<SYMBOL>.c`, defining `SYMBOL` with exactly that name (the symbol as
+   queue.tsv and the asm spell it: a confirmed name from symbol_addrs.txt, or `func_XXXXXXXX`; don't
+   rename it yourself, put a probable Driver 2 name in a comment). Declare every global and function you use with the exact
+   name the asm uses (`D_000BE754`, `ClearMem`, `DrawPrim`, ...).
 3. Score it: `distrobox enter build -- .venv/bin/python tools/fnscore.py SYMBOL src/pilot/SYMBOL.c --diff`.
    It prints `MATCH <percent>` and the differing rows (`--asm` prints both full listings). 100.0 means
    zero differing instructions. A string literal or jump table may come from your own `.rodata`/`.sdata`;
@@ -125,7 +126,7 @@ GCC 2.7.2-psx and 2.8.x each failed functions that cdk matches.
 
 - (b047) `andi 0xff`/`0xf0` at call sites: give callees real prototypes with `unsigned char` params (K&R `()` loses it).
 
-- (b048) Small helpers that were already matched (e.g. ClearMem func_00012498) get inlined: copy the matched body
+- (b048) Small helpers that were already matched (e.g. ClearMem) get inlined: copy the matched body
   as a `static inline` into the caller's file.
 
 - (b052) Delay slots tell the global's form: `long long` form is never moved into a delay slot (target shows `nop`);
@@ -319,3 +320,4 @@ real proof. fnscore 100 is necessary, linkcheck pass is what counts. Hand-writte
 - (r4-14b) Before sweeping, check a register target is REACHABLE: a constant with 3 refs can never beat a 4-ref ~9-insn temp in local-alloc - look for an extra ref or a set-twice (global) pseudo instead. Reusing an index for the value it loads (`idx = *p0`) reshuffled a whole single-block function. Permuter `[weight_overrides]` (perm_ins_block = 0 ...) in settings.toml stops do-while/if(1) wrappers.
 - (r4-11b) loop.c move_movables lowers its threshold by 3 per moved insn: a target that hoists one invariant chain but recomputes its sibling inside the loop = a REAL loop with both chains in the body, the hoisted one first (no goto needed). A goto loop drops one loop-depth weighting level. `x = q - m->x*2` vs `x = q; x -= m->x*2;` changes which local group gets v0/v1. GCC 2.7.2.3 sources (loop.c, flow.c, global.c, local-alloc.c, jump.c) are in pilot/gccsrc/ - read them for exact heuristics.
 - (r4-cell) Refs and live length move together: removing duplicated-arm statements cuts length as much as refs. To flip a global-alloc race add refs that don't extend the range (several refs in the same insns). In a shared inline, sched1 issues the divide with the longer dependent chain first regardless of source order. `andi 0xffff` on a computed index: casts, ushort locals/params/inline helpers, bitfields, explicit & all fold (combine knows nonzero bits) - unsolved.
+- (r4-11c) Moving a variable's assignment much EARLIER lengthens its life and lowers its global-alloc priority so a hoisted const address (doubled length) wins. `(a - b) + K` is reassociated; an inline `add750(a) - b` keeps addiu-before-subu. An s-reg saved but never used next to mult code = reload spilled HI; the mfhi regs then come from reload, not local-alloc. A product as its own statement (`dx = c * 180;`) moves neighbouring loads.
