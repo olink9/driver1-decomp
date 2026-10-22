@@ -1,6 +1,10 @@
-/* r3-14 (94.48): preamble statement order found by a dependency-safe permutation sweep. Left: s-reg priorities -
-   bp (D_00089030 walker) must outrank u/w (target s5/s6/s7 = bp/w/u, ours s7/s5/s6), and the step[0] temp
-   should land in s0 (ours step[2]); the f/g/e address temps and the i=k=0 init are scheduled differently. */
+/* r4-13 (94.82): ROOT CAUSE of the s5/s6/s7 swap found: global-alloc priority floor_log2(refs)*refs/len of bp (7 refs)
+   must fall between x (8/198 = .1212) and w (8/202 = .1188), i.e. bp live length 116-117 after sched1.
+   bp = D_00089030 before the for gives len 124-129 (bp loses to u/w -> s7); inside the for init after
+   `k = i = 0` gives len 113 (u/w now s7/s6 as in the target, but bp outranks z/y/x -> s2). Its length is set by
+   where sched1 places the lo_sum among the priority-1 leaves (i=0, k=i, base lo_sum) - RTL position decides ties.
+   Single-line moves that hit len 116/117 wreck the rest of the preamble schedule (88-91%).
+   r3-14 (94.48): preamble statement order found by a dependency-safe permutation sweep. */
 /* Sibling of func_00027A4C: 4x4-subdivided bilinear quad (5x5 grid + UVs), then RotTransPers. */
 typedef struct { short x, y, z, pad; } SV;
 extern SV D_000A1B00[];
@@ -38,10 +42,11 @@ void func_00029448(unsigned int verts, unsigned int uv, unsigned int uv2, SV *v)
 
     s = (SV *)(((verts & 0xFF) << 3) + (int)v);
     u = (uv & 0xFF) << 4;
-    x = s->x;
     y = s->y;
+    x = s->x;
     z = s->z;
     e = (SV *)(((verts >> 24) << 3) + (int)v);
+    f = (SV *)(((verts >> 16 & 0xFF) << 3) + (int)v);
     g = (SV *)(((verts >> 24 & 0xFF) << 3) + (int)v);
     duv[0] = (((uv >> 16 & 0xFF) << 4) - u) >> 2;
     w = (uv & 0xFF00) >> 4;
@@ -56,9 +61,8 @@ void func_00029448(unsigned int verts, unsigned int uv, unsigned int uv2, SV *v)
     estep[2] = (e->z - (short)z) >> 2;
     pp = D_000A1B00;
     step[1] = (c->y - (short)y) >> 2;
-    estep[0] = (e->x - (short)x) >> 2;
     step[2] = (c->z - (short)z) >> 2;
-    f = (SV *)(((verts >> 16 & 0xFF) << 3) + (int)v);
+    estep[0] = (e->x - (short)x) >> 2;
     cstep[0] = (f->x - g->x) >> 2;
     cstep[1] = (f->y - g->y) >> 2;
     cstep[2] = (f->z - g->z) >> 2;
@@ -66,9 +70,8 @@ void func_00029448(unsigned int verts, unsigned int uv, unsigned int uv2, SV *v)
     dstep[1] = (cstep[1] - step[1]) >> 2;
     dstep[2] = (cstep[2] - step[2]) >> 2;
     dstep[0] = (cstep[0] - step[0]) >> 2;
-    bp = D_00089030;
     duv3[1] = (duv2[1] - duv[1]) >> 2;
-    for (k = i = 0; i < 5; i++, bp++) {
+    for (k = i = 0, bp = D_00089030; i < 5; i++, bp++) {
         rx = x;
         ry = y;
         rz = z;
