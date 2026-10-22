@@ -1,4 +1,4 @@
-/* WIP 99.95 (run2-r3): 'civ->t != 1' swap fixed by moving the rcossin step into static inline step_car().
+/* MATCHED run3 (coordinator, 2026-10-22): func_00013D88 really returns int - declaring it void left v0 free after the call, so reload retried the spilled LO into v0. Old notes: (run2-r3): 'civ->t != 1' swap fixed by moving the rcossin step into static inline step_car().
  * Remaining: dz*dz product lands in v0 (target v1). Cause (.greg): dz*dz pseudo wins LO, dx*dx gets a2, then
  * reload spills LO for the dx*dx mult and retries dz*dz into the first free GPR (v0). In the target dx*dx must win
  * LO instead. Tried: operand/statement order, sq() inline, dist2() inline, in-place *=, 730 <= ..., !(<).
@@ -60,7 +60,7 @@ extern unsigned char D_00096FC4;
 extern void func_00063AB4();
 extern void func_0001A008();
 extern void func_000143CC();
-extern void func_00013D88();
+extern int func_00013D88();
 extern void func_0001D608();
 extern void func_00018C74();
 extern void func_00018618();
