@@ -1,9 +1,8 @@
 /* func_00014A8C - DrawAllTheCars-like (sort visible cars by distance, then draw)
- * run2-r3 (r3-09): 98.59. Fixed: car loop as a biv `c++` (t[0]/t[2] via c->t, call arg indexed
- * D_0009B230[i].t) -> vz giv anchor + separate call giv; ENT pointer biv `e++`; separate counter `m`
- * for the draw loop (fixed the s2/s3 swap). Left: prologue only - target computes the car base into
- * a0 with the lui in v0 (split = base pseudo global), ours ties it (lui v1/addiu v1) and schedules it
- * after s7. Swept: all 360 orders of the six init statements, for/while/do forms, initializer/register c.
+ * run3-r4: MATCH. Final fix: the car pointer `c` of the sort loop is REUSED for the per-entry car in the
+ * draw loop (`c = &D_0009B230[e->f0]`, no separate `car`) - gives the split `lui v0; addiu a0,v0` base
+ * (lesson r4-02), and `c = D_0009B230;` written before `e = D_00098950;` fixes the prologue order.
+ * Earlier: car loop biv c++ with call arg D_0009B230[i].t, ENT biv e++, separate draw counter m.
  */
 typedef struct {
     unsigned char f0, f1, f2, f3, f4, f5;
@@ -61,15 +60,14 @@ void func_00014A8C(void)
     unsigned char o;
     int idx;
     ENT *e;
-    CAR *car;
     int *cur;
     char *p;
     CAR *c;
     int r;
     int a1;
 
-    e = D_00098950;
     c = D_0009B230;
+    e = D_00098950;
     *(int *)&D_000973B4 = 0;
     camx = D_0008A8F0[0];
     camz = D_0008A8F0[2];
@@ -118,24 +116,24 @@ void func_00014A8C(void)
         if (e->f10 == 1 && ((e->f5 != 0 && e->f1 == 4) || e->f1 == 9))
             func_00046000(idx);
         if (e->f17 & 1) {
-            car = &D_0009B230[e->f0];
+            c = &D_0009B230[e->f0];
             a1 = e->f24;
             if (a1 & 1) {
                 if (e->f44 != 0x7FFFFFFF) {
-                    if (e->f44 < car->f20) {
+                    if (e->f44 < c->f20) {
                         if (a1 == 3) func_000439E4(idx, 0);
                         else func_000439E4(idx, 1);
-                    } else if (car->f20 < e->f44) {
+                    } else if (c->f20 < e->f44) {
                         if (a1 == 1) func_000439E4(idx, 0);
                         else func_000439E4(idx, 1);
                     }
                 }
             } else {
                 if (e->f40 != 0x7FFFFFFF) {
-                    if (e->f40 < car->f18) {
+                    if (e->f40 < c->f18) {
                         if (a1 == 0) func_000439E4(idx, 0);
                         else func_000439E4(idx, 1);
-                    } else if (car->f18 < e->f40) {
+                    } else if (c->f18 < e->f40) {
                         if (a1 == 2) func_000439E4(idx, 0);
                         else func_000439E4(idx, 1);
                     }
