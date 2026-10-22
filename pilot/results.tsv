@@ -1058,3 +1058,4 @@ time	symbol	size	best	attempts	status
 2026-10-22	func_0001A30C	1600	100.0	1	matched run3-coord (callee func_00013D88 void->int)
 2026-10-22T20:47:23Z	func_0005CF10	596	99.72	40	gave_up	run3-r4
 2026-10-22T20:53:36Z	func_00033870	648	100.0	14	matched	run3-r4
+2026-10-22T20:57:40Z	func_00062DB0	868	98.41	30	gave_up	run3-r4
