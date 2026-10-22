@@ -1,7 +1,7 @@
-/* WIP 99.91 (run2-r3 diagnosis): only the mfhi register of the first two /1500 (target t0, ours v0).
- * .greg: the hi-part pseudos start in HI; the px mult (pos[0]/1500) sits inside the z hi span, so reload spills HI
- * and retries both into the first free GPR (v0). Target needs v0..a3 unavailable at retry (or a different HI winner).
- * Tried: all 3-divide statement orders with temps (30), declaration perms (120), inline cell(), PLAYER* locals. */
+/* func_00018900 - matched run3-r4.
+ * The mfhi t0 vs v0 leftover (spilled HI retried into the first free GPR) was fixed by declaring the
+ * tail callee with its real return type: func_00016F0C returns int (tested in func_000181B4/000154A8).
+ * The value-returning call_value form changes v0's liveness, so reload no longer picks v0 for HI. */
 typedef struct {
     unsigned char id;      /* 0x00 */
     unsigned char active;  /* 0x01 */
@@ -34,7 +34,7 @@ extern CIV D_00098950[];
 extern PLAYER D_0009B230[];
 extern void func_00014FC4();
 extern void func_00021820();
-extern void func_00016F0C();
+extern int func_00016F0C();
 
 void func_00018900(CIV *cp)
 {
