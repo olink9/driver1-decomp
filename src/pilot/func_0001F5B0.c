@@ -1,10 +1,9 @@
-/* r3-13 (run2-r3) 98.69: fixes found - D_000967A0 is a plain `int *` scalar (struct form kept the cell-pointer store
- * above the reload); `info` must stay live across the loop (a `(int)info < 0` test inside it - target keeps info in s5
- * and spills h); exactly ONE copy of the A0E20/0x4000 bump code (two copies double the lui savings -> loop.c hoists the
- * table base; target hoists only the index). The identical arms around `ht -= h` reproduce the dead hoisted flip (s6).
- * Left: s6/s7 swap of the hoisted flip (info&0x40000000) and h-sext: h-sext has 5 refs (used in both arms) vs flip 3;
- * target needs flip >= h-sext in priority but h-sext above the index (3 refs/39) and above h (spilled). Tried: h once
- * before/after the arms (refs 2-3 but live 44 -> h-sext spilled instead of h), flip tested twice, nested arms. */
+/* FAKEMATCH: the `if ((info & 0x40000000) || (int)info < 0) r = 0; else r = 0;` statement in the loop is dead code
+ * kept only for steering. Target hoists `info & 0x40000000` (s6) out of the loop and never uses it: the identical
+ * arms are cross-jumped away after global-alloc, leaving the dead hoisted flip. Testing the flip FIRST in the `||`
+ * gives it 4 refs (vs 3 for the hoisted h-sext), so it wins s6 over h-sext (s7) as in the target; `ht -= h` before
+ * the test puts the h-sext first in hoist order. Real source probably had some flip-dependent code here that
+ * compiled to identical arms. (r4-15, run3) */
 /* func_0001F5B0 - no Driver 2 counterpart (map height lookup, cf. MapHeight) */
 
 typedef struct { int vx, vy, vz, pad; } VEC;
@@ -119,7 +118,14 @@ int func_0001F5B0(VEC *pos)
             else
                 r = func_00024370(x, z, sp);
             if (r) {
-                ht = (x * sp->nx + z * sp->nz) / 4096 - sp->d; if (((int)info < 0) || (info & 0x40000000)) { ht -= h; } else { ht -= h; } if (D_000A0E20[(info >> 16) & 0x3ff][1] & 0x4000) ht += D_0008EAA8[((x + z) << 2) & 0x1ffc] >> 9;
+                ht = (x * sp->nx + z * sp->nz) / 4096 - sp->d;
+                ht -= h;
+                if ((info & 0x40000000) || ((int)info < 0))
+                    r = 0;
+                else
+                    r = 0;
+                if (D_000A0E20[(info >> 16) & 0x3ff][1] & 0x4000)
+                    ht += D_0008EAA8[((x + z) << 2) & 0x1ffc] >> 9;
                 return ht;
             }
         }
