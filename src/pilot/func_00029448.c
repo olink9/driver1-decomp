@@ -1,7 +1,10 @@
-/* r4-13 (99.84): sibling form fixed u/w and base/pp: `bits = D_00089030[i]` and LDV3(&D_000A1B00[k]) (both loop.c givs,
-   no bp/pp pointers), natural step/estep/dstep order. Left: the D_00089030 giv (7 refs) must rank between x
-   (8 refs/198 insns = .1212) and w (.1188) in global-alloc priority floor_log2(n)*n/len; its live length after sched1
-   is 115 (.1217, beats x -> s4/s5 swap). Needs len 116-117; no single statement move gives that (lens 108/114/115/118+). */
+/* FAKEMATCH: the second `dstep[0] = (cstep[0] - step[0]) >> 2;` (after duv3) is a redundant recompute that only
+   steers allocation: its extra store survives to sched1 and adds one insn to block 0 after the D_00089030 giv init,
+   so x/y/z/u/w and the giv each live one insn longer and the giv (7 refs) drops below x in global-alloc order
+   (x -> s4, giv -> s5 as in the target). The store is gone by final, so the code is byte-identical.
+   The permuter (r4-13b) found this and an equivalent duplicate of `duv2[0] = ...` placed after cstep[2]; no natural
+   C form found (pointer/inline-helper/loop/type/tail-duplication variants all broke other allocation).
+   History: r3-14 94.48, r4-13 99.84 (sibling giv forms), r4-13b 100.0 with this hint. */
 /* Sibling of func_00027A4C: 4x4-subdivided bilinear quad (5x5 grid + UVs), then RotTransPers. */
 typedef struct { short x, y, z, pad; } SV;
 extern SV D_000A1B00[];
@@ -67,6 +70,7 @@ void func_00029448(unsigned int verts, unsigned int uv, unsigned int uv2, SV *v)
     dstep[2] = (cstep[2] - step[2]) >> 2;
     duv3[0] = (duv2[0] - duv[0]) >> 2;
     duv3[1] = (duv2[1] - duv[1]) >> 2;
+    dstep[0] = (cstep[0] - step[0]) >> 2;
     for (k = i = 0; i < 5; i++) {
         rx = x;
         ry = y;
