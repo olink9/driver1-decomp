@@ -28,7 +28,7 @@ extern long long D_00097530;
 #define current (*(int **)&D_00097530)
 
 extern void func_0002C564();
-extern void func_00079D20();
+extern void SetRotMatrix();
 extern void func_0002DBB4();
 extern int func_0002C5F0();
 extern int func_0002C6DC();
@@ -70,7 +70,7 @@ void func_0004287C(void)
         mp->m[0][1] = b >> 1;
         mp->m[0][2] = c2 >> 1;
         func_0002C564(&pos);
-        func_00079D20(mp);
+        SetRotMatrix(mp);
         gte_SetTransVec0(&pos);
         pos.vx = *px;
         pos.vy = obj->y;

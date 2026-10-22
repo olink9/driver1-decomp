@@ -34,10 +34,10 @@ extern int D_0009731C;
 extern XZ D_00099158[];
 extern VEC D_0008A8F0;
 
-extern void func_00034638();
-extern void func_00039978();
-extern void func_00033F9C();
-extern void func_00035394();
+extern void UnpackRegion();
+extern void CheckUnpackNewRegions();
+extern void CheckLoadAreaData();
+extern void StartSpooling();
 
 void func_00039D94(void)
 {
@@ -64,18 +64,18 @@ void func_00039D94(void)
 
     if (D_00097324 == -1)
     {
-        func_00034638(D_0009732C, D_00097328);
+        UnpackRegion(D_0009732C, D_00097328);
         p = &D_00099158[D_00097328];
         p->x = D_0009730C * D_0009733C * 3000 - D_00097398;
         p->z = D_00097314 * D_0009733C * 3000 - D_00097368;
     }
 
-    func_00039978();
+    CheckUnpackNewRegions();
 
     if (D_00097324 == D_0009732C || D_00097324 == -1)
-        func_00033F9C(D_00097320, D_0009731C);
+        CheckLoadAreaData(D_00097320, D_0009731C);
 
     D_000972FC = (D_0008A8F0.vx + D_00097398) / 3000;
     D_00097300 = (D_0008A8F0.vz + D_00097368) / 3000;
-    func_00035394();
+    StartSpooling();
 }

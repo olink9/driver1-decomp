@@ -26,11 +26,11 @@ extern MAT D_000AF6A0[];
 extern MAT D_0008AA38, D_000BBE84, D_000BBEA4, D_0008A1EC, D_000AF9C0;
 extern struct { int a[4]; int cur; int prev; } D_0009D8DC;
 extern void func_00077D6C();
-extern void func_0004EB10();
+extern void InvertMatrix();
 extern void func_0004EA6C(void *m, short a);
 extern void MulMatrix0();
 extern void RotMatrixY();
-extern void func_00079D20();
+extern void SetRotMatrix();
 extern void func_0004EAC0();
 
 #define US(x) (*(unsigned short *)&x)
@@ -88,7 +88,7 @@ void func_0003D810(int player, int inside)
 
     func_00077D6C(0x100);
     I(D_000970E4) = 0x100;
-    func_0004EB10(&D_000AF6A0[player], &D_000BBE84);
+    InvertMatrix(&D_000AF6A0[player], &D_000BBE84);
 
     if ((US(D_0009752C) & 3) != 3) {
         func_0004EA6C(&D_000BBE84, 0x800);
@@ -109,7 +109,7 @@ void func_0003D810(int player, int inside)
         D_000BBE84.m[0][1] = -D_000BBE84.m[0][1];
         D_000BBE84.m[0][2] = -D_000BBE84.m[0][2];
     }
-    func_0004EB10(&D_000BBE84, &D_000BBEA4);
+    InvertMatrix(&D_000BBE84, &D_000BBEA4);
 
     D_0008A1EC.m[0][0] = 0x1000;
     D_0008A1EC.m[0][2] = 0;
@@ -121,7 +121,7 @@ void func_0003D810(int player, int inside)
 
     v.vx = 0;
     v.vy = -60;
-    func_00079D20(&D_000BBEA4);
+    SetRotMatrix(&D_000BBEA4);
     func_0004EAC0(&v);
     I(D_00096A48) = 10000;
     D_0008A8F0.vx += v.vx;

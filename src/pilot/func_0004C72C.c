@@ -6,7 +6,7 @@ typedef struct {
 extern long long D_000967F4, D_00096858;
 extern int D_000C7004[];
 extern int D_00096C68, D_00096C6C, D_00096C64, D_00096C60;
-extern int func_0004C610();
+extern int GetEngineRevs();
 
 /* Driver 2 name: unknown */
 void func_0004C72C(CAR *p)
@@ -32,7 +32,7 @@ b0:
             goto call;
         if (p->b84 != 0) {
 call:
-            tgt = func_0004C610(p);
+            tgt = GetEngineRevs(p);
             goto mid;
         }
     }

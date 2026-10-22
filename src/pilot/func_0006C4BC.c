@@ -13,7 +13,7 @@ extern MTEXT *D_000977C0;
 extern int D_00096F08, D_00096F0C, D_00096F10, D_00096F68, D_000977C4, D_000977C8, D_000977CC, D_000977D0;
 extern char D_000977B4[8], D_000977B8[8], D_00096F6C[];
 extern MENU D_0008D064[];
-extern void func_0004D648();
+extern void SetMasterVolume();
 extern void func_0004E454();
 extern void func_0006C8D4();
 extern int sprintf();
@@ -43,13 +43,13 @@ int func_0006C4BC(MENU *menu, int sel) {
         pad = *(unsigned short *)&D_0009752C;
         if (pad & 0x2000) {
             if (*(int *)&D_00096C94 < 0) {
-                func_0004D648(*(int *)&D_00096C94 += 100);
+                SetMasterVolume(*(int *)&D_00096C94 += 100);
                 sprintf(D_000977B4, D_00096F6C, *(int *)&D_00096C94 / 100 + 100);
                 D_000977C0[D_00096EFC].text = D_000977B4;
             }
         } else if (pad & 0x8000) {
             if (*(int *)&D_00096C94 > -10000) {
-                func_0004D648(*(int *)&D_00096C94 -= 100);
+                SetMasterVolume(*(int *)&D_00096C94 -= 100);
                 sprintf(D_000977B4, D_00096F6C, *(int *)&D_00096C94 / 100 + 100);
                 D_000977C0[D_00096EFC].text = D_000977B4;
             }

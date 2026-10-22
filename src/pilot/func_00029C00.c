@@ -19,9 +19,9 @@ extern short D_0008EAAA[];
 extern int D_000A1C08[];
 extern B8 D_0009701C;
 
-extern int func_000217C8();
-extern void func_000466D4();
-extern void func_00047A90();
+extern int ROADS_GetRouteData();
+extern void GetSmokeDrift();
+extern void Setup_Smoke();
 extern void func_00047FA4();
 extern int ratan2();
 
@@ -47,7 +47,7 @@ void func_00029C00(int player)
         idx -= 64;
     t = &D_000A295C[player][idx];
 
-    if (func_000217C8(b->vx, b->vz, surf) != 0) {
+    if (ROADS_GetRouteData(b->vx, b->vz, surf) != 0) {
         if (D_000A0E20[surf[0]][0] & 0x80)
             return;
         if (D_000A0E20[surf[0]][1] & 0x4000) {
@@ -63,13 +63,13 @@ void func_00029C00(int player)
     pos.vz = b->vz;
 
     if ((D_000A294C[player]++ & 3) == 1) {
-        func_000466D4(&vel);
+        GetSmokeDrift(&vel);
         if (t->type == 2) {
             VECTOR v2 = {0, 50, 0};
-            func_00047A90(&pos, 100, 500, 3, 0, &vel, 0);
+            Setup_Smoke(&pos, 100, 500, 3, 0, &vel, 0);
             func_00047FA4(&pos, &v2, 5, 2);
         } else if (*(int *)&D_00097424 == 0) {
-            func_00047A90(&pos, 100, 500, 2, 0, &vel, 0);
+            Setup_Smoke(&pos, 100, 500, 2, 0, &vel, 0);
         }
     }
 

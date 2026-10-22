@@ -44,7 +44,7 @@ extern void func_0005F0EC();
 extern void func_0005FA9C();
 extern void func_00060C9C();
 extern short func_00060AD4();
-extern void func_00060C18();
+extern void SetPedestrianTurn();
 extern CAR *func_000607AC();
 extern void func_000650E4();
 extern void func_0005FF70();
@@ -127,7 +127,7 @@ void func_0005F3F8(void)
                         if (p->flags & 0x2000)
                             turn = 0x80;
                         if (p->c51 < 0x20) {
-                            func_00060C18(p, turn);
+                            SetPedestrianTurn(p, turn);
                             p->c51++;
                         } else {
                             p->vx = (spd * D_0008EAA8[((p->angle + 0x800) & 0xFFF) * 2]) >> 12;

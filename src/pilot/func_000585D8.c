@@ -9,7 +9,7 @@ extern short D_0008EAA8[];
 extern long long D_00096834;
 extern long long D_00097530;
 extern void DrawPrim();
-extern void func_00053C88();
+extern void DrawN();
 
 void func_000585D8(int *pos)
 {
@@ -48,5 +48,5 @@ void func_000585D8(int *pos)
         DrawPrim(p);
         **(int **)&D_00097530 += 20;
     }
-    func_00053C88(&v, 1);
+    DrawN(&v, 1);
 }

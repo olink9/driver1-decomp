@@ -5,7 +5,7 @@ extern int D_00097800;
 extern int D_00097808;
 extern long long D_000C784C[];
 extern void SsSetSerialVol();
-extern void func_0007A3B0();
+extern void CdControl();
 extern void func_0007A580();
 
 void func_0006F5CC(int a, int b, int c)
@@ -40,8 +40,8 @@ void func_0006F5CC(int a, int b, int c)
     }
     buf[0] = 1;
     SsSetSerialVol(0, 0x7f, 0x7f);
-    func_0007A3B0(0xD, buf, out);
+    CdControl(0xD, buf, out);
     func_0007A580(D_000977F8, pad);
-    func_0007A3B0(0x1B, pad, out);
+    CdControl(0x1B, pad, out);
     D_00096F98 = 1;
 }

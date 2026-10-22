@@ -24,9 +24,9 @@ extern unsigned char D_000BDF94[];
 extern char D_000C017C[];
 extern char D_000C6F04[];
 
-void func_00050CF8();
+void CloseShutters();
 void func_0003336C();
-void func_0003E6A0();
+void DentCar();
 void func_000513B4();
 void func_00051540();
 void func_00051374();
@@ -35,34 +35,34 @@ void func_00033AF8();
 void func_0004E08C();
 void func_0004C438();
 void func_0004DE58();
-void func_0004D648();
+void SetMasterVolume();
 void func_0004E454();
-void func_0004E398();
+void StartXM();
 void func_000334B4();
 int func_1E19B4();
 void func_000430B8();
 void func_000513D4();
 void func_000514E0();
-void func_00074158();
+void SetDispMask();
 void func_00022168();
 void func_0003CFE8();
-void func_0003D4D0();
+void PlaceCameraAtLocation();
 void func_0001D590();
 void func_0003D810();
 void func_0006DBC8();
 void func_0003D6C0();
 void func_0003DC00();
-void func_0004A654();
+void DoLightning();
 void func_00025748();
 void func_0002D79C();
 void func_00059B84();
-void func_00048660();
-void func_0005C7D0(unsigned char r, unsigned char g, unsigned char b);
+void HandleDebris();
+void SetTextColour(unsigned char r, unsigned char g, unsigned char b);
 void func_0005D164();
 void func_0005B70C();
 void func_0004DF28();
 int func_0006C964();
-void func_00058DE0();
+void CheckCameraChange();
 void func_000230B0();
 void func_1E2E70();
 void func_00025C68();
@@ -73,7 +73,7 @@ void func_1E1E08();
 void func_1E0290();
 void func_0006A934();
 void func_0006E040();
-void func_00059D94();
+void ControlReplay();
 int VSync(int);
 void DrawSync(int);
 void func_0004E170();
@@ -92,9 +92,9 @@ void func_0002360C(void)
         x = 1;
     D_00096840 = x;
 
-    func_00050CF8(2, 0x140, 0x200);
+    CloseShutters(2, 0x140, 0x200);
     func_0003336C();
-    func_0003E6A0(0x17);
+    DentCar(0x17);
     func_000513B4();
     func_00051540();
     func_00051374();
@@ -107,12 +107,12 @@ void func_0002360C(void)
     func_0004C438();
     if (I(D_00096F80) != 5 && I(D_0009763C) == 0)
         func_0004DE58();
-    func_0004D648(I(D_00096C94));
+    SetMasterVolume(I(D_00096C94));
     func_0004E454(I(D_00096C90));
 
     while (D_0009709C == 0) {
         if (D_000970D8 == 3 && D_00096834 != 2)
-            func_0004E398(1);
+            StartXM(1);
         func_000334B4();
         if (D_00096800 == 1 && func_1E19B4())
             D_0009709C = 7;
@@ -121,7 +121,7 @@ void func_0002360C(void)
         func_000513D4();
         func_000514E0();
         if (I(D_00097534) == 3)
-            func_00074158(1);
+            SetDispMask(1);
         {
             unsigned short pad = *(unsigned short *)&D_0009752C;
             if (pad & 0x2000) {
@@ -147,7 +147,7 @@ void func_0002360C(void)
         case 1:
             if (D_00096899 == 0 && I(D_00096F80) == 5)
                 D_00097658.v = 1;
-            func_0003D4D0(D_00096890, 1);
+            PlaceCameraAtLocation(D_00096890, 1);
             break;
         case 3:
             func_0001D590(&D_0009B0A4[D_0009688C]);
@@ -168,7 +168,7 @@ void func_0002360C(void)
                 D_00097658.v = 1;
             if (D_00096899 == 0)
                 D_00096890 = 0;
-            func_0003D4D0(D_00096890, 0);
+            PlaceCameraAtLocation(D_00096890, 0);
             break;
         case 6:
             func_0003D6C0(D_000C017C);
@@ -228,7 +228,7 @@ void func_0002360C(void)
             if (D_00096AA8.v) {
                 D_00097128 = 78;
                 if (D_00096AA9.v == 0)
-                    func_0004A654();
+                    DoLightning();
             } else {
                 D_00097128 = 128;
             }
@@ -236,7 +236,7 @@ void func_0002360C(void)
             D_000970E8 = 1;
             D_00097128 = 26;
             if (D_00096AA8.v && D_00096AA9.v == 0)
-                func_0004A654();
+                DoLightning();
         }
 
         if (D_00096834 == 3)
@@ -255,7 +255,7 @@ void func_0002360C(void)
         if (D_00096899 && D_00096844 == 0)
             func_00059B84();
         if (I(D_00096DC4) == 0) {
-            func_00048660();
+            HandleDebris();
         } else if (D_000970D8 < *ReplayPtr - 1) {
             int f = D_000970D8 & 0x1F;
             int c;
@@ -263,7 +263,7 @@ void func_0002360C(void)
                 c = f;
             else
                 c = 32 - f;
-            func_0005C7D0(c * 8, 0, 0);
+            SetTextColour(c * 8, 0, 0);
             func_0005D164("Fast Forward", 100, 30, 0x1000, 0x1000, 0);
         }
         if (I(D_00096DC4))
@@ -297,7 +297,7 @@ void func_0002360C(void)
 
         D_00097660.v = 0;
         if (D_0009687C == 0 && D_00096899)
-            func_00058DE0(D_000970D8);
+            CheckCameraChange(D_000970D8);
         if (D_0009687C == 0) {
             if (I(D_00096F80) == 5 || I(D_00096F80) == 1)
                 func_000230B0();
@@ -314,10 +314,10 @@ void func_0002360C(void)
             func_0006C8CC();
             if (D_00096899 == 0 && D_00096844 == 0) {
                 if (I(D_00096A08) == 0) {
-                    func_0005C7D0(255, 255, 255);
+                    SetTextColour(255, 255, 255);
                     func_0005C8F4("No Controller Connected", 120);
                 } else if (I(D_00096A08) == -1) {
-                    func_0005C7D0(255, 255, 255);
+                    SetTextColour(255, 255, 255);
                     func_0005C8F4("Unsupported Controller Connected", 120);
                 } else if (D_0009709C == 0) {
                     D_0009687C = 1;
@@ -347,7 +347,7 @@ void func_0002360C(void)
         if (I(D_00096F80) != 5 && D_00096899 == 0)
             func_0006E040();
         if (D_00096899 && D_00096844 == 0)
-            func_00059D94();
+            ControlReplay();
         if (I(D_00096DC4) == 0) {
             while ((unsigned)(VSync(-1) - D_00096924) < 2)
                 ;

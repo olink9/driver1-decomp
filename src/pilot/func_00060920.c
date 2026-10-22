@@ -15,7 +15,7 @@ typedef struct {
 extern long long D_0009687C;
 extern int D_000C015C[];
 extern int D_000C0164[];
-extern int func_0001F5B0();
+extern int MapHeight();
 extern void func_000610A4();
 
 void func_00060920(OBJ *o)
@@ -26,7 +26,7 @@ void func_00060920(OBJ *o)
         return;
     o->x += o->vx;
     o->z += o->vz;
-    lim = 40 - func_0001F5B0(o);
+    lim = 40 - MapHeight(o);
     if (o->y < lim || (o->flags & 0x1000)) {
         o->y += o->vy;
         o->vy += 8;

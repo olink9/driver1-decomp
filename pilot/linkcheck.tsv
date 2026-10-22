@@ -1,5 +1,193 @@
 symbol	result	detail
-func_00012498	pass	src/pilot/func_00012498.c: 0x00012498 size 0x74; exe identical
+AddGroundDebris	pass	src/pilot/AddGroundDebris.c: 0x000426B4 size 0x1C8; exe identical
+AddRainDrops	pass	src/pilot/AddRainDrops.c: 0x00049DB8 size 0x2AC; exe identical
+AllocateReverb	pass	src/pilot/AllocateReverb.c: 0x0004E840 size 0x68; exe identical
+ApplyEffs	pass	src/pilot/ApplyEffs.c: 0x0007232C size 0x358; exe identical
+Arpeggio	pass	src/pilot/Arpeggio.c: 0x000712E4 size 0xF8; exe identical
+CalcPlayPos	pass	src/pilot/CalcPlayPos.c: 0x00072150 size 0xBC; exe identical
+Calc_Object_MatrixYZX	pass	src/pilot/Calc_Object_MatrixYZX.c: 0x0004E9C4 size 0x7C; exe identical
+CameraBar	pass	src/pilot/CameraBar.c: 0x00058FCC size 0x5E4; exe identical
+CameraCollisionCheck	pass	src/pilot/CameraCollisionCheck.c: 0x0003C998 size 0x650; exe identical
+CarBuildingCollision	pass	src/pilot/CarBuildingCollision.c: 0x0003FF0C size 0xCA0; exe identical
+CheckCameraChange	pass	src/pilot/CheckCameraChange.c: 0x00058DE0 size 0x1EC; exe identical
+CheckCarToCarCollisions	pass	src/pilot/CheckCarToCarCollisions.c: 0x0001FAFC size 0x428; exe identical
+CheckLoadAreaData	pass	src/pilot/CheckLoadAreaData.c: 0x00033F9C size 0x268; exe identical
+CheckUnpackNewRegions	pass	src/pilot/CheckUnpackNewRegions.c: 0x00039978 size 0x41C; exe identical
+ClearChannelFields	pass	src/pilot/ClearChannelFields.c: 0x0004D4D4 size 0x70; exe identical
+ClearMem	pass	src/pilot/ClearMem.c: 0x00012498 size 0x74; exe identical
+ClearRegion	pass	src/pilot/ClearRegion.c: 0x00034204 size 0xD0; exe identical
+ClearSPU	pass	src/pilot/ClearSPU.c: 0x00073630 size 0x94; exe identical
+CloseShutters	pass	src/pilot/CloseShutters.c: 0x00050CF8 size 0x130; exe identical
+CompleteSoundSetup	pass	src/pilot/CompleteSoundSetup.c: 0x0004D968 size 0x164; exe identical
+ControlReplay	pass	src/pilot/ControlReplay.c: 0x00059D94 size 0x1978, .rodata at 0x10E5C; exe identical
+CurrentKeyStat	pass	src/pilot/CurrentKeyStat.c: 0x00073208 size 0xAC; exe identical
+DentCar	pass	src/pilot/DentCar.c: 0x0003E6A0 size 0x440; exe identical
+DisplayDebris	pass	src/pilot/DisplayDebris.c: 0x000481C8 size 0x498; exe identical
+DisplayLightReflections	pass	src/pilot/DisplayLightReflections.c: 0x0004A398 size 0x2BC; exe identical
+DisplaySmoke	pass	src/pilot/DisplaySmoke.c: 0x00048E88 size 0x544; exe identical
+DisplaySpark	pass	src/pilot/DisplaySpark.c: 0x00045CEC size 0x314; exe identical
+DisplaySplashes	pass	src/pilot/DisplaySplashes.c: 0x0004A064 size 0x334, .sdata at 0x96C40; exe identical
+DisplayWater	pass	src/pilot/DisplayWater.c: 0x00045A04 size 0x2E8; exe identical
+DoAutoDirect	pass	src/pilot/DoAutoDirect.c: 0x0005B784 size 0x480, .rodata at 0x10ED4; exe identical
+DoDolbySS	pass	src/pilot/DoDolbySS.c: 0x00072740 size 0xEC; exe identical
+DoEEffects	pass	src/pilot/DoEEffects.c: 0x00070B68 size 0x394, .rodata at 0x117EC; exe identical
+DoLightning	pass	src/pilot/DoLightning.c: 0x0004A654 size 0xC4; exe identical
+DoS3MRetrig	pass	src/pilot/DoS3MRetrig.c: 0x00071504 size 0x220, .rodata at 0x1182C; exe identical
+DoToneSlide	pass	src/pilot/DoToneSlide.c: 0x00071724 size 0x68; exe identical
+DoTremolo	pass	src/pilot/DoTremolo.c: 0x000718A8 size 0x168; exe identical
+DoVibrato	pass	src/pilot/DoVibrato.c: 0x0007178C size 0x11C; exe identical
+DoVolSlide	pass	src/pilot/DoVolSlide.c: 0x000713DC size 0x90; exe identical
+DoXMPanSlide	pass	src/pilot/DoXMPanSlide.c: 0x0007146C size 0x98; exe identical
+DrawAnimatingObject	pass	src/pilot/DrawAnimatingObject.c: 0x00052C10 size 0xCC; exe identical
+DrawCarWheels	pass	src/pilot/DrawCarWheels.c: 0x0003B208 size 0x540; exe identical
+DrawCiv	pass	src/pilot/DrawCiv.c: 0x0005DBDC size 0x132C; exe identical
+DrawCompass	pass	src/pilot/DrawCompass.c: 0x00053E54 size 0x2EC; exe identical
+DrawExplosion	pass	src/pilot/DrawExplosion.c: 0x00066FF0 size 0x848; exe identical
+DrawLensFlare	pass	src/pilot/DrawLensFlare.c: 0x00046E44 size 0x5AC; exe identical
+DrawMapPSX	pass	src/pilot/DrawMapPSX.c: 0x0002C8FC size 0xEA0; exe identical
+DrawN	pass	src/pilot/DrawN.c: 0x00053C88 size 0x1CC; exe identical
+DrawOverheadMap	pass	src/pilot/DrawOverheadMap.c: 0x0005474C size 0xDE4; exe identical
+DrawPercentageBar	pass	src/pilot/DrawPercentageBar.c: 0x00056BDC size 0x5A0; exe identical
+DrawRainDrops	pass	src/pilot/DrawRainDrops.c: 0x00049590 size 0x384; exe identical
+DrawSightCone	pass	src/pilot/DrawSightCone.c: 0x00055A20 size 0x280; exe identical
+DrawStopZone	pass	src/pilot/DrawStopZone.c: 0x00057734 size 0x3B0, .rodata at 0x10C94; exe identical
+DrawTyreTracks	pass	src/pilot/DrawTyreTracks.c: 0x0002A084 size 0x548; exe identical
+DrawWheelObject	pass	src/pilot/DrawWheelObject.c: 0x0003B748 size 0x24C; exe identical
+FadeGameScreen	pass	src/pilot/FadeGameScreen.c: 0x0005073C size 0x174; exe identical
+FindFreeCamera	pass	src/pilot/FindFreeCamera.c: 0x00059658 size 0x40; exe identical
+FindNextChange	pass	src/pilot/FindNextChange.c: 0x00058D70 size 0x70; exe identical
+FindSeated	pass	src/pilot/FindSeated.c: 0x00060E4C size 0x108; exe identical
+Find_TexID	pass	src/pilot/Find_TexID.c: 0x00051898 size 0x94, .rodata at 0x109B0; exe identical
+FirstCamera	pass	src/pilot/FirstCamera.c: 0x0005C660 size 0x2C; exe identical
+FlashOverheadMap	pass	src/pilot/FlashOverheadMap.c: 0x00054618 size 0x134; exe identical
+GetEngineRevs	pass	src/pilot/GetEngineRevs.c: 0x0004C610 size 0x11C; exe identical
+GetFreeChannel	pass	src/pilot/GetFreeChannel.c: 0x0004E4B0 size 0x134; exe identical
+GetFreeSongID	pass	src/pilot/GetFreeSongID.c: 0x000736E4 size 0x54; exe identical
+GetFreq2	pass	src/pilot/GetFreq2.c: 0x00072BC0 size 0x58; exe identical
+GetSmokeDrift	pass	src/pilot/GetSmokeDrift.c: 0x000466D4 size 0x108; exe identical
+GetTEXINFName	pass	src/pilot/GetTEXINFName.c: 0x0005192C size 0x114; exe identical
+GetTextureDetails	pass	src/pilot/GetTextureDetails.c: 0x00052240 size 0x1F4; exe identical
+Getlong	pass	src/pilot/Getlong.c: 0x0004FB70 size 0x30; exe identical
+GlobalTimeStep	pass	src/pilot/GlobalTimeStep.c: 0x0001BAC0 size 0x192C; exe identical
+HandleDebris	pass	src/pilot/HandleDebris.c: 0x00048660 size 0x828; exe identical
+InitFrustrumMatrix	pass	src/pilot/InitFrustrumMatrix.c: 0x0002DADC size 0xD8; exe identical
+InitHubcap	pass	src/pilot/InitHubcap.c: 0x0003ECD4 size 0x84; exe identical
+InitModelNames	pass	src/pilot/InitModelNames.c: 0x00022700 size 0x118; exe identical
+InitOverheadMap	pass	src/pilot/InitOverheadMap.c: 0x000541C8 size 0x104; exe identical
+InitSPUChannel	pass	src/pilot/InitSPUChannel.c: 0x000731A0 size 0x68; exe identical
+InitSound	pass	src/pilot/InitSound.c: 0x0004D3DC size 0xF8; exe identical
+InitSpooling	pass	src/pilot/InitSpooling.c: 0x000337D4 size 0x9C; exe identical
+InitXMData	pass	src/pilot/InitXMData.c: 0x0006FB14 size 0x278; exe identical
+IntVols	pass	src/pilot/IntVols.c: 0x00072B8C size 0x34; exe identical
+InvertMatrix	pass	src/pilot/InvertMatrix.c: 0x0004EB10 size 0x6C; exe identical
+JCalcPat	pass	src/pilot/JCalcPat.c: 0x000722C0 size 0x6C; exe identical
+JPClearSPUFlags	pass	src/pilot/JPClearSPUFlags.c: 0x000737CC size 0x38; exe identical
+JPlayEffects	pass	src/pilot/JPlayEffects.c: 0x00070508 size 0x220, .rodata at 0x1173C; exe identical
+JPlayNote	pass	src/pilot/JPlayNote.c: 0x000702BC size 0x24C; exe identical
+LoadFont	pass	src/pilot/LoadFont.c: 0x0005C99C size 0x1CC; exe identical
+LoadGameLevel	pass	src/pilot/LoadGameLevel.c: 0x0002258C size 0x174; exe identical
+LoadInAreaTSets	pass	src/pilot/LoadInAreaTSets.c: 0x00033B10 size 0x208; exe identical
+LoadMapTile	pass	src/pilot/LoadMapTile.c: 0x00056278 size 0x154; exe identical
+LoadRegionData	pass	src/pilot/LoadRegionData.c: 0x000342D4 size 0x364; exe identical
+LoadSoundBank	pass	src/pilot/LoadSoundBank.c: 0x0004E214 size 0x134; exe identical
+Loadfile	pass	src/pilot/Loadfile.c: 0x00050E28 size 0x9C; exe identical
+LoadfileSeg	pass	src/pilot/LoadfileSeg.c: 0x00050EC4 size 0x328, .rodata at 0x1092C; exe identical
+Long2DDistance	pass	src/pilot/Long2DDistance.c: 0x00067EE0 size 0x140; exe identical
+LongQuaternion2Matrix	pass	src/pilot/LongQuaternion2Matrix.c: 0x0001B380 size 0x124; exe identical
+LoseHubcap	pass	src/pilot/LoseHubcap.c: 0x0003ED78 size 0x2A4, .sdata at 0x96A8C; exe identical
+MangleWheelModels	pass	src/pilot/MangleWheelModels.c: 0x0003C6CC size 0x2CC; exe identical
+MapHeight	pass	src/pilot/MapHeight.c: 0x0001F5B0 size 0x46C; exe identical
+MoveHubcap	pass	src/pilot/MoveHubcap.c: 0x0003F01C size 0x2C4, .sdata at 0x96A9C; exe identical
+NoMoreCamerasErrorMessage	pass	src/pilot/NoMoreCamerasErrorMessage.c: 0x0005C5B0 size 0xB0; exe identical
+OK_To_Zoom	pass	src/pilot/OK_To_Zoom.c: 0x0003DEE0 size 0xB4; exe identical
+PlaceCameraAtLocation	pass	src/pilot/PlaceCameraAtLocation.c: 0x0003D4D0 size 0x130; exe identical
+PlacePoolForCar	pass	src/pilot/PlacePoolForCar.c: 0x00040BAC size 0x728; exe identical
+PlaceShadowForCar	pass	src/pilot/PlaceShadowForCar.c: 0x0002ADEC size 0x420; exe identical
+PlayRender	pass	src/pilot/PlayRender.c: 0x0006D610 size 0x78; exe identical
+PlaySFX	pass	src/pilot/PlaySFX.c: 0x00073104 size 0x9C; exe identical
+PlaySpeech	pass	src/pilot/PlaySpeech.c: 0x0004C96C size 0x60; exe identical
+PlotSkyPoly	pass	src/pilot/PlotSkyPoly.c: 0x0004F34C size 0x47C; exe identical
+PrintDigit	pass	src/pilot/PrintDigit.c: 0x0005CF10 size 0x254; exe identical
+PrintString	pass	src/pilot/PrintString.c: 0x0005CC68 size 0x2A8; exe identical
+PrintStringRightAligned	pass	src/pilot/PrintStringRightAligned.c: 0x0005C864 size 0x90; exe identical
+ProcessMapLump	pass	src/pilot/ProcessMapLump.c: 0x0002DFEC size 0x244, .rodata at 0x10430; exe identical
+ProcessSpoolInfoLump	pass	src/pilot/ProcessSpoolInfoLump.c: 0x000346C8 size 0x140; exe identical
+ProcessTextureInfo	pass	src/pilot/ProcessTextureInfo.c: 0x00051A40 size 0x9C; exe identical
+ROADS_GetRouteData	pass	src/pilot/ROADS_GetRouteData.c: 0x000217C8 size 0x58; exe identical
+ReInitFrontend	pass	src/pilot/ReInitFrontend.c: 0x00025638 size 0x110; exe identical
+ReInitSystem	pass	src/pilot/ReInitSystem.c: 0x0006D56C size 0xA4; exe identical
+RecordCamera	pass	src/pilot/RecordCamera.c: 0x00058B2C size 0x244; exe identical
+ResetSound	pass	src/pilot/ResetSound.c: 0x0004D544 size 0xB4; exe identical
+RoundShadow	pass	src/pilot/RoundShadow.c: 0x000451A8 size 0x2B8; exe identical
+SPE	pass	src/pilot/SPE.c: 0x00070728 size 0x440, .rodata at 0x117AC; exe identical
+ScaleCamera	pass	src/pilot/ScaleCamera.c: 0x0004FA7C size 0xF4; exe identical
+SelectCameraCar	pass	src/pilot/SelectCameraCar.c: 0x0005BC04 size 0xDC; exe identical
+SendSBK	pass	src/pilot/SendSBK.c: 0x00033D18 size 0x13C; exe identical
+SendTPage	pass	src/pilot/SendTPage.c: 0x00033870 size 0x288; exe identical
+SetChannelPitch	pass	src/pilot/SetChannelPitch.c: 0x0004DACC size 0xB8; exe identical
+SetColourByValue	pass	src/pilot/SetColourByValue.c: 0x0006ADFC size 0x14C; exe identical
+SetFrq	pass	src/pilot/SetFrq.c: 0x00073304 size 0x20; exe identical
+SetInstr	pass	src/pilot/SetInstr.c: 0x00070FD8 size 0xF8; exe identical
+SetMapPos	pass	src/pilot/SetMapPos.c: 0x000563CC size 0xD8; exe identical
+SetMasterVolume	pass	src/pilot/SetMasterVolume.c: 0x0004D648 size 0x54; exe identical
+SetNote	pass	src/pilot/SetNote.c: 0x00070EFC size 0xDC; exe identical
+SetPedestrianTurn	pass	src/pilot/SetPedestrianTurn.c: 0x00060C18 size 0x84; exe identical
+SetPer	pass	src/pilot/SetPer.c: 0x000710D0 size 0x214; exe identical
+SetShadowPoints	pass	src/pilot/SetShadowPoints.c: 0x0001D3EC size 0x1A4; exe identical
+SetTextColour	pass	src/pilot/SetTextColour.c: 0x0005C7D0 size 0x1C; exe identical
+SetVol	pass	src/pilot/SetVol.c: 0x000732D8 size 0x2C; exe identical
+SetupRain	pass	src/pilot/SetupRain.c: 0x00049538 size 0x58; exe identical
+Setup_Debris	pass	src/pilot/Setup_Debris.c: 0x00047824 size 0x26C; exe identical
+Setup_Smoke	pass	src/pilot/Setup_Smoke.c: 0x00047A90 size 0x514; exe identical
+ShowFlare	pass	src/pilot/ShowFlare.c: 0x00045718 size 0x2EC; exe identical
+ShowGroundLight	pass	src/pilot/ShowGroundLight.c: 0x00045460 size 0x2B8; exe identical
+ShowIcons	pass	src/pilot/ShowIcons.c: 0x0005972C size 0x458; exe identical
+ShowLight	pass	src/pilot/ShowLight.c: 0x0004449C size 0xD0C; exe identical
+ShowLight1	pass	src/pilot/ShowLight1.c: 0x0004428C size 0x210; exe identical
+ShowLoadingScreen	pass	src/pilot/ShowLoadingScreen.c: 0x000508B0 size 0x448, .rodata at 0x10990; exe identical
+ShowReplayMenu	pass	src/pilot/ShowReplayMenu.c: 0x00059BBC size 0x1D8; exe identical
+SilenceXM	pass	src/pilot/SilenceXM.c: 0x00073324 size 0xE4; exe identical
+Start3DSoundVolPitch	pass	src/pilot/Start3DSoundVolPitch.c: 0x0004D7E4 size 0xCC; exe identical
+StartSound	pass	src/pilot/StartSound.c: 0x0004D6B0 size 0x90; exe identical
+StartSpooling	pass	src/pilot/StartSpooling.c: 0x00035394 size 0x98; exe identical
+StartXM	pass	src/pilot/StartXM.c: 0x0004E398 size 0x74; exe identical
+StepCars	pass	src/pilot/StepCars.c: 0x0001D648 size 0x9C; exe identical
+StepOneCar	pass	src/pilot/StepOneCar.c: 0x0001D6E4 size 0x17D0; exe identical
+StringWidth	pass	src/pilot/StringWidth.c: 0x0005C7EC size 0x78; exe identical
+SubdivShadow	pass	src/pilot/SubdivShadow.c: 0x0002A808 size 0x5E4; exe identical
+SwirlLeaves	pass	src/pilot/SwirlLeaves.c: 0x00041CE4 size 0x148; exe identical
+UnpackRegion	pass	src/pilot/UnpackRegion.c: 0x00034638 size 0x90; exe identical
+UpdateEffs	pass	src/pilot/UpdateEffs.c: 0x00072684 size 0xBC; exe identical
+UpdateHardware	pass	src/pilot/UpdateHardware.c: 0x0007282C size 0x360; exe identical
+UpdatePatternData	pass	src/pilot/UpdatePatternData.c: 0x00071C74 size 0x4DC; exe identical
+UpdateSpool	pass	src/pilot/UpdateSpool.c: 0x00033604 size 0x1D0; exe identical
+UpdateWithTimer	pass	src/pilot/UpdateWithTimer.c: 0x00071AC8 size 0xEC; exe identical
+UpdateXMData	pass	src/pilot/UpdateXMData.c: 0x00071A10 size 0xB8; exe identical
+XM_CloseVAB	pass	src/pilot/XM_CloseVAB.c: 0x0006F940 size 0x54; exe identical
+XM_CloseVAB2	pass	src/pilot/XM_CloseVAB2.c: 0x0006F994 size 0x78; exe identical
+XM_DoFullUpdate	pass	src/pilot/XM_DoFullUpdate.c: 0x00071BB4 size 0xC0; exe identical
+XM_Init	pass	src/pilot/XM_Init.c: 0x0006FDF0 size 0x4CC; exe identical
+XM_Pause	pass	src/pilot/XM_Pause.c: 0x00073408 size 0xE0; exe identical
+XM_Restart	pass	src/pilot/XM_Restart.c: 0x000734E8 size 0xF4; exe identical
+XM_SetMasterVol	pass	src/pilot/XM_SetMasterVol.c: 0x000735DC size 0x54; exe identical
+XM_SetSongPos	pass	src/pilot/XM_SetSongPos.c: 0x00073020 size 0xE4; exe identical
+add_haze	pass	src/pilot/add_haze.c: 0x000493CC size 0x16C; exe identical
+animate_garage_door	pass	src/pilot/animate_garage_door.c: 0x0005334C size 0x130; exe identical
+bFindCollisionPoint	pass	src/pilot/bFindCollisionPoint.c: 0x0003F658 size 0x234; exe identical
+bFindCollisionTime	pass	src/pilot/bFindCollisionTime.c: 0x0003F88C size 0x25C; exe identical
+bcollided2d	pass	src/pilot/bcollided2d.c: 0x0003F2E0 size 0x378; exe identical
+cbready	pass	src/pilot/cbready.c: 0x0006F760 size 0xBC; exe identical
+cjpRecord	pass	src/pilot/cjpRecord.c: 0x0005BFF0 size 0x328, .rodata at 0x10E38; exe identical
+clipAgainstZ	pass	src/pilot/clipAgainstZ.c: 0x0002B20C size 0x354; exe identical
+clippedPoly	pass	src/pilot/clippedPoly.c: 0x0002B560 size 0x45C; exe identical
+damage_lamp	pass	src/pilot/damage_lamp.c: 0x000431CC size 0xA4; exe identical
+damage_object	pass	src/pilot/damage_object.c: 0x00043270 size 0x1CC; exe identical
+data_cb_misc	pass	src/pilot/data_cb_misc.c: 0x00035174 size 0x160; exe identical
+data_cb_regions	pass	src/pilot/data_cb_regions.c: 0x00034D74 size 0x170; exe identical
+data_cb_textures	pass	src/pilot/data_cb_textures.c: 0x0003497C size 0x19C; exe identical
+dist	pass	src/pilot/dist.c: 0x0005C458 size 0x70; exe identical
+draw_box	pass	src/pilot/draw_box.c: 0x000564A4 size 0x16C; exe identical
+find_lamp_streak	pass	src/pilot/find_lamp_streak.c: 0x0004315C size 0x70; exe identical
 func_0001250C	pass	src/pilot/func_0001250C.c: 0x0001250C size 0x120; exe identical
 func_0001262C	pass	src/pilot/func_0001262C.c: 0x0001262C size 0x86C; exe identical
 func_00012E98	pass	src/pilot/func_00012E98.c: 0x00012E98 size 0x23C; exe identical
@@ -12,6 +200,7 @@ func_000142CC	pass	src/pilot/func_000142CC.c: 0x000142CC size 0x100; exe identic
 func_000143CC	pass	src/pilot/func_000143CC.c: 0x000143CC size 0x3F8; exe identical
 func_000147C4	pass	src/pilot/func_000147C4.c: 0x000147C4 size 0x100; exe identical
 func_000148C4	pass	src/pilot/func_000148C4.c: 0x000148C4 size 0x1C8; exe identical
+func_00014A8C	pass	src/pilot/func_00014A8C.c: 0x00014A8C size 0x49C; exe identical
 func_00014F28	pass	src/pilot/func_00014F28.c: 0x00014F28 size 0x9C; exe identical
 func_00014FC4	pass	src/pilot/func_00014FC4.c: 0x00014FC4 size 0x374; exe identical
 func_00015338	pass	src/pilot/func_00015338.c: 0x00015338 size 0x154; exe identical
@@ -39,6 +228,7 @@ func_00018540	pass	src/pilot/func_00018540.c: 0x00018540 size 0x8; exe identical
 func_00018548	pass	src/pilot/func_00018548.c: 0x00018548 size 0x8; exe identical
 func_00018550	pass	src/pilot/func_00018550.c: 0x00018550 size 0xC8; exe identical
 func_00018618	pass	src/pilot/func_00018618.c: 0x00018618 size 0x2E8; exe identical
+func_00018900	pass	src/pilot/func_00018900.c: 0x00018900 size 0x374; exe identical
 func_00018C74	pass	src/pilot/func_00018C74.c: 0x00018C74 size 0x2D0; exe identical
 func_00018F44	pass	src/pilot/func_00018F44.c: 0x00018F44 size 0x38C; exe identical
 func_000192D0	pass	src/pilot/func_000192D0.c: 0x000192D0 size 0x44; exe identical
@@ -52,6 +242,7 @@ func_00019FEC	pass	src/pilot/func_00019FEC.c: 0x00019FEC size 0x1C; exe identica
 func_0001A008	pass	src/pilot/func_0001A008.c: 0x0001A008 size 0x1C; exe identical
 func_0001A024	pass	src/pilot/func_0001A024.c: 0x0001A024 size 0x198; exe identical
 func_0001A1BC	pass	src/pilot/func_0001A1BC.c: 0x0001A1BC size 0x150; exe identical
+func_0001A30C	pass	src/pilot/func_0001A30C.c: 0x0001A30C size 0x640; exe identical
 func_0001A94C	pass	src/pilot/func_0001A94C.c: 0x0001A94C size 0x70; exe identical
 func_0001A9BC	pass	src/pilot/func_0001A9BC.c: 0x0001A9BC size 0x25C; exe identical
 func_0001AC18	pass	src/pilot/func_0001AC18.c: 0x0001AC18 size 0x264; exe identical
@@ -59,24 +250,17 @@ func_0001AE7C	pass	src/pilot/func_0001AE7C.c: 0x0001AE7C size 0x50; exe identica
 func_0001AECC	pass	src/pilot/func_0001AECC.c: 0x0001AECC size 0x60; exe identical
 func_0001AF2C	pass	src/pilot/func_0001AF2C.c: 0x0001AF2C size 0x26C; exe identical
 func_0001B198	pass	src/pilot/func_0001B198.c: 0x0001B198 size 0x1E8; exe identical
-func_0001B380	pass	src/pilot/func_0001B380.c: 0x0001B380 size 0x124; exe identical
 func_0001B4A4	pass	src/pilot/func_0001B4A4.c: 0x0001B4A4 size 0x27C; exe identical
 func_0001B720	pass	src/pilot/func_0001B720.c: 0x0001B720 size 0x2F4; exe identical
 func_0001BA14	pass	src/pilot/func_0001BA14.c: 0x0001BA14 size 0xAC; exe identical
-func_0001BAC0	pass	src/pilot/func_0001BAC0.c: 0x0001BAC0 size 0x192C; exe identical
-func_0001D3EC	pass	src/pilot/func_0001D3EC.c: 0x0001D3EC size 0x1A4; exe identical
 func_0001D590	pass	src/pilot/func_0001D590.c: 0x0001D590 size 0x78; exe identical
 func_0001D608	pass	src/pilot/func_0001D608.c: 0x0001D608 size 0x40; exe identical
-func_0001D648	pass	src/pilot/func_0001D648.c: 0x0001D648 size 0x9C; exe identical
-func_0001D6E4	pass	src/pilot/func_0001D6E4.c: 0x0001D6E4 size 0x17D0; exe identical
 func_0001EEB4	pass	src/pilot/func_0001EEB4.c: 0x0001EEB4 size 0x5DC; exe identical
 func_0001F490	pass	src/pilot/func_0001F490.c: 0x0001F490 size 0x120; exe identical
 func_0001FA1C	pass	src/pilot/func_0001FA1C.c: 0x0001FA1C size 0xE0; exe identical
-func_0001FAFC	pass	src/pilot/func_0001FAFC.c: 0x0001FAFC size 0x428; exe identical
 func_0001FF24	pass	src/pilot/func_0001FF24.c: 0x0001FF24 size 0x628; exe identical
 func_0002054C	pass	src/pilot/func_0002054C.c: 0x0002054C size 0x234; exe identical
 func_00020780	pass	src/pilot/func_00020780.c: 0x00020780 size 0xC4; exe identical
-func_00020844	pass	src/pilot/func_00020844.c: 0x00020844 size 0x154; exe identical
 func_00020998	pass	src/pilot/func_00020998.c: 0x00020998 size 0xCC; exe identical
 func_00020A64	pass	src/pilot/func_00020A64.c: 0x00020A64 size 0x80; exe identical
 func_00020DB4	pass	src/pilot/func_00020DB4.c: 0x00020DB4 size 0x53C; exe identical
@@ -84,7 +268,6 @@ func_000212F0	pass	src/pilot/func_000212F0.c: 0x000212F0 size 0xD8; exe identica
 func_000213C8	pass	src/pilot/func_000213C8.c: 0x000213C8 size 0x190; exe identical
 func_00021558	pass	src/pilot/func_00021558.c: 0x00021558 size 0x138; exe identical
 func_00021690	pass	src/pilot/func_00021690.c: 0x00021690 size 0x138; exe identical
-func_000217C8	pass	src/pilot/func_000217C8.c: 0x000217C8 size 0x58; exe identical
 func_00021820	pass	src/pilot/func_00021820.c: 0x00021820 size 0x3CC; exe identical
 func_00021BEC	pass	src/pilot/func_00021BEC.c: 0x00021BEC size 0x24; exe identical
 func_00021C10	pass	src/pilot/func_00021C10.c: 0x00021C10 size 0x98; exe identical
@@ -94,8 +277,6 @@ func_00021DE8	pass	src/pilot/func_00021DE8.c: 0x00021DE8 size 0x174; exe identic
 func_00021F5C	pass	src/pilot/func_00021F5C.c: 0x00021F5C size 0x20C; exe identical
 func_00022168	pass	src/pilot/func_00022168.c: 0x00022168 size 0x1DC; exe identical
 func_00022344	pass	src/pilot/func_00022344.c: 0x00022344 size 0x248, .rodata at 0x1029C; exe identical
-func_0002258C	pass	src/pilot/func_0002258C.c: 0x0002258C size 0x174; exe identical
-func_00022700	pass	src/pilot/func_00022700.c: 0x00022700 size 0x118; exe identical
 func_00022818	pass	src/pilot/func_00022818.c: 0x00022818 size 0x898; exe identical
 func_000230B0	pass	src/pilot/func_000230B0.c: 0x000230B0 size 0x55C; exe identical
 func_0002360C	pass	src/pilot/func_0002360C.c: 0x0002360C size 0xD64, .rodata.lc0 at 0x101F0, .rodata.lc1 at 0x10324; exe identical
@@ -103,10 +284,8 @@ func_00024370	pass	src/pilot/func_00024370.c: 0x00024370 size 0xA8; exe identica
 func_00024418	pass	src/pilot/func_00024418.c: 0x00024418 size 0x98; exe identical
 func_000244B0	pass	src/pilot/func_000244B0.c: 0x000244B0 size 0x8; exe identical
 func_000244B8	pass	src/pilot/func_000244B8.c: 0x000244B8 size 0x74; exe identical
-func_0002452C	pass	src/pilot/func_0002452C.c: 0x0002452C size 0x228; exe identical
 func_00024754	pass	src/pilot/func_00024754.c: 0x00024754 size 0x7C8, .rodata at 0x1034C; exe identical
 func_00024F1C	pass	src/pilot/func_00024F1C.c: 0x00024F1C size 0x71C, .rodata at 0x103AC; exe identical
-func_00025638	pass	src/pilot/func_00025638.c: 0x00025638 size 0x110; exe identical
 func_00025748	pass	src/pilot/func_00025748.c: 0x00025748 size 0x4BC; exe identical
 func_00025C04	pass	src/pilot/func_00025C04.c: 0x00025C04 size 0x64; exe identical
 func_00025C68	pass	src/pilot/func_00025C68.c: 0x00025C68 size 0x2E0, .rodata at 0x103CC; exe identical
@@ -143,19 +322,14 @@ func_00028340	pass	src/pilot/func_00028340.c: 0x00028340 size 0x464; exe identic
 func_000287A4	pass	src/pilot/func_000287A4.c: 0x000287A4 size 0x354, .rodata at 0x103FC; exe identical
 func_00028AF8	pass	src/pilot/func_00028AF8.c: 0x00028AF8 size 0x4AC; exe identical
 func_00028FA4	pass	src/pilot/func_00028FA4.c: 0x00028FA4 size 0x4A4; exe identical
+func_00029448	pass	src/pilot/func_00029448.c: 0x00029448 size 0x468; exe identical
 func_000298B0	pass	src/pilot/func_000298B0.c: 0x000298B0 size 0xC; exe identical
 func_000298BC	pass	src/pilot/func_000298BC.c: 0x000298BC size 0xC4; exe identical
 func_00029980	pass	src/pilot/func_00029980.c: 0x00029980 size 0x38; exe identical
 func_000299B8	pass	src/pilot/func_000299B8.c: 0x000299B8 size 0x1D0; exe identical
 func_00029B88	pass	src/pilot/func_00029B88.c: 0x00029B88 size 0x78; exe identical
 func_00029C00	pass	src/pilot/func_00029C00.c: 0x00029C00 size 0x484, .rodata at 0x10420; exe identical
-func_0002A084	pass	src/pilot/func_0002A084.c: 0x0002A084 size 0x548; exe identical
 func_0002A5CC	pass	src/pilot/func_0002A5CC.c: 0x0002A5CC size 0x23C, .sbss at 0x97174; exe identical
-func_0002A808	pass	src/pilot/func_0002A808.c: 0x0002A808 size 0x5E4; exe identical
-func_0002ADEC	pass	src/pilot/func_0002ADEC.c: 0x0002ADEC size 0x420; exe identical
-func_0002B20C	pass	src/pilot/func_0002B20C.c: 0x0002B20C size 0x354; exe identical
-func_0002B560	pass	src/pilot/func_0002B560.c: 0x0002B560 size 0x45C; exe identical
-func_0002B9BC	pass	src/pilot/func_0002B9BC.c: 0x0002B9BC size 0x3F4; exe identical
 func_0002BDB0	pass	src/pilot/func_0002BDB0.c: 0x0002BDB0 size 0x4EC; exe identical
 func_0002C29C	pass	src/pilot/func_0002C29C.c: 0x0002C29C size 0x2A0; exe identical
 func_0002C53C	pass	src/pilot/func_0002C53C.c: 0x0002C53C size 0x28; exe identical
@@ -166,15 +340,12 @@ func_0002C688	pass	src/pilot/func_0002C688.c: 0x0002C688 size 0xC; exe identical
 func_0002C694	pass	src/pilot/func_0002C694.c: 0x0002C694 size 0x1C; exe identical
 func_0002C6B0	pass	src/pilot/func_0002C6B0.c: 0x0002C6B0 size 0x2C; exe identical
 func_0002C6DC	pass	src/pilot/func_0002C6DC.c: 0x0002C6DC size 0x220; exe identical
-func_0002C8FC	pass	src/pilot/func_0002C8FC.c: 0x0002C8FC size 0xEA0; exe identical
 func_0002D79C	pass	src/pilot/func_0002D79C.c: 0x0002D79C size 0x28; exe identical
 func_0002D7C4	pass	src/pilot/func_0002D7C4.c: 0x0002D7C4 size 0x318; exe identical
-func_0002DADC	pass	src/pilot/func_0002DADC.c: 0x0002DADC size 0xD8; exe identical
 func_0002DBB4	pass	src/pilot/func_0002DBB4.c: 0x0002DBB4 size 0x38; exe identical
 func_0002DBEC	pass	src/pilot/func_0002DBEC.c: 0x0002DBEC size 0x38; exe identical
 func_0002DC24	pass	src/pilot/func_0002DC24.c: 0x0002DC24 size 0x88; exe identical
 func_0002DCAC	pass	src/pilot/func_0002DCAC.c: 0x0002DCAC size 0x340; exe identical
-func_0002DFEC	pass	src/pilot/func_0002DFEC.c: 0x0002DFEC size 0x244, .rodata at 0x10430; exe identical
 func_0002E230	pass	src/pilot/func_0002E230.c: 0x0002E230 size 0x488; exe identical
 func_0002E6B8	pass	src/pilot/func_0002E6B8.c: 0x0002E6B8 size 0x4DC; exe identical
 func_0002EB94	pass	src/pilot/func_0002EB94.c: 0x0002EB94 size 0x8B0; exe identical
@@ -209,33 +380,16 @@ func_000317B0	pass	src/pilot/func_000317B0.c: 0x000317B0 size 0x6C; exe identica
 func_0003181C	pass	src/pilot/func_0003181C.c: 0x0003181C size 0x2C4, .rodata at 0x104C8; exe identical
 func_00031AE0	pass	src/pilot/func_00031AE0.c: 0x00031AE0 size 0x5A8; exe identical
 func_00032088	pass	src/pilot/func_00032088.c: 0x00032088 size 0xD64; exe identical
-func_00032DEC	pass	src/pilot/func_00032DEC.c: 0x00032DEC size 0x1AC; exe identical
 func_00032F98	pass	src/pilot/func_00032F98.c: 0x00032F98 size 0x3D4; exe identical
 func_0003336C	pass	src/pilot/func_0003336C.c: 0x0003336C size 0x148; exe identical
 func_000334B4	pass	src/pilot/func_000334B4.c: 0x000334B4 size 0x150; exe identical
-func_00033604	pass	src/pilot/func_00033604.c: 0x00033604 size 0x1D0; exe identical
-func_000337D4	pass	src/pilot/func_000337D4.c: 0x000337D4 size 0x9C; exe identical
 func_00033AF8	pass	src/pilot/func_00033AF8.c: 0x00033AF8 size 0x18; exe identical
-func_00033B10	pass	src/pilot/func_00033B10.c: 0x00033B10 size 0x208; exe identical
-func_00033D18	pass	src/pilot/func_00033D18.c: 0x00033D18 size 0x13C; exe identical
 func_00033E54	pass	src/pilot/func_00033E54.c: 0x00033E54 size 0x108; exe identical
 func_00033F5C	pass	src/pilot/func_00033F5C.c: 0x00033F5C size 0x40; exe identical
-func_00033F9C	pass	src/pilot/func_00033F9C.c: 0x00033F9C size 0x268; exe identical
-func_00034204	pass	src/pilot/func_00034204.c: 0x00034204 size 0xD0; exe identical
-func_000342D4	pass	src/pilot/func_000342D4.c: 0x000342D4 size 0x364; exe identical
-func_00034638	pass	src/pilot/func_00034638.c: 0x00034638 size 0x90; exe identical
-func_000346C8	pass	src/pilot/func_000346C8.c: 0x000346C8 size 0x140; exe identical
 func_00034808	pass	src/pilot/func_00034808.c: 0x00034808 size 0x104; exe identical
 func_0003490C	pass	src/pilot/func_0003490C.c: 0x0003490C size 0x70; exe identical
-func_0003497C	pass	src/pilot/func_0003497C.c: 0x0003497C size 0x19C; exe identical
-func_00034B18	pass	src/pilot/func_00034B18.c: 0x00034B18 size 0x15C; exe identical
-func_00034C74	pass	src/pilot/func_00034C74.c: 0x00034C74 size 0x100; exe identical
-func_00034D74	pass	src/pilot/func_00034D74.c: 0x00034D74 size 0x170; exe identical
 func_00034EE4	pass	src/pilot/func_00034EE4.c: 0x00034EE4 size 0x160; exe identical
-func_00035044	pass	src/pilot/func_00035044.c: 0x00035044 size 0x130; exe identical
-func_00035174	pass	src/pilot/func_00035174.c: 0x00035174 size 0x160; exe identical
 func_000352D4	pass	src/pilot/func_000352D4.c: 0x000352D4 size 0xC0; exe identical
-func_00035394	pass	src/pilot/func_00035394.c: 0x00035394 size 0x98; exe identical
 func_0003542C	pass	src/pilot/func_0003542C.c: 0x0003542C size 0xAC; exe identical
 func_000354D8	pass	src/pilot/func_000354D8.c: 0x000354D8 size 0x80; exe identical
 func_00035558	pass	src/pilot/func_00035558.c: 0x00035558 size 0x204; exe identical
@@ -261,7 +415,6 @@ func_000374C0	pass	src/pilot/func_000374C0.c: 0x000374C0 size 0x26C; exe identic
 func_0003772C	pass	src/pilot/func_0003772C.c: 0x0003772C size 0x2D8; exe identical
 func_00037A04	pass	src/pilot/func_00037A04.c: 0x00037A04 size 0x298; exe identical
 func_00037C9C	pass	src/pilot/func_00037C9C.c: 0x00037C9C size 0x25C; exe identical
-func_00037EF8	pass	src/pilot/func_00037EF8.c: 0x00037EF8 size 0x224; exe identical
 func_0003811C	pass	src/pilot/func_0003811C.c: 0x0003811C size 0x260; exe identical
 func_0003837C	pass	src/pilot/func_0003837C.c: 0x0003837C size 0x4A0; exe identical
 func_0003881C	pass	src/pilot/func_0003881C.c: 0x0003881C size 0x580; exe identical
@@ -278,7 +431,6 @@ func_000396A8	pass	src/pilot/func_000396A8.c: 0x000396A8 size 0xA0; exe identica
 func_00039748	pass	src/pilot/func_00039748.c: 0x00039748 size 0xAC; exe identical
 func_000397F4	pass	src/pilot/func_000397F4.c: 0x000397F4 size 0xBC; exe identical
 func_000398B0	pass	src/pilot/func_000398B0.c: 0x000398B0 size 0xC8; exe identical
-func_00039978	pass	src/pilot/func_00039978.c: 0x00039978 size 0x41C; exe identical
 func_00039D94	pass	src/pilot/func_00039D94.c: 0x00039D94 size 0x2D4; exe identical
 func_0003A068	pass	src/pilot/func_0003A068.c: 0x0003A068 size 0x98; exe identical
 func_0003A100	pass	src/pilot/func_0003A100.c: 0x0003A100 size 0x170; exe identical
@@ -286,120 +438,71 @@ func_0003A270	pass	src/pilot/func_0003A270.c: 0x0003A270 size 0x1EC; exe identic
 func_0003A45C	pass	src/pilot/func_0003A45C.c: 0x0003A45C size 0x23C; exe identical
 func_0003A698	pass	src/pilot/func_0003A698.c: 0x0003A698 size 0xAD0; exe identical
 func_0003B168	pass	src/pilot/func_0003B168.c: 0x0003B168 size 0xA0; exe identical
-func_0003B208	pass	src/pilot/func_0003B208.c: 0x0003B208 size 0x540; exe identical
-func_0003B748	pass	src/pilot/func_0003B748.c: 0x0003B748 size 0x24C; exe identical
 func_0003B994	pass	src/pilot/func_0003B994.c: 0x0003B994 size 0xE8; exe identical
 func_0003BA7C	pass	src/pilot/func_0003BA7C.c: 0x0003BA7C size 0x17C; exe identical
 func_0003BBF8	pass	src/pilot/func_0003BBF8.c: 0x0003BBF8 size 0x1D0; exe identical
 func_0003BDC8	pass	src/pilot/func_0003BDC8.c: 0x0003BDC8 size 0x904, .rodata at 0x10574; exe identical
-func_0003C6CC	pass	src/pilot/func_0003C6CC.c: 0x0003C6CC size 0x2CC; exe identical
-func_0003C998	pass	src/pilot/func_0003C998.c: 0x0003C998 size 0x650; exe identical
 func_0003CFE8	pass	src/pilot/func_0003CFE8.c: 0x0003CFE8 size 0x4E8; exe identical
-func_0003D4D0	pass	src/pilot/func_0003D4D0.c: 0x0003D4D0 size 0x130; exe identical
 func_0003D600	pass	src/pilot/func_0003D600.c: 0x0003D600 size 0xC0; exe identical
 func_0003D6C0	pass	src/pilot/func_0003D6C0.c: 0x0003D6C0 size 0x150; exe identical
 func_0003D810	pass	src/pilot/func_0003D810.c: 0x0003D810 size 0x3F0; exe identical
 func_0003DC00	pass	src/pilot/func_0003DC00.c: 0x0003DC00 size 0x2E0; exe identical
-func_0003DEE0	pass	src/pilot/func_0003DEE0.c: 0x0003DEE0 size 0xB4; exe identical
 func_0003DF94	pass	src/pilot/func_0003DF94.c: 0x0003DF94 size 0x2B0; exe identical
 func_0003E244	pass	src/pilot/func_0003E244.c: 0x0003E244 size 0x2FC; exe identical
 func_0003E540	pass	src/pilot/func_0003E540.c: 0x0003E540 size 0x160; exe identical
-func_0003E6A0	pass	src/pilot/func_0003E6A0.c: 0x0003E6A0 size 0x440; exe identical
 func_0003EAE0	pass	src/pilot/func_0003EAE0.c: 0x0003EAE0 size 0x2C; exe identical
 func_0003EB0C	pass	src/pilot/func_0003EB0C.c: 0x0003EB0C size 0x1C0; exe identical
 func_0003ECCC	pass	src/pilot/func_0003ECCC.c: 0x0003ECCC size 0x8; exe identical
-func_0003ECD4	pass	src/pilot/func_0003ECD4.c: 0x0003ECD4 size 0x84; exe identical
 func_0003ED58	pass	src/pilot/func_0003ED58.c: 0x0003ED58 size 0x20; exe identical
-func_0003ED78	pass	src/pilot/func_0003ED78.c: 0x0003ED78 size 0x2A4, .sdata at 0x96A8C; exe identical
-func_0003F01C	pass	src/pilot/func_0003F01C.c: 0x0003F01C size 0x2C4, .sdata at 0x96A9C; exe identical
-func_0003F2E0	pass	src/pilot/func_0003F2E0.c: 0x0003F2E0 size 0x378; exe identical
-func_0003F658	pass	src/pilot/func_0003F658.c: 0x0003F658 size 0x234; exe identical
-func_0003F88C	pass	src/pilot/func_0003F88C.c: 0x0003F88C size 0x25C; exe identical
 func_0003FAE8	pass	src/pilot/func_0003FAE8.c: 0x0003FAE8 size 0x1B0; exe identical
 func_0003FC98	pass	src/pilot/func_0003FC98.c: 0x0003FC98 size 0x274; exe identical
-func_0003FF0C	pass	src/pilot/func_0003FF0C.c: 0x0003FF0C size 0xCA0; exe identical
-func_00040BAC	pass	src/pilot/func_00040BAC.c: 0x00040BAC size 0x728; exe identical
 func_000412D4	pass	src/pilot/func_000412D4.c: 0x000412D4 size 0x2A8; exe identical
 func_0004157C	pass	src/pilot/func_0004157C.c: 0x0004157C size 0x114; exe identical
 func_00041690	pass	src/pilot/func_00041690.c: 0x00041690 size 0x434; exe identical
 func_00041AC4	pass	src/pilot/func_00041AC4.c: 0x00041AC4 size 0x220; exe identical
-func_00041CE4	pass	src/pilot/func_00041CE4.c: 0x00041CE4 size 0x148; exe identical
 func_00041E2C	pass	src/pilot/func_00041E2C.c: 0x00041E2C size 0x464, .sdata at 0x96AC4, .rodata at 0x10610; exe identical
 func_00042290	pass	src/pilot/func_00042290.c: 0x00042290 size 0x3E8; exe identical
 func_00042678	pass	src/pilot/func_00042678.c: 0x00042678 size 0x3C; exe identical
-func_000426B4	pass	src/pilot/func_000426B4.c: 0x000426B4 size 0x1C8; exe identical
 func_0004287C	pass	src/pilot/func_0004287C.c: 0x0004287C size 0x354; exe identical
 func_00042BD0	pass	src/pilot/func_00042BD0.c: 0x00042BD0 size 0xBC; exe identical
 func_00042C8C	pass	src/pilot/func_00042C8C.c: 0x00042C8C size 0x230, .sdata at 0x96C04; exe identical
 func_00042EBC	pass	src/pilot/func_00042EBC.c: 0x00042EBC size 0x1FC; exe identical
 func_000430B8	pass	src/pilot/func_000430B8.c: 0x000430B8 size 0xA4; exe identical
-func_0004315C	pass	src/pilot/func_0004315C.c: 0x0004315C size 0x70; exe identical
-func_000431CC	pass	src/pilot/func_000431CC.c: 0x000431CC size 0xA4; exe identical
-func_00043270	pass	src/pilot/func_00043270.c: 0x00043270 size 0x1CC; exe identical
 func_0004343C	pass	src/pilot/func_0004343C.c: 0x0004343C size 0x450; exe identical
 func_0004388C	pass	src/pilot/func_0004388C.c: 0x0004388C size 0x158; exe identical
 func_000439E4	pass	src/pilot/func_000439E4.c: 0x000439E4 size 0x328; exe identical
 func_00043D0C	pass	src/pilot/func_00043D0C.c: 0x00043D0C size 0x180; exe identical
 func_00043E8C	pass	src/pilot/func_00043E8C.c: 0x00043E8C size 0x150; exe identical
 func_00043FDC	pass	src/pilot/func_00043FDC.c: 0x00043FDC size 0x2B0; exe identical
-func_0004428C	pass	src/pilot/func_0004428C.c: 0x0004428C size 0x210; exe identical
-func_0004449C	pass	src/pilot/func_0004449C.c: 0x0004449C size 0xD0C; exe identical
-func_000451A8	pass	src/pilot/func_000451A8.c: 0x000451A8 size 0x2B8; exe identical
-func_00045460	pass	src/pilot/func_00045460.c: 0x00045460 size 0x2B8; exe identical
-func_00045718	pass	src/pilot/func_00045718.c: 0x00045718 size 0x2EC; exe identical
-func_00045A04	pass	src/pilot/func_00045A04.c: 0x00045A04 size 0x2E8; exe identical
-func_00045CEC	pass	src/pilot/func_00045CEC.c: 0x00045CEC size 0x314; exe identical
 func_00046000	pass	src/pilot/func_00046000.c: 0x00046000 size 0x234; exe identical
 func_00046234	pass	src/pilot/func_00046234.c: 0x00046234 size 0x4A0; exe identical
-func_000466D4	pass	src/pilot/func_000466D4.c: 0x000466D4 size 0x108; exe identical
 func_000467DC	pass	src/pilot/func_000467DC.c: 0x000467DC size 0x240; exe identical
 func_00046A1C	pass	src/pilot/func_00046A1C.c: 0x00046A1C size 0x23C; exe identical
 func_00046C58	pass	src/pilot/func_00046C58.c: 0x00046C58 size 0x1EC; exe identical
-func_00046E44	pass	src/pilot/func_00046E44.c: 0x00046E44 size 0x5AC; exe identical
-func_00047824	pass	src/pilot/func_00047824.c: 0x00047824 size 0x26C; exe identical
-func_00047A90	pass	src/pilot/func_00047A90.c: 0x00047A90 size 0x514; exe identical
 func_00047FA4	pass	src/pilot/func_00047FA4.c: 0x00047FA4 size 0x224; exe identical
-func_000481C8	pass	src/pilot/func_000481C8.c: 0x000481C8 size 0x498; exe identical
-func_00048660	pass	src/pilot/func_00048660.c: 0x00048660 size 0x828; exe identical
-func_00048E88	pass	src/pilot/func_00048E88.c: 0x00048E88 size 0x544; exe identical
-func_000493CC	pass	src/pilot/func_000493CC.c: 0x000493CC size 0x16C; exe identical
-func_00049538	pass	src/pilot/func_00049538.c: 0x00049538 size 0x58; exe identical
-func_00049590	pass	src/pilot/func_00049590.c: 0x00049590 size 0x384; exe identical
 func_00049914	pass	src/pilot/func_00049914.c: 0x00049914 size 0x4A4; exe identical
-func_00049DB8	pass	src/pilot/func_00049DB8.c: 0x00049DB8 size 0x2AC; exe identical
-func_0004A064	pass	src/pilot/func_0004A064.c: 0x0004A064 size 0x334, .sdata at 0x96C40; exe identical
-func_0004A398	pass	src/pilot/func_0004A398.c: 0x0004A398 size 0x2BC; exe identical
-func_0004A654	pass	src/pilot/func_0004A654.c: 0x0004A654 size 0xC4; exe identical
 func_0004A718	pass	src/pilot/func_0004A718.c: 0x0004A718 size 0x124; exe identical
 func_0004A83C	pass	src/pilot/func_0004A83C.c: 0x0004A83C size 0x1B8; exe identical
 func_0004A9F4	pass	src/pilot/func_0004A9F4.c: 0x0004A9F4 size 0x294; exe identical
 func_0004AC88	pass	src/pilot/func_0004AC88.c: 0x0004AC88 size 0x10C; exe identical
+func_0004AD94	pass	src/pilot/func_0004AD94.c: 0x0004AD94 size 0xFB4; exe identical
+func_0004BD48	pass	src/pilot/func_0004BD48.c: 0x0004BD48 size 0x414; exe identical
 func_0004C15C	pass	src/pilot/func_0004C15C.c: 0x0004C15C size 0x6C; exe identical
 func_0004C1C8	pass	src/pilot/func_0004C1C8.c: 0x0004C1C8 size 0xD4; exe identical
 func_0004C29C	pass	src/pilot/func_0004C29C.c: 0x0004C29C size 0x19C; exe identical
 func_0004C438	pass	src/pilot/func_0004C438.c: 0x0004C438 size 0x1D8; exe identical
-func_0004C610	pass	src/pilot/func_0004C610.c: 0x0004C610 size 0x11C; exe identical
 func_0004C72C	pass	src/pilot/func_0004C72C.c: 0x0004C72C size 0x1CC; exe identical
 func_0004C8F8	pass	src/pilot/func_0004C8F8.c: 0x0004C8F8 size 0x3C; exe identical
 func_0004C934	pass	src/pilot/func_0004C934.c: 0x0004C934 size 0x38; exe identical
-func_0004C96C	pass	src/pilot/func_0004C96C.c: 0x0004C96C size 0x60; exe identical
 func_0004C9CC	pass	src/pilot/func_0004C9CC.c: 0x0004C9CC size 0x20; exe identical
 func_0004C9EC	pass	src/pilot/func_0004C9EC.c: 0x0004C9EC size 0x70; exe identical
 func_0004CA5C	pass	src/pilot/func_0004CA5C.c: 0x0004CA5C size 0x4F4; exe identical
 func_0004CF50	pass	src/pilot/func_0004CF50.c: 0x0004CF50 size 0x2B8; exe identical
 func_0004D208	pass	src/pilot/func_0004D208.c: 0x0004D208 size 0x1D4; exe identical
-func_0004D3DC	pass	src/pilot/func_0004D3DC.c: 0x0004D3DC size 0xF8; exe identical
-func_0004D4D4	pass	src/pilot/func_0004D4D4.c: 0x0004D4D4 size 0x70; exe identical
-func_0004D544	pass	src/pilot/func_0004D544.c: 0x0004D544 size 0xB4; exe identical
 func_0004D5F8	pass	src/pilot/func_0004D5F8.c: 0x0004D5F8 size 0x50; exe identical
-func_0004D648	pass	src/pilot/func_0004D648.c: 0x0004D648 size 0x54; exe identical
 func_0004D69C	pass	src/pilot/func_0004D69C.c: 0x0004D69C size 0x14; exe identical
-func_0004D6B0	pass	src/pilot/func_0004D6B0.c: 0x0004D6B0 size 0x90; exe identical
 func_0004D740	pass	src/pilot/func_0004D740.c: 0x0004D740 size 0xA4; exe identical
-func_0004D7E4	pass	src/pilot/func_0004D7E4.c: 0x0004D7E4 size 0xCC; exe identical
 func_0004D8B0	pass	src/pilot/func_0004D8B0.c: 0x0004D8B0 size 0xB8; exe identical
-func_0004D968	pass	src/pilot/func_0004D968.c: 0x0004D968 size 0x164; exe identical
-func_0004DACC	pass	src/pilot/func_0004DACC.c: 0x0004DACC size 0xB8; exe identical
 func_0004DB84	pass	src/pilot/func_0004DB84.c: 0x0004DB84 size 0x74; exe identical
 func_0004DBF8	pass	src/pilot/func_0004DBF8.c: 0x0004DBF8 size 0x1B0; exe identical
 func_0004DDA8	pass	src/pilot/func_0004DDA8.c: 0x0004DDA8 size 0xB0; exe identical
@@ -410,31 +513,22 @@ func_0004E08C	pass	src/pilot/func_0004E08C.c: 0x0004E08C size 0x8C; exe identica
 func_0004E118	pass	src/pilot/func_0004E118.c: 0x0004E118 size 0x58; exe identical
 func_0004E170	pass	src/pilot/func_0004E170.c: 0x0004E170 size 0x6C; exe identical
 func_0004E1DC	pass	src/pilot/func_0004E1DC.c: 0x0004E1DC size 0x38; exe identical
-func_0004E214	pass	src/pilot/func_0004E214.c: 0x0004E214 size 0x134; exe identical
 func_0004E348	pass	src/pilot/func_0004E348.c: 0x0004E348 size 0x50; exe identical
-func_0004E398	pass	src/pilot/func_0004E398.c: 0x0004E398 size 0x74; exe identical
 func_0004E40C	pass	src/pilot/func_0004E40C.c: 0x0004E40C size 0x24; exe identical
 func_0004E430	pass	src/pilot/func_0004E430.c: 0x0004E430 size 0x24; exe identical
 func_0004E454	pass	src/pilot/func_0004E454.c: 0x0004E454 size 0x5C; exe identical
-func_0004E4B0	pass	src/pilot/func_0004E4B0.c: 0x0004E4B0 size 0x134; exe identical
 func_0004E5E4	pass	src/pilot/func_0004E5E4.c: 0x0004E5E4 size 0x98; exe identical
 func_0004E67C	pass	src/pilot/func_0004E67C.c: 0x0004E67C size 0x1C4; exe identical
-func_0004E840	pass	src/pilot/func_0004E840.c: 0x0004E840 size 0x68; exe identical
 func_0004E8A8	pass	src/pilot/func_0004E8A8.c: 0x0004E8A8 size 0xA0; exe identical
 func_0004E948	pass	src/pilot/func_0004E948.c: 0x0004E948 size 0x7C; exe identical
-func_0004E9C4	pass	src/pilot/func_0004E9C4.c: 0x0004E9C4 size 0x7C; exe identical
 func_0004EA40	pass	src/pilot/func_0004EA40.c: 0x0004EA40 size 0x2C; exe identical
 func_0004EA6C	pass	src/pilot/func_0004EA6C.c: 0x0004EA6C size 0x2C; exe identical
 func_0004EA98	pass	src/pilot/func_0004EA98.c: 0x0004EA98 size 0x28; exe identical
 func_0004EAC0	pass	src/pilot/func_0004EAC0.c: 0x0004EAC0 size 0x50; exe identical
-func_0004EB10	pass	src/pilot/func_0004EB10.c: 0x0004EB10 size 0x6C; exe identical
 func_0004EB7C	pass	src/pilot/func_0004EB7C.c: 0x0004EB7C size 0x1B8; exe identical
 func_0004ED34	pass	src/pilot/func_0004ED34.c: 0x0004ED34 size 0x4CC, .rodata at 0x108A8; exe identical
 func_0004F200	pass	src/pilot/func_0004F200.c: 0x0004F200 size 0x14C; exe identical
-func_0004F34C	pass	src/pilot/func_0004F34C.c: 0x0004F34C size 0x47C; exe identical
 func_0004F7C8	pass	src/pilot/func_0004F7C8.c: 0x0004F7C8 size 0x2B4; exe identical
-func_0004FA7C	pass	src/pilot/func_0004FA7C.c: 0x0004FA7C size 0xF4; exe identical
-func_0004FB70	pass	src/pilot/func_0004FB70.c: 0x0004FB70 size 0x30; exe identical
 func_0004FBA0	pass	src/pilot/func_0004FBA0.c: 0x0004FBA0 size 0x3AC; exe identical
 func_0004FF4C	pass	src/pilot/func_0004FF4C.c: 0x0004FF4C size 0x9C; exe identical
 func_0004FFE8	pass	src/pilot/func_0004FFE8.c: 0x0004FFE8 size 0x3C; exe identical
@@ -442,14 +536,7 @@ func_00050024	pass	src/pilot/func_00050024.c: 0x00050024 size 0x3D0; exe identic
 func_000503F4	pass	src/pilot/func_000503F4.c: 0x000503F4 size 0x1EC; exe identical
 func_000505E0	pass	src/pilot/func_000505E0.c: 0x000505E0 size 0x13C; exe identical
 func_0005071C	pass	src/pilot/func_0005071C.c: 0x0005071C size 0x20; exe identical
-func_0005073C	pass	src/pilot/func_0005073C.c: 0x0005073C size 0x174; exe identical
-func_000508B0	pass	src/pilot/func_000508B0.c: 0x000508B0 size 0x448, .rodata at 0x10990; exe identical
-func_00050CF8	pass	src/pilot/func_00050CF8.c: 0x00050CF8 size 0x130; exe identical
-func_00050E28	pass	src/pilot/func_00050E28.c: 0x00050E28 size 0x9C; exe identical
-func_00050EC4	pass	src/pilot/func_00050EC4.c: 0x00050EC4 size 0x328, .rodata at 0x1092C; exe identical
 func_000511EC	pass	src/pilot/func_000511EC.c: 0x000511EC size 0x40; exe identical
-func_0005122C	pass	src/pilot/func_0005122C.c: 0x0005122C size 0xD0; exe identical
-func_000512FC	pass	src/pilot/func_000512FC.c: 0x000512FC size 0x78; exe identical
 func_00051374	pass	src/pilot/func_00051374.c: 0x00051374 size 0x40; exe identical
 func_000513B4	pass	src/pilot/func_000513B4.c: 0x000513B4 size 0x20; exe identical
 func_000513D4	pass	src/pilot/func_000513D4.c: 0x000513D4 size 0x10C; exe identical
@@ -458,12 +545,8 @@ func_00051540	pass	src/pilot/func_00051540.c: 0x00051540 size 0x13C; exe identic
 func_0005167C	pass	src/pilot/func_0005167C.c: 0x0005167C size 0x30; exe identical
 func_000516AC	pass	src/pilot/func_000516AC.c: 0x000516AC size 0x38; exe identical
 func_000516E4	pass	src/pilot/func_000516E4.c: 0x000516E4 size 0x1B4; exe identical
-func_00051898	pass	src/pilot/func_00051898.c: 0x00051898 size 0x94, .rodata at 0x109B0; exe identical
-func_0005192C	pass	src/pilot/func_0005192C.c: 0x0005192C size 0x114; exe identical
-func_00051A40	pass	src/pilot/func_00051A40.c: 0x00051A40 size 0x9C; exe identical
 func_00051ADC	pass	src/pilot/func_00051ADC.c: 0x00051ADC size 0x6BC, .sbss.lc0 at 0x97550, .sbss.lc1 at 0x97574, .sbss.lc2 at 0x975A0; exe identical
 func_00052198	pass	src/pilot/func_00052198.c: 0x00052198 size 0xA8; exe identical
-func_00052240	pass	src/pilot/func_00052240.c: 0x00052240 size 0x1F4; exe identical
 func_00052434	pass	src/pilot/func_00052434.c: 0x00052434 size 0x184; exe identical
 func_000525B8	pass	src/pilot/func_000525B8.c: 0x000525B8 size 0x68, .rodata at 0x10A00; exe identical
 func_00052620	pass	src/pilot/func_00052620.c: 0x00052620 size 0x19C, .rodata at 0x10A20; exe identical
@@ -471,10 +554,8 @@ func_000527BC	pass	src/pilot/func_000527BC.c: 0x000527BC size 0x188; exe identic
 func_00052944	pass	src/pilot/func_00052944.c: 0x00052944 size 0x134; exe identical
 func_00052A78	pass	src/pilot/func_00052A78.c: 0x00052A78 size 0x18C; exe identical
 func_00052C04	pass	src/pilot/func_00052C04.c: 0x00052C04 size 0xC; exe identical
-func_00052C10	pass	src/pilot/func_00052C10.c: 0x00052C10 size 0xCC; exe identical
 func_00052CDC	pass	src/pilot/func_00052CDC.c: 0x00052CDC size 0x590, .rodata at 0x10C18; exe identical
 func_0005326C	pass	src/pilot/func_0005326C.c: 0x0005326C size 0xE0; exe identical
-func_0005334C	pass	src/pilot/func_0005334C.c: 0x0005334C size 0x130; exe identical
 func_0005347C	pass	src/pilot/func_0005347C.c: 0x0005347C size 0x184; exe identical
 func_00053600	pass	src/pilot/func_00053600.c: 0x00053600 size 0x44; exe identical
 func_00053644	pass	src/pilot/func_00053644.c: 0x00053644 size 0x120; exe identical
@@ -482,33 +563,22 @@ func_00053764	pass	src/pilot/func_00053764.c: 0x00053764 size 0xC4; exe identica
 func_00053828	pass	src/pilot/func_00053828.c: 0x00053828 size 0xC0; exe identical
 func_000538E8	pass	src/pilot/func_000538E8.c: 0x000538E8 size 0xE0; exe identical
 func_000539C8	pass	src/pilot/func_000539C8.c: 0x000539C8 size 0x2C0; exe identical
-func_00053C88	pass	src/pilot/func_00053C88.c: 0x00053C88 size 0x1CC; exe identical
-func_00053E54	pass	src/pilot/func_00053E54.c: 0x00053E54 size 0x2EC; exe identical
 func_00054140	pass	src/pilot/func_00054140.c: 0x00054140 size 0x88; exe identical
-func_000541C8	pass	src/pilot/func_000541C8.c: 0x000541C8 size 0x104; exe identical
 func_000542CC	pass	src/pilot/func_000542CC.c: 0x000542CC size 0x10C; exe identical
 func_000543D8	pass	src/pilot/func_000543D8.c: 0x000543D8 size 0x240; exe identical
-func_00054618	pass	src/pilot/func_00054618.c: 0x00054618 size 0x134; exe identical
-func_0005474C	pass	src/pilot/func_0005474C.c: 0x0005474C size 0xDE4; exe identical
 func_00055530	pass	src/pilot/func_00055530.c: 0x00055530 size 0xC4; exe identical
 func_000555F4	pass	src/pilot/func_000555F4.c: 0x000555F4 size 0x22C; exe identical
 func_00055820	pass	src/pilot/func_00055820.c: 0x00055820 size 0x200; exe identical
-func_00055A20	pass	src/pilot/func_00055A20.c: 0x00055A20 size 0x280; exe identical
 func_00055CA0	pass	src/pilot/func_00055CA0.c: 0x00055CA0 size 0x5D8; exe identical
-func_00056278	pass	src/pilot/func_00056278.c: 0x00056278 size 0x154; exe identical
-func_000563CC	pass	src/pilot/func_000563CC.c: 0x000563CC size 0xD8; exe identical
-func_000564A4	pass	src/pilot/func_000564A4.c: 0x000564A4 size 0x16C; exe identical
 func_00056610	pass	src/pilot/func_00056610.c: 0x00056610 size 0x13C; exe identical
 func_0005674C	pass	src/pilot/func_0005674C.c: 0x0005674C size 0x8; exe identical
 func_00056754	pass	src/pilot/func_00056754.c: 0x00056754 size 0x2C4; exe identical
 func_00056A18	pass	src/pilot/func_00056A18.c: 0x00056A18 size 0x144; exe identical
 func_00056B5C	pass	src/pilot/func_00056B5C.c: 0x00056B5C size 0x80; exe identical
-func_00056BDC	pass	src/pilot/func_00056BDC.c: 0x00056BDC size 0x5A0; exe identical
 func_0005717C	pass	src/pilot/func_0005717C.c: 0x0005717C size 0x230; exe identical
 func_000573AC	pass	src/pilot/func_000573AC.c: 0x000573AC size 0xAC; exe identical
 func_00057458	pass	src/pilot/func_00057458.c: 0x00057458 size 0xB8; exe identical
 func_00057510	pass	src/pilot/func_00057510.c: 0x00057510 size 0x224; exe identical
-func_00057734	pass	src/pilot/func_00057734.c: 0x00057734 size 0x3B0, .rodata at 0x10C94; exe identical
 func_00057AE4	pass	src/pilot/func_00057AE4.c: 0x00057AE4 size 0x658; exe identical
 func_0005813C	pass	src/pilot/func_0005813C.c: 0x0005813C size 0x13C; exe identical
 func_00058278	pass	src/pilot/func_00058278.c: 0x00058278 size 0x204; exe identical
@@ -517,50 +587,32 @@ func_000585D8	pass	src/pilot/func_000585D8.c: 0x000585D8 size 0x23C; exe identic
 func_00058814	pass	src/pilot/func_00058814.c: 0x00058814 size 0x1A0; exe identical
 func_000589B4	pass	src/pilot/func_000589B4.c: 0x000589B4 size 0x4C; exe identical
 func_00058A00	pass	src/pilot/func_00058A00.c: 0x00058A00 size 0x84; exe identical
-func_00058A84	pass	src/pilot/func_00058A84.c: 0x00058A84 size 0xA8; exe identical
-func_00058B2C	pass	src/pilot/func_00058B2C.c: 0x00058B2C size 0x244; exe identical
-func_00058D70	pass	src/pilot/func_00058D70.c: 0x00058D70 size 0x70; exe identical
-func_00058DE0	pass	src/pilot/func_00058DE0.c: 0x00058DE0 size 0x1EC; exe identical
-func_00058FCC	pass	src/pilot/func_00058FCC.c: 0x00058FCC size 0x5E4; exe identical
 func_000595B0	pass	src/pilot/func_000595B0.c: 0x000595B0 size 0x88; exe identical
 func_00059638	pass	src/pilot/func_00059638.c: 0x00059638 size 0x20; exe identical
-func_00059658	pass	src/pilot/func_00059658.c: 0x00059658 size 0x40; exe identical
 func_00059698	pass	src/pilot/func_00059698.c: 0x00059698 size 0x94; exe identical
-func_0005972C	pass	src/pilot/func_0005972C.c: 0x0005972C size 0x458; exe identical
 func_00059B84	pass	src/pilot/func_00059B84.c: 0x00059B84 size 0x38; exe identical
-func_00059BBC	pass	src/pilot/func_00059BBC.c: 0x00059BBC size 0x1D8; exe identical
-func_00059D94	pass	src/pilot/func_00059D94.c: 0x00059D94 size 0x1978, .rodata at 0x10E5C; exe identical
 func_0005B70C	pass	src/pilot/func_0005B70C.c: 0x0005B70C size 0x78; exe identical
-func_0005B784	pass	src/pilot/func_0005B784.c: 0x0005B784 size 0x480, .rodata at 0x10ED4; exe identical
-func_0005BC04	pass	src/pilot/func_0005BC04.c: 0x0005BC04 size 0xDC; exe identical
 func_0005BCE0	pass	src/pilot/func_0005BCE0.c: 0x0005BCE0 size 0x118; exe identical
 func_0005BDF8	pass	src/pilot/func_0005BDF8.c: 0x0005BDF8 size 0x134; exe identical
 func_0005BF2C	pass	src/pilot/func_0005BF2C.c: 0x0005BF2C size 0xC4; exe identical
-func_0005BFF0	pass	src/pilot/func_0005BFF0.c: 0x0005BFF0 size 0x328, .rodata at 0x10E38; exe identical
 func_0005C318	pass	src/pilot/func_0005C318.c: 0x0005C318 size 0xB8; exe identical
 func_0005C3D0	pass	src/pilot/func_0005C3D0.c: 0x0005C3D0 size 0x88; exe identical
-func_0005C458	pass	src/pilot/func_0005C458.c: 0x0005C458 size 0x70; exe identical
 func_0005C4C8	pass	src/pilot/func_0005C4C8.c: 0x0005C4C8 size 0xE8; exe identical
-func_0005C5B0	pass	src/pilot/func_0005C5B0.c: 0x0005C5B0 size 0xB0; exe identical
-func_0005C660	pass	src/pilot/func_0005C660.c: 0x0005C660 size 0x2C; exe identical
 func_0005C68C	pass	src/pilot/func_0005C68C.c: 0x0005C68C size 0x144, .rodata at 0x10F04; exe identical
-func_0005C7D0	pass	src/pilot/func_0005C7D0.c: 0x0005C7D0 size 0x1C; exe identical
-func_0005C7EC	pass	src/pilot/func_0005C7EC.c: 0x0005C7EC size 0x78; exe identical
-func_0005C864	pass	src/pilot/func_0005C864.c: 0x0005C864 size 0x90; exe identical
 func_0005C8F4	pass	src/pilot/func_0005C8F4.c: 0x0005C8F4 size 0xA8; exe identical
-func_0005C99C	pass	src/pilot/func_0005C99C.c: 0x0005C99C size 0x1CC; exe identical
-func_0005CC68	pass	src/pilot/func_0005CC68.c: 0x0005CC68 size 0x2A8; exe identical
+func_0005CB68	pass	src/pilot/func_0005CB68.c: 0x0005CB68 size 0x100; exe identical
 func_0005D164	pass	src/pilot/func_0005D164.c: 0x0005D164 size 0x35C; exe identical
 func_0005D4C0	pass	src/pilot/func_0005D4C0.c: 0x0005D4C0 size 0x3AC; exe identical
 func_0005D86C	pass	src/pilot/func_0005D86C.c: 0x0005D86C size 0x30; exe identical
 func_0005D89C	pass	src/pilot/func_0005D89C.c: 0x0005D89C size 0xD8; exe identical
 func_0005D974	pass	src/pilot/func_0005D974.c: 0x0005D974 size 0x1BC; exe identical
 func_0005DB30	pass	src/pilot/func_0005DB30.c: 0x0005DB30 size 0xAC; exe identical
-func_0005DBDC	pass	src/pilot/func_0005DBDC.c: 0x0005DBDC size 0x132C; exe identical
 func_0005EF08	pass	src/pilot/func_0005EF08.c: 0x0005EF08 size 0xC8; exe identical
 func_0005EFD0	pass	src/pilot/func_0005EFD0.c: 0x0005EFD0 size 0x9C; exe identical
 func_0005F06C	pass	src/pilot/func_0005F06C.c: 0x0005F06C size 0x80; exe identical
 func_0005F0EC	pass	src/pilot/func_0005F0EC.c: 0x0005F0EC size 0x30C; exe identical
+func_0005F3F8	pass	src/pilot/func_0005F3F8.c: 0x0005F3F8 size 0x6A4, .rodata at 0x10F28; exe identical
+func_0005FA9C	pass	src/pilot/func_0005FA9C.c: 0x0005FA9C size 0x144; exe identical
 func_0005FBE0	pass	src/pilot/func_0005FBE0.c: 0x0005FBE0 size 0x2EC; exe identical
 func_0005FECC	pass	src/pilot/func_0005FECC.c: 0x0005FECC size 0xA4, .rodata at 0x10F40; exe identical
 func_0005FF70	pass	src/pilot/func_0005FF70.c: 0x0005FF70 size 0x20; exe identical
@@ -570,14 +622,13 @@ func_0006009C	pass	src/pilot/func_0006009C.c: 0x0006009C size 0x28C; exe identic
 func_00060328	pass	src/pilot/func_00060328.c: 0x00060328 size 0x188; exe identical
 func_000604B0	pass	src/pilot/func_000604B0.c: 0x000604B0 size 0x48, .rodata at 0x10F58; exe identical
 func_000604F8	pass	src/pilot/func_000604F8.c: 0x000604F8 size 0xE0; exe identical
+func_000605D8	pass	src/pilot/func_000605D8.c: 0x000605D8 size 0x1D4; exe identical
 func_000607AC	pass	src/pilot/func_000607AC.c: 0x000607AC size 0x94; exe identical
 func_00060840	pass	src/pilot/func_00060840.c: 0x00060840 size 0x64; exe identical
 func_000608A4	pass	src/pilot/func_000608A4.c: 0x000608A4 size 0x7C; exe identical
 func_00060920	pass	src/pilot/func_00060920.c: 0x00060920 size 0x1B4; exe identical
 func_00060AD4	pass	src/pilot/func_00060AD4.c: 0x00060AD4 size 0x144; exe identical
-func_00060C18	pass	src/pilot/func_00060C18.c: 0x00060C18 size 0x84; exe identical
 func_00060C9C	pass	src/pilot/func_00060C9C.c: 0x00060C9C size 0x1B0; exe identical
-func_00060E4C	pass	src/pilot/func_00060E4C.c: 0x00060E4C size 0x108; exe identical
 func_00060F54	pass	src/pilot/func_00060F54.c: 0x00060F54 size 0x150; exe identical
 func_000610A4	pass	src/pilot/func_000610A4.c: 0x000610A4 size 0x170; exe identical
 func_00061214	pass	src/pilot/func_00061214.c: 0x00061214 size 0xC; exe identical
@@ -590,6 +641,7 @@ func_000614DC	pass	src/pilot/func_000614DC.c: 0x000614DC size 0x3EC, .rodata at 
 func_000618C8	pass	src/pilot/func_000618C8.c: 0x000618C8 size 0x14C; exe identical
 func_00061A14	pass	src/pilot/func_00061A14.c: 0x00061A14 size 0x188; exe identical
 func_00061B9C	pass	src/pilot/func_00061B9C.c: 0x00061B9C size 0xBC; exe identical
+func_00061C58	pass	src/pilot/func_00061C58.c: 0x00061C58 size 0x284; exe identical
 func_00061EDC	pass	src/pilot/func_00061EDC.c: 0x00061EDC size 0x80; exe identical
 func_00061F5C	pass	src/pilot/func_00061F5C.c: 0x00061F5C size 0xE54, .rodata at 0x10F8C; exe identical
 func_00063114	pass	src/pilot/func_00063114.c: 0x00063114 size 0x494; exe identical
@@ -606,6 +658,7 @@ func_000641C0	pass	src/pilot/func_000641C0.c: 0x000641C0 size 0x1A0; exe identic
 func_0006466C	pass	src/pilot/func_0006466C.c: 0x0006466C size 0x3F8; exe identical
 func_00064A64	pass	src/pilot/func_00064A64.c: 0x00064A64 size 0x22C; exe identical
 func_00064C90	pass	src/pilot/func_00064C90.c: 0x00064C90 size 0x15C; exe identical
+func_00064DEC	pass	src/pilot/func_00064DEC.c: 0x00064DEC size 0x1F4; exe identical
 func_00064FE0	pass	src/pilot/func_00064FE0.c: 0x00064FE0 size 0x104; exe identical
 func_000650E4	pass	src/pilot/func_000650E4.c: 0x000650E4 size 0x10C; exe identical
 func_000651F0	pass	src/pilot/func_000651F0.c: 0x000651F0 size 0x234; exe identical
@@ -615,12 +668,10 @@ func_000661A8	pass	src/pilot/func_000661A8.c: 0x000661A8 size 0x7C; exe identica
 func_00066224	pass	src/pilot/func_00066224.c: 0x00066224 size 0x794; exe identical
 func_000669B8	pass	src/pilot/func_000669B8.c: 0x000669B8 size 0x314; exe identical
 func_00066CCC	pass	src/pilot/func_00066CCC.c: 0x00066CCC size 0x324; exe identical
-func_00066FF0	pass	src/pilot/func_00066FF0.c: 0x00066FF0 size 0x848; exe identical
 func_00067838	pass	src/pilot/func_00067838.c: 0x00067838 size 0x20C; exe identical
 func_00067A44	pass	src/pilot/func_00067A44.c: 0x00067A44 size 0x258; exe identical
 func_00067C9C	pass	src/pilot/func_00067C9C.c: 0x00067C9C size 0x1BC; exe identical
 func_00067E58	pass	src/pilot/func_00067E58.c: 0x00067E58 size 0x88; exe identical
-func_00067EE0	pass	src/pilot/func_00067EE0.c: 0x00067EE0 size 0x140; exe identical
 func_00068020	pass	src/pilot/func_00068020.c: 0x00068020 size 0x34; exe identical
 func_00068054	pass	src/pilot/func_00068054.c: 0x00068054 size 0x1C8; exe identical
 func_0006821C	pass	src/pilot/func_0006821C.c: 0x0006821C size 0xA4; exe identical
@@ -639,7 +690,6 @@ func_0006A60C	pass	src/pilot/func_0006A60C.c: 0x0006A60C size 0xBC; exe identica
 func_0006A6C8	pass	src/pilot/func_0006A6C8.c: 0x0006A6C8 size 0x26C; exe identical
 func_0006A934	pass	src/pilot/func_0006A934.c: 0x0006A934 size 0x394; exe identical
 func_0006ACC8	pass	src/pilot/func_0006ACC8.c: 0x0006ACC8 size 0x134; exe identical
-func_0006ADFC	pass	src/pilot/func_0006ADFC.c: 0x0006ADFC size 0x14C; exe identical
 func_0006AF48	pass	src/pilot/func_0006AF48.c: 0x0006AF48 size 0x3D8; exe identical
 func_0006B320	pass	src/pilot/func_0006B320.c: 0x0006B320 size 0x130, .rodata at 0x11418; exe identical
 func_0006B450	pass	src/pilot/func_0006B450.c: 0x0006B450 size 0x5C; exe identical
@@ -684,8 +734,6 @@ func_0006C4BC	pass	src/pilot/func_0006C4BC.c: 0x0006C4BC size 0x410; exe identic
 func_0006C8CC	pass	src/pilot/func_0006C8CC.c: 0x0006C8CC size 0x8; exe identical
 func_0006C8D4	pass	src/pilot/func_0006C8D4.c: 0x0006C8D4 size 0x90; exe identical
 func_0006C964	pass	src/pilot/func_0006C964.c: 0x0006C964 size 0xC08; exe identical
-func_0006D56C	pass	src/pilot/func_0006D56C.c: 0x0006D56C size 0xA4; exe identical
-func_0006D610	pass	src/pilot/func_0006D610.c: 0x0006D610 size 0x78; exe identical
 func_0006D688	pass	src/pilot/func_0006D688.c: 0x0006D688 size 0x540; exe identical
 func_0006DBC8	pass	src/pilot/func_0006DBC8.c: 0x0006DBC8 size 0x174; exe identical
 func_0006DD3C	pass	src/pilot/func_0006DD3C.c: 0x0006DD3C size 0x184; exe identical
@@ -715,63 +763,19 @@ func_0006F5CC	pass	src/pilot/func_0006F5CC.c: 0x0006F5CC size 0x110; exe identic
 func_0006F6DC	pass	src/pilot/func_0006F6DC.c: 0x0006F6DC size 0xC; exe identical
 func_0006F6E8	pass	src/pilot/func_0006F6E8.c: 0x0006F6E8 size 0x40; exe identical
 func_0006F728	pass	src/pilot/func_0006F728.c: 0x0006F728 size 0x38; exe identical
-func_0006F760	pass	src/pilot/func_0006F760.c: 0x0006F760 size 0xBC; exe identical
 func_0006F81C	pass	src/pilot/func_0006F81C.c: 0x0006F81C size 0xC0; exe identical
 func_0006F8DC	pass	src/pilot/func_0006F8DC.c: 0x0006F8DC size 0x64; exe identical
-func_0006F940	pass	src/pilot/func_0006F940.c: 0x0006F940 size 0x54; exe identical
-func_0006F994	pass	src/pilot/func_0006F994.c: 0x0006F994 size 0x78; exe identical
 func_0006FA0C	pass	src/pilot/func_0006FA0C.c: 0x0006FA0C size 0x50; exe identical
 func_0006FA5C	pass	src/pilot/func_0006FA5C.c: 0x0006FA5C size 0x50; exe identical
 func_0006FAAC	pass	src/pilot/func_0006FAAC.c: 0x0006FAAC size 0x68; exe identical
-func_0006FB14	pass	src/pilot/func_0006FB14.c: 0x0006FB14 size 0x278; exe identical
 func_0006FD8C	pass	src/pilot/func_0006FD8C.c: 0x0006FD8C size 0x2C; exe identical
 func_0006FDB8	pass	src/pilot/func_0006FDB8.c: 0x0006FDB8 size 0x38; exe identical
-func_0006FDF0	pass	src/pilot/func_0006FDF0.c: 0x0006FDF0 size 0x4CC; exe identical
-func_000702BC	pass	src/pilot/func_000702BC.c: 0x000702BC size 0x24C; exe identical
-func_00070508	pass	src/pilot/func_00070508.c: 0x00070508 size 0x220, .rodata at 0x1173C; exe identical
-func_00070728	pass	src/pilot/func_00070728.c: 0x00070728 size 0x440, .rodata at 0x117AC; exe identical
-func_00070B68	pass	src/pilot/func_00070B68.c: 0x00070B68 size 0x394, .rodata at 0x117EC; exe identical
-func_00070EFC	pass	src/pilot/func_00070EFC.c: 0x00070EFC size 0xDC; exe identical
-func_00070FD8	pass	src/pilot/func_00070FD8.c: 0x00070FD8 size 0xF8; exe identical
-func_000710D0	pass	src/pilot/func_000710D0.c: 0x000710D0 size 0x214; exe identical
-func_000712E4	pass	src/pilot/func_000712E4.c: 0x000712E4 size 0xF8; exe identical
-func_000713DC	pass	src/pilot/func_000713DC.c: 0x000713DC size 0x90; exe identical
-func_0007146C	pass	src/pilot/func_0007146C.c: 0x0007146C size 0x98; exe identical
-func_00071504	pass	src/pilot/func_00071504.c: 0x00071504 size 0x220, .rodata at 0x1182C; exe identical
-func_00071724	pass	src/pilot/func_00071724.c: 0x00071724 size 0x68; exe identical
-func_0007178C	pass	src/pilot/func_0007178C.c: 0x0007178C size 0x11C; exe identical
-func_000718A8	pass	src/pilot/func_000718A8.c: 0x000718A8 size 0x168; exe identical
-func_00071A10	pass	src/pilot/func_00071A10.c: 0x00071A10 size 0xB8; exe identical
-func_00071AC8	pass	src/pilot/func_00071AC8.c: 0x00071AC8 size 0xEC; exe identical
-func_00071BB4	pass	src/pilot/func_00071BB4.c: 0x00071BB4 size 0xC0; exe identical
-func_00071C74	pass	src/pilot/func_00071C74.c: 0x00071C74 size 0x4DC; exe identical
-func_00072150	pass	src/pilot/func_00072150.c: 0x00072150 size 0xBC; exe identical
 func_0007220C	pass	src/pilot/func_0007220C.c: 0x0007220C size 0xB4; exe identical
-func_000722C0	pass	src/pilot/func_000722C0.c: 0x000722C0 size 0x6C; exe identical
-func_0007232C	pass	src/pilot/func_0007232C.c: 0x0007232C size 0x358; exe identical
-func_00072684	pass	src/pilot/func_00072684.c: 0x00072684 size 0xBC; exe identical
-func_00072740	pass	src/pilot/func_00072740.c: 0x00072740 size 0xEC; exe identical
-func_0007282C	pass	src/pilot/func_0007282C.c: 0x0007282C size 0x360; exe identical
-func_00072B8C	pass	src/pilot/func_00072B8C.c: 0x00072B8C size 0x34; exe identical
-func_00072BC0	pass	src/pilot/func_00072BC0.c: 0x00072BC0 size 0x58; exe identical
 func_00072C18	pass	src/pilot/func_00072C18.c: 0x00072C18 size 0x204; exe identical
 func_00072E1C	pass	src/pilot/func_00072E1C.c: 0x00072E1C size 0x204; exe identical
-func_00073020	pass	src/pilot/func_00073020.c: 0x00073020 size 0xE4; exe identical
-func_00073104	pass	src/pilot/func_00073104.c: 0x00073104 size 0x9C; exe identical
-func_000731A0	pass	src/pilot/func_000731A0.c: 0x000731A0 size 0x68; exe identical
-func_00073208	pass	src/pilot/func_00073208.c: 0x00073208 size 0xAC; exe identical
 func_000732B4	pass	src/pilot/func_000732B4.c: 0x000732B4 size 0x24; exe identical
-func_000732D8	pass	src/pilot/func_000732D8.c: 0x000732D8 size 0x2C; exe identical
-func_00073304	pass	src/pilot/func_00073304.c: 0x00073304 size 0x20; exe identical
-func_00073324	pass	src/pilot/func_00073324.c: 0x00073324 size 0xE4; exe identical
-func_00073408	pass	src/pilot/func_00073408.c: 0x00073408 size 0xE0; exe identical
-func_000734E8	pass	src/pilot/func_000734E8.c: 0x000734E8 size 0xF4; exe identical
-func_000735DC	pass	src/pilot/func_000735DC.c: 0x000735DC size 0x54; exe identical
-func_00073630	pass	src/pilot/func_00073630.c: 0x00073630 size 0x94; exe identical
 func_000736C4	pass	src/pilot/func_000736C4.c: 0x000736C4 size 0x20; exe identical
-func_000736E4	pass	src/pilot/func_000736E4.c: 0x000736E4 size 0x54; exe identical
 func_00073738	pass	src/pilot/func_00073738.c: 0x00073738 size 0x94; exe identical
-func_000737CC	pass	src/pilot/func_000737CC.c: 0x000737CC size 0x38; exe identical
 func_00073804	pass	src/pilot/func_00073804.c: 0x00073804 size 0x3C; exe identical
 func_00073840	pass	src/pilot/func_00073840.c: 0x00073840 size 0x40; exe identical
 func_00073880	pass	src/pilot/func_00073880.c: 0x00073880 size 0x8; exe identical
@@ -779,4 +783,15 @@ func_00073888	pass	src/pilot/func_00073888.c: 0x00073888 size 0x38; exe identica
 func_000738C0	pass	src/pilot/func_000738C0.c: 0x000738C0 size 0xC; exe identical
 func_000738CC	pass	src/pilot/func_000738CC.c: 0x000738CC size 0x8; exe identical
 func_000738D4	pass	src/pilot/func_000738D4.c: 0x000738D4 size 0x1C; exe identical
-(combined)	pass	780 passing functions linked together: sha1 94b44a84de2f9fa2dcaf120db2e7b3d74bc70d3d
+jump_debris	pass	src/pilot/jump_debris.c: 0x00020844 size 0x154; exe identical
+loadsectors	pass	src/pilot/loadsectors.c: 0x000512FC size 0x78; exe identical
+main	pass	src/pilot/main.c: 0x0002452C size 0x228; exe identical
+ready_cb_regions	pass	src/pilot/ready_cb_regions.c: 0x00034C74 size 0x100; exe identical
+ready_cb_soundbank	pass	src/pilot/ready_cb_soundbank.c: 0x00035044 size 0x130; exe identical
+ready_cb_textures	pass	src/pilot/ready_cb_textures.c: 0x00034B18 size 0x15C; exe identical
+sQuad	pass	src/pilot/sQuad.c: 0x0002B9BC size 0x3F4; exe identical
+sector_ready	pass	src/pilot/sector_ready.c: 0x0005122C size 0xD0; exe identical
+setCamera	pass	src/pilot/setCamera.c: 0x00058A84 size 0xA8; exe identical
+test_changemode	pass	src/pilot/test_changemode.c: 0x00032DEC size 0x1AC; exe identical
+wjmDraw3	pass	src/pilot/wjmDraw3.c: 0x00037EF8 size 0x224; exe identical
+(combined)	pass	795 passing functions linked together: sha1 94b44a84de2f9fa2dcaf120db2e7b3d74bc70d3d

@@ -16,7 +16,7 @@ extern long long D_00096820, D_00097708, D_000970D8, D_000967E8, D_00096DC4, D_0
 extern unsigned char D_000975E0;
 extern int D_000975DC;
 extern TXT D_000BE774, D_000BE998;
-extern void func_00067E58(), func_00057510(), func_00056A18(), func_00057AE4(), func_0005474C(), func_00055820(), func_00056BDC();
+extern void func_00067E58(), func_00057510(), func_00056A18(), func_00057AE4(), DrawOverheadMap(), func_00055820(), DrawPercentageBar();
 
 void func_000543D8(void)
 {
@@ -52,15 +52,15 @@ void func_000543D8(void)
     }
     *(int *)&D_00096DC4 = 0;
     if (*(int *)&D_00096834 != 6 && *(int *)&D_00096834 != 7)
-        func_0005474C();
+        DrawOverheadMap();
     if (*(int *)&D_00097704 && *(int *)&D_00097708 > 0x292)
         func_00055820();
-    func_00056BDC(&D_000BE774);
+    DrawPercentageBar(&D_000BE774);
     if (*(int *)&D_00096820) {
         *(int *)&D_00097708 = 0;
     } else {
         D_000BE998.val = *(int *)&D_00097708;
-        func_00056BDC(&D_000BE998);
+        DrawPercentageBar(&D_000BE998);
     }
     if (D_000975DC && D_000C71C0[0] == 0)
         func_00056A18(*(int *)&D_000977AC);

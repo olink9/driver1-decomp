@@ -23,9 +23,9 @@ extern VEC D_0008A8F0;
 extern MAT D_000B8FE8;
 extern int func_000398B0();
 extern int func_0002C5F0();
-extern int func_0001F5B0();
+extern int MapHeight();
 extern void func_0002C564();
-extern int func_0007EAF4();
+extern int RotTransPers();
 
 void func_00057510(VEC *pos)
 {
@@ -53,7 +53,7 @@ void func_00057510(VEC *pos)
     v[2].vx = 150;
     v[2].vy = -300;
     v[2].vz = 0;
-    t.vy = -func_0001F5B0(pos) - D_0008A8F0.vy;
+    t.vy = -MapHeight(pos) - D_0008A8F0.vy;
     t.vx = pos->vx - D_0008A8F0.vx;
     t.vz = pos->vz - D_0008A8F0.vz;
     func_0002C564(&t);
@@ -74,7 +74,7 @@ void func_00057510(VEC *pos)
     poly->g2 = 0;
     poly->b2 = 0;
     for (i = 0, first = xy; i < 3; i++) {
-        func_0007EAF4(vp, xy, &z, &flag);
+        RotTransPers(vp, xy, &z, &flag);
         if (xy == first)
             xy = &poly->x1;
         else

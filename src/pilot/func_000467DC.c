@@ -8,7 +8,7 @@ extern E D_0009AF04[];
 extern char D_000AF6A0[];
 extern long long D_000970D8, D_0009687C;
 extern int D_00096ABC;
-extern void func_0004EAC0(), func_00047A90();
+extern void func_0004EAC0(), Setup_Smoke();
 void func_000467DC(int a, int b, unsigned char c)
 {
     VEC pos;
@@ -42,7 +42,7 @@ void func_000467DC(int a, int b, unsigned char c)
     v.vz = 2;
     func_0004EAC0(&v);
     if (c)
-        func_00047A90(&pos, 20, 200, 1, b, &v, 1);
+        Setup_Smoke(&pos, 20, 200, 1, b, &v, 1);
     else
-        func_00047A90(&pos, 20, 100, 2, b, &v, 1);
+        Setup_Smoke(&pos, 20, 100, 2, b, &v, 1);
 }

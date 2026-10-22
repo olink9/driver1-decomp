@@ -18,7 +18,7 @@ extern unsigned char D_00097178[8];
 extern unsigned short D_00086F30[];
 extern unsigned short D_00087030[][32];
 extern POLY_FT4 D_000A216C[2][25];
-extern TexInfo *func_0005192C();
+extern TexInfo *GetTEXINFName();
 
 void func_0002A5CC(void)
 {
@@ -29,7 +29,7 @@ void func_0002A5CC(void)
 
     if (*(int *)&D_00096804 == 1)
         return;
-    t = func_0005192C(D_00096954, buf);
+    t = GetTEXINFName(D_00096954, buf);
     D_00097184 = buf[0];
     D_00097188 = buf[1];
     D_00097174[0] = t->x;

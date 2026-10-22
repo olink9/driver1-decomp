@@ -14,16 +14,16 @@ extern ITEM16 *D_000977F0;
 extern void func_0004E170();
 extern void func_0004E348();
 extern int func_00079AE0();
-extern void func_0006D610();
+extern void PlayRender();
 extern void func_00079AF0();
-extern void func_0006D56C();
+extern void ReInitSystem();
 extern void func_0006F57C();
 extern void func_0006F5CC();
 extern int func_0006F6DC();
 extern void func_000514E0();
 extern void func_0006F728();
-extern void func_00074158();
-extern void func_00050E28();
+extern void SetDispMask();
+extern void Loadfile();
 extern int func_1C9048();
 extern void func_00024754();
 extern void func_0004DF28();
@@ -39,9 +39,9 @@ ITEM16 *func_0006EEC4(ENTRY *p) {
     for (i = 0; D_0008D0EC[i].id != -1; i++) {
         if (copy.e[0].id == D_0008D0EC[i].id) {
             save = func_00079AE0();
-            func_0006D610(D_0008D0EC[i].arg);
+            PlayRender(D_0008D0EC[i].arg);
             func_00079AF0(save);
-            func_0006D56C();
+            ReInitSystem();
             func_0006F57C();
             v = D_0008D0EC[i].val;
             if (v < 100)
@@ -53,24 +53,24 @@ ITEM16 *func_0006EEC4(ENTRY *p) {
                 if (*(short *)&D_00097538)
                     func_0006F728();
             }
-            func_00074158(0);
-            func_00050E28(D_00011650, 0x1FE000);
+            SetDispMask(0);
+            Loadfile(D_00011650, 0x1FE000);
             return &D_000977F0[p->val];
         }
     }
     for (;;) {
         *(int *)&D_00096834 = D_00096F90;
-        func_00050E28(D_00011664, 0x1C0000);
-        func_00050E28(D_00011674, 0xE6600);
+        Loadfile(D_00011664, 0x1C0000);
+        Loadfile(D_00011674, 0xE6600);
         sel = func_1C9048(&copy);
         if (sel >= 0) {
             found = 0;
             for (i = 0; D_0008D1A0[i].id != -1 && !found; i++) {
                 if (ENT(p, sel)->id == D_0008D1A0[i].id) {
                     save = func_00079AE0();
-                    func_0006D610(D_0008D1A0[i].arg);
+                    PlayRender(D_0008D1A0[i].arg);
                     func_00079AF0(save);
-                    func_0006D56C();
+                    ReInitSystem();
                     func_0006F57C();
                     v = D_0008D1A0[i].val;
                     if (v < 100)
@@ -82,17 +82,17 @@ ITEM16 *func_0006EEC4(ENTRY *p) {
                         if (*(short *)&D_00097538)
                             func_0006F728();
                     }
-                    func_00050E28(D_00011650, 0x1FE000);
+                    Loadfile(D_00011650, 0x1FE000);
                     found = 1;
                 }
             }
             if (ENT(p, sel)->id == 0x13) {
                 save = func_00079AE0();
-                func_0006D610(0x21);
+                PlayRender(0x21);
                 func_00079AF0(save);
-                func_0006D56C();
+                ReInitSystem();
             }
-            func_00050E28(D_00011650, 0x1FE000);
+            Loadfile(D_00011650, 0x1FE000);
             return &D_000977F0[ENT(p, sel)->val];
         }
         if (sel == -1)

@@ -9,7 +9,7 @@ extern char D_000AF6A0[];
 extern long long D_000970D8, D_0009687C;
 extern int D_00096ABC;
 extern int func_000776E4();
-extern void func_000466D4(), func_00047A90();
+extern void GetSmokeDrift(), Setup_Smoke();
 static inline void xform(SVEC *in, VEC *out)
 {
     gte_SetTransVec0(out);
@@ -43,9 +43,9 @@ void func_00046A1C(int a, int b, int c)
     gte_SetRotMatrix(D_000AF6A0 + a * 32);
     sv2 = sv;
     xform(&sv2, &pos);
-    func_000466D4(&v);
+    GetSmokeDrift(&v);
     if (b)
-        func_00047A90(&pos, 100, 500, 1, c, &v, 0);
+        Setup_Smoke(&pos, 100, 500, 1, c, &v, 0);
     else
-        func_00047A90(&pos, 100, 400, 2, c, &v, 0);
+        Setup_Smoke(&pos, 100, 400, 2, c, &v, 0);
 }

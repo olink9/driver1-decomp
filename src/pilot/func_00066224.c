@@ -36,9 +36,9 @@ extern int D_0009777C;
 extern int D_00097780;
 extern VECTOR D_000C6CD8;
 
-extern void func_00047A90();
+extern void Setup_Smoke();
 extern void func_0004D8B0();
-extern void func_00047824();
+extern void Setup_Debris();
 extern int func_000776E4();
 
 static inline void bump(int v)
@@ -145,7 +145,7 @@ void func_00066224(void)
             r = *(int *)&D_000970D8 & 0x3;
 
         if (r == 0)
-            func_00047A90(&D_000C6CD8, 100, 500, 1, D_0009B1AC[0], D_0008BC70, 0);
+            Setup_Smoke(&D_000C6CD8, 100, 500, 1, D_0009B1AC[0], D_0008BC70, 0);
     } else {
         if (D_00097778 == 0) {
             func_0004D8B0(2, 0, 0, D_000C6CD8.vx, D_000C6CD8.vy, D_000C6CD8.vz);
@@ -163,9 +163,9 @@ void func_00066224(void)
         pos.vz = D_0009B0A4[0].pz + func_000776E4() % 400 - 200;
 
         if (!(*(int *)&D_000970D8 & 1))
-            func_00047A90(&pos, 100, 500, 1, D_0009B0A4[0].smoke, D_0008BC70, 0);
+            Setup_Smoke(&pos, 100, 500, 1, D_0009B0A4[0].smoke, D_0008BC70, 0);
         else
-            func_00047A90(&D_000C6CD8, 50, 200, 4, 10, D_0008BC70, 0);
+            Setup_Smoke(&D_000C6CD8, 50, 200, 4, 10, D_0008BC70, 0);
 
         if (D_00097778 < 9) {
             for (i = 0; i < 13; i++) {
@@ -175,7 +175,7 @@ void func_00066224(void)
                 vel.vx = (func_000776E4() & 0x1ff) - 256;
                 vel.vy = ((-66000 - (func_000776E4() & 0x7fff)) >> 10) - 600;
                 vel.vz = (func_000776E4() & 0x1ff) - 256;
-                func_00047824(&v, &vel, 5, 0);
+                Setup_Debris(&v, &vel, 5, 0);
             }
         }
         D_00097778++;

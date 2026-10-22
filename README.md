@@ -62,7 +62,8 @@ verified* below).
 1. Match the remaining functions in the main executable.
 2. Split and match the overlays.
 3. Merge the per-function files in `src/pilot/` into real source files with shared types, and apply the
-   collected names (`pilot/names-proposed.tsv`; many come from Driver 2's debug symbols).
+   remaining collected names (223 function names applied 2026-10-22, see `pilot/names-applied.tsv`; the rest
+   are in `pilot/names-rejected.tsv` with the reason).
 4. Port to PC on [PsyCross](https://github.com/OpenDriver2/PsyCross), the compatibility layer REDRIVER2 uses.
 
 ## How a match is verified
@@ -99,7 +100,7 @@ What that means for you:
 - **The C is not "the original source".** Like any matching decomp, it is *a* source that compiles to the
   same code. Names, types and structure are best guesses, informed by Driver 2's debug symbols where the two
   games share code.
-- **Readability is not there yet.** Per-function files, placeholder names (`func_0004E9C4`, `D_00097530`)
+- **Readability is not there yet.** Per-function files, placeholder names (`func_00020AE4`, `D_00097530`)
   and local struct definitions are expected at this stage. Cleanup into real source files is on the roadmap.
 - If you prefer not to use or contribute to AI-assisted projects, that's completely fine. The tools and
   findings here (compiler identification, the maspsx patch, the Driver 2 symbol mapping) may still be useful
@@ -119,8 +120,8 @@ make                                            # rebuilds a byte-identical SLUS
 
 Scoring one function, and the link check:
 ```sh
-.venv/bin/python tools/fnasm.py func_0004E9C4                         # target asm + Driver 2 hints
-.venv/bin/python tools/fnscore.py func_0004E9C4 src/pilot/func_0004E9C4.c --diff
+.venv/bin/python tools/fnasm.py Calc_Object_MatrixYZX         # target asm + Driver 2 hints
+.venv/bin/python tools/fnscore.py Calc_Object_MatrixYZX src/pilot/Calc_Object_MatrixYZX.c --diff
 .venv/bin/python tools/linkcheck.py -o pilot/linkcheck.tsv            # all matched files
 .venv/bin/python tools/progress.py                                    # the table above
 ```
@@ -142,7 +143,7 @@ hints in `fnasm.py` need two optional checkouts, each with its own environment v
 | `pilot/queue.tsv` | all 799 game functions, smallest first |
 | `pilot/results.tsv`, `pilot/linkcheck.tsv` | every attempt, and the link-check verdicts |
 | `pilot/d2map.tsv` | Driver 1 ↔ Driver 2 function pairs (code similarity) |
-| `pilot/names-proposed.tsv` | names found so far, not yet applied |
+| `pilot/names-proposed.tsv` | names proposed by the workers (raw); `names-applied.tsv` / `names-rejected.tsv` are the reviewed split |
 | `pilot/retry-notes.md` | open problems and leads |
 | `tools/` | scorer, link check, disassembly helper, Driver 2 matcher, PsyQ signature matcher |
 

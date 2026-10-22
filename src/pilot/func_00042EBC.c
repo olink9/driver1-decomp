@@ -4,9 +4,9 @@ extern int D_0008A8F0[];
 extern int D_00097480;
 extern int D_000B9170[];
 extern int D_000B9230[];
-extern int func_0001F5B0();
-extern void func_0004449C();
-extern void func_0004A398();
+extern int MapHeight();
+extern void ShowLight();
+extern void DisplayLightReflections();
 
 void func_00042EBC(O *o, int a1, int a2, int a3)
 {
@@ -37,12 +37,12 @@ void func_00042EBC(O *o, int a1, int a2, int a3)
     v1.y = o->y - D_0008A8F0[1] + a2;
     v2.x = v1.x;
     v2.z = v1.z;
-    h = func_0001F5B0(&v1);
+    h = MapHeight(&v1);
     c1[3] = 0;
     D_00097480 = -10;
     v2.y = -h - D_0008A8F0[1];
     v3 = v1;
-    func_0004449C(&v3, c1, 400, D_000B9170);
+    ShowLight(&v3, c1, 400, D_000B9170);
     c2[0] = 140; c2[1] = 140; c2[2] = 140;
-    func_0004A398(&v2, c2, 80, D_000B9230);
+    DisplayLightReflections(&v2, c2, 80, D_000B9230);
 }

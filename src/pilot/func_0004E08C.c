@@ -3,7 +3,7 @@ extern int D_00096C78;
 extern int D_00096C88;
 extern int D_000BD498[];
 extern void SpuSetMute();
-extern void func_000734E8();
+extern void XM_Restart();
 extern void SpuSetVoiceAttr();
 
 void func_0004E08C(void) {
@@ -12,7 +12,7 @@ void func_0004E08C(void) {
     int k;
     if (D_00096C78 != 0) {
         SpuSetMute(0);
-        func_000734E8(D_00096C88);
+        XM_Restart(D_00096C88);
         D_00096C78 = 0;
     }
     if (D_00096C74 != 0) {

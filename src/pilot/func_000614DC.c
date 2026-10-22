@@ -24,7 +24,7 @@ extern S17C D_000C017C;
 extern VEC D_0009D500;
 extern int D_000AF6A0[];
 extern int D_000AF980[];
-extern void func_00079D20();
+extern void SetRotMatrix();
 extern void func_0004EAC0();
 extern int SquareRoot0();
 
@@ -62,14 +62,14 @@ void func_000614DC(OBJ *obj)
         obj->pos.vz += D_000C017C.v.vz;
         break;
     case 4:
-        func_00079D20(D_000AF6A0);
+        SetRotMatrix(D_000AF6A0);
         func_0004EAC0(obj);
         obj->pos.vx += a.vx;
         obj->pos.vy -= a.vy;
         obj->pos.vz += a.vz;
         break;
     case 6:
-        func_00079D20(D_000AF980);
+        SetRotMatrix(D_000AF980);
         func_0004EAC0(obj);
     case 3:
         obj->pos.vx += D_0009D500.vx;
@@ -95,7 +95,7 @@ void func_000614DC(OBJ *obj)
         break;
     }
 
-    func_00079D20(D_000AF6A0);
+    SetRotMatrix(D_000AF6A0);
     func_0004EAC0(&b);
 
     if ((flags & 0x80) && ((flags & 0x80) >> 7)) a = D_0009B0A4.pos1;

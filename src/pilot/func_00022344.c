@@ -10,19 +10,19 @@ extern long long D_00097568;
 extern long long D_000975A8;
 extern char D_0009E714[];
 
-extern void func_00022700();
+extern void InitModelNames();
 extern void func_000298B0();
 extern void func_000298BC();
-extern void func_0002DFEC();
+extern void ProcessMapLump();
 extern void func_0003181C();
-extern void func_000346C8();
+extern void ProcessSpoolInfoLump();
 extern void func_00039450();
 extern void func_000394E0();
 extern void func_00039570();
 extern void func_000395B0();
 extern void func_000395D8();
 extern void func_00039668();
-extern void func_00051A40();
+extern void ProcessTextureInfo();
 extern void func_00052434();
 extern void func_000527BC();
 extern void func_00054140();
@@ -52,7 +52,7 @@ void func_00022344(char *lump_ptr)
             *(char **)&D_000975A8 = lump_ptr;
             break;
         case 34:
-            func_00051A40(lump_ptr);
+            ProcessTextureInfo(lump_ptr);
             break;
         case 7:
             func_00039450(D_0009E714, lump_ptr);
@@ -74,12 +74,12 @@ void func_00022344(char *lump_ptr)
             func_00052434(lump_ptr, lump_size);
             if (D_00096804 == 0)
                 func_000527BC(D_00097078, 0);
-            func_00022700();
+            InitModelNames();
             func_0003181C(D_00096834, 1);
             break;
         case 26:
-            func_000346C8(lump_ptr);
-            func_0002DFEC(D_00097114, 0);
+            ProcessSpoolInfoLump(lump_ptr);
+            ProcessMapLump(D_00097114, 0);
             break;
         case 8:
             func_000394E0(lump_ptr, lump_size);

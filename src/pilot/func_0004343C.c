@@ -14,11 +14,11 @@ extern struct L D_000B738C[];
 extern int D_000BBDD0[];
 extern int D_000B9170[];
 extern int D_000B9230[];
-extern int func_0001F5B0();
-extern void func_0004449C();
-extern void func_00045718();
-extern void func_000451A8();
-extern void func_0004A398();
+extern int MapHeight();
+extern void ShowLight();
+extern void ShowFlare();
+extern void RoundShadow();
+extern void DisplayLightReflections();
 
 static inline int find_lamp_streak(int id)
 {
@@ -117,17 +117,17 @@ void func_0004343C(O *o, int a1, int a2, int a3, int flags)
                 col[3] = 0x20;
             else
                 col[3] = 0;
-            func_0004449C(&pos, col, 50, D_000B9170);
+            ShowLight(&pos, col, 50, D_000B9170);
             col[0] >>= 1;
             col[2] >>= 1;
             col[1] >>= 1;
             if (*(int *)&D_00096850 || *(int *)&D_00096834 == 3)
-                func_00045718(&pos, col, 300, ((angx + angy + (pos.x + pos.z)) >> 3) & 0x1FFE);
+                ShowFlare(&pos, col, 300, ((angx + angy + (pos.x + pos.z)) >> 3) & 0x1FFE);
         }
-        v2.y = -func_0001F5B0(&pos) - D_0008A8F4[0];
+        v2.y = -MapHeight(&pos) - D_0008A8F4[0];
         if (*(int *)&D_00096850)
-            func_000451A8(&v2, col3, 400);
-        func_0004A398(&v2, col, 100, D_000B9230);
+            RoundShadow(&v2, col3, 400);
+        DisplayLightReflections(&v2, col, 100, D_000B9230);
         D_00097480 = -10;
     }
 }

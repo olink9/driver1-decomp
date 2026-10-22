@@ -6,7 +6,7 @@ extern long long D_00096897;
 extern char D_000976C8;
 extern void func_000618C8();
 extern void func_0005D974();
-extern int func_0001F5B0();
+extern int MapHeight();
 
 void func_00061A14(char *o)
 {
@@ -38,7 +38,7 @@ void func_00061A14(char *o)
 			func_0005D974(d);
 			d->x = *(int *)o + e->a;
 			d->z = *(int *)(o + 8) + *(int *)((char *)e + 8);
-			d->y = -func_0001F5B0(d);
+			d->y = -MapHeight(d);
 			d->e28 = *(int *)(o + 0x18);
 			d->e2c = *(int *)(o + 0x1c);
 			d->e30 = *(int *)(o + 0x20);

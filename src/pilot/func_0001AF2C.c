@@ -29,7 +29,7 @@ extern CAR_DATA D_0009B0A4[];
 extern CIV D_00098900[];
 extern VECTOR D_0008A8F0;
 extern long long D_00096834;
-extern int func_0001F5B0(VECTOR *pos);
+extern int MapHeight(VECTOR *pos);
 extern void func_0001B4A4(CAR_DATA *cp, VECTOR *pos);
 extern void func_0001B720(CAR_DATA *cp, int n);
 extern void func_0003EB0C(int a, int b);
@@ -57,7 +57,7 @@ void func_0001AF2C(int slot, VECTOR *pos, int a2, int type, int arg4)
     ClearMem((unsigned char *)&D_0009B0A4[slot], sizeof(CAR_DATA));
     tmp.vx = pos->vx;
     tmp.vz = pos->vz;
-    tmp.vy = func_0001F5B0(&tmp) + 0xA3;
+    tmp.vy = MapHeight(&tmp) + 0xA3;
     cp = &D_0009B0A4[slot];
     func_0001B4A4(cp, &tmp);
     cp->fF8 = a2;

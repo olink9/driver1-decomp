@@ -35,7 +35,7 @@ extern int D_0009740C;
 extern unsigned char D_00097458;
 extern unsigned char D_00097460;
 extern void func_00043FDC();
-extern void func_00040BAC();
+extern void PlacePoolForCar();
 
 void func_00046234(int player)
 {
@@ -131,13 +131,13 @@ void func_00046234(int player)
         col.r = n << 4;
         col.b = n << 4;
         col.g = n << 4;
-        func_00040BAC(player, &col, 1);
+        PlacePoolForCar(player, &col, 1);
     }
     if (*flash != 0) {
         col.r = *flash;
         col.b = 0;
         col.g = 0;
-        func_00040BAC(player, &col, 0);
+        PlacePoolForCar(player, &col, 0);
         *flash = 0;
     }
     if (player == 0) {

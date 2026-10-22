@@ -32,9 +32,9 @@ extern char D_0001023C[];
 
 extern void func_00073F88();
 extern void func_00079800();
-extern void func_00074158();
+extern void SetDispMask();
 extern void func_00025F48();
-extern void func_000508B0();
+extern void ShowLoadingScreen();
 extern void func_00022818();
 extern void func_1E22CC();
 extern void func_0002360C();
@@ -64,7 +64,7 @@ void func_00024F1C(void)
     ret = 1;
     func_00073F88(1);
     func_00079800(0);
-    func_00074158(0);
+    SetDispMask(0);
     D_00096818 = 0;
     do {
         D_000967DD = 0;
@@ -77,8 +77,8 @@ void func_00024F1C(void)
             D_000967BD = 0xFF;
         }
         if (D_000967BC == 1)
-            func_000508B0(name, 1, 0x24);
-        func_00074158(1);
+            ShowLoadingScreen(name, 1, 0x24);
+        SetDispMask(1);
         func_00022818();
         if (D_00096858 == 1)
             func_1E22CC();
@@ -156,7 +156,7 @@ void func_00024F1C(void)
                             D_0009687C = 1;
                             func_0005071C(0, 0xFF, 8);
                             WaitScreenFade();
-                            func_00074158(0);
+                            SetDispMask(0);
                             D_0009687C = saved1;
                             *(int *)&D_00097534 = 0;
                             D_0009709C = 1;
@@ -167,7 +167,7 @@ void func_00024F1C(void)
                             D_0009687C = 1;
                             func_0005071C(0, 0xFF, 8);
                             WaitScreenFade();
-                            func_00074158(0);
+                            SetDispMask(0);
                             D_0009687C = saved2;
                             *(int *)&D_00097534 = 0;
                             D_0009709C = 0;
@@ -179,7 +179,7 @@ void func_00024F1C(void)
                     D_0009687C = 1;
                     func_0005071C(0, 0xFF, 8);
                     WaitScreenFade();
-                    func_00074158(0);
+                    SetDispMask(0);
                     D_0009687C = saved3;
                     *(int *)&D_00097534 = 0;
                     D_0009709C = 0;
@@ -216,7 +216,7 @@ void func_00024F1C(void)
             D_0009687C = 1;
             func_0005071C(0, 0xFF, 8);
             WaitScreenFade();
-            func_00074158(0);
+            SetDispMask(0);
             *(volatile int *)&D_00097534 = 0;
             D_000970D8 = *(volatile int *)&D_00097534;
             D_0009687C = saved4;
@@ -228,7 +228,7 @@ void func_00024F1C(void)
             D_0009687C = 1;
             func_0005071C(0, 0xFF, 8);
             WaitScreenFade();
-            func_00074158(0);
+            SetDispMask(0);
             D_0009687C = saved5;
             D_00096899 = 1;
             D_00096928 = D_0009709C;
@@ -256,14 +256,14 @@ void func_00024F1C(void)
         D_0009687C = 1;
         func_0005071C(0, 0xFF, 8);
         WaitScreenFade();
-        func_00074158(0);
+        SetDispMask(0);
         D_0009687C = saved6;
     }
     *(int *)&D_00096780 = 0;
     *(int *)&D_0009677C = 0;
     D_00096884 = 0;
     D_00096899 = 0;
-    func_00074158(0);
+    SetDispMask(0);
     func_00051374();
     r.x = 0;
     r.y = 0;
@@ -271,5 +271,5 @@ void func_00024F1C(void)
     r.h = 0x200;
     func_00074374(&r, 0, 0, 0);
     DrawSync(0);
-    func_00074158(1);
+    SetDispMask(1);
 }

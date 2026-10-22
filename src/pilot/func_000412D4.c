@@ -27,10 +27,10 @@ extern unsigned short *D_000A0E20[];
 extern MATRIX D_000AF6A0[];
 extern PARTICLE D_000B92A0[];
 extern int func_000776E4();
-extern void func_00079D20();
+extern void SetRotMatrix();
 extern void func_0004EAC0();
 extern int func_00042678();
-extern int func_000217C8();
+extern int ROADS_GetRouteData();
 
 void func_000412D4(int car, short height, int type)
 {
@@ -55,7 +55,7 @@ void func_000412D4(int car, short height, int type)
             pos.vx = (func_000776E4() & 0x1FF) - 256;
             pos.vz = (func_000776E4() & 0x400) - 512;
         }
-        func_00079D20(&D_000AF6A0[car]);
+        SetRotMatrix(&D_000AF6A0[car]);
         func_0004EAC0(&pos);
         pos.vx += D_0009B0A4[car].t[0];
         pos.vy = -height;
@@ -66,7 +66,7 @@ void func_000412D4(int car, short height, int type)
             return;
 
         if (type) {
-            if (func_000217C8(pos.vx, pos.vz, &surf) && (*D_000A0E20[surf.type] & 0x80)) {
+            if (ROADS_GetRouteData(pos.vx, pos.vz, &surf) && (*D_000A0E20[surf.type] & 0x80)) {
                 p = &D_000B92A0[idx];
                 p->pos = pos;
                 p->flags = 0x8006;

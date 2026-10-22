@@ -18,7 +18,7 @@ extern unsigned char D_00097028;
 extern unsigned char D_0009701C;
 extern int D_00096790;
 
-extern void func_00020844();
+extern void jump_debris();
 extern void func_000299B8();
 extern void func_00029B88();
 extern void func_00029C00();
@@ -38,7 +38,7 @@ void func_0002054C(int player)
     change = 0;
     cp = &D_0009B0A4[player];
     sp = cp->f10C;
-    func_00020844(cp);
+    jump_debris(cp);
     if (player != 0)
         return;
     for (i = 0; i < 4; i++) {

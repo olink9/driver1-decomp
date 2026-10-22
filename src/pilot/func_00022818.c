@@ -37,15 +37,15 @@ extern int D_0008A1DC[];
 
 
 extern void func_00058814(), func_0004C9CC(), func_000595B0(), func_00026040(), func_000505E0();
-extern void func_0004D544(), func_0004E1DC(), func_0004D69C(), func_0004C29C(), func_0004DF28();
+extern void ResetSound(), func_0004E1DC(), func_0004D69C(), func_0004C29C(), func_0004DF28();
 extern void func_000212F0(), func_00068384(), func_00061220(), func_00068360(), func_000686BC();
-extern void func_00059638(), func_0004D208(), func_00050E28(), func_1E06B8(), func_0002258C();
-extern void func_0004ED34(), func_0005C99C(), func_00052198(), func_0003A068(), func_000541C8();
+extern void func_00059638(), func_0004D208(), Loadfile(), func_1E06B8(), LoadGameLevel();
+extern void func_0004ED34(), LoadFont(), func_00052198(), func_0003A068(), InitOverheadMap();
 extern void func_0003181C(), func_000244B8(), func_1E320C(), func_000148C4(), func_0002DC24();
 extern void func_000147C4(), func_00063C60(), func_0003E540(), func_00021BEC(), func_0005EF08();
-extern void func_00016CE4(), func_0001FA1C(), func_000337D4(), func_000542CC(), func_00052A78();
+extern void func_00016CE4(), func_0001FA1C(), InitSpooling(), func_000542CC(), func_00052A78();
 extern void func_00052C04(), func_00033AF8(), func_0001AF2C(), func_1E1D30(), func_1E1008();
-extern void func_00049538(), func_00058D70(), func_00059698(), func_00056B5C(), func_000661A8();
+extern void SetupRain(), FindNextChange(), func_00059698(), func_00056B5C(), func_000661A8();
 extern void func_000682C0(), func_0001AE7C(), func_0004D5F8(), func_1E2D70();
 extern int VSync();
 
@@ -83,7 +83,7 @@ void func_00022818(void)
     }
 
     if (D_00096804 == 0) {
-        func_0004D544();
+        ResetSound();
         func_0004E1DC(0);
         func_0004E1DC(1);
         func_0004E1DC(2);
@@ -147,24 +147,24 @@ void func_00022818(void)
 
     if (D_000967BC != 0) {
         if (D_00096834 == 2 || D_00096834 == 6) {
-            func_00050E28(D_000101D8, 0x1E0000);
+            Loadfile(D_000101D8, 0x1E0000);
         } else if (D_00096800 == 1) {
-            func_00050E28(D_000101E4, 0x1E0000);
+            Loadfile(D_000101E4, 0x1E0000);
             func_1E06B8();
         }
-        func_00050E28(D_00086F00[D_00096834], 0x1F8BBC);
-        func_0002258C();
+        Loadfile(D_00086F00[D_00096834], 0x1F8BBC);
+        LoadGameLevel();
         D_000967BE = 1;
         if (D_00096834 != 2 && D_00096804 == 0)
             func_0004ED34();
-        func_0005C99C();
+        LoadFont();
     } else {
         if (D_000967BE == 0)
             func_00052198();
         D_000967BE = 1;
         func_0003A068();
         if (D_000970A4 != 0 && D_00096899 == 0)
-            func_000541C8();
+            InitOverheadMap();
         func_0003181C(D_00096834, 0);
     }
 
@@ -194,7 +194,7 @@ void func_00022818(void)
     }
 
     func_0001FA1C();
-    func_000337D4();
+    InitSpooling();
     func_0003A068();
 
     if (D_000970A4 != 0 && D_00096899 == 0) {
@@ -231,7 +231,7 @@ void func_00022818(void)
     if (D_00096854 != 0)
         func_1E1008();
 
-    func_00049538();
+    SetupRain();
 
     if (D_000967BC != 0) {
         *(int *)&D_0009715C = D_00097098;
@@ -242,7 +242,7 @@ void func_00022818(void)
     }
 
     if (D_00096899 != 0)
-        func_00058D70(D_000970D8);
+        FindNextChange(D_000970D8);
     else
         func_00059698();
 

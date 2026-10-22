@@ -2,7 +2,7 @@
 typedef struct { char *primptr; unsigned int *ot; } DB;
 extern long long D_00097530;
 #define current (*(DB **)&D_00097530)
-extern int func_0007B1E8();
+extern int NormalClip();
 
 typedef struct {
     unsigned char id, pad[3], v0, v1, v2, v3;
@@ -31,7 +31,7 @@ void func_00035DA8(void)
     zbuff = *(short **)0x1F80001C;
     prims = (PF4 *)current->primptr;
 
-    if (func_0007B1E8(outlongs[src->v0], outlongs[src->v1], outlongs[src->v2]) > 0) {
+    if (NormalClip(outlongs[src->v0], outlongs[src->v1], outlongs[src->v2]) > 0) {
         ((unsigned char *)prims)[3] = 5;
         prims->rgb0 = 0;
         ((unsigned char *)prims)[7] = 0x28;

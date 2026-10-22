@@ -7,11 +7,11 @@ extern char D_00010910[];
 extern void CdInit();
 extern int CdSearchFile();
 extern int sprintf();
-extern int func_0007A684();
+extern int CdPosToInt();
 extern void func_0007A580();
-extern void func_0007A3B0();
-extern void func_0007DCBC();
-extern int func_0007DE58();
+extern void CdControl();
+extern void CdRead();
+extern int CdReadSync();
 
 void func_000503F4(void)
 {
@@ -27,14 +27,14 @@ void func_000503F4(void)
         sz[i] = 0;
         sprintf(name, D_00010910, D_00086EC0[i]);
         if (CdSearchFile(file, name) != 0)
-            sz[i] = func_0007A684(file);
+            sz[i] = CdPosToInt(file);
     }
     for (i = 0; i < 8; i++) {
         if (sz[i] != 0) {
             func_0007A580(sz[i], file);
-            func_0007A3B0(2, file, 0);
-            func_0007DCBC(1, 0xD0200, 0x80);
-            while (func_0007DE58(0, name + 0x80) != 0)
+            CdControl(2, file, 0);
+            CdRead(1, 0xD0200, 0x80);
+            while (CdReadSync(0, name + 0x80) != 0)
                 ;
             for (j = 0; j < 4; j++) {
                 D_000BE0A4[i][j].a = base[j * 2] + (sz[i] << 11);
@@ -46,6 +46,6 @@ void func_000503F4(void)
         sz[i] = 0;
         sprintf(name, D_00010910, D_0008AAFC[i]);
         if (CdSearchFile(file, name) != 0)
-            ((int *)&D_00097520)[i] = func_0007A684(file);
+            ((int *)&D_00097520)[i] = CdPosToInt(file);
     }
 }

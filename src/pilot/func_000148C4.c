@@ -10,8 +10,8 @@ extern long long D_00096804, D_00096834;
 #define G34 (*(int *)&D_00096834)
 extern V3 D_0008531C[];
 extern V3s D_0008A8F0;
-extern void func_000774C4(), func_00020A64(), func_0001B4A4(), func_0001B720();
-extern int func_0001F5B0();
+extern void memset(), func_00020A64(), func_0001B4A4(), func_0001B720();
+extern int MapHeight();
 
 /* Driver 2 name: unknown */
 void func_000148C4(void)
@@ -19,7 +19,7 @@ void func_000148C4(void)
     char pad[16];
     V3s v;
     A_t *p;
-    func_000774C4(&D_0009B0A4, 0, 0x18C);
+    memset(&D_0009B0A4, 0, 0x18C);
     if (D_000C6F04.b2de != 0 && G04 == 0) {
         int a = D_000C6F04.a4, b = D_000C6F04.a8, c = D_000C6F04.ac;
         D_0009B0A4.b2 = 0;
@@ -38,7 +38,7 @@ void func_000148C4(void)
         p->c8 = D_0008531C[G34].x;
         p->cc = D_0008531C[G34].y;
         p->d0 = D_0008531C[G34].z;
-        p->cc = func_0001F5B0(&p->c8) + 0xA4;
+        p->cc = MapHeight(&p->c8) + 0xA4;
         v.y = p->cc;
         func_0001B4A4(p, &v);
         func_0001B720(&D_0009B0A4, 0);

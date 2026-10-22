@@ -4,11 +4,11 @@ extern int D_000868DC[];
 extern int *D_000977E0;
 extern int D_000977E8;
 extern int *D_000977F0;
-extern void func_00050E28();
+extern void Loadfile();
 int func_0006EACC(void) {
     int *p = (int *)0x1FE000;
     int r;
-    func_00050E28(D_00011650, 0x1FE000);
+    Loadfile(D_00011650, 0x1FE000);
     D_000977F0 = (int *)0x1FE004;
     r = 1;
     __asm__("" : "=r"(r) : "0"(r));

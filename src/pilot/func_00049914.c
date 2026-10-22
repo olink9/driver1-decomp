@@ -51,7 +51,7 @@ extern long long D_0009687C;
 extern long long D_00097530;
 #define current (*(DB **)&D_00097530)
 
-extern void func_000466D4(VECTOR *v);
+extern void GetSmokeDrift(VECTOR *v);
 extern void func_0002C564(VECTOR *v);
 
 static inline void ReleaseRainDrop(int RainIndex)
@@ -71,7 +71,7 @@ void func_00049914(void)
     int Count;
     int col;
 
-    func_000466D4(&drift);
+    GetSmokeDrift(&drift);
 
     if (D_00097428 == 0)
         return;

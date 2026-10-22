@@ -18,7 +18,7 @@ extern int D_00089F1C[];
 extern MATRIX D_000BBE84;
 extern long long D_000972F0;
 extern void MulMatrix0();
-extern void func_00079D20();
+extern void SetRotMatrix();
 
 #define gte_SetTransVector(r0) __asm__ volatile ( \
     "lw $12, 0(%0);" "lw $13, 4(%0);" "lw $14, 8(%0);" \
@@ -57,7 +57,7 @@ int func_0002E6B8(MODEL *model, MATRIX *rot, VECTOR *trans)
     sum = 0;
     gte_SetTransVector(trans);
     MulMatrix0(&D_000BBE84, rot, &m);
-    func_00079D20(&m);
+    SetRotMatrix(&m);
     verts = model->vertices;
     i = 0;
     for (n = model->num_vertices / 3; n > 0; ) {

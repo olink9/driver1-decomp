@@ -22,7 +22,7 @@ extern short D_0008EAA8[];
 extern SCALE_b062 D_0008B080[];
 extern long long D_00096888;
 extern long long D_00096834;
-extern void func_0007EAC4();
+extern void RotTrans();
 
 void func_000539C8(VECTOR *in, VECTOR *out, int count, unsigned char flag, unsigned char flag2)
 {
@@ -67,7 +67,7 @@ void func_000539C8(VECTOR *in, VECTOR *out, int count, unsigned char flag, unsig
             vv.vx = (in->vx - D_0009B0A4[0].xC8) / scale;
             vv.vz = (D_0009B0A4[0].xD0 - in->vz) / scale;
         }
-        func_0007EAC4(&vv, out++, &f);
+        RotTrans(&vv, out++, &f);
         in++;
     }
 }

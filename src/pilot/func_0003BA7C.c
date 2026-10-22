@@ -13,8 +13,8 @@ typedef struct { char pad[0xA]; unsigned short nverts; char pad2[0x10]; SVECTOR 
 
 extern CAR D_0009B0A4[];
 extern MODEL *D_000A1AB0[];
-extern void func_0004EB10(); /* InvertMatrix */
-extern void func_00079D20(); /* SetRotMatrix */
+extern void InvertMatrix();
+extern void SetRotMatrix();
 
 void func_0003BA7C(int car, unsigned char *out)
 {
@@ -27,8 +27,8 @@ void func_0003BA7C(int car, unsigned char *out)
     x = (D_0009B0A4[car].xpos >> 8) & 0x3F;
     z = -(D_0009B0A4[car].zpos >> 8) & 0x3F;
     sv = D_000A1AB0[0]->verts;
-    func_0004EB10(&D_0009B0A4[car].mat, (MATRIX *)0x1F800344);
-    func_00079D20((MATRIX *)0x1F800344);
+    InvertMatrix(&D_0009B0A4[car].mat, (MATRIX *)0x1F800344);
+    SetRotMatrix((MATRIX *)0x1F800344);
     for (i = 0; i < D_000A1AB0[0]->nverts; i++) {
         gte_ldv0(&sv[i]);
         gte_rtv0();

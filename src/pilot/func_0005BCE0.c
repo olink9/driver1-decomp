@@ -8,7 +8,7 @@ extern int D_0008A1E0[];
 extern char D_0009B0A4[];
 extern char D_0009D438[];
 extern int D_0008A8F0[];
-extern int func_00067EE0();
+extern int Long2DDistance();
 extern int func_0005BDF8();
 
 int func_0005BCE0(int a)
@@ -29,7 +29,7 @@ int func_0005BCE0(int a)
         base = D_0009B0A4;
     else
         base = D_0009D438;
-    if (func_00067EE0(base + 0xC8, D_0008A8F0) >= 0x55F1) {
+    if (Long2DDistance(base + 0xC8, D_0008A8F0) >= 0x55F1) {
         *(unsigned char *)&D_00096897 = 0;
         D_0008A1E0[0] = -300;
         *(int *)&D_0009688C = 0;

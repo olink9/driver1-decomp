@@ -55,7 +55,7 @@ extern int func_0001B198();
 extern int func_000397F4();
 extern int ratan2();
 extern int SquareRoot0();
-extern void func_0004C96C();
+extern void PlaySpeech();
 
 #define ABS(x) ((x) >= 0 ? (x) : -(x))
 
@@ -142,7 +142,7 @@ void func_000635C0(void)
             D_0009770C = -1;
             D_00097744 = 257;
             if (D_00097708 > 0x292)
-                func_0004C96C(D_000BC9BC, 8);
+                PlaySpeech(D_000BC9BC, 8);
         } else {
             D_0009770C = 0;
         }

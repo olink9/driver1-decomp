@@ -73,17 +73,17 @@ extern char D_000AB454[];
 extern char D_000B08B8[];
 extern PED D_00098950[];
 
-extern int func_000217C8();
-extern void func_0002ADEC();
+extern int ROADS_GetRouteData();
+extern void PlaceShadowForCar();
 extern void func_0002C564();
 extern int func_0002C5F0();
 extern void func_0002DBB4();
 extern void func_0002E230();
 extern void func_0003B168();
-extern void func_0003B208();
+extern void DrawCarWheels();
 extern void func_0003B994();
 extern void func_0003BA7C();
-extern void func_00040BAC();
+extern void PlacePoolForCar();
 extern void func_000412D4();
 extern void func_00043E8C();
 extern void func_00046234();
@@ -129,7 +129,7 @@ void func_0003A698(int i, int view)
         int *src = D_0009B0A4[i].mat;
         int *dst = D_000AF6A0[i].m;
 
-        if (view == 0 && func_000217C8(cars->x, cars->z, tmp)) {
+        if (view == 0 && ROADS_GetRouteData(cars->x, cars->z, tmp)) {
             if ((*D_000A0E20[tmp[0]] & 0x80) && cars->y < 220) {
                 if (I32(D_0009687C) == 0) {
                     if (I32(D_00097004) != 0)
@@ -159,7 +159,7 @@ void func_0003A698(int i, int view)
             D_00097460.c[0] = 0;
 
         if (I32(D_000970E8) != 0)
-            func_00040BAC(i, a18, 1);
+            PlacePoolForCar(i, a18, 1);
         return;
     }
 
@@ -242,7 +242,7 @@ void func_0003A698(int i, int view)
         }
 
         if (view == 0) {
-            if (func_000217C8(cp->x, cp->z, tmp)) {
+            if (ROADS_GetRouteData(cp->x, cp->z, tmp)) {
                 if (I32(D_00096834) != 1 && (*D_000A0E20[tmp[0]] & 0x80) && cp->y < 220) {
                     if (I32(D_0009687C) == 0) {
                         if (I32(D_00097004) != 0)
@@ -254,14 +254,14 @@ void func_0003A698(int i, int view)
                 } else {
                     I32(D_00097004) = 25;
                     I32(D_000970DC) = 100;
-                    func_0002ADEC(i, &pos, zero);
+                    PlaceShadowForCar(i, &pos, zero);
                 }
             }
             func_0003BA7C(i, D_000AB454);
             I32(D_000972F0) = (int)D_000B08B8;
         } else {
             I32(D_000972F0) = (int)&D_000AF97A[i];
-            func_0002ADEC(i, &pos, zero);
+            PlaceShadowForCar(i, &pos, zero);
         }
 
         {
@@ -272,7 +272,7 @@ void func_0003A698(int i, int view)
                 I32(D_00096978) = 1;
             if (i != 0 || I32(D_00096874) != 1) {
                 func_0003B168(vp, &mat, &pos, &v98);
-                func_0003B208(i, &mat, &pos, 0, view2);
+                DrawCarWheels(i, &mat, &pos, 0, view2);
                 I32(D_00096978) = 0;
             }
         }

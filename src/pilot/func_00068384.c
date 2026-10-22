@@ -31,7 +31,7 @@ extern int D_000BE78C[];
 extern char D_000C6EA8[];
 extern ENT D_000C7034[];
 
-extern void func_000774C4();
+extern void memset();
 extern void func_00068B88();
 extern void func_0006B97C();
 
@@ -50,7 +50,7 @@ void func_00068384(OBJ *obj)
     c = obj->c;
     for (src = obj->d, dst = d; src < obj->d + 1; src += 2, dst++)
         *dst = *src;
-    func_000774C4(obj, 0, 0x2E8);
+    memset(obj, 0, 0x2E8);
     for (src = d, dst = obj->d; src < d + 1; src += 2, dst++)
         *dst = *src;
     obj->b = b;

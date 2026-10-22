@@ -2,7 +2,7 @@ extern int D_000A8024[];
 extern short D_0009728C[];
 extern unsigned char *D_000AA7E8[];
 extern int D_000973A8;
-extern void func_0004FB70();
+extern void Getlong();
 void func_0003A270(int idx, int val, int off, unsigned char *out)
 {
     int hdr;
@@ -14,7 +14,7 @@ void func_0003A270(int idx, int val, int off, unsigned char *out)
             *out++ = 0;
     } else {
         base = D_000AA7E8[idx];
-        func_0004FB70(&hdr, base + off * 4);
+        Getlong(&hdr, base + off * 4);
         p = base + (hdr & 0x3FFFFFFF);
         if (p != base) {
             n = D_000973A8;

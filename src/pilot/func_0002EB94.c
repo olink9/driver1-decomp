@@ -57,7 +57,7 @@ extern unsigned short D_00086F30[];
 extern long long D_00097530;
 #define current (*(DB **)&D_00097530)
 extern int func_0002680C();
-extern void func_00074D54();
+extern void SetDrawMode();
 
 #define gte_SetRotMatrix(r0) __asm__ volatile ( \
     "lw    $12, 0( %0 );" "lw    $13, 4( %0 );" "ctc2  $12, $0;" "ctc2  $13, $1;" \
@@ -169,7 +169,7 @@ void func_0002EB94(int count)
             ft3->uv1tpage = uv[1].w | tpage;
             ft3->uv2 = uv[2].w;
             polys = (unsigned char *)(f3 + 1);
-            func_00074D54(polys, 1, 1, 0x40, 0);
+            SetDrawMode(polys, 1, 1, 0x40, 0);
             addPrim(&current->ot[z], ft3);
             addPrim(&current->ot[z], f3);
             addPrim(&current->ot[z], polys);
@@ -199,7 +199,7 @@ void func_0002EB94(int count)
             ft4->uv2 = uv[3].w;
             ft4->uv3 = uv[2].w;
             polys = (unsigned char *)(f4 + 1);
-            func_00074D54(polys, 1, 1, 0x40, 0);
+            SetDrawMode(polys, 1, 1, 0x40, 0);
             addPrim(&current->ot[z], ft4);
             addPrim(&current->ot[z], f4);
             addPrim(&current->ot[z], polys);

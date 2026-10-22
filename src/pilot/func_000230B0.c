@@ -57,10 +57,10 @@ extern int D_0009711C;
 extern V16 D_000A1AF0;
 
 extern void func_00042BD0();
-extern void func_0005334C();
+extern void animate_garage_door();
 extern void func_00032088();
 extern int func_00079AF0();
-extern void func_0005BFF0();
+extern void cjpRecord();
 extern void func_0005BF2C();
 extern void func_0001FF24();
 extern void func_0001D608();
@@ -68,7 +68,7 @@ extern void func_0001A94C();
 extern void func_0001A30C();
 extern void func_00064A64();
 extern void func_0005F3F8();
-extern void func_0001BAC0();
+extern void GlobalTimeStep();
 extern void func_00066224();
 extern void func_0004C15C();
 extern void func_0001A9BC();
@@ -77,7 +77,7 @@ extern void func_0004D740();
 extern void func_000359D0();
 extern void func_0004CF50();
 extern void func_0002054C();
-extern void func_00041CE4();
+extern void SwirlLeaves();
 extern void func_00020780();
 
 void func_000230B0(void)
@@ -88,7 +88,7 @@ void func_000230B0(void)
         D_00097118++;
 
     func_00042BD0();
-    func_0005334C();
+    animate_garage_door();
     func_00032088(D_00096834);
     *(int *)&D_00097030 = 0;
 
@@ -114,7 +114,7 @@ void func_000230B0(void)
                 D_00097060.a = 0;
                 D_00097060.b = 1;
             }
-            func_0005BFF0(D_00096888 != 0, &D_0009705C, &D_00097060.a, &D_00097060.b);
+            cjpRecord(D_00096888 != 0, &D_0009705C, &D_00097060.a, &D_00097060.b);
             func_0001FF24(D_00096888, D_0009705C, D_00097060.a, D_00097060.b);
             func_0001D608(&D_0009B0A4[D_00096888], 1);
         }
@@ -150,7 +150,7 @@ void func_000230B0(void)
         func_00064A64();
     }
 
-    func_0001BAC0();
+    GlobalTimeStep();
     if (D_000970EC != 0)
         func_00066224();
     func_0004C15C();
@@ -178,11 +178,11 @@ void func_000230B0(void)
     func_000359D0();
     func_0004CF50();
     func_0002054C(0);
-    func_00041CE4(0);
+    SwirlLeaves(0);
 
     if (D_00096898 == 6 || D_00096898 == 3 || (unsigned char)(D_00096898 - 7) < 2) {
         func_00020780(0x17);
-        func_00041CE4(0x17);
+        SwirlLeaves(0x17);
     }
 
     if (D_00096878 == 1 && D_00096884 != 0 && D_00096874 == 0 && *(int *)&D_00096F80 == 5 &&

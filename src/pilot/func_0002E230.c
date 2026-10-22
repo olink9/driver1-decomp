@@ -23,7 +23,7 @@ typedef struct { unsigned char v; char pad[7]; } B8;
 extern B8 D_00096858;
 extern long long D_000972F0;
 extern void MulMatrix0();
-extern void func_00079D20();
+extern void SetRotMatrix();
 
 #define gte_SetTransVector(r0) __asm__ volatile ( \
     "lw $12, 0(%0);" "lw $13, 4(%0);" "lw $14, 8(%0);" \
@@ -60,7 +60,7 @@ void func_0002E230(MODEL *model, MATRIX *rot, VECTOR *trans, int zbias)
     zbuf = (short *)0x1F800240;
     gte_SetTransVector(trans);
     MulMatrix0(&D_000BBE84, rot, &m);
-    func_00079D20(&m);
+    SetRotMatrix(&m);
     verts = model->vertices;
     i = 0;
     for (n = model->num_vertices / 3; n > 0; ) {

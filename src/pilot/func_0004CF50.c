@@ -36,10 +36,10 @@ typedef struct { int count; int list[64]; } QUEUE;
 typedef struct { char pad[0x4E6]; unsigned short vol; } SNDSTATE;
 extern SNDSTATE D_000BD498;
 
-extern void func_00073020();
+extern void XM_SetSongPos();
 extern void func_0004DDA8();
 extern void func_0004CA5C();
-extern void func_0004D6B0();
+extern void StartSound();
 
 void func_0004CF50(void)
 {
@@ -49,7 +49,7 @@ void func_0004CF50(void)
 
     if (D_00096C70 == 0 && *(int *)&D_00097708 >= 0x293) {
         D_00096C70 = 1;
-        func_00073020(*(int *)&D_00096C88, D_0008AA04[*(int *)&D_00097298].id);
+        XM_SetSongPos(*(int *)&D_00096C88, D_0008AA04[*(int *)&D_00097298].id);
     }
 
     if (gamemode == 2 || gamemode == 0) {
@@ -81,9 +81,9 @@ void func_0004CF50(void)
             q->count--;
             v = q->list[q->count];
             if (v >= 100) {
-                func_0004D6B0(9, 4, v - 100, 0, 0x1000);
+                StartSound(9, 4, v - 100, 0, 0x1000);
             } else if (*(int *)&D_00096770 != 0 && *(int *)&D_00096834 != 2) {
-                func_0004D6B0(9, 3, v, -4000, 0x1000);
+                StartSound(9, 3, v, -4000, 0x1000);
             }
             D_000BD498.vol = D_000BD498.vol * 5 / 6;
         }

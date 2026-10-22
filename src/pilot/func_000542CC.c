@@ -13,7 +13,7 @@ extern char D_00096D40[];
 extern char D_00096D48[];
 extern int D_000975DC;
 extern void func_00056B5C();
-extern void func_000541C8();
+extern void InitOverheadMap();
 
 void func_000542CC(void)
 {
@@ -23,7 +23,7 @@ void func_000542CC(void)
         D_000BE774.h = 0x18;
         D_000BE774.f14 = 1;
         D_000975DC = 0;
-        func_000541C8();
+        InitOverheadMap();
         func_00056B5C(&D_000BE998, 0x1000, D_0008B180, D_00096D40);
         D_000BE998.w = 0x10;
         D_000BE998.h = 0x2E;

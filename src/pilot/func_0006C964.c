@@ -37,7 +37,7 @@ extern MENTRY D_0008CCD4[], D_0008CB54[], D_0008CA84[], D_0008CC04[], D_0008C994
 extern MENTRY D_0008C854[], D_0008C784[];
 
 extern void func_0004DF28(), func_000359BC(), func_000514E0(), func_00025C04();
-extern void func_0005C7D0(), func_0005C8F4(), func_0005CC68();
+extern void SetTextColour(), func_0005C8F4(), PrintString();
 extern int func_0006E854(), func_0006C4BC();
 extern int sprintf();
 
@@ -207,20 +207,20 @@ next:
         }
         if (*(int *)&D_000967E8 == 0) {
             if (*(int *)&D_00096A08 == 0) {
-                func_0005C7D0(0xFF, 0xFF, 0xFF);
+                SetTextColour(0xFF, 0xFF, 0xFF);
                 func_0005C8F4(D_000115F4, 0x78);
             } else if (*(int *)&D_00096A08 == -1) {
-                func_0005C7D0(0xFF, 0xFF, 0xFF);
+                SetTextColour(0xFF, 0xFF, 0xFF);
                 func_0005C8F4(D_0001160C, 0x78);
             } else {
                 p = D_000977C0;
                 i = 0;
                 while (p[i].text != 0) {
-                    func_0005C7D0(p[i].r, p[i].g, p[i].b);
+                    SetTextColour(p[i].r, p[i].g, p[i].b);
                     switch (p[i].flag) {
                     case 0:
                     default:
-                        func_0005CC68(p[i].text, p[i].x, p[i].y);
+                        PrintString(p[i].text, p[i].x, p[i].y);
                         break;
                     case 1:
                         func_0005C8F4(p[i].text, p[i].y);
@@ -228,7 +228,7 @@ next:
                     }
                     i++;
                 }
-                func_0005C7D0(0xFF, 0xFF, 0xFF);
+                SetTextColour(0xFF, 0xFF, 0xFF);
             }
             if (D_00096F08 != -1) {
                 D_000977C0[D_00096F08].r = 0xFF;

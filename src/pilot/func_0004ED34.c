@@ -26,7 +26,7 @@ extern unsigned char D_000BE278[];
 extern DV D_000BE708[];
 
 extern short GetTPage();
-extern void func_00050EC4();
+extern void LoadfileSeg();
 extern short func_0007A7F4();
 extern void func_000516AC();
 extern void func_00074404();
@@ -87,8 +87,8 @@ void func_0004ED34(void)
     bmp = (unsigned char *)0xF8600;
     D_00097090 = D_0008AA58[D_000974EC];
     offs = *(int **)&D_00097098;
-    func_00050EC4(D_00010898, offs, D_000974EC * 48, 0x34);
-    func_00050EC4(D_00010898, 0xF8600, offs[0], offs[12] - offs[0]);
+    LoadfileSeg(D_00010898, offs, D_000974EC * 48, 0x34);
+    LoadfileSeg(D_00010898, 0xF8600, offs[0], offs[12] - offs[0]);
 
     dv.vx = D_000BE708[D_000BE278[D_000BDCE8.d]].vx;
     dv.vy = D_000BE708[D_000BE278[D_000BDCE8.d]].vy;

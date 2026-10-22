@@ -33,7 +33,7 @@ extern VEC D_0008A1DC;
 typedef struct { short v; short pad[3]; } S8;
 extern S8 D_00096C48, D_00096C4A, D_00096C4C;
 extern long long D_000970E4, D_00096A48;
-extern int func_0001F5B0();
+extern int MapHeight();
 extern void func_0004AD94();
 extern int ratan2();
 extern void func_00077D6C();
@@ -83,9 +83,9 @@ void func_0003CFE8(int player)
     }
 
     D_0008A8F0.vy = -cp->cc + D_0008A1DC.vy;
-    D_000973C4 = D_0008A1DC.vy - func_0001F5B0(&D_0008A8F0) - 100;
-    D_000973CC = func_0001F5B0(&cp->c8);
-    D_000973BC = func_0001F5B0(&D_0008A8F0);
+    D_000973C4 = D_0008A1DC.vy - MapHeight(&D_0008A8F0) - 100;
+    D_000973CC = MapHeight(&cp->c8);
+    D_000973BC = MapHeight(&D_0008A8F0);
     if (D_0008A8F0.vy > D_000973C4) {
         if ((D_000973CC - D_000973BC >= 0 ? D_000973CC - D_000973BC : D_000973BC - D_000973CC) < 900) {
             D_00096C48.v = ((D_0008A8F0.vy - D_000973C4) >> 1) + 25;

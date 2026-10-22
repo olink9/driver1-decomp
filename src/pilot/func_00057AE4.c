@@ -57,8 +57,8 @@ extern void func_00058278();
 extern void func_0005813C();
 extern void func_000585D8();
 extern void func_0005847C();
-extern void func_000541C8();
-extern void func_00056278();
+extern void InitOverheadMap();
+extern void LoadMapTile();
 extern void func_0005C8F4();
 
 #define MODE (*(int *)&D_00096834)
@@ -158,7 +158,7 @@ void func_00057AE4(void)
                 gt->tpage = D_00086F30[*(int *)&D_000974B4] | 0x20;
             } while (0);
             DrawPrim(gt);
-            func_00056278(0, i, j);
+            LoadMapTile(0, i, j);
 
             ft = (FT4 *)**(int **)&D_00097530;
             ((unsigned char *)ft)[3] = 9;
@@ -213,7 +213,7 @@ void func_00057AE4(void)
         func_0005813C(&col, &pos2);
         func_0005847C(&pos, &pos2);
     }
-    func_000541C8();
+    InitOverheadMap();
     f3 = (FT3 *)**(int **)&D_00097530;
     ((unsigned char *)f3)[3] = 7;
     f3->code = 0x24;

@@ -2,7 +2,7 @@ extern char D_000BC8AC[];
 extern char D_000BC7AC[];
 extern short D_0008A910[];
 extern int D_000974B8;
-extern void func_000774C4();
+extern void memset();
 
 void func_0004C1C8(void)
 {
@@ -23,7 +23,7 @@ void func_0004C1C8(void)
     p = D_0008A910;
     q = D_000BC7AC;
     D_000974B8 = 0;
-    func_000774C4(q, 14, 0x100);
+    memset(q, 14, 0x100);
     p++;
     s = *p;
     v = D_0008A910[0];

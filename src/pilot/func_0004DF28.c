@@ -2,13 +2,13 @@ typedef struct { unsigned int voice; unsigned int mask; short a; short b; char p
 typedef struct { VA va; char pad[0x44]; } ENT;
 extern int D_00096C74, D_00096C78, D_00096C88;
 extern ENT D_000BD498[];
-extern void func_00073408(), SpuSetMute(), SpuSetVoiceAttr();
+extern void XM_Pause(), SpuSetMute(), SpuSetVoiceAttr();
 void func_0004DF28(void)
 {
     VA attr;
     int i;
     if (D_00096C78 == 0) {
-        func_00073408(D_00096C88);
+        XM_Pause(D_00096C88);
         D_00096C78 = 1;
         SpuSetMute(1);
     }

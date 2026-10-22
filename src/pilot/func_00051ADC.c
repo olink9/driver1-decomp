@@ -38,8 +38,8 @@ extern XY D_000BE1BC[];
 
 extern unsigned short GetTPage();
 extern unsigned short func_0007A7F4();
-extern void func_000774C4();
-extern void func_000512FC();
+extern void memset();
+extern void loadsectors();
 extern void func_000516E4();
 extern void func_00056610();
 extern void func_0005674C();
@@ -78,7 +78,7 @@ void func_00051ADC(int *sector)
         for (j = 0; j < 32; j++)
             D_00087030[i][j] = func_0007A7F4(0x3C0, 0x10);
     D_00097560 = 0;
-    func_000774C4(D_000BE278, 0, 0x80);
+    memset(D_000BE278, 0, 0x80);
     D_00097550.x = 0x3C0;
     D_00097550.y = 0x100;
     D_00097550.w = 0x10;
@@ -104,7 +104,7 @@ void func_00051ADC(int *sector)
     addr = *(char **)&D_00097098;
     for (i = 0; i < D_0009758C; i++)
         n += (D_00097594[i].size + 2047) / 2048;
-    func_000512FC(addr, *sector, n);
+    loadsectors(addr, *sector, n);
     *sector += n;
     for (i = 0; i < D_0009758C; i++) {
         id = D_00097594[i].id;
@@ -133,7 +133,7 @@ void func_00051ADC(int *sector)
                 D_00097580 = *sector;
                 *(int *)&D_00097584 = n;
             }
-            func_000512FC(addr, *sector, n);
+            loadsectors(addr, *sector, n);
             RegisterTPage(id);
             func_000516E4(&D_00097574, &D_00097550, id, addr);
             D_00097560++;

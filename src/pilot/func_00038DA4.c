@@ -9,7 +9,7 @@ extern unsigned char *D_000972F0;
 extern long long D_00096990;
 extern long long D_000975CC;
 extern int D_000BE9FC[][30][5];
-extern int func_0007B1E8();
+extern int NormalClip();
 
 typedef struct {
     unsigned char id, texture_set;
@@ -49,7 +49,7 @@ void func_00038DA4(void)
     zbuff = *(short **)0x1F80001C;
     prims = (PGT3 *)current->primptr;
 
-    if (func_0007B1E8(((int *)outlongs)[src->v0], ((int *)outlongs)[src->v1], ((int *)outlongs)[src->v2]) > 0) {
+    if (NormalClip(((int *)outlongs)[src->v0], ((int *)outlongs)[src->v1], ((int *)outlongs)[src->v2]) > 0) {
         *(int *)&prims->r0 = *(int *)&D_000971A0;
         *(int *)&prims->r1 = *(int *)&D_000971A0;
         *(int *)&prims->r2 = *(int *)&D_000971A0;

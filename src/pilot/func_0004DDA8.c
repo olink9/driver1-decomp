@@ -5,7 +5,7 @@ extern struct V D_000BD50C[];
 extern void func_0004E5E4();
 extern void SpuSetVoiceAttr();
 extern void func_0004DBF8();
-extern void func_0004DACC();
+extern void SetChannelPitch();
 
 void func_0004DDA8(unsigned idx, int a1, int a2, int a3, int e) {
     struct V *v;
@@ -18,6 +18,6 @@ void func_0004DDA8(unsigned idx, int a1, int a2, int a3, int e) {
         D_000BD498[idx].f4 = 0xF;
         SpuSetVoiceAttr(&D_000BD498[idx]);
         func_0004DBF8(&D_000BD498[idx]);
-        func_0004DACC(idx, e);
+        SetChannelPitch(idx, e);
     }
 }

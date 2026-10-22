@@ -30,7 +30,7 @@ extern int D_000969A8;
 extern int D_000969AC;
 extern int D_000969B0;
 extern void func_0002C564();
-extern void func_00079D20();
+extern void SetRotMatrix();
 
 #define gte_SetTransVector(r0) __asm__ volatile ( \
     "lw $12, 0(%0);" "lw $13, 4(%0);" "lw $14, 8(%0);" \
@@ -96,7 +96,7 @@ void func_0002F444(void)
         sv[i].vy = v.vy;
         sv[i].vz = v.vz;
     }
-    func_00079D20(&D_000890BC);
+    SetRotMatrix(&D_000890BC);
     gte_SetTransVector(&D_0008909C);
 
     {

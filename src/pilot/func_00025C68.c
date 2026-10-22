@@ -32,7 +32,7 @@ extern long long D_0009677C;
 extern CARX D_0009B0A4;
 extern void func_0004DF28();
 extern void func_0003EAE0();
-extern void func_000774C4();
+extern void memset();
 extern void func_0001B4A4();
 extern void RotMatrix();
 
@@ -61,7 +61,7 @@ void func_00025C68(void)
         func_0003EAE0(0);
         break;
     case 4:
-        func_000774C4(&rot, 0, 8);
+        memset(&rot, 0, 8);
         rot.vy = D_0009B0A4.dir;
         rot2 = rot;
         pos.vx = D_0009B0A4.x;

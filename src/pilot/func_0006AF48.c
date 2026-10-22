@@ -18,9 +18,9 @@ extern B8 D_00097699;
 extern B8 D_0009769A;
 extern int func_0006B450();
 extern int sprintf();
-extern void func_0005CC68();
-extern int func_0005CF10();
-extern void func_0005C7D0();
+extern void PrintString();
+extern int PrintDigit();
+extern void SetTextColour();
 
 static inline void SetColour(int val)
 {
@@ -60,13 +60,13 @@ static inline void ShowB(int *v, short x, short y)
 
     SetColour(v[0]);
     len = sprintf(buf, D_00096EF0, v[0]);
-    w = func_0005CF10(Off(x + 25, 2, len), y, buf);
-    func_0005C7D0(0x80, 0x80, 0x80);
+    w = PrintDigit(Off(x + 25, 2, len), y, buf);
+    SetTextColour(0x80, 0x80, 0x80);
     if (v[1] != 0x7FFFFFFF)
         sprintf(buf, D_00096EF4, v[1]);
     else
         sprintf(buf, D_00096EF8);
-    func_0005CC68(buf, w, y + 13);
+    PrintString(buf, w, y + 13);
 }
 
 void func_0006AF48(int *v, short x, short y)
@@ -77,6 +77,6 @@ void func_0006AF48(int *v, short x, short y)
     w = func_0006B450(D_0008C248, 4);
     SetColour(v[9]);
     sprintf(buf1, D_00096EF0, v[9]);
-    func_0005CC68(buf1, w, D_0008C27A[0]);
+    PrintString(buf1, w, D_0008C27A[0]);
     ShowB(v, x, y);
 }

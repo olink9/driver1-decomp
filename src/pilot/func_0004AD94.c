@@ -82,8 +82,8 @@ extern int D_000974B0;
 extern int D_00096C50;
 
 extern void func_0004AC88(int a, int b, int c);
-extern int func_0001F5B0(VECTOR *pos);
-extern int func_0003FF0C(CAR_DATA *cp, BUILDING_BOX *bbox, CELL_OBJECT *cop);
+extern int MapHeight(VECTOR *pos);
+extern int CarBuildingCollision(CAR_DATA *cp, BUILDING_BOX *bbox, CELL_OBJECT *cop);
 extern int func_0004BD48(BUILDING_BOX *boxes, int i, int j, int car);
 extern void func_0004EAC0(VECTOR *v);
 
@@ -176,7 +176,7 @@ void func_0004AD94(int car)
                 int m = *(int *)&D_00096834;
                 if (m == 3 || (m == 5 && *(int *)&D_0008A8F8 > -445000) ||
                     (m == 1 && cp->where[2] > 238000)) {
-                    player_pos.vy = func_0001F5B0(&player_pos) + 500;
+                    player_pos.vy = MapHeight(&player_pos) + 500;
                     cp->where[1] = player_pos.vy;
                 }
             }
@@ -234,7 +234,7 @@ void func_0004AD94(int car)
                             } else {
                                 if (cam_dist >= 0x104) {
                                 count = 5;
-                                while (func_0003FF0C(cp, &bbox, D_000BBF14[D_000974B0]) && count > 0) {
+                                while (CarBuildingCollision(cp, &bbox, D_000BBF14[D_000974B0]) && count > 0) {
                                     cam_dist -= D_000974AC;
                                     if (cam_dist < 0x104)
                                         cam_dist = 0x104;
@@ -252,7 +252,7 @@ void func_0004AD94(int car)
                             D_000BC004[D_000974B0] = bbox;
                             D_000BBF14[D_000974B0] = cop;
                                 D_000974B0++;
-                        } else if (func_0003FF0C(cp, &bbox, cop)) {
+                        } else if (CarBuildingCollision(cp, &bbox, cop)) {
                             cp->hit = 1;
                         }
                     }
@@ -279,7 +279,7 @@ void func_0004AD94(int car)
             if (bb->xsize) {
                 count = 5;
                 if (cam_dist >= 0x104)
-                while (func_0003FF0C(cp, bb, D_000BBF14[pi]) && count > 0) {
+                while (CarBuildingCollision(cp, bb, D_000BBF14[pi]) && count > 0) {
                     cam_dist -= D_000974AC;
                     if (cam_dist < 0x104)
                         cam_dist = 0x104;
@@ -305,7 +305,7 @@ void func_0004AD94(int car)
             cp->where[2] = D_0009B0A4[0].where[2] + ((cam_dist * D_0008EAA8[(cp->direction & 0xfff) * 2 + 1] / 2 + 0x800) >> 12);
             bb = D_000BC004;
             for (pi = 0; pi < D_000974B0; pi++, bb++) {
-                if (bb->xsize && func_0003FF0C(cp, bb, D_000BBF14[pi])) {
+                if (bb->xsize && CarBuildingCollision(cp, bb, D_000BBF14[pi])) {
                     cam_dist -= step;
                     if (cam_dist < 0x104)
                         cam_dist = 0x104;
@@ -317,7 +317,7 @@ void func_0004AD94(int car)
         }
     } else {
         for (bi = 0; bi < D_000974B0; bi++) {
-            if (D_000BC004[bi].xsize && func_0003FF0C(cp, &D_000BC004[bi], D_000BBF14[bi]))
+            if (D_000BC004[bi].xsize && CarBuildingCollision(cp, &D_000BC004[bi], D_000BBF14[bi]))
                 cp->hit = 1;
         }
     }

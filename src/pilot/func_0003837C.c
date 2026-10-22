@@ -7,7 +7,7 @@ extern long long D_000974B4;
 extern unsigned short D_00087030[][32];
 extern unsigned short D_00086F30[];
 extern unsigned char *D_000972F0;
-extern int func_0007B1E8();
+extern int NormalClip();
 
 typedef struct {
     unsigned char id, texture_set;
@@ -49,7 +49,7 @@ void func_0003837C(unsigned char col)
     prims = (PFT3 *)current->primptr;
     uvs = *(unsigned char **)0x1F800038;
 
-    if (func_0007B1E8(((int *)outlongs)[src->v0], ((int *)outlongs)[src->v1], ((int *)outlongs)[src->v2]) > 0) {
+    if (NormalClip(((int *)outlongs)[src->v0], ((int *)outlongs)[src->v1], ((int *)outlongs)[src->v2]) > 0) {
         *(int *)&prims->r0 = *(int *)&D_000971A0;
         ((unsigned char *)prims)[3] = 7;
         ((unsigned char *)prims)[0x23] = 7;

@@ -2,7 +2,7 @@ extern long long D_00096770;
 extern int D_00097704;
 extern int D_00097708;
 extern char D_000BC9BC[];
-extern void func_0004C96C();
+extern void PlaySpeech();
 
 void func_000650E4(char *base, int idx, short amt)
 {
@@ -29,7 +29,7 @@ void func_000650E4(char *base, int idx, short amt)
         D_00097708 = 0x1000;
     i = idx;
     if (i == 4)
-        func_0004C96C(D_000BC9BC, 7);
+        PlaySpeech(D_000BC9BC, 7);
     if (i == 3)
-        func_0004C96C(D_000BC9BC, 10);
+        PlaySpeech(D_000BC9BC, 10);
 }

@@ -42,7 +42,7 @@ extern VECTOR D_0008909C;
 extern VECTOR camb __asm__("D_0008909C");
 extern int D_00096D58;
 
-extern int func_00067EE0();
+extern int Long2DDistance();
 extern void func_000539C8();
 
 #define setlen(p, _len) (((TAG *)(p))->len = (unsigned char)(_len))
@@ -65,7 +65,7 @@ void func_00055CA0(VECTOR *pos)
     vertex[0].vx = (vertex[2].vz + 2) >> 2;
     vertex[0].vz = (2 - vertex[2].vx) >> 2;
 
-    dist = func_00067EE0(&D_0008909C, &vertex[0]) / D_0008B080[GameLevel].scale;
+    dist = Long2DDistance(&D_0008909C, &vertex[0]) / D_0008B080[GameLevel].scale;
 
     if (dist > D_00096D58) {
         vertex[0].vx = vertex[0].vx * D_00096D58 / dist;
@@ -78,7 +78,7 @@ void func_00055CA0(VECTOR *pos)
     scale = D_0008B080[GameLevel].scale;
     pot = current->ot;
 
-    len = func_00067EE0(&camb, &vertex[2]);
+    len = Long2DDistance(&camb, &vertex[2]);
 
     shade = 180;
     if (gTimeOfDay != 0)

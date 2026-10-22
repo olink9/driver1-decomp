@@ -1,8 +1,8 @@
 extern char D_00010678[];
 extern int D_0008A988[];
 extern unsigned char D_0008A96C[];
-extern void func_00050EC4();
-extern void func_0004E214();
+extern void LoadfileSeg();
+extern void LoadSoundBank();
 
 static inline void ld(int i, int mode)
 {
@@ -10,11 +10,11 @@ static inline void ld(int i, int mode)
     int *t = D_0008A988;
     int len, off;
     if (t[1] == 0)
-        func_00050EC4(h, t, 0, 0x2C);
+        LoadfileSeg(h, t, 0, 0x2C);
     len = D_0008A988[i + 1] - D_0008A988[i];
     off = D_0008A988[i];
-    func_00050EC4(h, 0x80100000, off, len);
-    func_0004E214(0x80100000, len, mode);
+    LoadfileSeg(h, 0x80100000, off, len);
+    LoadSoundBank(0x80100000, len, mode);
 }
 
 void func_0004C29C(int arg)

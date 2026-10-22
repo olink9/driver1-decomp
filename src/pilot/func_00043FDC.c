@@ -9,9 +9,9 @@ extern MAT D_000AF6A0[];
 extern VEC D_0008A8F0;
 extern int D_00097424, D_00097434, D_00097438, D_00097440, D_00097468;
 extern int D_000B9230[];
-extern int func_0001F5B0();
-extern void func_0004449C(), func_0004A398();
-extern void func_00045718(VEC *, CVEC *, short, int);
+extern int MapHeight();
+extern void ShowLight(), DisplayLightReflections();
+extern void ShowFlare(VEC *, CVEC *, short, int);
 
 void func_00043FDC(SVEC *pos, int car, CVEC *col, short size, int arg4, int flag)
 {
@@ -52,10 +52,10 @@ void func_00043FDC(SVEC *pos, int car, CVEC *col, short size, int arg4, int flag
     gte_stlvnl(&v);
     if (D_00097424 >= 10) {
         v2 = v;
-        v2.vy = -func_0001F5B0(&D_0009B0A4[car].pos) - D_0008A8F0.vy;
+        v2.vy = -MapHeight(&D_0009B0A4[car].pos) - D_0008A8F0.vy;
     }
     col->cd = cd;
-    func_0004449C(&v, col, size, arg4);
-    func_00045718(&v, col, size * 3, ((pos->vx + pos->vz) >> 2) + ((D_00097434 + D_00097438) & 0xFFF) * 2);
-    func_0004A398(&v2, col, size, D_000B9230);
+    ShowLight(&v, col, size, arg4);
+    ShowFlare(&v, col, size * 3, ((pos->vx + pos->vz) >> 2) + ((D_00097434 + D_00097438) & 0xFFF) * 2);
+    DisplayLightReflections(&v2, col, size, D_000B9230);
 }

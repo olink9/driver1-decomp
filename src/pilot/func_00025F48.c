@@ -19,7 +19,7 @@ extern void func_000148C4();
 extern void func_0001FA1C();
 extern void func_1E1D30();
 extern void func_1E1008();
-extern void func_00058D70();
+extern void FindNextChange();
 extern void func_00059698();
 
 void func_00025F48(void)
@@ -44,7 +44,7 @@ void func_00025F48(void)
     if (D_00096834 == 2)
         func_1E1008();
     if (D_00096895)
-        func_00058D70(D_000970D8);
+        FindNextChange(D_000970D8);
     else
         func_00059698();
 }

@@ -1,5 +1,5 @@
 /* HANDWRITTEN ASM */
-/* GTE prim helper (inputs in t0-t3/s5/s6/v1/a1); .L00030520 is a second entry point used by func_00030464 / func_000307E8 (j) and func_0002C8FC (address taken) */
+/* GTE prim helper (inputs in t0-t3/s5/s6/v1/a1); .L00030520 is a second entry point used by func_00030464 / func_000307E8 (j) and DrawMapPSX (address taken) */
 __asm__(
     ".set noreorder\n"
     ".macro XJ p0; j \\p0; .endm\n"

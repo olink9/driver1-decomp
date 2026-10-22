@@ -43,7 +43,7 @@ extern S24b D_000B7F3C[];
 extern int func_000776E4();
 extern void func_0004EA98();
 extern void func_0004EAC0();
-extern void func_00079D20();
+extern void SetRotMatrix();
 
 void func_00042290(void)
 {
@@ -76,9 +76,9 @@ void func_00042290(void)
         func_0004EA98(D_000BBA80, &D_0009746C);
         for (i = 0; i < 5; i++) {
             if (i == 1)
-                func_00079D20(D_000BBA80);
+                SetRotMatrix(D_000BBA80);
             else
-                func_00079D20(D_000B9008);
+                SetRotMatrix(D_000B9008);
             t = *D_0008A864[i];
             func_0004EAC0(&t.v[0]);
             func_0004EAC0(&t.v[1]);

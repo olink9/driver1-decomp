@@ -9,7 +9,7 @@ extern char D_000AF6A0[];
 extern long long D_000970D8, D_0009687C;
 extern int D_00096ABC;
 extern int func_000776E4();
-extern void func_00079D20(), func_00047A90();
+extern void SetRotMatrix(), Setup_Smoke();
 void func_00046C58(int a)
 {
     VEC pos;
@@ -32,7 +32,7 @@ void func_00046C58(int a)
     sv.vz += func_000776E4() & 0x3F;
     pos = D_0009B0A4[a].pos;
     pos.vy = -pos.vy;
-    func_00079D20(D_000AF6A0 + a * 32);
+    SetRotMatrix(D_000AF6A0 + a * 32);
     sv2 = sv;
     gte_SetTransVec0(&pos);
     gte_ldv0(&sv2);
@@ -41,5 +41,5 @@ void func_00046C58(int a)
     zero.vx = 0;
     zero.vy = 0;
     zero.vz = 0;
-    func_00047A90(&pos, 50, 100, 4, 0, &zero, 0);
+    Setup_Smoke(&pos, 50, 100, 4, 0, &zero, 0);
 }

@@ -38,7 +38,7 @@ extern MATRIX D_000B8FE8;
 extern int func_000398B0();
 extern int func_0002C5F0();
 extern void func_0002C564();
-extern void func_00057734();
+extern void DrawStopZone();
 
 void func_00056754(MDL_b062 *m, VECTOR *pos, int flag)
 {
@@ -92,5 +92,5 @@ void func_00056754(MDL_b062 *m, VECTOR *pos, int flag)
         current->primptr += 20;
     }
     if (!flag)
-        func_00057734(pos);
+        DrawStopZone(pos);
 }

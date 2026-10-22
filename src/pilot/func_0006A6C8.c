@@ -30,9 +30,9 @@ extern long long D_00097708;
 extern long long D_0009770C;
 extern char D_000BC9BC[];
 extern int func_0004FFE8(void);
-extern void func_0004C96C();
-extern void func_0004D6B0();
-extern void func_0004D7E4();
+extern void PlaySpeech();
+extern void StartSound();
+extern void Start3DSoundVolPitch();
 
 void func_0006A6C8(SNDOBJ *p)
 {
@@ -52,7 +52,7 @@ void func_0006A6C8(SNDOBJ *p)
                 play = 1;
             if (play) {
                 r = func_0004FFE8();
-                func_0004C96C(D_000BC9BC, p->list[1 + r % p->list[0]]);
+                PlaySpeech(D_000BC9BC, p->list[1 + r % p->list[0]]);
                 p->t.timer = RandTime(&p->t, r);
             }
         }
@@ -65,14 +65,14 @@ void func_0006A6C8(SNDOBJ *p)
             } else {
                 switch (e->flags & 6) {
                 case 0:
-                    func_0004C96C(D_000BC9BC, e->b1);
+                    PlaySpeech(D_000BC9BC, e->b1);
                     break;
                 case 4:
                     pos = e->pos;
-                    func_0004D7E4(-1, e->b2, e->b1, pos->x, pos->y, pos->z, e->s6, e->s8);
+                    Start3DSoundVolPitch(-1, e->b2, e->b1, pos->x, pos->y, pos->z, e->s6, e->s8);
                     break;
                 case 2:
-                    func_0004D6B0(-1, e->b2, e->b1, e->s6, e->s8);
+                    StartSound(-1, e->b2, e->b1, e->s6, e->s8);
                     break;
                 }
                 e->flags &= ~1;
