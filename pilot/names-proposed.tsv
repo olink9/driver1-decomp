@@ -403,3 +403,4 @@ func_00041CE4	SwirlLeaves	r3-11
 func_00033870	SendTPage	r3-11
 func_0007A704	SpuSetTransferMode	r3-16 (fairly certain)
 func_000342D4	LoadRegionData	r3-16
+0x000473F0	func_000473F0	DisplaySun	r4-14b: SKY.C DisplaySun (null FT3, sun FT4, rotating flare FT4; VECTOR output)

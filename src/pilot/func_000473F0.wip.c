@@ -1,12 +1,19 @@
-/* FAKEMATCH (if it ever matches): do { } while (0) wrappers here only shift register priorities. */
-/* r4-14 (99.22, was 99.16): the angle block's table reads through two pointers (p0 = &tbl[i*2], p1 = &tbl[i*2-1])
- * and do{}while(0) moved to start after size.vx. Diagnosis (local-alloc qty priority floor_log2(refs)*refs/len, all
- * one block): mask 0xFFFFFF loses t1 because the angle block's &tbl[i*2] pseudo takes t1 first; that happens because
- * -35 grabs a3, because the idx chain (lhu/sll/andi/+tbl-2) loses v1 to the [0]-value pair, because the [-1] value
- * (2 refs, life 1) outranks everything. Loading [-1] FIRST (`sn = *p1; c = *p0;`, g5/01int0) puts the chain in v1 and
- * fixes mask/ff00/9 = t2?/t3/t4 but then r.vx (sra, prio 2.67) takes a1 before -35 (1.71) -> -35 in a3, &[0] in t0.
- * LEFT: target needs -35 in a1 ahead of r.vx and the [-1] value - no source form found that raises -35's priority. */
-/* (no Driver 2 counterpart) - HUD sprite pair + rotating overlay */
+/* FAKEMATCH (if it ever matches): `c = *p0; ... idx = *p0;` reads cos twice into two variables only to shift
+ * local-alloc priorities. No do{}while(0) wrapper any more. */
+/* Driver 2: DisplaySun (SKY.C) - null FT3 + sun FT4 + rotating flare FT4. D2 debug locals: polys, null,
+ * VECTOR output (stack), int width, height. cos = rcossin_tbl[(i*2)+1] is referenced FIRST (that is why the
+ * target addresses D_0008EAAA and derives the sin address as base-2 by CSE).
+ * r4-14b: 99.37 WITHOUT the wrapper (was 99.22 with it). Permuter found the reuse of `idx` as the cos value;
+ * that alone puts the masks/9/base3/poly3 (t1/t3/t4/t2/t0) right - everything outside the rotation block now
+ * matches. A clean no-steering form scores 99.22 (also wrapper-free):
+ *     idx = *p0; sn = *p1; r.vx = ((idx - sn) * size.vx) >> 12; r.vy = ((*p1 + *p0) * size.vy) >> 12;
+ * LEFT (rotation block only): target has -35 in a1, &cos in a3, sin value + r.vx in a2. With local-alloc
+ * priority floor_log2(refs)*refs/life, the -35 qty (3 refs over >= 7 insns, 0.43) can never be allocated before
+ * r.vx's sra (4 refs / 9 insns, 0.89) or poly3 (0.92), yet a1 must be busy for both -> the target's -35 has
+ * >= 4 refs, or r.vx/poly3 are global (set twice). Tried without success: D2 literal form (camera_angle struct
+ * .vy, (vy & 0x1ffe)+1 index -> andi-before-sll, wrong), S8/CA struct forms of D_00096C4A, mask addPrim,
+ * 8-byte struct `current`, size.vx operand order, size chain assignment, static inline rot(&r,&size,ang),
+ * one variable spanning sin value + r.vx (D2 `width` reuse), null reused as the third prim pointer. */
 
 typedef struct { short vx, vy, vz, pad; } SVECTOR;
 typedef struct { short vx, vy; } DVECTOR;
@@ -57,6 +64,7 @@ typedef struct { unsigned addr:24; unsigned len:8; } P_TAG;
 #define setaddr(_p, _addr) (((P_TAG *)(_p))->addr = (unsigned long)(_addr))
 #define getaddr(_p) (unsigned long)(((P_TAG *)(_p))->addr)
 #define addPrim(ot, p) setaddr(p, getaddr(ot)), setaddr(ot, p)
+
 
 void func_000473F0(DVECTOR *pos, int a1, int a2, int intensity)
 {
@@ -114,13 +122,12 @@ void func_000473F0(DVECTOR *pos, int a1, int a2, int intensity)
     poly->b0 = intensity >> 2;
 
     size.vx = -35;
-    do {
     size.vy = -35;
     idx = (angle >> 1) & 0xFFF;
     { short *p0 = &D_0008EAAA[idx * 2]; short *p1 = &D_0008EAAA[idx * 2 - 1]; int c, sn;
-    c = *p0; sn = *p1;
+    c = *p0; sn = *p1; idx = *p0;
     r.vx = ((c - sn) * size.vx) >> 12;
-    r.vy = ((*p0 + *p1) * size.vy) >> 12; }
+    r.vy = ((idx + *p1) * size.vy) >> 12; }
 
     poly->x0 = pos->vx + ((r.vx * 3) >> 1);
     poly->y0 = pos->vy + r.vy;
@@ -142,5 +149,4 @@ void func_000473F0(DVECTOR *pos, int a1, int a2, int intensity)
     poly->tpage = D_000B9130.tpage | 0x20;
     addPrim(current->ot + 0x1078, poly);
     current->primptr += sizeof(POLY_FT4);
-    } while (0);
 }
