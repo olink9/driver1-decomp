@@ -1,3 +1,4 @@
+/* WIP 93.55: register allocation differs only (target: t3=n copy, i=t1, mask 0xFFFFFF in a1, 0xFF000000 in t2, ptr CC0 in a3 / C70 in a2). Logic identical. */
 typedef struct { unsigned int tag; int pad[9]; } T_001C1F40;
 typedef struct { int a; unsigned int **ot; } DB_001C1F40;
 extern DB_001C1F40 *current;
