@@ -65,6 +65,10 @@ TARGETS = {
     ),
     "frontend": _overlay("frontend", "FRONTEND.BIN", "62f9e054eccd83f0aa688b6e1b5aad5693f35849", 0x1C0000, 0x1D3308),
     "mcard": _overlay("mcard", "MCARD.BIN", "d25d51e8bf2226168551f46da83b238f7a62754b", 0xE6600, 0xF2A88),
+    # CRED and IVIEW both load at 0x1E0000 and are never resident together: own symbol files,
+    # neither config includes the other's (their func_ names do not collide)
+    "cred": _overlay("cred", "CRED.BIN", "ea5a8e516f3642789131882aa5a2d17edd09ad4d", 0x1E0000, 0x1F3878),
+    "iview": _overlay("iview", "IVIEW.BIN", "8ef018b016a0fd9679c87659ef16433fac2d26da", 0x1E0000, 0x1E42E0),
 }
 NAMES = list(TARGETS)
 
@@ -81,7 +85,7 @@ def path(t, key):
 
 def of_symbol(sym, default="main"):
     """The target whose per-function asm has SYM.s (names are address-based, unique
-    across main/FRONTEND/MCARD); `default` if none has it."""
+    across main and the overlays; CRED/IVIEW checked to be disjoint); `default` if none has it."""
     for n, t in TARGETS.items():
         if os.path.exists(os.path.join(ROOT, t["fn"], sym + ".s")):
             return n

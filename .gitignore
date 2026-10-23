@@ -21,5 +21,9 @@ frontend.ld
 mcard.ld
 frontend.d
 mcard.d
+cred.ld
+iview.ld
+cred.d
+iview.d
 undefined_funcs_auto.*.txt
 undefined_syms_auto.*.txt

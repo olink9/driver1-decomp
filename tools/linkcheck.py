@@ -5,7 +5,7 @@
     tools/linkcheck.py SYM...               # only these (src/pilot/SYM.c)
     tools/linkcheck.py --wip SYM...         # also accept src/pilot/SYM.wip.c for these
     tools/linkcheck.py --all --wip SYM...   # the default set plus these
-    [-o pilot/linkcheck.tsv] [-j 8] [--target main|frontend|mcard]
+    [-o pilot/linkcheck.tsv] [-j 8] [--target main|frontend|mcard|cred|iview]
 
 --target (tools/targets.py, default main) checks an overlay instead: its baseline asm,
 linker script, original file and sha1, C from src/pilot/<target>/, -G0 (output under

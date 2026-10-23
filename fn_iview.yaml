@@ -1,0 +1,51 @@
+name: IVIEW.BIN
+sha1: 8ef018b016a0fd9679c87659ef16433fac2d26da
+options:
+  basename: iview
+  target_path: orig/IVIEW.BIN
+  elf_path: build/iview.elf
+  base_path: .
+  platform: psx
+  compiler: PSYQ
+  asm_path: asm_fn
+  src_path: build/fnsrc_iview
+  build_path: build/fn_iview
+  ld_script_path: build/fn_iview.ld
+  ld_dependencies: True
+  find_file_boundaries: False
+  # no gp_value: the overlays are built -G0 (not one $gp-relative access in .text)
+  # main + overlays as one address space, so references into main (gNight, D_000967C8)
+  # are symbolized instead of being left as raw (0x96850 >> 16) constants
+  global_vram_start: 0x10000
+  global_vram_end: 0x200000
+  auto_decompile_empty_functions: False   # every function gets a per-function .s (scoring target)
+  o_as_suffix: True
+  use_legacy_include_asm: False
+  section_order: [".rodata", ".text", ".data", ".bss"]
+  symbol_addrs_path:
+    - symbol_addrs.txt            # main (calls/refs into the executable)
+    - build/main_syms.txt         # every main symbol, from build/slus_008.42.elf (tools/mainsyms.py)
+    - symbol_addrs.iview.txt
+    # never symbol_addrs.cred.txt: CRED.BIN loads at the same 0x1E0000 and is never resident with this one
+  reloc_addrs_path:
+    - reloc_addrs.iview.txt
+  undefined_funcs_auto_path: build/fn_iview.undefined_funcs_auto.txt
+  undefined_syms_auto_path: build/fn_iview.undefined_syms_auto.txt
+  subalign: 2
+  ld_align_section_vram_end: False
+  ld_align_segment_vram_end: False
+  string_encoding: ASCII
+  data_string_encoding: ASCII
+  rodata_string_guesser_level: 2
+  data_string_guesser_level: 2
+segments:
+  - name: iview
+    type: code
+    start: 0x0
+    vram: 0x1E0000
+    subsegments:
+      - [0x0, rodata, iview_rodata]
+      - [0x290, c, iview]
+      - [0x3358, data, iview_data]
+      - [0x3488, data, iview_tail]   # zero tail (bss carried in the file); split as data for exact bytes
+  - [0x42E0]

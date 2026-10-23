@@ -3,7 +3,7 @@
 skipping ones already in src/pilot or logged in pilot/results.tsv and ones
 that are hand-written GTE assembly.
 
-    tools/nextbatch.py N [--sample LO HI] [--seeded] [--target main|frontend|mcard]
+    tools/nextbatch.py N [--sample LO HI] [--seeded] [--target main|frontend|mcard|cred|iview]
 
 --sample LO HI picks evenly from sizes LO..HI; --seeded keeps only functions
 with a Driver 2 counterpart (pilot/d2map.tsv score >= 0.4); --target reads that

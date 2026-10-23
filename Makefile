@@ -15,7 +15,7 @@ CFLAGS   := -O2 -G8 -mips1 -mcpu=3000 -fgnu-linker -mgas -msoft-float -quiet -fu
 CPPFLAGS := -Iinclude -Isrc -undef -Wall -lang-c -fno-builtin -Dmips -D__GNUC__=2 -D__OPTIMIZE__ -D__mips__ -D__mips -Dpsx -D__psx__ -D__psx -D_PSYQ -D__EXTENSIONS__ -D_MIPSEL -D_LANGUAGE_C -DLANGUAGE_C -DNO_LOGS -DHACKS -DUSE_INCLUDE_ASM -D_internal_version_$(VERSION) -DSOTN_STR
 MASPSX   := MASPSX_EXTERN_G=4 $(PYTHON) tools/maspsx/maspsx.py --aspsx-version=2.79 --expand-div -G8
 
-OVERLAYS := frontend mcard
+OVERLAYS := frontend mcard cred iview
 S_FILES  := $(shell find asm -name '*.s' -not -path 'asm/nonmatchings/*' $(foreach o,$(OVERLAYS),-not -path 'asm/$(o)/*'))
 C_FILES  := $(shell find src -name '*.c' -not -path 'src/pilot/*' 2>/dev/null)   # pilot files are standalone, not linked yet
 O_FILES  := $(S_FILES:%.s=$(BUILD)/%.o) $(C_FILES:%.c=$(BUILD)/%.o)
@@ -23,7 +23,8 @@ O_FILES  := $(S_FILES:%.s=$(BUILD)/%.o) $(C_FILES:%.c=$(BUILD)/%.o)
 all: $(BUILD)/SLUS_008.42
 	@sha1sum -c $(BASENAME).sha1
 
-# Code overlays (frontend.yaml / mcard.yaml): each its own binary at its load address.
+# Code overlays (frontend.yaml / mcard.yaml / cred.yaml / iview.yaml): each its own binary at its
+# load address. CRED and IVIEW share 0x1E0000 (never resident together; separate symbol files).
 # References into main resolve through build/main_syms.ld (PROVIDE list exported from
 # main's ELF by tools/mainsyms.py); FRONTEND <-> MCARD calls through splat's
 # undefined_*_auto.<overlay>.txt.
@@ -32,6 +33,10 @@ frontend: $(BUILD)/FRONTEND.BIN
 	@sha1sum -c frontend.sha1
 mcard: $(BUILD)/MCARD.BIN
 	@sha1sum -c mcard.sha1
+cred: $(BUILD)/CRED.BIN
+	@sha1sum -c cred.sha1
+iview: $(BUILD)/IVIEW.BIN
+	@sha1sum -c iview.sha1
 
 $(BUILD)/main_syms.ld: $(BUILD)/$(BASENAME).elf tools/mainsyms.py
 	$(PYTHON) tools/mainsyms.py
@@ -49,6 +54,8 @@ $(BUILD)/$(2): $(BUILD)/$(1).elf
 endef
 $(eval $(call OVERLAY_RULES,frontend,FRONTEND.BIN))
 $(eval $(call OVERLAY_RULES,mcard,MCARD.BIN))
+$(eval $(call OVERLAY_RULES,cred,CRED.BIN))
+$(eval $(call OVERLAY_RULES,iview,IVIEW.BIN))
 
 $(BUILD)/%.o: %.s
 	@mkdir -p $(dir $@)

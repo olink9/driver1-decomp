@@ -1,0 +1,50 @@
+name: CRED.BIN
+sha1: ea5a8e516f3642789131882aa5a2d17edd09ad4d
+options:
+  basename: cred
+  target_path: orig/CRED.BIN
+  elf_path: build/cred.elf
+  base_path: .
+  platform: psx
+  compiler: PSYQ
+  asm_path: asm/cred
+  src_path: src/cred
+  build_path: build/cred
+  ld_script_path: cred.ld
+  ld_dependencies: True
+  find_file_boundaries: False
+  # no gp_value: the overlays are built -G0 (not one $gp-relative access in .text)
+  # main + overlays as one address space, so references into main (gNight, D_000967C8)
+  # are symbolized instead of being left as raw (0x96850 >> 16) constants
+  global_vram_start: 0x10000
+  global_vram_end: 0x200000
+  o_as_suffix: True
+  use_legacy_include_asm: False
+  section_order: [".rodata", ".text", ".data", ".bss"]
+  symbol_addrs_path:
+    - symbol_addrs.txt            # main (calls/refs into the executable)
+    - build/main_syms.txt         # every main symbol, from build/slus_008.42.elf (tools/mainsyms.py)
+    - symbol_addrs.cred.txt
+    # never symbol_addrs.iview.txt: IVIEW.BIN loads at the same 0x1E0000 and is never resident with this one
+  reloc_addrs_path:
+    - reloc_addrs.cred.txt
+  undefined_funcs_auto_path: undefined_funcs_auto.cred.txt
+  undefined_syms_auto_path: undefined_syms_auto.cred.txt
+  subalign: 2
+  ld_align_section_vram_end: False
+  ld_align_segment_vram_end: False
+  string_encoding: ASCII
+  data_string_encoding: ASCII
+  rodata_string_guesser_level: 2
+  data_string_guesser_level: 2
+segments:
+  - name: cred
+    type: code
+    start: 0x0
+    vram: 0x1E0000
+    subsegments:
+      - [0x0, rodata, cred_rodata]
+      - [0x6B8, asm, cred]
+      - [0x1AB4, data, cred_data]
+      - [0x1F7C, data, cred_tail]   # zero tail (bss carried in the file); split as data for exact bytes
+  - [0x13878]

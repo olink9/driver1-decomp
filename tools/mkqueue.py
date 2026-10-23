@@ -3,7 +3,7 @@
 overlay): game functions (main: below the PsyQ libraries, which start at __main 0x738F0)
 smallest first, with the Driver 2 counterpart hint from pilot/d2map.tsv when there is one.
 
-    tools/mkqueue.py [--target main|frontend|mcard]
+    tools/mkqueue.py [--target main|frontend|mcard|cred|iview]
 """
 import argparse, os, re, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))

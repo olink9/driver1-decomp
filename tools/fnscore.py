@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Compile one candidate C file and score one function against the original.
 
-    tools/fnscore.py SYMBOL FILE.c [--target main|frontend|mcard] [--cc 2.7.2] [--opt -O2] [-G 8] [--aspsx 2.79] [--asm]
+    tools/fnscore.py SYMBOL FILE.c [--target main|frontend|mcard|cred|iview] [--cc 2.7.2] [--opt -O2] [-G 8] [--aspsx 2.79] [--asm]
 
 Prints `MATCH <percent>`; 100.0 only when objdiff marks no instruction as
 different (never rounded). The target is the function's split asm
