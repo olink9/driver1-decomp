@@ -1,7 +1,7 @@
 #!/bin/bash
 # usage: dump.sh file.c flags...   -> dumps in $W/dump/
 cd .
-W=build/mc67dump; mkdir -p $W
+W=${DUMP_DIR:-build/dump0-$$}; mkdir -p $W   # per-worker dir: set DUMP_DIR
 mkdir -p $W/dump; rm -f $W/dump/*
 f=$1; shift
 compilers/gcc-2.7.2-psx/cpp -Iinclude -Iinclude/shim -Iinclude/psyq -Isrc -undef -Wall -lang-c -nostdinc -Dmips -D__GNUC__=2 -D__OPTIMIZE__ -D__mips__ -D__mips -Dpsx -D__psx__ -D__psx -D_PSYQ -D__EXTENSIONS__ -D_MIPSEL -D_LANGUAGE_C -DLANGUAGE_C -DDRIVER1 $f $W/dump/x.i
