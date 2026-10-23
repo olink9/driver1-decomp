@@ -1,4 +1,5 @@
-/* WIP 99.53: only the order of the two adds (x+=D_001CDE88 / y+=D_001CDE8C) differs; char pad[32] sizes the 0x20 frame (FAKEMATCH-style) */
+/* func_001C2014: draw a flat POLY_F4 box (setPolyF4, setXYWH order, setRGB0, addPrim).
+   FAKEMATCH: char pad[32] only sizes the 0x20 frame (no saves; probably an unused local aggregate). */
 typedef struct { unsigned addr:24; unsigned len:8; } P_TAG;
 typedef struct { unsigned int tag; unsigned char r0, g0, b0, code; short x0, y0, x1, y1, x2, y2, x3, y3; } PF4;
 typedef struct { unsigned int *p; unsigned int **ot; } DB;
@@ -13,11 +14,11 @@ void func_001C2014(int x, int y, unsigned char *c, int w, int h, int z)
     y += D_001CDE8C;
     p = (PF4 *)current->p;
     ((unsigned char *)p)[3] = 5;
-    p->y0 = y;
-    p->y1 = y;
     ((unsigned char *)p)[7] = 0x29;
     p->x0 = x;
+    p->y0 = y;
     p->x1 = x + w;
+    p->y1 = y;
     p->x2 = x;
     p->y2 = y + h;
     p->x3 = x + w;

@@ -1,5 +1,4 @@
-/* WIP 97.27: twin of func_001C4810 (2 entries instead of 4); same single diff: the target keeps a runtime
-   'code = 0x2C; v1 = v0; andi v1,0xFC; sb' that every tried C form const-folds (0x2C & 0xFC == 0x2C). */
+/* func_001C5D28: twin of func_001C4810 (2 sprites). setSemiTrans(p,0); setShadeTex(p,0) as two separate &= after rgb. */
 typedef struct {
     unsigned int tag;
     unsigned char r0, g0, b0, code;
@@ -43,10 +42,11 @@ void func_001C5D28(void)
         p = &D_001D2DD0[i];
         ((P_TAG *)p)->len = 9;
         p->code = 0x2C;
-        p->code &= ~3;
         p->r0 = 128;
         p->g0 = 128;
         p->b0 = 128;
+        p->code &= ~2;
+        p->code &= ~1;
         p->x0 = 160;
         p->y0 = D_001CE4C4[i].y;
         p->x1 = tex.u1 - tex.u0 + 161;

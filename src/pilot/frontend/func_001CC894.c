@@ -1,8 +1,7 @@
-/* WIP 99.97: only the scratch reg of the plot-table copy's dst address differs (target lui t0,%hi(D_1F800010) / ours lui v0):
- * local-alloc gives the (high) pseudo v0; the target's t0 means v0..a3 were busy or it was a global pseudo there. Tried inline
- * helpers (d[n], *--d, end-pointer arg, src/dst order), macro init orders; the giv-vs-folded dst form is settled.
- * FAKEMATCH: char pad[16] only sizes the 0x58 frame (probably a second 16-byte local in the original).
- * D_1F800010 - 4 = the scratchpad plot table at 0x1F800000 (no symbol there in the linker script). */
+/* func_001CC894: model draw list + fade overlay. MATCH except a reloc-only diff: the scratchpad plot table base is ONE
+ * local `plot = (int *)0x1F800000` shared by the copy (plot + 4, addiu 0x10) and the call table; it becomes a global
+ * constant pseudo that reload rematerialises into t0 (lui 0x1f80 / addiu 0x10 = splat's %hi/%lo(D_1F800010), same bytes).
+ * FAKEMATCH: char pad[16] only sizes the 0x58 frame (probably a second 16-byte local in the original). */
 typedef struct { int vx, vy, vz, pad; } VECTOR;
 typedef struct { short m[3][3]; int t[3]; } MATRIX;
 typedef struct { unsigned int *p; unsigned int **ot; } DB;
@@ -87,9 +86,10 @@ void func_001CC894(OBJ **objs, int count)
     int k;
     PG4 *g4;
     PGT4 *gt4;
+    int *plot = (int *)0x1F800000;
 
     copy_words(D_001CF308, D_001CF338, 1);
-    copy_words(D_1F800010 - 4, D_001CF328, 4);
+    copy_words(plot, D_001CF328, 4);
     copy_words(D_001CF30C, D_001CF33C, 3);
     copy_words(D_001CF314, D_001CF348, 7);
     last = -1;
@@ -115,7 +115,7 @@ void func_001CC894(OBJ **objs, int count)
         for (j = 0; j < model->num_polys; j++) {
             t = *poly;
             k = t & 0x1F;
-            ((PLOTFN *)0x1F800000)[t & 3](poly);
+            ((PLOTFN *)plot)[t & 3](poly);
             poly += D_00089F1C[k];
         }
     }

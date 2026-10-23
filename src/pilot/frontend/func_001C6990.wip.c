@@ -1,4 +1,8 @@
 /* WIP 97.17: block 2 (C98/CE8) matches; block 1 only a register swap: target gives the D_001D2CC0 base a1 and the scale's u1-u0 chain a3/v0, mine a2 and a1/a3 (local-alloc in the first block). Tried: pointer locals (worse), scale as temp/inline helper (either param order), w before setXYWH, 2-D array, decl order. */
+/* Diagnosis (ov1-wip pass): the root is a sched1 LOAD ORDER in block 1 - target loads u1,u1,u0,u0 (both u1-u0 chains
+   interleaved, as block 2 does), ours u1,u0,u1,u0; the regs follow. Block 2 gets it because its loads go through a
+   cse'd base (a2 - 0x28) distinct from the store base; block 1 has one base for both. Tried here (no change): index via
+   const local / i = 0 (const-propagated), (D + 0)[0], extra parens. Block 1's source probably differs from block 2. */
 #include "common.h"
 
 extern int D_00096C90, D_00096C94, D_00096C98, D_00096C9C;

@@ -1476,3 +1476,13 @@ time	symbol	size	best	attempts	status
 2026-10-23T19:20:29Z	func_001C8640	1736	100.0	4	matched	ov1
 2026-10-23T19:36:15Z	func_000E9CE0	1956	100.0	27	matched	ov1
 2026-10-23T19:36:15Z	func_000EB728	2308	100.0	5	matched	ov1
+2026-10-23T19:37:58Z	func_001C4810	440	100.0	1	matched	ov1-wip
+2026-10-23T19:37:58Z	func_001C5D28	440	100.0	1	matched	ov1-wip
+2026-10-23T19:39:30Z	func_001CC894	1220	100.0	2	matched	ov1-wip (reloc-only diff: literal 0x1F800000 vs splat D_1F800010)
+2026-10-23T19:39:30Z	func_001C2014	256	100.0	3	matched	ov1-wip
+2026-10-23T19:42:24Z	func_001C5B28	232	100.0	3	matched	ov1-wip
+2026-10-23T19:42:24Z	func_001CB380	288	99.38	8	gave_up	ov1-wip
+2026-10-23T19:44:42Z	func_001C9344	192	100.0	2	matched	ov1-wip
+2026-10-23T19:44:42Z	func_001CD7C0	332	99.13	7	gave_up	ov1-wip
+2026-10-23T19:46:05Z	func_001C4A7C	104	100.0	1	matched	ov1-wip
+2026-10-23T19:46:05Z	func_001C6990	684	97.17	5	gave_up	ov1-wip

@@ -1,5 +1,5 @@
-/* WIP 97.27: only diff = target keeps a runtime 'code = 0x2C; v1 = v0; andi v1,0xFC; sb' (setSemiTrans/ShadeTex(p,0) not folded);
-   every C form tried (PsyQ PT macros, &= ~3, bitfields, int/uchar temps, second pointer) is const-folded by cse1 (0x2C & 0xFC == 0x2C) and the 2nd store vanishes. */
+/* func_001C4810: builds 4 POLY_FT4 menu sprites. code = 0x2C then setSemiTrans(p,0); setShadeTex(p,0) as two
+   separate &= after the rgb stores (a single &= ~3 is cse-folded). */
 typedef struct {
     unsigned int tag;
     unsigned char r0, g0, b0, code;
@@ -43,10 +43,11 @@ void func_001C4810(void)
         p = &D_001D2D10[i];
         ((P_TAG *)p)->len = 9;
         p->code = 0x2C;
-        p->code &= ~3;
         p->r0 = 128;
         p->g0 = 128;
         p->b0 = 128;
+        p->code &= ~2;
+        p->code &= ~1;
         p->x0 = 160;
         p->y0 = D_001CE0BC[i].y;
         p->x1 = tex.u1 - tex.u0 + 161;

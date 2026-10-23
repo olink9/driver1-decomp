@@ -1,4 +1,9 @@
 /* WIP 99.38: only register choice (matrix base lui a3/addiu a2 vs a2/v1, 3rd product t1 vs t0) differs. FAKEMATCH-style: char pad[32] sizes the 0x58 frame. D_00097534 is volatile like main FrameCnt. */
+/* Diagnosis (ov1-wip pass): the 3 products are global pseudos (pref LO_REG); reload then spills a3 for the mult (.greg
+   'Spilling reg 7') and moves s2 to t0. Target has the matrix address pseudo in a2 (ours v1, local-alloc) so the high part
+   lands in a3 and the spill hits t0 -> s2 in t1. Tried with no effect: one-expression sum, s += accumulation (98.19), sum
+   temp, reversed compare, goto skip, lim variable at every position (const-propagated), MAT pointer local, all 6 decl orders
+   and statement orders. */
 typedef struct { short m[3][3]; int t[3]; } MAT;
 extern MAT inv_camera_matrix;
 extern int D_001CF2D4;
