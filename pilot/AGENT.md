@@ -13,9 +13,10 @@ Work through them in order. For each one:
    it also prints that function's **debug-symbol prototype** (source file, parameter names and registers,
    locals, stack frame) and its **REDRIVER2 C source**. Driver 2 runs on the same engine, so start from
    that code, but Driver 1's version often differs (other constants, fields, extra or missing branches).
-2. Write `src/pilot/<SYMBOL>.c`, defining `SYMBOL` with exactly that name (keep the `func_XXXXXXXX`
-   name; put the Driver 2 name in a comment). Declare every global and function you use with the exact
-   name the asm uses (`D_000BE754`, `func_00012498`, `DrawPrim`, ...).
+2. Write `src/pilot/<SYMBOL>.c`, defining `SYMBOL` with exactly that name (the symbol as
+   queue.tsv and the asm spell it: a confirmed name from symbol_addrs.txt, or `func_XXXXXXXX`; don't
+   rename it yourself, put a probable Driver 2 name in a comment). Declare every global and function you use with the exact
+   name the asm uses (`D_000BE754`, `ClearMem`, `DrawPrim`, ...).
 3. Score it: `distrobox enter build -- .venv/bin/python tools/fnscore.py SYMBOL src/pilot/SYMBOL.c --diff`.
    It prints `MATCH <percent>` and the differing rows (`--asm` prints both full listings). 100.0 means
    zero differing instructions. A string literal or jump table may come from your own `.rodata`/`.sdata`;
@@ -29,6 +30,23 @@ Work through them in order. For each one:
 **GCC 2.7.2-cdk** (`compilers/gcc-2.7.2-cdk`), `-O2 -G8`, then maspsx (`--aspsx-version=2.79
 --expand-div -G8`, plus the extern patch below) and GNU as. These are fnscore's defaults; don't change them.
 GCC 2.7.2-psx and 2.8.x each failed functions that cdk matches.
+
+## Overlays: FRONTEND.BIN / MCARD.BIN (added 2026-10-23)
+Same compiler, but **built -G0** (confirmed on 8 functions: 6 FRONTEND, 2 MCARD; -G8 fails them). fnscore,
+linkcheck and permsetup pick this up by themselves: don't pass `-G`.
+- Queue: `pilot/queue-frontend.tsv` / `pilot/queue-mcard.tsv` (`tools/nextbatch.py N --target frontend`).
+- Write `src/pilot/frontend/<SYMBOL>.c` (MCARD: `src/pilot/mcard/`). `tools/fnasm.py SYMBOL` and
+  `tools/fnscore.py SYMBOL src/pilot/frontend/SYMBOL.c --diff` find the overlay from the symbol name
+  (or pass `--target frontend`). Log to the same `pilot/results.tsv`.
+- **Every global is absolute** (`lui` + `%lo`), including main's `.sdata` variables that main itself reaches
+  through `$gp`. Declare globals with their natural type (`extern int D_x;`, `extern short`, `extern char`, arrays
+  `extern T D_x[]`); main's `extern long long` 8-byte trick is a -G8 artifact and does NOT apply here.
+- References into main use main's spelling (`func_00073F88`, `SetDispMask`, `D_000967F4`); FRONTEND and MCARD call
+  each other directly (`func_000E6D60`, `func_001C334C`), declare those as plain externs.
+- A raw `(0xE6600 >> 16)` / `(0xE6600 & 0xFFFF)` in the asm is a plain number (a load address or buffer), not a symbol:
+  write it as an integer constant, e.g. `(char *)0xE6600`.
+- Proof: `tools/linkcheck.py --target frontend` (`--target mcard`) relinks the overlay; final arbiter as for main.
+- ~200 FRONTEND functions are 8-40 B menu callbacks (`return 0;`, `D_x = 0;`, `f(); return 0;`): 1 attempt each.
 
 ## What the pilot learned
 - **Globals come in three addressing forms; declare them to match:**
@@ -125,7 +143,7 @@ GCC 2.7.2-psx and 2.8.x each failed functions that cdk matches.
 
 - (b047) `andi 0xff`/`0xf0` at call sites: give callees real prototypes with `unsigned char` params (K&R `()` loses it).
 
-- (b048) Small helpers that were already matched (e.g. ClearMem func_00012498) get inlined: copy the matched body
+- (b048) Small helpers that were already matched (e.g. ClearMem) get inlined: copy the matched body
   as a `static inline` into the caller's file.
 
 - (b052) Delay slots tell the global's form: `long long` form is never moved into a delay slot (target shows `nop`);
@@ -170,7 +188,7 @@ GCC 2.7.2-psx and 2.8.x each failed functions that cdk matches.
 - (b104) Diagnosing register swaps: run cc1 with `-dl -dg` and compare per-pseudo "used N times across M insns" with
   GCC 2.7 global-alloc priority floor_log2(refs)*refs/live_length - shows which variable needs more/fewer refs.
 
-- (b110) rcossin table: index ONE table (`D_0008EAA8[ang*2+1]`), don't declare D_0008EAAA separately - lets loop.c
+- (b110) rcossin table: index ONE table (`rcossin_tbl[ang*2+1]`), don't declare D_0008EAAA separately - lets loop.c
   hoist the base. Spilled locals in the target = compute all products first, then compare.
 
 - (b120) `abs()` is ONE insn (abssi2: bgez/move/subu) - no block split, loads move across it; `if (w<0) w=-w` is a real
@@ -264,10 +282,10 @@ real proof. fnscore 100 is necessary, linkcheck pass is what counts. Hand-writte
 - (f-01) `flags & 2` kept as `sltu` (not srl;andi): `b = flags & 2; b = b != 0;`. Setters with early loads and late stores: locals read at the top. Unsolved: `bnez c; addiu c,1` (test the old value, step in the delay slot) - `c++ != 0` folds to `++c != 1`.
 - (f-02) Before sweeping: check for an already matched SIBLING (same struct/callee) and port it, and for an already matched helper that is inlined (copy it in as static inline).
 - (b131) One block-local `cp`/`st` per sequential loop (as D2's debug info); a function-wide one lands in an s-reg everywhere. An addressable scalar (`&depth`) gets its slot when its address is first used - declare later arrays in a block opened after that call. Two-way `beqz; beq x,1; j skip; body0; body1` = `switch` with cases 0 and 1. `lh` swaps use `int` temps (short gives lhu).
-- (f-03) Statement-order problems: pilot/scripts/hillclimb.py (single swaps, ~0.3 s/try with its own build dir) found LongQuaternion2Matrix in ~160 tries. rcossin loads that must stay below gp stores: `*(short *)((int)D_0008EAA8 + i*4)`. Globals re-read every pass with no hoisting = a goto-built loop.
+- (f-03) Statement-order problems: pilot/scripts/hillclimb.py (single swaps, ~0.3 s/try with its own build dir) found LongQuaternion2Matrix in ~160 tries. rcossin loads that must stay below gp stores: `*(short *)((int)rcossin_tbl + i*4)`. Globals re-read every pass with no hoisting = a goto-built loop.
 - (b132) `if (A || B || C) {X} else Y` around an inlined loop: try the inverse `if (!A && !B && !C) Y; else ...`. `x - 5` then beqz/beq 1 = `switch (x - 5) { case 0: case 1: }`. A reset like `move = 0` belongs at the END of a block when its register is reused as a temp inside.
 - (f-04) A delay-slot insn before a jal that "should" come after the call = it was scheduled right before the jal (as swapped it in). Sweep global declaration forms (unsized `T D_x[]` vs `long long`) TOGETHER with statement order. Sweep output: sort numerically on the score (plain sort puts 100.0 below 98).
-- (f-05) A value left in a0 across a later jal = a call argument. Several RequestSpool calls in one function need `volatile int D_000972B0` (spoolcounter). pilot/scripts/permute.py permutes lines between `//PERM{` and `//PERM}` markers (several groups) using fs.py.
+- (f-05) A value left in a0 across a later jal = a call argument. Several RequestSpool calls in one function need `volatile int spoolcounter` (spoolcounter). pilot/scripts/permute.py permutes lines between `//PERM{` and `//PERM}` markers (several groups) using fs.py.
 - (b129) A table base rebuilt with `lui t9/addiu t9` at each use = loop.c hoisted it then it was spilled: put all lookups on ONE table symbol so loop.c merges them. Args set before a branch = local pointers assigned first (`VECTOR *pv = &v;`). `and x,reg(-2)` vs your andi 0xfe = an explicit `& ~1`. Separate variables for products vs results.
 - (r3-twins) Target `sll N; srl M` on a value whose shifted copy is already in a register: write the literal `(unsigned)(x << N) >> M` - casts/masks get CSE-folded into andi.
 - (b130) A load kept below a store with no alias = cross-jumped duplicate stores: write the stores in both branches. An s-reg swap from a near-tie in priority: add real references (a store per branch). `count = c ? 4 : 12; for (i = count - 1; i != -1; i--)` gives `beqz count` + `addiu -1` in the slot. Sparse 0/1/default switch with a `<2` test: an extra `case 2:` on the default body.
@@ -277,7 +295,7 @@ real proof. fnscore 100 is necessary, linkcheck pass is what counts. Hand-writte
 - (r3-03) A register swap on the LAST use of a pointer = the dying pointer passes its preference to the load: one temp reused for all the field loads blocks it. In the -dS dump, priority 0x7f000001 = adjust_priority boost; no store order beats it (only a real dependence/volatile) - stop sweeping.
 - (r3-04) A load kept below a store with no alias can be a sched2 ANTI-dependence (shared hard reg): fix the register choice by statement order (check `--extra=-fno-schedule-insns2`). `do { } while (0)` wrappers that only shift priorities are FAKEMATCH by our rule (b053) - tag them.
 - (r3-05) Target `addiu aN,base,K` with 0(aN) loads in a loop where yours has K(aN): a guarded do-while over a local base pointer. A copy deleted by cse-skip-blocks after `if (v<0) v=~v;`: assign it in both arms. Dead stores used only to steer the compiler count as FAKEMATCH.
-- (r3-07) ARRAY_REF loads (`D_x[i]`) are MEM_IN_STRUCT, so a gp scalar store drifts freely past them; loads that must stay on one side of such a store: `*(short *)((int)D_x + i*4)`. `current` loaded early among struct stores: declare D_00097530 as an 8-byte struct field. Compare -dS dumps with -fno-schedule-insns to tell priority placement from alias dependence.
+- (r3-07) ARRAY_REF loads (`D_x[i]`) are MEM_IN_STRUCT, so a gp scalar store drifts freely past them; loads that must stay on one side of such a store: `*(short *)((int)D_x + i*4)`. `current` loaded early among struct stores: declare current as an 8-byte struct field. Compare -dS dumps with -fno-schedule-insns to tell priority placement from alias dependence.
 - (r3-08) `A = B = expr` ties the two copies on priority; write the expression twice (CSE'd) to break a pair swap. A store held late: put the new value in a fresh variable that dies in the next op (sched2 anti-dependence pins it). Clamp testing a copy: `v = MIN(hi, MAX(0, v + K));`.
 - (r3-06) Verify every `return` constant against the asm (a branch to the epilogue with v0 already 1 = `return 1`). Check whether a matched sibling is inlined in a function's tail before working on it.
 - (r3-09) An s-reg lost to a parameter with equal refs: look for the original reusing that variable later (call results add refs). Pointer stepping (c++, c->f) but the call argument kept indexed (&D_x[i].f) gives two pointers.
@@ -288,3 +306,35 @@ real proof. fnscore 100 is necessary, linkcheck pass is what counts. Hand-writte
 - (r3-15) maspsx crashes on spaced operands in hand-written asm (`sltu $v0, $a2, $a0`): write them without spaces. A delay slot filled from the branch TARGET while an independent insn stays right before the branch = hand-written asm (GCC reorg never does that).
 - (r3-14) Use pilot/scripts/permute_dep2.py (def-before-use filter) for order sweeps: plain permutes 'improve' wips with broken semantics. (Matched files are safe: byte-identical code means identical behaviour.) `bp = D_x;` inits are sunk to their use by update_equiv_regs - change refs, not position.
 - (r3-16) A subu that sched1 won't put next to a jal: store it in a NEW single-set local (birthing boost). Reverse: args scheduled too late = single-set temps; use one shared multi-set variable. Check ';; N preferences:' in .greg before sweeping declarations.
+- (r4-01) A pointer losing a -dS birthing boost (0x7f000001) is set twice (init + loop p++): copy it into a single-set local for its pre-loop use (`b = buf; call(b); for (p = b; ...)`) - global alloc ties both to one reg.
+- (r4-03) A loop-invariant flag tested before AND inside a loop loses its reg to short temps (long live range): a copy at loop entry (`int wide = big;`) splits it - FAKEMATCH steering. Permuter found it in ~2000 iterations.
+- (r4-03) Global-alloc priority here is floor_log2(refs)*refs/len compared as FLOAT (.1359 vs .1364 decides) - corrects (r3-12); read the `;; N regs to allocate:` order in .greg.
+- (r4-04) Near-tie reg swap: move a variable's first set one statement earlier to lengthen its life and drop its priority (`ax = dx; a = ...; if (dx < 0) ax = -dx;` beat if/else abs). A delay slot holding the later independent subtraction = the copy was assigned before it.
+- (r4-04) A permuter candidate that "improves" by reusing an unrelated variable as a load temp = the target loads into a separate short-lived reg: fix priorities, don't keep the temp.
+- (r4-02) `lui vX; addiu aN,vX,%lo` with the pointer dying in its first block = the variable is reused in a later block (global-alloc keeps one reg for both ranges); labels/inline helpers don't do it. Unused C labels are deleted before flow - they can't split blocks.
+- (r4-06) An inline helper's PARAMETER ORDER sets the regs of its inlined loop (ConvRow(src, dst, n) vs (dst, src)) - swap helper params when src/dst regs are swapped inside it. A param losing its a0 preference = a block-0 local got a0 after the param copy: find it in .greg dispositions first.
+- (r4-10) A reg diff far from any call (e.g. mfhi into v0 vs t0) can be a WRONG CALLEE RETURN TYPE: `extern void f()` vs `int f()` changes v0 liveness after the call even when the result is discarded. Before sweeping, check each callee's type in matched files: `grep -rhn "func_X *(" src/pilot | grep -v "^.*{"`.
+- (coord r4) Swept every remaining wip: flipping each `extern void` callee to int one at a time - only func_0001A30C changed (matched). Done; no need to repeat.
+- (r4-05) Prologue `sw sN` too early: the save has an anti-dep on the param->sN copy and sched2 breaks ties by luid - copy the param into a user local AFTER the other entry setup. local-alloc DOUBLES the live length of REG_EQUIV pseudos (params, hoisted const addresses) -> lower global-alloc priority; a user-var copy of a param loses the doubling and steals the s-reg (compare .flow/.lreg "used N times across M insns").
+- (r4-07) Shift + base computed before a jal and added after it = two user locals assigned before the call (`ofs = i << 6; base = (char *)tbl; call(); p = base + ofs;`). A gp-relative short that is a field of a small struct (tpage.w/h): declare `typedef struct { short v; } SHORT1;` - stays gp-relative, gets MEM_IN_STRUCT aliasing.
+- (r4-07) hillclimb.py can move statements across call arguments and "improve" with broken semantics - keep call-argument setup pinned.
+- (r4-11) A chain the target recomputes every pass inside `if (pass)` = a goto-built pass loop (`again: ... if (++pass < 2) goto again;`; loop.c ignores it). A pre-loop temp sharing a name with an inner-loop var becomes one long global pseudo - give it its own name. `bits | mem_byte` operand order needs `unsigned char bits`. Run permute_dep2 over pre-loop statements BEFORE register tuning (85.9 -> 98.4 in one sweep).
+- (r4-12) min/max via `MAX(a->x + a->w, b->x + b->w)` (?: macro) gives b-before-a load order, not an if-clamp. A shared merge tail reached by goto can be the body written out in BOTH branches (cross-jumping re-merges; extra refs raise priorities). A branch with `v0 = 0` in its delay slot = its own mid-function `return 0` (nested ifs, not &&). `rg = D; rg += r;` stops CSE recording the address sum.
+- (r4-12, tooling) permsetup wipes perm/SYMBOL including outputs - copy good outputs out before re-running it.
+- (r4-14) Single-block function: local-alloc ranks by floor_log2(refs)*refs/(death-birth) - a long-lived constant losing its reg is usually the END of a chain; fix the first link (e.g. the order of two table loads), not the constant. Priority dump helper: pilot/scripts/pri.py.
+- (r4-15) Hoisted loop invariants get pseudo numbers in order of FIRST USE in the loop body - move the first use to reorder them; break a .greg tie with one extra ref (operand order in `||`). A dead hoisted invariant in the target = an if with identical arms cross-jumped after global-alloc (reproducing it with dead arms is FAKEMATCH).
+- (r4-16) r4-02 confirmed: a missing split `lui vX; addiu aN,vX` base = merge a second same-type pointer local from a later block into the earlier one, THEN re-sweep init order (360 orders without the merge could never work).
+- (r4-08) Cell lookup: D_0009E714 as `int[]` with `t = D[3] + 750; cz = (t - z) / 1500;` (sibling form). If sched1 always issues one divide first, route the OTHER divide through `static inline int q60(int v){return v/60;}`. Compare register-normalised asm (pilot/scripts/shape.py) to separate schedule from allocation diffs.
+- (r4-18) A value set in both if/else arms then masked/shifted after the join = write the whole tail in EACH arm with a block-local temp (cross-jumping re-merges; the extra block end also keeps later loads down). A loop pointer losing its s-reg by a small gap: duplicate `p++; continue;` on an early path (real C, +refs; floor_log2 jumps at 32). Removed two do{}while(0) FAKEMATCH wrappers this way.
+- (r4-05b) A field store sched2 lifts too high: make nearby global loads MEM_IN_STRUCT (`typedef struct { unsigned char v; char pad[7]; } B8;` read as `.v`) - replaced a do{}while(0) wrapper. Before tuning priorities on a copied param, try D2's debug-symbol shape LITERALLY (params used directly, block locals, char widths).
+- (r4-13) Port the matched sibling's exact giv form first (`D[i]` / `&D[k]` givs instead of explicit pointers fixed 3 reg pairs, 94.8 -> 99.8). Global-alloc length is measured AFTER sched1; a constant-pointer init is a sched1 leaf ordered only by luid among other leaves, so its length moves in steps. Helpers: pilot/scripts/lensweep.py, climb.py (def-use-safe hill climb).
+- (r4-13, tooling) Permuter can't parse GTE __asm__: keep the macros as plain calls in base.c and prepend `cat hdr.h "$IN" | gcc -E -P` in perm/SYM/compile.sh (re-patch after every permsetup).
+- (r4-19) `s *= s` ties the product into the sum's qty in local-alloc (lower priority) - use fresh single-set locals for products (`distx = dx*dx; distz = dz*dz;`). `bs + (speed + 580)` is reassociated by combine to `(bs+580)+speed`; keep `extra = speed + 580;` as its own statement.
+- (coord, run 3) fnscore now accepts NEGATIVE reloc addends (`%hi(D_x-0x20)` vs a same-address splat label); before, the relaxed check stopped there and showed e.g. 99.98 for byte-identical code. All remaining wips rescored - none was only hitting this.
+- (r4-09) A second constant divide issued only after the first quotient is complete = a block/loop boundary between them in the original (a loop note reproduces it). An `andi 0xffff` that combine folds in every C form survives only if the def is hidden - untried idea: a `static inline` helper with an `unsigned short` param/return (GCC 2.7 inlining keeps the conversion).
+- (r4-06b) local-alloc: an insn ties its output to the first dying input UNLESS the output already has a qty - reassign (`ty = D - ty`) to keep load and result apart; `sel = D - ty` ties them. Params used only in block 0 (loops use separate locals `px = x - tx*60`) get their a0/a1 suggestion first. Read GCC's local-alloc source before sweeping: pilot/gccsrc/local-alloc-2.95.c (close to 2.7; block_alloc, combine_regs, QTY_CMP_PRI).
+- (r4-13b) Fast pre-filter for s-reg swaps: run only cc1 and read the hard-reg outcome in .greg (~0.2 s/variant). Duplicated tails only work for plain C - asm volatile (GTE macros) paths are never cross-jumped. A repeated dead store that survives to sched1 lengthens all block-0 lives by one (FAKEMATCH).
+- (r4-14b) Before sweeping, check a register target is REACHABLE: a constant with 3 refs can never beat a 4-ref ~9-insn temp in local-alloc - look for an extra ref or a set-twice (global) pseudo instead. Reusing an index for the value it loads (`idx = *p0`) reshuffled a whole single-block function. Permuter `[weight_overrides]` (perm_ins_block = 0 ...) in settings.toml stops do-while/if(1) wrappers.
+- (r4-11b) loop.c move_movables lowers its threshold by 3 per moved insn: a target that hoists one invariant chain but recomputes its sibling inside the loop = a REAL loop with both chains in the body, the hoisted one first (no goto needed). A goto loop drops one loop-depth weighting level. `x = q - m->x*2` vs `x = q; x -= m->x*2;` changes which local group gets v0/v1. GCC 2.7.2.3 sources (loop.c, flow.c, global.c, local-alloc.c, jump.c) are in pilot/gccsrc/ - read them for exact heuristics.
+- (r4-cell) Refs and live length move together: removing duplicated-arm statements cuts length as much as refs. To flip a global-alloc race add refs that don't extend the range (several refs in the same insns). In a shared inline, sched1 issues the divide with the longer dependent chain first regardless of source order. `andi 0xffff` on a computed index: casts, ushort locals/params/inline helpers, bitfields, explicit & all fold (combine knows nonzero bits) - unsolved.
+- (r4-11c) Moving a variable's assignment much EARLIER lengthens its life and lowers its global-alloc priority so a hoisted const address (doubled length) wins. `(a - b) + K` is reassociated; an inline `add750(a) - b` keeps addiu-before-subu. An s-reg saved but never used next to mult code = reload spilled HI; the mfhi regs then come from reload, not local-alloc. A product as its own statement (`dx = c * 180;`) moves neighbouring loads.

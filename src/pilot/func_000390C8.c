@@ -1,16 +1,16 @@
 /* POLY_GT4 draw with per-vertex xy/uv split (wjmDraw4-like) */
 typedef struct { unsigned addr:24; unsigned len:8; } P_TAG;
 typedef struct { char *primptr; unsigned int *ot; } DB;
-extern long long D_00097530;
-#define current (*(DB **)&D_00097530)
-extern long long D_000971A0;
-extern unsigned short D_00087030[][32];
-extern unsigned short D_00086F30[];
+extern long long current;
+#define current (*(DB **)&current)
+extern long long combointensity;
+extern unsigned short texture_cluts[][32];
+extern unsigned short texture_pages[];
 extern unsigned char *D_000972F0;
 extern long long D_00096990;
 extern long long D_000975CC;
 extern int D_000BE9FC[][30][5];
-extern int func_0007B1E8();
+extern int NormalClip();
 
 typedef struct {
     unsigned char id, texture_set;
@@ -55,8 +55,8 @@ void func_000390C8(void)
     zbuff = *(short **)0x1F80001C;
     prims = (PGT4 *)current->primptr;
 
-    if (func_0007B1E8(((int *)outlongs)[src->v0], ((int *)outlongs)[src->v1], ((int *)outlongs)[src->v2]) > 0) {
-        col = *(int *)&D_000971A0;
+    if (NormalClip(((int *)outlongs)[src->v0], ((int *)outlongs)[src->v1], ((int *)outlongs)[src->v2]) > 0) {
+        col = *(int *)&combointensity;
         ((unsigned char *)prims)[3] = 12;
         *(int *)&prims->r0 = col;
         *(int *)&prims->r1 = col;
@@ -81,10 +81,10 @@ void func_000390C8(void)
         prims->u3 = src->u2 + off;
         prims->v3 = src->v2_;
         if (*(int *)&D_00096990 == 1)
-            prims->clut = D_00087030[src->texture_set][src->texture_id];
+            prims->clut = texture_cluts[src->texture_set][src->texture_id];
         else
             prims->clut = D_000BE9FC[src->texture_set - *(int *)&D_000975CC][src->texture_id][*(int *)&D_00096990 - 2];
-        prims->tpage = D_00086F30[src->texture_set];
+        prims->tpage = texture_pages[src->texture_set];
         z = (zbuff[src->v0] + zbuff[src->v1] + zbuff[src->v2] + zbuff[src->v3]) / 4;
         ((P_TAG *)prims)->addr = ((P_TAG *)&current->ot[z])->addr;
         ((P_TAG *)&current->ot[z])->addr = (unsigned int)prims;

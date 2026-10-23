@@ -18,17 +18,17 @@ typedef struct { int pad0; int y; int z; char pad[2]; unsigned short type; } OBJ
 extern ENT D_000B7F3C[];
 extern MATRIX D_0001064C;
 extern MATRIX D_000AF9C0;
-extern MODEL *D_000A0E20[];
-extern VECTOR D_0008A8F0;
+extern MODEL *modelpointers[];
+extern VECTOR camera_position;
 extern long long D_000971C0;
 extern long long D_00097128;
-extern long long D_00096850;
+extern long long gNight;
 extern unsigned char D_00096AA8;
-extern long long D_00097530;
-#define current (*(int **)&D_00097530)
+extern long long current;
+#define current (*(int **)&current)
 
 extern void func_0002C564();
-extern void func_00079D20();
+extern void SetRotMatrix();
 extern void func_0002DBB4();
 extern int func_0002C5F0();
 extern int func_0002C6DC();
@@ -46,7 +46,7 @@ void func_0004287C(void)
     int i = 0;
     MATRIX *mp = &m;
     short a, b, c2;
-    MODEL **mt = D_000A0E20;
+    MODEL **mt = modelpointers;
     int *px;
 
     for (; i < 8; i++, e++) {
@@ -59,10 +59,10 @@ void func_0004287C(void)
         if (!(model->flags & 0x4000))
             RotMatrixY((px[-3] * ((unsigned char*)px)[-16] * 3) & 0xfff, mp);
         RotMatrixZ((px[-3] * ((unsigned char*)px)[-16]) & 0xfff, mp);
-        pos.vx = *px - D_0008A8F0.vx;
+        pos.vx = *px - camera_position.vx;
         *(int *)&D_000971C0 = 0;
-        pos.vy = obj->y - D_0008A8F0.vy;
-        pos.vz = obj->z - D_0008A8F0.vz;
+        pos.vy = obj->y - camera_position.vy;
+        pos.vz = obj->z - camera_position.vz;
         m.m[0][0] = a = m.m[0][0] * 3;
         mp->m[0][1] = b = mp->m[0][1] * 3;
         mp->m[0][2] = c2 = mp->m[0][2] * 3;
@@ -70,7 +70,7 @@ void func_0004287C(void)
         mp->m[0][1] = b >> 1;
         mp->m[0][2] = c2 >> 1;
         func_0002C564(&pos);
-        func_00079D20(mp);
+        SetRotMatrix(mp);
         gte_SetTransVec0(&pos);
         pos.vx = *px;
         pos.vy = obj->y;
@@ -83,7 +83,7 @@ void func_0004287C(void)
             int lv;
             lv = *(int *)&D_00097128;
             c = lv << 16 | lv << 8 | lv;
-            if (D_00096AA8 == 0 && *(int *)&D_00096850 == 0)
+            if (D_00096AA8 == 0 && *(int *)&gNight == 0)
                 *sp = 0x2C808080;
             else
                 *sp = c | 0x2C000000;

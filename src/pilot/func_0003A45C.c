@@ -27,11 +27,11 @@ typedef struct {
     int h;
 } SEG;
 
-extern long long D_00097530;
-#define current (*(DB **)&D_00097530)
+extern long long current;
+#define current (*(DB **)&current)
 extern long long D_000974B4;
 extern long long D_000972F0;
-extern long long D_000971A0;
+extern long long combointensity;
 extern long long D_000970EC;
 extern long long D_00096990;
 extern int D_00096A3C;
@@ -39,8 +39,8 @@ extern char D_000BE9FC[];
 extern char D_000BC7AC[];
 extern char D_000BC8AC[];
 extern SEG D_000AF5B0;
-extern unsigned short D_00086F30[];
-extern unsigned short D_00087030[][32];
+extern unsigned short texture_pages[];
+extern unsigned short texture_cluts[][32];
 extern void func_0003DF94();
 extern void func_0003E244();
 
@@ -52,8 +52,8 @@ void func_0003A45C(SEG *s, int mode)
     plot.ot = current->ot + 8;
     plot.f8 = 0;
     plot.fC = D_000BE9FC;
-    plot.tpage = (D_00086F30[*(int *)&D_000974B4] | 0x20) << 16;
-    plot.clut = D_00087030[*(int *)&D_000974B4][0] << 16;
+    plot.tpage = (texture_pages[*(int *)&D_000974B4] | 0x20) << 16;
+    plot.clut = texture_cluts[*(int *)&D_000974B4][0] << 16;
     plot.f18 = *(int *)&D_000972F0;
     plot.f1C = D_000BC7AC;
     plot.f20 = mode;
@@ -64,7 +64,7 @@ void func_0003A45C(SEG *s, int mode)
     func_0003DF94(s->g0, s->g1, s->h, &plot, 0, 0);
 
     plot.ot = current->ot + 8;
-    plot.f8 = *(int *)&D_000971A0 & 0xFFFFFF;
+    plot.f8 = *(int *)&combointensity & 0xFFFFFF;
     if (*(int *)&D_000970EC && s == &D_000AF5B0)
         plot.ot = current->ot + D_00096A3C;
     func_0003DF94(s->a0, s->a1, s->h, &plot, 0, 0);

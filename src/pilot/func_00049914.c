@@ -43,15 +43,15 @@ extern short D_000B8028[];
 extern RAIN_TYPE D_000B81C8[];
 extern MATRIX D_000B8FE8;
 extern TEXINF D_000B9170;
-extern VECTOR D_0008A8F0;
-extern B8 D_00096897;
+extern VECTOR camera_position;
+extern B8 cameraview;
 extern int D_0009B1A8[];
-extern long long D_00096850;
-extern long long D_0009687C;
-extern long long D_00097530;
-#define current (*(DB **)&D_00097530)
+extern long long gNight;
+extern long long pauseflag;
+extern long long current;
+#define current (*(DB **)&current)
 
-extern void func_000466D4(VECTOR *v);
+extern void GetSmokeDrift(VECTOR *v);
 extern void func_0002C564(VECTOR *v);
 
 static inline void ReleaseRainDrop(int RainIndex)
@@ -71,7 +71,7 @@ void func_00049914(void)
     int Count;
     int col;
 
-    func_000466D4(&drift);
+    GetSmokeDrift(&drift);
 
     if (D_00097428 == 0)
         return;
@@ -81,7 +81,7 @@ void func_00049914(void)
 
     gte_SetRotMatrix(&D_000B8FE8);
 
-    if (D_00096897.v != 1)
+    if (cameraview.v != 1)
         col = 150 - (D_0009B1A8[0] >> 12);
     else
         col = 150;
@@ -89,11 +89,11 @@ void func_00049914(void)
     if (col < 30)
         col = 30;
 
-    if (*(int *)&D_00096850 != 0)
+    if (*(int *)&gNight != 0)
         col >>= 1;
 
     while (Count-- != 0) {
-        if (*(int *)&D_0009687C == 0) {
+        if (*(int *)&pauseflag == 0) {
             RainPtr->vy += 6;
             RainPtr->vx -= drift.vx;
             RainPtr->vz -= drift.vz;
@@ -107,9 +107,9 @@ void func_00049914(void)
         p1.vy = RainPtr->oy;
         p1.vz = RainPtr->oz;
 
-        RainPtr->ox = p2.vx = RainPtr->vx - D_0008A8F0.vx;
-        RainPtr->oy = p2.vy = RainPtr->vy - D_0008A8F0.vy;
-        RainPtr->oz = p2.vz = RainPtr->vz - D_0008A8F0.vz;
+        RainPtr->ox = p2.vx = RainPtr->vx - camera_position.vx;
+        RainPtr->oy = p2.vy = RainPtr->vy - camera_position.vy;
+        RainPtr->oz = p2.vz = RainPtr->vz - camera_position.vz;
 
         if (p1.vx != 0) {
             func_0002C564(&p1);

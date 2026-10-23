@@ -13,6 +13,8 @@ import os, re, sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 FN = os.path.join(ROOT, "asm_fn/nonmatchings/main")
+sys.path.insert(0, os.path.join(ROOT, "tools"))
+import targets  # noqa: E402  (overlay symbols: asm_fn/nonmatchings/<target>/)
 DUMP = os.environ.get("D2_SYMBOL_DUMP", os.path.expanduser("~/dev/redriver2-old/symbols/spanish_dump.h"))
 R2 = os.environ.get("REDRIVER2_GAME", os.path.expanduser("~/dev/redriver2-ref/src_rebuild/Game"))
 
@@ -56,6 +58,8 @@ def r2_source(name):
 def main():
     sym = sys.argv[1]
     p = os.path.join(FN, sym + ".s")
+    if not os.path.exists(p):
+        p = os.path.join(targets.path(targets.get(targets.of_symbol(sym)), "fn"), sym + ".s")
     if not os.path.exists(p):
         sys.exit(f"{sym}: not found")
     text = open(p, errors="replace").read()

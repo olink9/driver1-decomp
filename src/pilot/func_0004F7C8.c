@@ -11,7 +11,7 @@ extern int D_000974E8;
 extern unsigned char D_0008AA8C[];
 extern int D_00089F1C[];
 extern int RotTransPers3();
-extern void func_0004F34C();
+extern void PlotSkyPoly();
 
 int func_0004F7C8(MODEL *model, int base)
 {
@@ -66,7 +66,7 @@ int func_0004F7C8(MODEL *model, int base)
     *(short **)0x1F80001C = depth;
     for (i = 0; i < model->num_polys; i++) {
         *(unsigned char **)0x1F80003C = poly;
-        func_0004F34C(D_0008AA8C[base + i]);
+        PlotSkyPoly(D_0008AA8C[base + i]);
         poly += D_00089F1C[*poly];
     }
     return result;

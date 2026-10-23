@@ -1,5 +1,5 @@
 extern int D_00096C90, D_00096C88;
-extern void func_000735DC();
+extern void XM_SetMasterVol();
 
 void func_0004E454(int x) {
     int v;
@@ -15,5 +15,5 @@ lo:
             v = 0;
     } else
         v = 10000;
-    func_000735DC(D_00096C88, ((v >> 7) + (v >> 8)) & 0xFF);
+    XM_SetMasterVol(D_00096C88, ((v >> 7) + (v >> 8)) & 0xFF);
 }

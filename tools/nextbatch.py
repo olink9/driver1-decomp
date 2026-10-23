@@ -3,32 +3,36 @@
 skipping ones already in src/pilot or logged in pilot/results.tsv and ones
 that are hand-written GTE assembly.
 
-    tools/nextbatch.py N [--sample LO HI] [--seeded]
+    tools/nextbatch.py N [--sample LO HI] [--seeded] [--target main|frontend|mcard|cred|iview]
 
 --sample LO HI picks evenly from sizes LO..HI; --seeded keeps only functions
-with a Driver 2 counterpart (pilot/d2map.tsv score >= 0.4)."""
+with a Driver 2 counterpart (pilot/d2map.tsv score >= 0.4); --target reads that
+target's queue (pilot/queue-<target>.tsv) and C dir (src/pilot/<target>/)."""
 import os, sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.join(ROOT, "tools"))
+import targets  # noqa: E402
 
 
 def main():
     a = sys.argv[1:]
+    T = targets.get(a[a.index("--target") + 1] if "--target" in a else "main")
     n = int(a[0])
     lo, hi = (int(a[a.index("--sample") + 1]), int(a[a.index("--sample") + 2])) if "--sample" in a else (0, 1 << 30)
-    done = {f.split(".")[0] for f in os.listdir(os.path.join(ROOT, "src/pilot"))}
+    done = {f.split(".")[0] for f in os.listdir(targets.path(T, "src"))} if os.path.isdir(targets.path(T, "src")) else set()
     res = os.path.join(ROOT, "pilot/results.tsv")
     if os.path.exists(res):
         done |= {l.split("\t")[1] for l in open(res).read().splitlines()[1:] if "\t" in l}
     rows = []
-    for l in open(os.path.join(ROOT, "pilot/queue.tsv")).read().splitlines()[1:]:
+    for l in open(targets.path(T, "queue")).read().splitlines()[1:]:
         c = l.split("\t")
         size, sym = int(c[0]), c[2]
         if sym in done or not (lo <= size <= hi):
             continue
         if "--seeded" in a and not (c[4] and float(c[4]) >= 0.4):
             continue
-        s = open(os.path.join(ROOT, "asm_fn/nonmatchings/main", sym + ".s"), errors="replace").read()
+        s = open(os.path.join(targets.path(T, "fn"), sym + ".s"), errors="replace").read()
         if "handwritten instruction" in s and "ctc2" not in s and "mtc2" not in s:
             continue
         rows.append(l)

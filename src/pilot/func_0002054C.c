@@ -9,7 +9,7 @@ typedef struct {
     char pad114[396 - 0x114];
 } CAR;
 
-extern CAR D_0009B0A4[];
+extern CAR car_data[];
 extern int D_0009B16C[];
 extern long long D_00096AA8;
 extern long long D_00096AA9;
@@ -18,7 +18,7 @@ extern unsigned char D_00097028;
 extern unsigned char D_0009701C;
 extern int D_00096790;
 
-extern void func_00020844();
+extern void jump_debris();
 extern void func_000299B8();
 extern void func_00029B88();
 extern void func_00029C00();
@@ -36,9 +36,9 @@ void func_0002054C(int player)
 
     onground = 0;
     change = 0;
-    cp = &D_0009B0A4[player];
+    cp = &car_data[player];
     sp = cp->f10C;
-    func_00020844(cp);
+    jump_debris(cp);
     if (player != 0)
         return;
     for (i = 0; i < 4; i++) {

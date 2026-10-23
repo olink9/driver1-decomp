@@ -41,7 +41,7 @@ extern PED D_000C4E38[];
 extern int D_00096770;
 extern int D_00096774;
 extern long long D_00097764;
-extern long long D_000970E8;
+extern long long gLightsOn;
 extern unsigned char func_00017A50();
 extern int func_00063AA8();
 extern int func_00017A64();
@@ -130,7 +130,7 @@ CAR *func_0001638C(int dir, int x, int z)
     e->f4C = D_0009B230[e->id].z / 1500;
     e->f9 = func_00015338(e);
     e->f17 = 2;
-    if (*(int *)&D_000970E8 != 0)
+    if (*(int *)&gLightsOn != 0)
         e->f17 = 0x42;
 end:
     return cp;

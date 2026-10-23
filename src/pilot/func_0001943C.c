@@ -34,7 +34,7 @@ extern long long D_0009704C;
 extern long long D_0009B16C;
 extern long long D_0009B174;
 extern long long D_00096870;
-extern volatile long long D_000970D8;
+extern volatile long long CameraCnt;
 extern int D_0009677C;
 extern unsigned char D_00096FC4;
 extern int D_00096FD0;
@@ -111,9 +111,9 @@ void func_0001943C(P *p)
             cp = &D_00098950[s];
             f5 = cp->f5;
             if (cp->active && D_0009677C) {
-                if (*(volatile int *)&D_000970D8 != D_00096FD0 || s != D_00096FF0) {
+                if (*(volatile int *)&CameraCnt != D_00096FD0 || s != D_00096FF0) {
                     D_00096FF0 = s;
-                    D_00096FD0 = *(volatile int *)&D_000970D8;
+                    D_00096FD0 = *(volatile int *)&CameraCnt;
                 }
             }
             if (f5)

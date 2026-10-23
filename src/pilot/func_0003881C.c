@@ -1,14 +1,14 @@
 /* Textured quad (POLY_FT4) plus a semi-transparent overlay POLY_FT4 of grey level col */
 typedef struct { char *primptr; unsigned int *ot; } DB;
-extern long long D_00097530;
-#define current (*(DB **)&D_00097530)
-extern long long D_000971A0;
-extern unsigned short D_00087030[][32];
-extern unsigned short D_00086F30[];
+extern long long current;
+#define current (*(DB **)&current)
+extern long long combointensity;
+extern unsigned short texture_cluts[][32];
+extern unsigned short texture_pages[];
 extern unsigned char *D_000972F0;
 extern long long D_000974B4;
 extern long long D_000974B8;
-extern int func_0007B1E8();
+extern int NormalClip();
 typedef struct { unsigned addr:24; unsigned len:8; } P_TAG;
 #define setaddr(_p, _addr) (((P_TAG *)(_p))->addr = (unsigned long)(_addr))
 #define getaddr(_p) (unsigned long)(((P_TAG *)(_p))->addr)
@@ -56,8 +56,8 @@ void func_0003881C(unsigned char col)
     prims = (PFT4 *)current->primptr;
     uvtab = *(unsigned char **)0x1F800038;
 
-    if (func_0007B1E8(outlongs[src->v0], outlongs[src->v1], outlongs[src->v2]) > 0) {
-        *(int *)&prims->r0 = *(int *)&D_000971A0;
+    if (NormalClip(outlongs[src->v0], outlongs[src->v1], outlongs[src->v2]) > 0) {
+        *(int *)&prims->r0 = *(int *)&combointensity;
         ((unsigned char *)prims)[3] = 9;
         ((unsigned char *)&prims[1])[3] = 9;
         prims[1].r0 = col;
@@ -98,11 +98,11 @@ void func_0003881C(unsigned char col)
         prims[1].v2 = uvtab[src->e3 * 2 + 1];
         prims[1].u3 = uvtab[src->e2 * 2];
         prims[1].v3 = uvtab[src->e2 * 2 + 1];
-        prims->clut = D_00087030[src->texture_set][src->texture_id];
-        prims->tpage = D_00086F30[src->texture_set];
+        prims->clut = texture_cluts[src->texture_set][src->texture_id];
+        prims->tpage = texture_pages[src->texture_set];
         ts = *(int *)&D_000974B4;
-        prims[1].clut = D_00087030[ts][*(int *)&D_000974B8];
-        prims[1].tpage = D_00086F30[ts] | 0x20;
+        prims[1].clut = texture_cluts[ts][*(int *)&D_000974B8];
+        prims[1].tpage = texture_pages[ts] | 0x20;
         prims[1].code |= 2;
         z = (zbuff[src->v0] + zbuff[src->v1] + zbuff[src->v2] + zbuff[src->v3]) / 4;
         addPrim(current->ot + z, &prims[1]);

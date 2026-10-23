@@ -8,7 +8,7 @@ typedef struct {
 
 typedef struct { int a; char pad[52]; } S38;
 
-extern int D_000967C8, D_00096844, D_000967F4, D_00096814, D_000967C4, D_00096820, D_0009681C;
+extern int D_000967C8, AttractMode, D_000967F4, D_00096814, D_000967C4, D_00096820, D_0009681C;
 extern int D_00096808, D_000967E4, D_00096854, D_00096858, D_00096870, D_00096834, D_00096884;
 extern int D_00097110, D_00096888, D_00096874, D_0009709C, D_000967CC, D_000967F0, D_000970A8;
 extern int D_00097068, D_000967E0, D_00096800, D_000967F8, D_000967D8, D_00096810;
@@ -27,10 +27,10 @@ extern char D_0001023C[];
 
 extern void DrawSync(), VSync(), SsSetSerialVol();
 extern void func_0004E170(), func_0004E348(), func_0006F4D8(), func_0006F6E8();
-extern void func_00024F1C(), func_00025638(), func_0006EB48(), func_00074158();
-extern void func_00050E28(), func_0006EACC(), func_0006D610(), func_00079AF0();
-extern void func_0006D56C(), func_0006EB74(), func_00079800(), func_000508B0();
-extern void func_00022818(), func_0002360C(), func_000739B4(), func_0004D648(), func_0004E454();
+extern void func_00024F1C(), ReInitFrontend(), func_0006EB48(), SetDispMask();
+extern void Loadfile(), func_0006EACC(), PlayRender(), func_00079AF0();
+extern void ReInitSystem(), func_0006EB74(), func_00079800(), ShowLoadingScreen();
+extern void func_00022818(), func_0002360C(), func_000739B4(), SetMasterVolume(), func_0004E454();
 extern int func_00079AE0();
 
 void func_00024754(void)
@@ -45,7 +45,7 @@ void func_00024754(void)
     DrawSync(0);
     VSync(0);
     D_000967C8 = 0;
-    D_00096844 = 0;
+    AttractMode = 0;
     func_0004E170();
     func_0004E348();
     func_0006F4D8();
@@ -102,7 +102,7 @@ void func_00024754(void)
         if (D_000967F4 == 0x13)
             D_00096870 = 2;
         func_00024F1C();
-        func_00025638();
+        ReInitFrontend();
         D_000967F0 = 0;
         return;
     case 3:
@@ -177,7 +177,7 @@ void func_00024754(void)
         D_00096858 = 0;
         D_00096898 = 0;
         *(int *)&D_00096778 = 0;
-        D_00096844 = 0;
+        AttractMode = 0;
         D_00096899 = 0;
         break;
     case 2:
@@ -186,10 +186,10 @@ void func_00024754(void)
         D_00096898 = 0;
         D_000967F4 = 5;
         func_00024F1C();
-        func_00025638();
+        ReInitFrontend();
         D_00096898 = 0;
         func_0006EB48();
-        func_00074158(1);
+        SetDispMask(1);
         return;
     case 4:
         D_00096898 = 0;
@@ -202,10 +202,10 @@ void func_00024754(void)
         D_00096899 = 0;
         D_00096898 = 0;
         func_00024F1C();
-        func_00050E28(D_0001028C, 0x1C0000);
+        Loadfile(D_0001028C, 0x1C0000);
         D_00096898 = 0;
         func_0006EB48();
-        func_00074158(1);
+        SetDispMask(1);
         D_000967BC = 1;
         return;
     case 0:
@@ -214,9 +214,9 @@ void func_00024754(void)
         if (D_000967F0 == 0) {
             func_0006EACC();
             D_00097068 = func_00079AE0();
-            func_0006D610(2);
+            PlayRender(2);
             func_00079AF0(D_00097068);
-            func_0006D56C();
+            ReInitSystem();
             D_00096854 = 1;
             D_00096808 = 0xAE;
             D_000967F4 = 5;
@@ -225,7 +225,7 @@ void func_00024754(void)
             D_00096834 = 2;
             func_00024F1C();
             D_000967F4 = 0;
-            func_00050E28(D_0001028C, 0x1C0000);
+            Loadfile(D_0001028C, 0x1C0000);
             D_00096854 = 0;
             D_0009709C = 0;
         } else {
@@ -248,13 +248,13 @@ void func_00024754(void)
             func_0006EB74();
             D_00096814 = 1;
         }
-        func_00025638();
+        ReInitFrontend();
         D_000967F0 = 0;
         return;
     case 7:
         saved784 = *(int *)&D_00096784;
         saved870 = D_00096870;
-        D_00096844 = 1;
+        AttractMode = 1;
         D_00096895 = 1;
         D_00096899 = 1;
         D_00096870 = 1;
@@ -285,37 +285,37 @@ void func_00024754(void)
         D_00096854 = 0;
         D_00096858 = 0;
         func_00079800(0);
-        func_00074158(0);
-        func_000508B0(D_0001023C, 1, 0x24);
+        SetDispMask(0);
+        ShowLoadingScreen(D_0001023C, 1, 0x24);
         func_00022818();
         func_0002360C();
         if (D_00096800) {
-            func_00074158(0);
+            SetDispMask(0);
             func_000739B4(0x100, 0x78);
             D_00096800 = 0;
             D_0008AA38[0] = 0x1999;
             D_00096800 = 0;
         }
-        func_00025638();
-        D_00096844 = 0;
+        ReInitFrontend();
+        AttractMode = 0;
         D_00096870 = saved870;
         *(int *)&D_00096784 = saved784;
         return;
     case 8:
         h = func_00079AE0();
-        func_0006D610(D_000967F8);
+        PlayRender(D_000967F8);
         func_00079AF0(h);
-        func_00074158(0);
-        func_0006D56C();
+        SetDispMask(0);
+        ReInitSystem();
         if ((unsigned)(D_000967F8 - 0x46) < 4) {
             for (i = 0; i < D_000967D8; i++)
                 D_0008671C[i].a = -2;
             D_000967C4 = 1;
         }
-        func_0004D648(*(int *)&D_00096C94);
+        SetMasterVolume(*(int *)&D_00096C94);
         func_0004E454(*(int *)&D_00096C90);
         return;
     }
-    func_00025638();
+    ReInitFrontend();
 }
 

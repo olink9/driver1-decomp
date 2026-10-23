@@ -1,7 +1,7 @@
 /* screen fade / letterbox bars */
 typedef struct { char *primptr; unsigned int *ot; int pad; int id; } DB;
-extern long long D_00097530;
-#define current (*(DB **)&D_00097530)
+extern long long current;
+#define current (*(DB **)&current)
 
 typedef struct { unsigned addr:24; unsigned len:8; } P_TAG;
 #define setaddr(_p, _addr) (((P_TAG *)(_p))->addr = (unsigned long)(_addr))
@@ -38,7 +38,7 @@ extern POLY_F4 D_000C746C[];
 extern int D_00096F80;
 extern int D_00096F88;
 extern unsigned char D_00096F8C;
-extern long long D_00096897;
+extern long long cameraview;
 
 void func_0006E040(void)
 {
@@ -78,7 +78,7 @@ void func_0006E040(void)
         D_00096F8C += 4;
         if (D_00096F8C >= 42) {
             D_00096F8C = 42;
-            *(unsigned char *)&D_00096897 = 0;
+            *(unsigned char *)&cameraview = 0;
             D_00096F80 = 5;
         }
         top->x0 = 0;

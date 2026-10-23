@@ -58,7 +58,7 @@ extern POS_b095 D_0009B2F8[20];
 extern long long D_00097040;
 extern long long D_00097050;
 extern long long D_00097054;
-extern long long D_000970D8;
+extern long long CameraCnt;
 extern long long D_00097038;
 extern int func_000142CC();
 extern void func_00021820();
@@ -135,7 +135,7 @@ sw:
         break;
     case 0:
     case 3:
-        if (p->x3 == 0 && p->x18 < 650 && (*(int *)&D_000970D8 & 3) == p->x24) {
+        if (p->x3 == 0 && p->x18 < 650 && (*(int *)&CameraCnt & 3) == p->x24) {
             mode = p->x34;
             switch (mode) {
             case -1:
@@ -183,7 +183,7 @@ sw:
     }
 
     mode = p->x3C;
-    if ((p->id & 3) == (*(int *)&D_000970D8 & 3))
+    if ((p->id & 3) == (*(int *)&CameraCnt & 3))
         p->x16 = func_0001262C(p);
     if (p->x16)
         mode = 0;

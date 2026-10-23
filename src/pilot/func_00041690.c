@@ -34,11 +34,11 @@ typedef struct {
     short frame;
 } PART;
 
-extern long long D_00097530;
-#define current (*(DB **)&D_00097530)
+extern long long current;
+#define current (*(DB **)&current)
 extern int D_00097420;
 extern PART D_000B7E1C[];
-extern VECTOR D_0008A8F0;
+extern VECTOR camera_position;
 extern MATRIX D_000B8FE8;
 extern SPRTEX D_000BBE24;
 extern SPRTEX D_000BBE34;
@@ -75,9 +75,9 @@ void func_00041690(void)
 
     for (i--; i != -1; p++, i--) {
         if (p->life > 0) {
-            pos.vx = p->x - D_0008A8F0.vx;
-            pos.vy = p->y - D_0008A8F0.vy;
-            pos.vz = p->z - D_0008A8F0.vz;
+            pos.vx = p->x - camera_position.vx;
+            pos.vy = p->y - camera_position.vy;
+            pos.vz = p->z - camera_position.vz;
             func_0002C564(&pos);
             gte_SetTransVec0(&pos);
             gte_SetRotMatrix(&D_000B8FE8);

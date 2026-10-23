@@ -6,13 +6,13 @@ extern char D_00011724[];
 extern int D_00097800;
 extern int D_00097808;
 extern int CdSearchFile();
-extern int func_0007A684();
+extern int CdPosToInt();
 
 static inline int getpos(char *name)
 {
     CdlFILE f;
     CdSearchFile(&f, name);
-    return func_0007A684(&f);
+    return CdPosToInt(&f);
 }
 
 void func_0006F2DC(unsigned char flags, int idx)

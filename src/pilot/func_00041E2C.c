@@ -59,65 +59,65 @@ extern TEXTURE_DETAILS D_000BBE24;
 extern TEXTURE_DETAILS D_000BBE34;
 extern TEXTURE_DETAILS D_000BBE44;
 
-void func_00052240(char *name, TEXTURE_DETAILS *info);   /* Driver 2: GetTextureDetails */
+void GetTextureDetails(char *name, TEXTURE_DETAILS *info);   /* Driver 2: GetTextureDetails */
 void func_0005CB68(int clut, int a, int b);                /* Driver 2: SetCLUT16Flags */
 
 void func_00041E2C(void)
 {
-    func_00052240("SMOKE", &D_000B91B0);
-    func_00052240("DEBRIS", &D_000B9260);
+    GetTextureDetails("SMOKE", &D_000B91B0);
+    GetTextureDetails("DEBRIS", &D_000B9260);
     if (*(int *)&D_00096854 == 0)
-        func_00052240("LITTER", &D_000B90D0);
-    func_00052240("SUN2", &D_000B9210);
-    func_00052240("SUN2", &D_000B9170);
-    func_00052240("SKID", &D_000BBE44);
-    func_00052240("FLARE1", &D_000B9130);
-    func_00052240("SPLASH", &D_000B9200);
-    func_00052240("SWBIRD1", &D_000BBE24);
-    func_00052240("SWBIRD2", &D_000BBE34);
-    func_00052240("SUN2", &D_000B9110);
-    func_00052240("SKYSUN", &D_000B9240);
-    func_00052240("DROP", &D_000B90F0);
-    func_00052240("DIGIT", &D_000B9140);
+        GetTextureDetails("LITTER", &D_000B90D0);
+    GetTextureDetails("SUN2", &D_000B9210);
+    GetTextureDetails("SUN2", &D_000B9170);
+    GetTextureDetails("SKID", &D_000BBE44);
+    GetTextureDetails("FLARE1", &D_000B9130);
+    GetTextureDetails("SPLASH", &D_000B9200);
+    GetTextureDetails("SWBIRD1", &D_000BBE24);
+    GetTextureDetails("SWBIRD2", &D_000BBE34);
+    GetTextureDetails("SUN2", &D_000B9110);
+    GetTextureDetails("SKYSUN", &D_000B9240);
+    GetTextureDetails("DROP", &D_000B90F0);
+    GetTextureDetails("DIGIT", &D_000B9140);
     func_0005CB68(D_000B9140.clutid, 6, 0);
-    func_00052240("COLLON", &D_000B9280);
-    func_00052240("JEANS1", &D_000B9150);
-    func_00052240("ARM1", &D_000B9250);
-    func_00052240("FOREARM1", &D_000B91A0);
-    func_00052240("CHEST1", &D_000B9220);
-    func_00052240("LOWHEAD", &D_000B9120);
+    GetTextureDetails("COLLON", &D_000B9280);
+    GetTextureDetails("JEANS1", &D_000B9150);
+    GetTextureDetails("ARM1", &D_000B9250);
+    GetTextureDetails("FOREARM1", &D_000B91A0);
+    GetTextureDetails("CHEST1", &D_000B9220);
+    GetTextureDetails("LOWHEAD", &D_000B9120);
     *(int *)&D_00096CD0 = 1;
-    func_00052240("ADDCAM", &D_000BBA70);
-    func_00052240("FRAMEADV", &D_000B81B8);
-    func_00052240("AUTO", &D_000B9038);
-    func_00052240("CHASEC", &D_000BBC20);
-    func_00052240("CHOOSECA", &D_000B7F2C);
-    func_00052240("CLOCK", &D_000B9028);
-    func_00052240("DELCAM", &D_000BABB0);
-    func_00052240("EDITCAM", &D_000B90C0);
-    func_00052240("FIXEDCA", &D_000BB520);
-    func_00052240("INCAR", &D_000B8FD8);
-    func_00052240("LENSCHA", &D_000BABA0);
-    func_00052240("LOOKCAR", &D_000BBDC0);
-    func_00052240("MOVECMP", &D_000BBDB0);
-    func_00052240("MOVECAM", &D_000B7EB8);
-    func_00052240("OK", &D_000B736C);
-    func_00052240("PAUSE", &D_000B9290);
-    func_00052240("PLAYCAM", &D_000B737C);
-    func_00052240("PLAYPAU", &D_000BBA60);
-    func_00052240("SAVE2CA", &D_000BBA50);
-    func_00052240("RESTREP", &D_000B7EA8);
-    func_00052240("SEA", &D_000B9180);
+    GetTextureDetails("ADDCAM", &D_000BBA70);
+    GetTextureDetails("FRAMEADV", &D_000B81B8);
+    GetTextureDetails("AUTO", &D_000B9038);
+    GetTextureDetails("CHASEC", &D_000BBC20);
+    GetTextureDetails("CHOOSECA", &D_000B7F2C);
+    GetTextureDetails("CLOCK", &D_000B9028);
+    GetTextureDetails("DELCAM", &D_000BABB0);
+    GetTextureDetails("EDITCAM", &D_000B90C0);
+    GetTextureDetails("FIXEDCA", &D_000BB520);
+    GetTextureDetails("INCAR", &D_000B8FD8);
+    GetTextureDetails("LENSCHA", &D_000BABA0);
+    GetTextureDetails("LOOKCAR", &D_000BBDC0);
+    GetTextureDetails("MOVECMP", &D_000BBDB0);
+    GetTextureDetails("MOVECAM", &D_000B7EB8);
+    GetTextureDetails("OK", &D_000B736C);
+    GetTextureDetails("PAUSE", &D_000B9290);
+    GetTextureDetails("PLAYCAM", &D_000B737C);
+    GetTextureDetails("PLAYPAU", &D_000BBA60);
+    GetTextureDetails("SAVE2CA", &D_000BBA50);
+    GetTextureDetails("RESTREP", &D_000B7EA8);
+    GetTextureDetails("SEA", &D_000B9180);
     *(int *)&D_00096CD0 = 0;
     D_000B9120.u1 = D_000B9120.u3 = D_000B9120.u0 + 8;
     if (*(int *)&D_00096834 == 2 || *(int *)&D_00096834 == 6) {
-        func_00052240("STOPWTCH", &D_000B9160);
-        func_00052240("TRAIL", &D_000B9190);
-        func_00052240("ELPAPEL", &D_000B91F0);
-        func_00052240("JOYPAD", &D_000B9270);
-        func_00052240("CROSS", &D_000B91D0);
-        func_00052240("LINE", &D_000B90E0);
+        GetTextureDetails("STOPWTCH", &D_000B9160);
+        GetTextureDetails("TRAIL", &D_000B9190);
+        GetTextureDetails("ELPAPEL", &D_000B91F0);
+        GetTextureDetails("JOYPAD", &D_000B9270);
+        GetTextureDetails("CROSS", &D_000B91D0);
+        GetTextureDetails("LINE", &D_000B90E0);
     }
-    func_00052240("LIGHTREF", &D_000B9230);
-    func_00052240("SUN2", &D_000B91E0);
+    GetTextureDetails("LIGHTREF", &D_000B9230);
+    GetTextureDetails("SUN2", &D_000B91E0);
 }

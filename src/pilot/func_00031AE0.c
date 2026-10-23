@@ -1,6 +1,6 @@
 /* func_00031AE0: per-frame update + draw of every object in an object list
  * (ground-following objects, smoke emitters, sparks on rotation change). No Driver 2 counterpart.
- * rcossin table: the cos half is addressed as D_0008EAA8[i*2 + 1] (= D_0008EAAA); that form is what
+ * rcossin table: the cos half is addressed as rcossin_tbl[i*2 + 1] (= D_0008EAAA); that form is what
  * makes GCC emit the la-macro (t0) sequence of the target. */
 typedef struct { short vx, vy, vz, pad; } SVECTOR;
 typedef struct { int vx, vy, vz, pad; } VECTOR;
@@ -22,28 +22,28 @@ typedef struct {
 } OBJ;
 
 extern OBJ **D_00089E84[];
-extern VECTOR D_0008A8F0;
+extern VECTOR camera_position;
 extern long long D_00097120;
-extern MATRIX D_000BBE84;
-extern short D_0008EAA8[];
+extern MATRIX inv_camera_matrix;
+extern short rcossin_tbl[];
 extern SVECTOR D_00089EC4[];
 
-extern int func_0001F5B0();
+extern int MapHeight();
 extern int ratan2();
 extern int func_0004FFE8();
 extern int func_000398B0();
-extern void func_00047A90();
+extern void Setup_Smoke();
 extern void func_0002DBB4();
 extern int func_0002C5F0();
 extern int func_000776E4();
-extern void func_0004E9C4();
+extern void Calc_Object_MatrixYZX();
 extern void func_0004EA6C();
-extern void func_00079D20();
+extern void SetRotMatrix();
 extern void func_0004EAC0();
 extern void func_0002E6B8();
 extern void func_0004E948();
 extern void func_0002E230();
-extern void func_000774C4();
+extern void memset();
 extern void func_00047FA4();
 
 static inline int add850(int y)
@@ -82,16 +82,16 @@ void func_00031AE0(int idx)
                 v.vx = o->x14;
                 v.vz = o->x1C + 250;
                 v.vy = o->x18;
-                h1 = -func_0001F5B0(&v);
+                h1 = -MapHeight(&v);
                 v.vz -= 500;
-                h2 = -func_0001F5B0(&v);
+                h2 = -MapHeight(&v);
             } else {
                 v.vx = o->x14 + 250;
                 v.vz = o->x1C;
                 v.vy = o->x18;
-                h1 = -func_0001F5B0(&v);
+                h1 = -MapHeight(&v);
                 v.vx -= 500;
-                h2 = -func_0001F5B0(&v);
+                h2 = -MapHeight(&v);
             }
             o->x24 = ratan2(h2 - h1, 500);
             o->x18 = (h2 + h1) >> 1;
@@ -99,8 +99,8 @@ void func_00031AE0(int idx)
         if (flags & 0x200) {
             a = o->x22;
             p.vy = (func_0004FFE8(3) & 0x3F) - 60;
-            p.vx = (D_0008EAA8[(a & 0xFFF) * 2] * 125) >> 9;
-            p.vz = (D_0008EAA8[(a & 0xFFF) * 2 + 1] * 125) >> 9;
+            p.vx = (rcossin_tbl[(a & 0xFFF) * 2] * 125) >> 9;
+            p.vz = (rcossin_tbl[(a & 0xFFF) * 2 + 1] * 125) >> 9;
             p.vx += o->x14 + (func_0004FFE8(0) & 0x7F);
             p.vz += o->x1C + (func_0004FFE8(1) & 0x7F);
             vel.vx = 0;
@@ -108,22 +108,22 @@ void func_00031AE0(int idx)
             vel.vz = 0;
             pp2 = &p;
             if (o->x8 > 60 && func_000398B0(pp2) == 1)
-                func_00047A90(pp2, 200, 400, 5, o->x8 - 60, &vel, 0);
+                Setup_Smoke(pp2, 200, 400, 5, o->x8 - 60, &vel, 0);
         }
         func_0002DBB4();
         if ((flags & 0x1000000) && func_0002C5F0(&o->x14, 800) != -1 &&
             ((flags & 0x400) || func_000398B0(&o->x14) != 0)) {
             if (flags & 0x100) {
-                pos.vx = o->x14 - D_0008A8F0.vx;
-                pos.vy = o->x18 - add850(D_0008A8F0.vy);
-                pos.vz = o->x1C - D_0008A8F0.vz;
+                pos.vx = o->x14 - camera_position.vx;
+                pos.vy = o->x18 - add850(camera_position.vy);
+                pos.vz = o->x1C - camera_position.vz;
                 model = *(void **)&D_00097120;
                 rot.vx = o->x20;
                 rot.vy = func_000776E4() & 0xFFF;
                 rot.vz = o->x24;
-                func_0004E9C4(&m, &rot);
+                Calc_Object_MatrixYZX(&m, &rot);
                 func_0004EA6C(&m, func_000776E4() & 0xFFF);
-                func_00079D20(&D_000BBE84);
+                SetRotMatrix(&inv_camera_matrix);
                 func_0004EAC0(&pos);
                 diff -= o->x24;
                 if (diff < 0)
@@ -131,21 +131,21 @@ void func_00031AE0(int idx)
                 func_0002E6B8(model, &m, &pos);
             }
             model = o->model;
-            pos.vx = o->x14 - D_0008A8F0.vx;
-            pos.vy = o->x18 - D_0008A8F0.vy;
-            pos.vz = o->x1C - D_0008A8F0.vz;
+            pos.vx = o->x14 - camera_position.vx;
+            pos.vy = o->x18 - camera_position.vy;
+            pos.vz = o->x1C - camera_position.vz;
             rot.vx = o->x20;
             rot.vy = o->x22 + 0x400;
             rot.vz = o->x24;
             func_0004E948(&m, &rot);
-            func_00079D20(&D_000BBE84);
+            SetRotMatrix(&inv_camera_matrix);
             func_0004EAC0(&pos);
             diff -= o->x24;
             if (diff < 0)
                 diff = -diff;
             if (flags & 0x400) {
                 func_0002E6B8(model, &m, &pos);
-            } else if (!(flags & 4) && o->x18 < D_0008A8F0.vy) {
+            } else if (!(flags & 4) && o->x18 < camera_position.vy) {
                 if (flags & 0x20000) {
                     if (abs(pos.vx) + abs(pos.vz) < 35000)
                         func_0002E230(model, &m, &pos, 600);
@@ -156,12 +156,12 @@ void func_00031AE0(int idx)
                 func_0002E230(model, &m, &pos, 0);
             }
             if ((flags & 4) && diff > 5) {
-                func_00079D20(&m);
+                SetRotMatrix(&m);
                 i = 0;
                 pvel = &spvel;
                 psp = &sp;
                 for (; i < 4; i++) {
-                    func_000774C4(pvel, 0, 16);
+                    memset(pvel, 0, 16);
                     sp.vx = D_00089EC4[i].vx;
                     sp.vy = D_00089EC4[i].vy;
                     sp.vz = D_00089EC4[i].vz;

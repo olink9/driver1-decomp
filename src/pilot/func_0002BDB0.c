@@ -1,9 +1,9 @@
 /* textured quad (POLY_FT4) split into two halves with midpoint vertices */
 typedef struct { char *primptr; unsigned int *ot; } DB;
-extern long long D_00097530;
-#define current (*(DB **)&D_00097530)
-extern unsigned short D_00087030[][32];
-extern unsigned short D_00086F30[];
+extern long long current;
+#define current (*(DB **)&current)
+extern unsigned short texture_cluts[][32];
+extern unsigned short texture_pages[];
 extern int D_000890DC[];
 
 typedef struct { short vx, vy, vz, pad; } SVECTOR;
@@ -54,8 +54,8 @@ void func_0002BDB0(POLYFT4SRC *src, short *verts)
     int zz;
 
     page = src->page;
-    clut = D_00087030[page][src->clut] << 16;
-    tpage = D_00086F30[page] << 16;
+    clut = texture_cluts[page][src->clut] << 16;
+    tpage = texture_pages[page] << 16;
 
     v[0].vz = *(short *)((char *)verts + src->v[0] * 8);
     v[1].vz = *(short *)((char *)verts + src->v[1] * 8);

@@ -26,7 +26,7 @@ extern ENT D_00098900[];
 extern int D_00096E78, D_00097790;
 extern ST D_000BE774;
 extern char D_000C6EA8[];
-extern int D_0009B0A4[];
+extern int car_data[];
 
 void func_0006A318(CAR *car)
 {
@@ -98,7 +98,7 @@ void func_0006A318(CAR *car)
         lim = D_00097790;
         st->f18 = 1;
         st->fE = lim;
-        st->fC = car->s2DC = func_0006B9D8(D_000C6EA8, D_0009B0A4, car->s2DC);
+        st->fC = car->s2DC = func_0006B9D8(D_000C6EA8, car_data, car->s2DC);
         if (car->s2DC >= lim)
             car->f104 = 0x7FFF;
         break;

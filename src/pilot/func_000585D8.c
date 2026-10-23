@@ -5,11 +5,11 @@ typedef struct {
     short x1, y1;
 } LG2;
 extern short D_0008B268[];
-extern short D_0008EAA8[];
+extern short rcossin_tbl[];
 extern long long D_00096834;
-extern long long D_00097530;
+extern long long current;
 extern void DrawPrim();
-extern void func_00053C88();
+extern void DrawN();
 
 void func_000585D8(int *pos)
 {
@@ -25,17 +25,17 @@ void func_000585D8(int *pos)
     pts[1].vx = x;
     z = pos[1];
     pts[1].vy = z;
-    pts[0].vx = x + ((D_0008EAA8[(ang & 0xfff) * 2] * 25) >> 12);
-    pts[0].vy = z + ((D_0008EAA8[(ang & 0xfff) * 2 + 1] * 25) >> 12);
-    v.vx = x + ((D_0008EAA8[(ang & 0xfff) * 2] * 15) >> 11);
-    v.vz = z + ((D_0008EAA8[(ang & 0xfff) * 2 + 1] * 15) >> 11);
-    pts[2].vx = x + ((D_0008EAA8[((ang - 200) & 0xfff) * 2] * 5) >> 10);
-    pts[2].vy = z + ((D_0008EAA8[((ang - 200) & 0xfff) * 2 + 1] * 5) >> 10);
-    pts[3].vx = x + ((D_0008EAA8[((ang + 200) & 0xfff) * 2] * 5) >> 10);
-    pts[3].vy = z + ((D_0008EAA8[((ang + 200) & 0xfff) * 2 + 1] * 5) >> 10);
+    pts[0].vx = x + ((rcossin_tbl[(ang & 0xfff) * 2] * 25) >> 12);
+    pts[0].vy = z + ((rcossin_tbl[(ang & 0xfff) * 2 + 1] * 25) >> 12);
+    v.vx = x + ((rcossin_tbl[(ang & 0xfff) * 2] * 15) >> 11);
+    v.vz = z + ((rcossin_tbl[(ang & 0xfff) * 2 + 1] * 15) >> 11);
+    pts[2].vx = x + ((rcossin_tbl[((ang - 200) & 0xfff) * 2] * 5) >> 10);
+    pts[2].vy = z + ((rcossin_tbl[((ang - 200) & 0xfff) * 2 + 1] * 5) >> 10);
+    pts[3].vx = x + ((rcossin_tbl[((ang + 200) & 0xfff) * 2] * 5) >> 10);
+    pts[3].vy = z + ((rcossin_tbl[((ang + 200) & 0xfff) * 2 + 1] * 5) >> 10);
     pp = &pts[1];
     for (i = 0; i < 3; i++, pp++) {
-        p = **(LG2 ***)&D_00097530;
+        p = **(LG2 ***)&current;
         ((unsigned char *)p)[3] = 4;
         p->code = 0x50;
         p->x0 = pts[0].vx;
@@ -46,7 +46,7 @@ void func_000585D8(int *pos)
         p->r1 = 64; p->g1 = 64; p->b1 = 64;
         p->code |= 2;
         DrawPrim(p);
-        **(int **)&D_00097530 += 20;
+        **(int **)&current += 20;
     }
-    func_00053C88(&v, 1);
+    DrawN(&v, 1);
 }

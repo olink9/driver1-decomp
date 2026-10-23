@@ -11,10 +11,10 @@
 typedef struct { int f0; MATRIX mat; char pad1[0xC8 - 4 - sizeof(MATRIX)]; int xpos; int pad2; int zpos; char pad3[0x18C - 0xD4]; } CAR;
 typedef struct { char pad[0xA]; unsigned short nverts; char pad2[0x10]; SVECTOR *verts; } MODEL;
 
-extern CAR D_0009B0A4[];
+extern CAR car_data[];
 extern MODEL *D_000A1AB0[];
-extern void func_0004EB10(); /* InvertMatrix */
-extern void func_00079D20(); /* SetRotMatrix */
+extern void InvertMatrix();
+extern void SetRotMatrix();
 
 void func_0003BA7C(int car, unsigned char *out)
 {
@@ -24,11 +24,11 @@ void func_0003BA7C(int car, unsigned char *out)
     unsigned char *p;
     int i;
 
-    x = (D_0009B0A4[car].xpos >> 8) & 0x3F;
-    z = -(D_0009B0A4[car].zpos >> 8) & 0x3F;
+    x = (car_data[car].xpos >> 8) & 0x3F;
+    z = -(car_data[car].zpos >> 8) & 0x3F;
     sv = D_000A1AB0[0]->verts;
-    func_0004EB10(&D_0009B0A4[car].mat, (MATRIX *)0x1F800344);
-    func_00079D20((MATRIX *)0x1F800344);
+    InvertMatrix(&car_data[car].mat, (MATRIX *)0x1F800344);
+    SetRotMatrix((MATRIX *)0x1F800344);
     for (i = 0; i < D_000A1AB0[0]->nverts; i++) {
         gte_ldv0(&sv[i]);
         gte_rtv0();

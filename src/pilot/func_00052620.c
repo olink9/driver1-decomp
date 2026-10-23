@@ -6,7 +6,7 @@ extern BLOCK100 D_000853D8[];
 extern BLOCK100 D_000855CC[];
 extern BLOCK100 D_00085630[];
 extern BLOCK100 D_00085694[];
-extern BLOCK100 D_0009AF04;
+extern BLOCK100 car_cosmetics;
 extern BLOCK100 D_0009AF68;
 extern BLOCK100 D_0009AFCC;
 extern BLOCK100 D_0009B030;
@@ -28,7 +28,7 @@ void func_00052620(void)
     m = n;
     {
         int i; int *s, *d;
-        d = (int *)&D_0009AF04;
+        d = (int *)&car_cosmetics;
         s = (int *)&D_000853D8[*(int *)&D_0009683C + m];
         for (i = 25; i > 0; i--) *d++ = *s++;
     }

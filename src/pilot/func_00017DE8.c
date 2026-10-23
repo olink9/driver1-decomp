@@ -59,7 +59,7 @@ typedef struct {
     int b;
 } PAIR;
 
-extern CAR D_0009B0A4[];
+extern CAR car_data[];
 extern int func_00021820();
 extern int func_00018100();
 extern int func_00017780(OBJ *p, XZ *a1, int *a2, unsigned char mode);
@@ -82,7 +82,7 @@ void func_00017DE8(OBJ *c)
     if (c->x38 == 0)
         return;
     if (c->state == 1) {
-        p = &D_0009B0A4[c->id + 1].pos;
+        p = &car_data[c->id + 1].pos;
         if (func_00021820(p->x, p->z, c->x24, &s1) == 0) {
             c->x18 = s1.x;
             c->x1C = s1.z;
@@ -93,7 +93,7 @@ void func_00017DE8(OBJ *c)
             c->xD++;
         return;
     }
-    p = &D_0009B0A4[c->id + 1].pos;
+    p = &car_data[c->id + 1].pos;
     pz = &p->z;
     if (func_00018100(c, c->x24 << 10) < 64)
         ok = func_00017780(c, p, pz, c->x24);
@@ -122,11 +122,11 @@ void func_00017DE8(OBJ *c)
     c->x9 = func_00015338(c);
     if (c->xC != 0)
         c->xC--;
-    if (D_0009B0A4[0].x108 < 31)
+    if (car_data[0].x108 < 31)
         return;
     if (c->x38 < 11)
         return;
-    if (func_0001A1BC(&D_0009B0A4[c->id + 1]) == 0)
+    if (func_0001A1BC(&car_data[c->id + 1]) == 0)
         return;
     if (c->xC != 0)
         return;
@@ -134,5 +134,5 @@ void func_00017DE8(OBJ *c)
     if (t == 3)
         t = 2;
     c->xC = 13;
-    func_0004D740(-1, 0, t + 6, &D_0009B0A4[c->id + 1].pos, D_0009B0A4[c->id + 1].xD8);
+    func_0004D740(-1, 0, t + 6, &car_data[c->id + 1].pos, car_data[c->id + 1].xD8);
 }

@@ -403,3 +403,13 @@ func_00041CE4	SwirlLeaves	r3-11
 func_00033870	SendTPage	r3-11
 func_0007A704	SpuSetTransferMode	r3-16 (fairly certain)
 func_000342D4	LoadRegionData	r3-16
+0x000473F0	func_000473F0	DisplaySun	r4-14b: SKY.C DisplaySun (null FT3, sun FT4, rotating flare FT4; VECTOR output)
+func_00078E4C	MemCardSync	mc-011 usage guess (libmcrd), confirm with psyqsig
+func_00077ED8	MemCardExist	mc-011 usage guess
+func_00078114	MemCardAccept	mc-011 usage guess
+func_00077E48	MemCardStart	mc-011 usage guess
+func_00077E98	MemCardStop	mc-011 usage guess
+func_0007A7F4	GetClut	frontend+mcard usage
+func_0007EC88	strlen	mc/fr usage
+func_0007B218	strncmp	mc usage
+func_0007B228	strcmp	mc usage

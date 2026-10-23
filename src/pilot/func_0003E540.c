@@ -4,7 +4,7 @@ extern int D_000973E4, D_000973E0, D_000973D0, D_000973D4;
 extern int D_0008A6BC[], D_0008A6DC[], D_0008A71C[], D_0008A6FC[];
 extern T *D_000A1AE0[];
 extern char D_000B6DBC[];
-extern void func_0003ECCC(), func_0003EB0C(), func_0003ECD4();
+extern void func_0003ECCC(), func_0003EB0C(), InitHubcap();
 
 void func_0003E540(void)
 {
@@ -20,5 +20,5 @@ void func_0003E540(void)
         func_0003ECCC(D_000A1AE0[i]->p, &D_000B6DBC[i * 50], D_000A1AE0[i]->n);
     }
     func_0003EB0C(0, 0);
-    func_0003ECD4();
+    InitHubcap();
 }

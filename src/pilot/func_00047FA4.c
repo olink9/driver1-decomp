@@ -17,7 +17,7 @@ typedef struct {
     short s4E;      /* 0x4E */
 } DEBRIS;
 
-extern long long D_0009687C;
+extern long long pauseflag;
 extern int D_0009742C;
 extern short D_000BB530[];
 extern DEBRIS D_000B92A0[];
@@ -42,7 +42,7 @@ void func_00047FA4(VEC *pos, VEC *vel, int count, unsigned char type)
     int r;
     int x, y, z;
 
-    if (*(int *)&D_0009687C != 0)
+    if (*(int *)&pauseflag != 0)
         return;
     for (i = 0; i < count; i++) {
         n = alloc();

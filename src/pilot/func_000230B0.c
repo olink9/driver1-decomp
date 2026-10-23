@@ -20,9 +20,9 @@ extern int D_00097118;
 extern int D_00096834;
 extern unsigned char D_00096899;
 extern long long D_00097030;
-extern long long D_00097668;
-extern int D_000970D8;
-extern int D_0009687C;
+extern long long ReplayParameterPtr;
+extern int CameraCnt;
+extern int pauseflag;
 extern int D_00097064;
 extern unsigned char D_000A8014[];
 extern int D_00096874;
@@ -34,7 +34,7 @@ extern PADV D_00097060;
 extern int D_000970F4;
 extern int D_0009B1A8[];
 extern int D_00096888;
-extern CAR D_0009B0A4[];
+extern CAR car_data[];
 extern unsigned char D_00096898;
 extern unsigned char D_000970A0;
 extern int D_00097088;
@@ -57,10 +57,10 @@ extern int D_0009711C;
 extern V16 D_000A1AF0;
 
 extern void func_00042BD0();
-extern void func_0005334C();
+extern void animate_garage_door();
 extern void func_00032088();
 extern int func_00079AF0();
-extern void func_0005BFF0();
+extern void cjpRecord();
 extern void func_0005BF2C();
 extern void func_0001FF24();
 extern void func_0001D608();
@@ -68,7 +68,7 @@ extern void func_0001A94C();
 extern void func_0001A30C();
 extern void func_00064A64();
 extern void func_0005F3F8();
-extern void func_0001BAC0();
+extern void GlobalTimeStep();
 extern void func_00066224();
 extern void func_0004C15C();
 extern void func_0001A9BC();
@@ -77,7 +77,7 @@ extern void func_0004D740();
 extern void func_000359D0();
 extern void func_0004CF50();
 extern void func_0002054C();
-extern void func_00041CE4();
+extern void SwirlLeaves();
 extern void func_00020780();
 
 void func_000230B0(void)
@@ -88,12 +88,12 @@ void func_000230B0(void)
         D_00097118++;
 
     func_00042BD0();
-    func_0005334C();
+    animate_garage_door();
     func_00032088(D_00096834);
     *(int *)&D_00097030 = 0;
 
-    if (D_00096899 != 0 && **(int **)&D_00097668 - 2 < D_000970D8)
-        D_0009687C = 1;
+    if (D_00096899 != 0 && **(int **)&ReplayParameterPtr - 2 < CameraCnt)
+        pauseflag = 1;
 
     D_00097064 = func_00079AF0(0x1F8003E8);
 
@@ -114,23 +114,23 @@ void func_000230B0(void)
                 D_00097060.a = 0;
                 D_00097060.b = 1;
             }
-            func_0005BFF0(D_00096888 != 0, &D_0009705C, &D_00097060.a, &D_00097060.b);
+            cjpRecord(D_00096888 != 0, &D_0009705C, &D_00097060.a, &D_00097060.b);
             func_0001FF24(D_00096888, D_0009705C, D_00097060.a, D_00097060.b);
-            func_0001D608(&D_0009B0A4[D_00096888], 1);
+            func_0001D608(&car_data[D_00096888], 1);
         }
     } else {
         func_0005BF2C(D_00096888, &D_0009705C, &D_00097060.a, &D_00097060.b);
         D_000970F4 = D_0009705C;
         func_0001FF24(D_00096888, D_0009705C, D_00097060.a, D_00097060.b);
-        func_0001D608(&D_0009B0A4[D_00096888], 1);
+        func_0001D608(&car_data[D_00096888], 1);
     }
 
     if (D_00096898 == 3 || D_00096898 == 8) {
         func_0005BF2C(1, &D_0009705C, &D_00097060.a, &D_00097060.b);
         D_000970F4 = D_0009705C;
         D_000970A0 = D_00097060.a;
-        if ((D_00096874 == 0 && D_00096878 != 0 && D_000970D8 > 100) || D_00097088 != 0 ||
-            **(int **)&D_00097668 < D_000970D8)
+        if ((D_00096874 == 0 && D_00096878 != 0 && CameraCnt > 100) || D_00097088 != 0 ||
+            **(int **)&ReplayParameterPtr < CameraCnt)
             func_0001FF24(0x17, 0x10, 0, 1);
         else
             func_0001FF24(0x17, D_0009705C, D_00097060.a, D_00097060.b);
@@ -150,7 +150,7 @@ void func_000230B0(void)
         func_00064A64();
     }
 
-    func_0001BAC0();
+    GlobalTimeStep();
     if (D_000970EC != 0)
         func_00066224();
     func_0004C15C();
@@ -159,10 +159,10 @@ void func_000230B0(void)
     func_00021C10();
     func_00079AF0(D_00097064);
 
-    D_000970D8++;
-    if (D_0009B0A4[0].speed < 100) {
+    CameraCnt++;
+    if (car_data[0].speed < 100) {
         if (++D_00096920 > 180)
-            D_0009B0A4[0].f17C = D_00096E7C.v + 100;
+            car_data[0].f17C = D_00096E7C.v + 100;
     } else {
         D_00096920 = 0;
     }
@@ -178,16 +178,16 @@ void func_000230B0(void)
     func_000359D0();
     func_0004CF50();
     func_0002054C(0);
-    func_00041CE4(0);
+    SwirlLeaves(0);
 
     if (D_00096898 == 6 || D_00096898 == 3 || (unsigned char)(D_00096898 - 7) < 2) {
         func_00020780(0x17);
-        func_00041CE4(0x17);
+        SwirlLeaves(0x17);
     }
 
     if (D_00096878 == 1 && D_00096884 != 0 && D_00096874 == 0 && *(int *)&D_00096F80 == 5 &&
         ++D_00097084 > 20 && D_0009711C == 0) {
         D_0009711C = 1;
-        D_000A1AF0 = D_0009B0A4[D_00096884].pos;
+        D_000A1AF0 = car_data[D_00096884].pos;
     }
 }

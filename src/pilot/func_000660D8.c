@@ -1,12 +1,12 @@
 /* unknown */
 typedef struct { char pad[0xC8]; int x; int pad2; int y; } S;
-extern S D_0009B0A4;
+extern S car_data;
 extern unsigned char D_0008BBF0[];
 
 int func_000660D8(int a, int b, int c, int d)
 {
     int t, u, y;
-    S *s = &D_0009B0A4;
+    S *s = &car_data;
     t = s->x + c / 256;
     u = s->y + d / 256;
     a = a - t;

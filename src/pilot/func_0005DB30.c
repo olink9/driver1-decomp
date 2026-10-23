@@ -5,7 +5,7 @@ extern S4 D_00096E44[];
 extern void func_0002DBB4();
 extern int func_000398B0();
 extern int func_0002C5F0();
-extern void func_0005DBDC();
+extern void DrawCiv();
 
 void func_0005DB30(void) {
     S4 s;
@@ -15,6 +15,6 @@ void func_0005DB30(void) {
     func_0002DBB4();
     for (i = 0; i < 20; i++, p++) {
         if ((p->f & 0x10) && func_000398B0(p) && func_0002C5F0(p, 0x12C) != -1)
-            func_0005DBDC(p, i);
+            DrawCiv(p, i);
     }
 }

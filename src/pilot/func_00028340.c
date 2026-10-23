@@ -1,7 +1,7 @@
 /* no Driver 2 counterpart: emits 4-point primitives (code 5) for a list of packed vertex indices */
 typedef struct { char *primptr; unsigned long *ot; } DB;
-extern long long D_00097530;
-#define current (*(DB **)&D_00097530)
+extern long long current;
+#define current (*(DB **)&current)
 
 typedef struct { short x, y; } SXY;
 

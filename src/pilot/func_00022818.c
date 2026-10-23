@@ -1,15 +1,15 @@
 /* func_00022818 - no Driver 2 counterpart (game/level init sequence) */
 
-extern int D_00096834, D_000967FC, D_000967B8, D_00096844, D_00096800, D_00096808;
-extern unsigned char D_00096899, D_000967BC, D_00096898, D_000967BE, D_000967BF, D_00096897, D_000970F8;
-extern int D_00096850, D_00097098, D_00096804, D_000967F4, D_00096858, D_00096854, D_00096914;
-extern int D_000970A4, D_000970DC, D_000970FC, D_000970D8, D_000970EC, D_00096810, D_00097080;
+extern int D_00096834, D_000967FC, D_000967B8, AttractMode, D_00096800, D_00096808;
+extern unsigned char D_00096899, D_000967BC, D_00096898, D_000967BE, D_000967BF, cameraview, D_000970F8;
+extern int gNight, D_00097098, D_00096804, D_000967F4, D_00096858, D_00096854, D_00096914;
+extern int D_000970A4, D_000970DC, D_000970FC, CameraCnt, D_000970EC, D_00096810, D_00097080;
 extern int D_00097074, D_000970D0;
 
 extern int D_000C7004[];
 extern long long D_00096A68, D_0009724C, D_000976AC, D_000977A0, D_00096A60, D_00096A64;
 extern long long D_00096A6C, D_00097004, D_0009715C, D_000974A4, D_0009719C, D_00096E7C, D_000971B4;
-extern long long D_00096AA8, D_00096AA9, D_00097424, D_00097658, D_00096FE4, D_00097668;
+extern long long D_00096AA8, D_00096AA9, wetness, tracking_car, D_00096FE4, ReplayParameterPtr;
 
 typedef struct {
     char pad0[0x84];
@@ -28,8 +28,8 @@ typedef struct {
     int f18;
 } SE9E0;
 
-extern char D_000BC9BC[], D_0008A8F0[], D_000C017C[], D_000101D8[], D_000101E4[];
-extern char D_0008B1A4[], D_00096918[], D_0009B0A4[];
+extern char D_000BC9BC[], camera_position[], D_000C017C[], D_000101D8[], D_000101E4[];
+extern char D_0008B1A4[], D_00096918[], car_data[];
 extern S6F04 D_000C6F04;
 extern SE9E0 D_000BE9E0;
 extern int D_00086F00[];
@@ -37,15 +37,15 @@ extern int D_0008A1DC[];
 
 
 extern void func_00058814(), func_0004C9CC(), func_000595B0(), func_00026040(), func_000505E0();
-extern void func_0004D544(), func_0004E1DC(), func_0004D69C(), func_0004C29C(), func_0004DF28();
+extern void ResetSound(), func_0004E1DC(), func_0004D69C(), func_0004C29C(), func_0004DF28();
 extern void func_000212F0(), func_00068384(), func_00061220(), func_00068360(), func_000686BC();
-extern void func_00059638(), func_0004D208(), func_00050E28(), func_1E06B8(), func_0002258C();
-extern void func_0004ED34(), func_0005C99C(), func_00052198(), func_0003A068(), func_000541C8();
+extern void func_00059638(), func_0004D208(), Loadfile(), func_1E06B8(), LoadGameLevel();
+extern void func_0004ED34(), LoadFont(), func_00052198(), func_0003A068(), InitOverheadMap();
 extern void func_0003181C(), func_000244B8(), func_1E320C(), func_000148C4(), func_0002DC24();
 extern void func_000147C4(), func_00063C60(), func_0003E540(), func_00021BEC(), func_0005EF08();
-extern void func_00016CE4(), func_0001FA1C(), func_000337D4(), func_000542CC(), func_00052A78();
+extern void func_00016CE4(), func_0001FA1C(), InitSpooling(), func_000542CC(), func_00052A78();
 extern void func_00052C04(), func_00033AF8(), func_0001AF2C(), func_1E1D30(), func_1E1008();
-extern void func_00049538(), func_00058D70(), func_00059698(), func_00056B5C(), func_000661A8();
+extern void SetupRain(), FindNextChange(), func_00059698(), func_00056B5C(), func_000661A8();
 extern void func_000682C0(), func_0001AE7C(), func_0004D5F8(), func_1E2D70();
 extern int VSync();
 
@@ -65,14 +65,14 @@ void func_00022818(void)
     func_00058814();
     func_0004C9CC(D_000BC9BC);
 
-    if (D_00096844 != 0 && (D_00096800 == 1 || (unsigned)(D_00096808 - 0xB4) < 4)) {
+    if (AttractMode != 0 && (D_00096800 == 1 || (unsigned)(D_00096808 - 0xB4) < 4)) {
         func_000595B0();
-        D_00096844 = 1;
+        AttractMode = 1;
         D_00096899 = 1;
     }
 
     func_00026040();
-    D_00096850 = 0;
+    gNight = 0;
     *(short *)&D_00096A68 = 0;
 
     if (D_000967BC != 0) {
@@ -83,7 +83,7 @@ void func_00022818(void)
     }
 
     if (D_00096804 == 0) {
-        func_0004D544();
+        ResetSound();
         func_0004E1DC(0);
         func_0004E1DC(1);
         func_0004E1DC(2);
@@ -94,7 +94,7 @@ void func_00022818(void)
         func_0004E1DC(7);
         func_0004E1DC(8);
         func_0004E1DC(9);
-        func_0004D69C(D_0008A8F0);
+        func_0004D69C(camera_position);
         if (D_000967BC != 0)
             func_0004C29C(D_00096808);
         func_0004DF28();
@@ -147,24 +147,24 @@ void func_00022818(void)
 
     if (D_000967BC != 0) {
         if (D_00096834 == 2 || D_00096834 == 6) {
-            func_00050E28(D_000101D8, 0x1E0000);
+            Loadfile(D_000101D8, 0x1E0000);
         } else if (D_00096800 == 1) {
-            func_00050E28(D_000101E4, 0x1E0000);
+            Loadfile(D_000101E4, 0x1E0000);
             func_1E06B8();
         }
-        func_00050E28(D_00086F00[D_00096834], 0x1F8BBC);
-        func_0002258C();
+        Loadfile(D_00086F00[D_00096834], 0x1F8BBC);
+        LoadGameLevel();
         D_000967BE = 1;
         if (D_00096834 != 2 && D_00096804 == 0)
             func_0004ED34();
-        func_0005C99C();
+        LoadFont();
     } else {
         if (D_000967BE == 0)
             func_00052198();
         D_000967BE = 1;
         func_0003A068();
         if (D_000970A4 != 0 && D_00096899 == 0)
-            func_000541C8();
+            InitOverheadMap();
         func_0003181C(D_00096834, 0);
     }
 
@@ -185,7 +185,7 @@ void func_00022818(void)
 
     func_0003E540();
     func_00021BEC();
-    D_00096897 = 0;
+    cameraview = 0;
 
     if (D_00096804 == 0) {
         if (D_000970D0 != 0)
@@ -194,7 +194,7 @@ void func_00022818(void)
     }
 
     func_0001FA1C();
-    func_000337D4();
+    InitSpooling();
     func_0003A068();
 
     if (D_000970A4 != 0 && D_00096899 == 0) {
@@ -212,7 +212,7 @@ void func_00022818(void)
     if (D_00096898 == 3 || D_00096898 == 8) {
         if (D_00096898 == 8)
             D_000967BF = 0;
-        func_0001AF2C(0x17, *(int *)&D_00097668 + 4, *(short *)(*(int *)&D_00097668 + 0x10), D_000967BF, 4);
+        func_0001AF2C(0x17, *(int *)&ReplayParameterPtr + 4, *(short *)(*(int *)&ReplayParameterPtr + 0x10), D_000967BF, 4);
     }
 
     *(int *)&D_00096A60 = 0x640;
@@ -231,7 +231,7 @@ void func_00022818(void)
     if (D_00096854 != 0)
         func_1E1008();
 
-    func_00049538();
+    SetupRain();
 
     if (D_000967BC != 0) {
         *(int *)&D_0009715C = D_00097098;
@@ -242,7 +242,7 @@ void func_00022818(void)
     }
 
     if (D_00096899 != 0)
-        func_00058D70(D_000970D8);
+        FindNextChange(CameraCnt);
     else
         func_00059698();
 
@@ -260,17 +260,17 @@ void func_00022818(void)
         func_000661A8();
 
     if (*(unsigned char *)&D_00096AA8 != 0 || *(unsigned char *)&D_00096AA9 != 0)
-        *(int *)&D_00097424 = 7000;
+        *(int *)&wetness = 7000;
     else
-        *(int *)&D_00097424 = 0;
+        *(int *)&wetness = 0;
 
     p = &D_000C6F04;
     if (p->f2E0 != 0 && D_00096834 != 4) {
-        func_000682C0(D_0009B0A4, p->f84);
+        func_000682C0(car_data, p->f84);
         p->f2E0 = 0;
     }
 
-    *(unsigned char *)&D_00097658 = 1;
+    *(unsigned char *)&tracking_car = 1;
     *(int *)&D_00096E7C = 0x55F0;
 
     if (D_00096899 == 0)

@@ -4,14 +4,14 @@ extern long long D_000967A8;     /* NumRoads */
 extern long long D_00097534;
 extern long long D_0009704C;
 
-void func_0004FB70(char *dest, char *source);   /* Driver 2: Getlong */
+void Getlong(char *dest, char *source);   /* Driver 2: Getlong */
 int printf(const char *fmt, ...);
 
 void func_000395D8(char *p)
 {
     int magic;
 
-    func_0004FB70((char *)&D_000967A8, p);
+    Getlong((char *)&D_000967A8, p);
     if (*(int *)&D_000967A8 > 422) {
         printf("MAX_ROADS = %d NumRoads = %d, guess what you gotta do!\n", 422, *(int *)&D_000967A8);
         magic = *(int *)&D_00097534;

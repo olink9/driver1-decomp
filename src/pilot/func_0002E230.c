@@ -16,14 +16,14 @@ typedef void (*POLYFUNC)(int);
 extern POLYFUNC D_00089FFC[];
 extern POLYFUNC D_0008A1BC[];
 extern int D_00089F1C[];
-extern MATRIX D_000BBE84;
+extern MATRIX inv_camera_matrix;
 extern int D_00096990;
 extern char D_00096978;
 typedef struct { unsigned char v; char pad[7]; } B8;
 extern B8 D_00096858;
 extern long long D_000972F0;
 extern void MulMatrix0();
-extern void func_00079D20();
+extern void SetRotMatrix();
 
 #define gte_SetTransVector(r0) __asm__ volatile ( \
     "lw $12, 0(%0);" "lw $13, 4(%0);" "lw $14, 8(%0);" \
@@ -59,8 +59,8 @@ void func_0002E230(MODEL *model, MATRIX *rot, VECTOR *trans, int zbias)
     sxy = (long *)0x1F800044;
     zbuf = (short *)0x1F800240;
     gte_SetTransVector(trans);
-    MulMatrix0(&D_000BBE84, rot, &m);
-    func_00079D20(&m);
+    MulMatrix0(&inv_camera_matrix, rot, &m);
+    SetRotMatrix(&m);
     verts = model->vertices;
     i = 0;
     for (n = model->num_vertices / 3; n > 0; ) {

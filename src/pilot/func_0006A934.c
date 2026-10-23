@@ -37,7 +37,7 @@ typedef struct {
 } CAR;
 
 extern CAR D_000C6F04;
-extern long long D_0009687C;
+extern long long pauseflag;
 extern long long D_00096F80;
 extern long long D_000976F8;
 extern long long D_000975EC;
@@ -86,7 +86,7 @@ void func_0006A934(CAR *car)
     int *p;
     T29C *t;
 
-    if (D_000C6F04.f2B8 == 0 || D_000C6F04.f2B4 == 0 || *(int *)&D_0009687C != 0)
+    if (D_000C6F04.f2B8 == 0 || D_000C6F04.f2B4 == 0 || *(int *)&pauseflag != 0)
         return;
 
     func_0006A6C8(car);

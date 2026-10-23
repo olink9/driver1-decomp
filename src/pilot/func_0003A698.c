@@ -36,13 +36,13 @@ typedef struct { char c[150]; } S150;
 typedef struct { char c[1024]; } S1024;
 
 extern long long D_00096834;
-extern long long D_000971A0;
-extern B8 D_00096897;
+extern long long combointensity;
+extern B8 cameraview;
 extern long long D_0009688C;
-extern long long D_0009687C;
+extern long long pauseflag;
 extern long long D_00097004;
 extern long long D_000970DC;
-extern long long D_000970E8;
+extern long long gLightsOn;
 extern long long D_00096874;
 extern long long D_00096978;
 extern long long D_000972F0;
@@ -59,31 +59,31 @@ extern int D_0009D8DC[];
 extern int D_0009D8E0[];
 typedef struct { int m[5]; char pad[0x18C - 20]; } CARMAT;
 extern CARMAT D_0009B0A8[];
-extern VECTOR D_0008A8F0;
-extern CAR D_0009B0A4[];
-extern unsigned short *D_000A0E20[];
+extern VECTOR camera_position;
+extern CAR car_data[];
+extern unsigned short *modelpointers[];
 extern int D_000A1AE0[];
 extern S50 D_000B6DBC[];
 extern S150 D_000AF97A[];
 extern VIEWS D_000AF5B0[];
 extern S1024 D_000B09BC[];
 extern MAT8 D_000AF6A0[];
-extern MAT8 D_000BBE84;
+extern MAT8 inv_camera_matrix;
 extern char D_000AB454[];
 extern char D_000B08B8[];
 extern PED D_00098950[];
 
-extern int func_000217C8();
-extern void func_0002ADEC();
+extern int ROADS_GetRouteData();
+extern void PlaceShadowForCar();
 extern void func_0002C564();
 extern int func_0002C5F0();
 extern void func_0002DBB4();
 extern void func_0002E230();
 extern void func_0003B168();
-extern void func_0003B208();
+extern void DrawCarWheels();
 extern void func_0003B994();
 extern void func_0003BA7C();
-extern void func_00040BAC();
+extern void PlacePoolForCar();
 extern void func_000412D4();
 extern void func_00043E8C();
 extern void func_00046234();
@@ -122,20 +122,20 @@ void func_0003A698(int i, int view)
 
     view &= 3;
     if (I32(D_00096834) == 3)
-        I32(D_000971A0) = 0x282828;
+        I32(combointensity) = 0x282828;
 
-    if (D_00096897.c[0] == 2 && i == I32(D_0009688C)) {
-        CAR *cars = D_0009B0A4;
-        int *src = D_0009B0A4[i].mat;
+    if (cameraview.c[0] == 2 && i == I32(D_0009688C)) {
+        CAR *cars = car_data;
+        int *src = car_data[i].mat;
         int *dst = D_000AF6A0[i].m;
 
-        if (view == 0 && func_000217C8(cars->x, cars->z, tmp)) {
-            if ((*D_000A0E20[tmp[0]] & 0x80) && cars->y < 220) {
-                if (I32(D_0009687C) == 0) {
+        if (view == 0 && ROADS_GetRouteData(cars->x, cars->z, tmp)) {
+            if ((*modelpointers[tmp[0]] & 0x80) && cars->y < 220) {
+                if (I32(pauseflag) == 0) {
                     if (I32(D_00097004) != 0)
                         I32(D_00097004) = I32(D_00097004) - 1;
-                    D_0009B0A4[i].f40 -= D_0009B0A4[i].f40 >> 4;
-                    D_0009B0A4[i].f48 -= D_0009B0A4[i].f48 >> 4;
+                    car_data[i].f40 -= car_data[i].f40 >> 4;
+                    car_data[i].f48 -= car_data[i].f48 >> 4;
                 }
             } else {
                 I32(D_00097004) = 25;
@@ -144,28 +144,28 @@ void func_0003A698(int i, int view)
         }
         CopyMatrix(src, dst);
 
-        if (D_0009B0A4[i].f114 < 500)
+        if (car_data[i].f114 < 500)
             D_00097458.c[0] = 2;
-        else if (D_0009B0A4[i].f114 < 1000)
+        else if (car_data[i].f114 < 1000)
             D_00097458.c[0] = 1;
         else
             D_00097458.c[0] = 0;
 
-        if (D_0009B0A4[i].f118 < 500)
+        if (car_data[i].f118 < 500)
             D_00097460.c[0] = 2;
-        else if (D_0009B0A4[i].f118 < 1000)
+        else if (car_data[i].f118 < 1000)
             D_00097460.c[0] = 1;
         else
             D_00097460.c[0] = 0;
 
-        if (I32(D_000970E8) != 0)
-            func_00040BAC(i, a18, 1);
+        if (I32(gLightsOn) != 0)
+            PlacePoolForCar(i, a18, 1);
         return;
     }
 
     D_000971C0.c[0] = 0;
     view2 = view;
-    cp = &D_0009B0A4[i];
+    cp = &car_data[i];
     zero = 0;
     if (i == 0)
         view2 = 0;
@@ -182,9 +182,9 @@ void func_0003A698(int i, int view)
 
     func_0002DBB4();
     dist = func_0002C5F0(&pos, 800);
-    pos.vx -= D_0008A8F0.vx;
-    pos.vy -= D_0008A8F0.vy;
-    pos.vz -= D_0008A8F0.vz;
+    pos.vx -= camera_position.vx;
+    pos.vy -= camera_position.vy;
+    pos.vz -= camera_position.vz;
     func_0002C564(&pos);
 
     if (dist != -1) {
@@ -242,37 +242,37 @@ void func_0003A698(int i, int view)
         }
 
         if (view == 0) {
-            if (func_000217C8(cp->x, cp->z, tmp)) {
-                if (I32(D_00096834) != 1 && (*D_000A0E20[tmp[0]] & 0x80) && cp->y < 220) {
-                    if (I32(D_0009687C) == 0) {
+            if (ROADS_GetRouteData(cp->x, cp->z, tmp)) {
+                if (I32(D_00096834) != 1 && (*modelpointers[tmp[0]] & 0x80) && cp->y < 220) {
+                    if (I32(pauseflag) == 0) {
                         if (I32(D_00097004) != 0)
                             I32(D_00097004) = I32(D_00097004) - 1;
                         func_000412D4(i, tmp[1] + 100, I32(D_00097004) == 0);
-                        D_0009B0A4[i].f40 -= D_0009B0A4[i].f40 >> 4;
-                        D_0009B0A4[i].f48 -= D_0009B0A4[i].f48 >> 4;
+                        car_data[i].f40 -= car_data[i].f40 >> 4;
+                        car_data[i].f48 -= car_data[i].f48 >> 4;
                     }
                 } else {
                     I32(D_00097004) = 25;
                     I32(D_000970DC) = 100;
-                    func_0002ADEC(i, &pos, zero);
+                    PlaceShadowForCar(i, &pos, zero);
                 }
             }
             func_0003BA7C(i, D_000AB454);
             I32(D_000972F0) = (int)D_000B08B8;
         } else {
             I32(D_000972F0) = (int)&D_000AF97A[i];
-            func_0002ADEC(i, &pos, zero);
+            PlaceShadowForCar(i, &pos, zero);
         }
 
         {
             VIEWS *vp = &D_000AF5B0[view2 & 3];
             vp->f38 = &D_000B09BC[i];
-            MulMatrix0(&D_000BBE84, &D_000AF6A0[i], &mat);
+            MulMatrix0(&inv_camera_matrix, &D_000AF6A0[i], &mat);
             if (D_00096898.c[0] == 8 && i == 23 && I32(D_00096874) == 0)
                 I32(D_00096978) = 1;
             if (i != 0 || I32(D_00096874) != 1) {
                 func_0003B168(vp, &mat, &pos, &v98);
-                func_0003B208(i, &mat, &pos, 0, view2);
+                DrawCarWheels(i, &mat, &pos, 0, view2);
                 I32(D_00096978) = 0;
             }
         }
@@ -280,13 +280,13 @@ done:
         func_00043E8C(i);
         if (i != 0) {
             if (D_00098950[i - 1].f1 != 1 && func_0004FFE8(i) == 0) {
-                if (I32(D_000970E8) != 0)
+                if (I32(gLightsOn) != 0)
                     D_00098950[i - 1].f17 |= 0x40;
                 else
                     D_00098950[i - 1].f17 &= ~0x40;
             }
         }
-        if ((i == 0 && I32(D_000970E8) != 0) || (i != 0 && (D_00098950[i - 1].f17 & 0x40)))
+        if ((i == 0 && I32(gLightsOn) != 0) || (i != 0 && (D_00098950[i - 1].f17 & 0x40)))
             func_00046234(i);
 
         if (D_0009D8E0[0] != 0)

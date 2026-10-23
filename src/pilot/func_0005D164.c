@@ -1,7 +1,7 @@
 /* scaled/multi-line font print into POLY_FT4s (PRES.C family) */
 typedef struct { char *primptr; unsigned int *ot; } DB;
-extern long long D_00097530;
-#define current (*(DB **)&D_00097530)
+extern long long current;
+#define current (*(DB **)&current)
 
 typedef struct {
     unsigned char x, y;

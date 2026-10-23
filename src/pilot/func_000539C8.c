@@ -17,12 +17,12 @@ typedef struct {
     int scale;
 } SCALE_b062;
 
-extern CAR_b062 D_0009B0A4[];
-extern short D_0008EAA8[];
+extern CAR_b062 car_data[];
+extern short rcossin_tbl[];
 extern SCALE_b062 D_0008B080[];
 extern long long D_00096888;
 extern long long D_00096834;
-extern void func_0007EAC4();
+extern void RotTrans();
 
 void func_000539C8(VECTOR *in, VECTOR *out, int count, unsigned char flag, unsigned char flag2)
 {
@@ -33,9 +33,9 @@ void func_000539C8(VECTOR *in, VECTOR *out, int count, unsigned char flag, unsig
     MATRIX m;
     int s, c;
     int a;
-    a = D_0009B0A4[*(int *)&D_00096888].dirF8 & 0xFFF;
-    s = D_0008EAA8[a*2];
-    c = D_0008EAA8[a*2+1];
+    a = car_data[*(int *)&D_00096888].dirF8 & 0xFFF;
+    s = rcossin_tbl[a*2];
+    c = rcossin_tbl[a*2+1];
     m.m[2][0] = -s;
     m.m[2][2] = c;
     m.m[0][0] = (c << 9) / 320;
@@ -64,10 +64,10 @@ void func_000539C8(VECTOR *in, VECTOR *out, int count, unsigned char flag, unsig
             vv.vx = in->vx / scale;
             vv.vz = -in->vz / scale;
         } else {
-            vv.vx = (in->vx - D_0009B0A4[0].xC8) / scale;
-            vv.vz = (D_0009B0A4[0].xD0 - in->vz) / scale;
+            vv.vx = (in->vx - car_data[0].xC8) / scale;
+            vv.vz = (car_data[0].xD0 - in->vz) / scale;
         }
-        func_0007EAC4(&vv, out++, &f);
+        RotTrans(&vv, out++, &f);
         in++;
     }
 }

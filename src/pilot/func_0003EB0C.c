@@ -5,7 +5,7 @@ extern TBL *D_000A1AB0[];
 extern SV D_000B09BC[];
 extern char D_000AF97A[];
 extern char D_000B08B8[];
-extern ENT D_0009B0A4[];
+extern ENT car_data[];
 extern void func_0003ECCC();
 /* Driver 2 name: unknown */
 void func_0003EB0C(int idx, unsigned int type)
@@ -44,6 +44,6 @@ void func_0003EB0C(int idx, unsigned int type)
         buf[k] = 0;
     func_0003ECCC(p, buf, D_000A1AB0[type]->n);
     for (j = 5; j >= 0; j--)
-        D_0009B0A4[idx].a[j] = 0;
-    D_0009B0A4[idx].h = 0;
+        car_data[idx].a[j] = 0;
+    car_data[idx].h = 0;
 }

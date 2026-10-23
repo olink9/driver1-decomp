@@ -21,14 +21,14 @@ typedef struct {
 extern int D_0009E714[];
 extern short *D_0009E724[];
 extern long long D_00097374;
-extern void func_000774C4();
+extern void memset();
 extern int func_0004A9F4();
 
 static inline VEC CopyPos(VEC *in)
 {
     VEC r;
 
-    func_000774C4(&r, 0, 16);
+    memset(&r, 0, 16);
     r.vx = in->vx;
     r.vz = in->vz;
     return r;
@@ -107,7 +107,7 @@ short func_00020DB4(int x, int z, int dir, ROADOUT *out)
     if (*cell == -1)
         return -1;
 
-    func_000774C4(&pos, 0, 16);
+    memset(&pos, 0, 16);
     pos.vx = x;
     pos.vz = z;
 

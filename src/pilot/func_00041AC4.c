@@ -22,7 +22,7 @@ extern int D_00096AC0;
 extern int D_00097430;
 extern short D_000B7EC8[];
 extern LEAF D_000B7584[];
-extern long long D_00096850;
+extern long long gNight;
 extern unsigned char D_00096AA8;
 extern int func_000776E4();
 
@@ -83,7 +83,7 @@ void func_00041AC4(VEC *Position, int num_leaves, int Type)
             myleaf->rgb.b = myleaf->rgb.g = myleaf->rgb.r = (temprand & 0x3f) + 80;
         }
 
-        if (*(int *)&D_00096850 != 0)
+        if (*(int *)&gNight != 0)
             *(int *)&myleaf->rgb = *(int *)&myleaf->rgb >> 2 & 0x3f3f3f3f;
         else if (D_00096AA8 != 0)
             *(int *)&myleaf->rgb = *(int *)&myleaf->rgb >> 1 & 0x7f7f7f7f;

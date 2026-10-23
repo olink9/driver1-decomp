@@ -12,11 +12,11 @@ typedef struct { int a, b, c, d; } TMP;
 extern HUD D_000C6F04;
 extern int D_000C71C0[];
 extern long long D_00096899;
-extern long long D_00096820, D_00097708, D_000970D8, D_000967E8, D_00096DC4, D_00096834, D_00097704, D_000977AC;
+extern long long D_00096820, D_00097708, CameraCnt, D_000967E8, FastForward, D_00096834, D_00097704, D_000977AC;
 extern unsigned char D_000975E0;
 extern int D_000975DC;
 extern TXT D_000BE774, D_000BE998;
-extern void func_00067E58(), func_00057510(), func_00056A18(), func_00057AE4(), func_0005474C(), func_00055820(), func_00056BDC();
+extern void func_00067E58(), func_00057510(), func_00056A18(), func_00057AE4(), DrawOverheadMap(), func_00055820(), DrawPercentageBar();
 
 void func_000543D8(void)
 {
@@ -41,26 +41,26 @@ void func_000543D8(void)
             *(int *)&D_00097708 = 0;
         return;
     }
-    c = *(int *)&D_000970D8 % 16;
+    c = *(int *)&CameraCnt % 16;
     if (c >= 8)
-        c = 16 - (*(int *)&D_000970D8 % 16);
+        c = 16 - (*(int *)&CameraCnt % 16);
     D_000975E0 = c;
     if (*(int *)&D_000967E8) {
-        *(int *)&D_00096DC4 = 1;
+        *(int *)&FastForward = 1;
         func_00057AE4();
         return;
     }
-    *(int *)&D_00096DC4 = 0;
+    *(int *)&FastForward = 0;
     if (*(int *)&D_00096834 != 6 && *(int *)&D_00096834 != 7)
-        func_0005474C();
+        DrawOverheadMap();
     if (*(int *)&D_00097704 && *(int *)&D_00097708 > 0x292)
         func_00055820();
-    func_00056BDC(&D_000BE774);
+    DrawPercentageBar(&D_000BE774);
     if (*(int *)&D_00096820) {
         *(int *)&D_00097708 = 0;
     } else {
         D_000BE998.val = *(int *)&D_00097708;
-        func_00056BDC(&D_000BE998);
+        DrawPercentageBar(&D_000BE998);
     }
     if (D_000975DC && D_000C71C0[0] == 0)
         func_00056A18(*(int *)&D_000977AC);

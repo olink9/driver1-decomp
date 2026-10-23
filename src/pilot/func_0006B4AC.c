@@ -20,7 +20,7 @@ typedef struct {
 
 extern long long D_000967F4;
 extern long long D_00096F80;
-extern long long D_0009687C;
+extern long long pauseflag;
 extern int D_000C7040[];
 extern int D_000C71A0[];
 extern GS D_000C6F04;
@@ -34,10 +34,10 @@ extern char D_00096EF0[];
 extern char D_00096EF4[];
 extern char D_00096EF8[];
 extern int sprintf();
-extern void func_0005C7D0();
+extern void SetTextColour();
 extern void func_0005C8F4();
-extern int func_0005CC68(char *string, short x, short y);
-extern int func_0005CF10(short x, short y, char *string);
+extern int PrintString(char *string, short x, short y);
+extern int PrintDigit(short x, short y, char *string);
 extern unsigned char func_0006ACC8();
 extern void func_0006AF48();
 extern int func_0006B450();
@@ -47,9 +47,9 @@ static inline void ShowCount(int v)
     char buf[8];
     int w;
 
-    w = func_0005CC68(D_00096E80, 0x171, 0xD);
+    w = PrintString(D_00096E80, 0x171, 0xD);
     func_0006ACC8(buf, v, 1);
-    func_0005CC68(buf, w, 0xD);
+    PrintString(buf, w, 0xD);
 }
 
 static inline void ShowNum(int n)
@@ -66,12 +66,12 @@ static inline void ShowLap(int v)
     int w;
     unsigned char r;
 
-    func_0005C7D0(0x80, 0x80, 0x80);
+    SetTextColour(0x80, 0x80, 0x80);
     r = func_0006ACC8(buf, v, 0);
-    w = func_0005CF10(0xBB, 0x18, buf);
+    w = PrintDigit(0xBB, 0x18, buf);
     sprintf(buf, D_00096EE8, r);
-    func_0005CC68(buf, w, 0x25);
-    func_0005C7D0(0xFF, 0xFF, 0x40);
+    PrintString(buf, w, 0x25);
+    SetTextColour(0xFF, 0xFF, 0x40);
 }
 
 static inline void ShowTime(char *tbl, int n, int *v, int k)
@@ -81,15 +81,15 @@ static inline void ShowTime(char *tbl, int n, int *v, int k)
     unsigned char len;
 
     func_0006B450(tbl, n);
-    func_0005C7D0(0x80, 0x80, 0x80);
+    SetTextColour(0x80, 0x80, 0x80);
     len = sprintf(buf, D_00096EF0, v[0]);
-    w = func_0005CF10((short)(0x197 + (k - len) * 26), 0x18, buf);
-    func_0005C7D0(0x80, 0x80, 0x80);
+    w = PrintDigit((short)(0x197 + (k - len) * 26), 0x18, buf);
+    SetTextColour(0x80, 0x80, 0x80);
     if (v[1] != 0x7FFFFFFF)
         sprintf(buf, D_00096EF4, v[1]);
     else
         sprintf(buf, D_00096EF8);
-    func_0005CC68(buf, w, 0x25);
+    PrintString(buf, w, 0x25);
 }
 
 typedef struct { int f[10]; } TIMER10;
@@ -113,7 +113,7 @@ void func_0006B4AC(GS *gs)
     char *s;
 
     snd = -1;
-    func_0005C7D0(0xFF, 0xFF, 0x40);
+    SetTextColour(0xFF, 0xFF, 0x40);
     if (*(int *)&D_000967F4 == 0x11) {
         func_0006AF48(&gs->t.f[2], 0x171, 0x18);
     } else if (*(int *)&D_000967F4 == 0x12) {
@@ -124,7 +124,7 @@ void func_0006B4AC(GS *gs)
         ShowCount(gs->t.f[8]);
     }
     if (gs->f128)
-        func_0005CC68(gs->f128, 0x10, 0xC8);
+        PrintString(gs->f128, 0x10, 0xC8);
     if (gs->b2E2)
         ShowNum(gs->b2E1);
     if ((D_000C71A0[0] & 4) && *(int *)&D_00096F80 == 5)
@@ -151,10 +151,10 @@ void func_0006B4AC(GS *gs)
         if (snd >= 0) {
             MSG *m = &D_0008BD58[snd];
             if ((s = m->s1) != 0 || (s = m->s2) != 0) {
-                if (*(int *)&D_0009687C == 0)
+                if (*(int *)&pauseflag == 0)
                     func_0005C8F4(s, 0x54);
             }
-        } else if ((s = D_000C6F04.f124) != 0 && *(int *)&D_0009687C != 1) {
+        } else if ((s = D_000C6F04.f124) != 0 && *(int *)&pauseflag != 1) {
             func_0005C8F4(s, 0x54);
         }
     } else {

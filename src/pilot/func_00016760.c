@@ -28,7 +28,7 @@ typedef struct {
 extern CAR D_0009B230[];
 extern ENT D_00098950[];
 extern int D_00096770;
-extern void func_000774C4();
+extern void memset();
 extern int func_00017A64();
 extern void func_00020A64();
 extern int func_0004FFE8();
@@ -58,7 +58,7 @@ int func_00016760(int x, int y, int z, int dir, int flag)
     int slot;
     int r;
 
-    func_000774C4(&v, 0, 16);
+    memset(&v, 0, 16);
     v.x = x;
     v.y = y;
     v.z = z;

@@ -32,8 +32,8 @@ extern int D_00097004;
 extern char D_00097028;
 extern int *D_0009D8F4[];
 extern SURF *D_0009D904[];
-extern unsigned short *D_000A0E20[];
-extern short D_0008EAA8[];
+extern unsigned short *modelpointers[];
+extern short rcossin_tbl[];
 extern int func_00024418();
 extern int func_00024370();
 
@@ -94,12 +94,12 @@ int func_0001EEB4(VEC *pos, VEC *normal, VEC *out, int flag)
         if (info & 4)
             D_00096FF8 = 1;
 
-        D_00096FFC = (D_000A0E20[(info >> 16) & 0x3ff][1] >> 14) & 1;
+        D_00096FFC = (modelpointers[(info >> 16) & 0x3ff][1] >> 14) & 1;
         if (D_00096FFC && !flag)
             D_00097028 = 1;
 
-        if (!flag && (D_000A0E20[(info >> 16) & 0x3ff][0] & 0x80) && pos->vy < 220) {
-            out->vy = D_0008EAA8[(*(int *)&D_000970FC & 0xfff) * 2] >> 7;
+        if (!flag && (modelpointers[(info >> 16) & 0x3ff][0] & 0x80) && pos->vy < 220) {
+            out->vy = rcossin_tbl[(*(int *)&D_000970FC & 0xfff) * 2] >> 7;
             if (!D_00097004)
                 out->vy = out->vy - (100 - *(int *)&D_000970DC) / 2;
             normal->vy = 4096;
@@ -157,7 +157,7 @@ int func_0001EEB4(VEC *pos, VEC *normal, VEC *out, int flag)
                     normal->vz = nz;
                     out->vy = ht;
                     if (D_00096FFC) {
-                        out->vy = ht + (D_0008EAA8[((x + z) << 2) & 0x1ffc] >> 9);
+                        out->vy = ht + (rcossin_tbl[((x + z) << 2) & 0x1ffc] >> 9);
                         return 2048;
                     }
                     return 4096;
@@ -174,7 +174,7 @@ int func_0001EEB4(VEC *pos, VEC *normal, VEC *out, int flag)
         normal->vy = 4096;
         normal->vz = 0;
         if (D_00096FFC) {
-            out->vy += D_0008EAA8[((x + z) << 2) & 0x1ffc] >> 9;
+            out->vy += rcossin_tbl[((x + z) << 2) & 0x1ffc] >> 9;
             return 2048;
         }
         return 4096;

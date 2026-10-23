@@ -1,7 +1,7 @@
 extern unsigned char D_000BF6EC[];
 struct G { char p[4]; unsigned char w; char q[3]; };
 extern struct G D_000BF2EC[];
-extern void func_0005CC68();
+extern void PrintString();
 
 void func_0005C8F4(unsigned char *s, short y)
 {
@@ -19,5 +19,5 @@ void func_0005C8F4(unsigned char *s, short y)
         }
         ch = *p++;
     }
-    func_0005CC68(s, (short)((512 - w) >> 1), y);
+    PrintString(s, (short)((512 - w) >> 1), y);
 }

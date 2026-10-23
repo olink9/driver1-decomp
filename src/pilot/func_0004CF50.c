@@ -10,8 +10,8 @@ extern long long D_000BD97C;
 extern long long D_00096770;
 extern long long D_00096834;
 extern int D_000974C0;
-extern long long D_00096897;
-#define gamemode (*(unsigned char *)&D_00096897)
+extern long long cameraview;
+#define gamemode (*(unsigned char *)&cameraview)
 
 typedef struct { unsigned short id; short pad; } SNDENT;
 extern SNDENT D_0008AA04[];
@@ -28,7 +28,7 @@ typedef struct {
     short h182;
     char pad2[0x18C - 0x184];
 } PLAYER;
-extern PLAYER D_0009B0A4[];
+extern PLAYER car_data[];
 
 extern int D_000BC9BC[];
 typedef struct { int count; int list[64]; } QUEUE;
@@ -36,10 +36,10 @@ typedef struct { int count; int list[64]; } QUEUE;
 typedef struct { char pad[0x4E6]; unsigned short vol; } SNDSTATE;
 extern SNDSTATE D_000BD498;
 
-extern void func_00073020();
+extern void XM_SetSongPos();
 extern void func_0004DDA8();
 extern void func_0004CA5C();
-extern void func_0004D6B0();
+extern void StartSound();
 
 void func_0004CF50(void)
 {
@@ -49,20 +49,20 @@ void func_0004CF50(void)
 
     if (D_00096C70 == 0 && *(int *)&D_00097708 >= 0x293) {
         D_00096C70 = 1;
-        func_00073020(*(int *)&D_00096C88, D_0008AA04[*(int *)&D_00097298].id);
+        XM_SetSongPos(*(int *)&D_00096C88, D_0008AA04[*(int *)&D_00097298].id);
     }
 
     if (gamemode == 2 || gamemode == 0) {
-        D_000BD474.vx = D_0009B0A4[0].pos.vx;
-        D_000BD474.vy = D_0009B0A4[0].pos.vy;
-        D_000BD474.vz = D_0009B0A4[0].pos.vz;
+        D_000BD474.vx = car_data[0].pos.vx;
+        D_000BD474.vy = car_data[0].pos.vy;
+        D_000BD474.vz = car_data[0].pos.vz;
     } else {
         D_000BD474.vx = 0;
         D_000BD474.vy = 0;
         D_000BD474.vz = 0;
     }
 
-    p = &D_0009B0A4[*(int *)&D_00096888];
+    p = &car_data[*(int *)&D_00096888];
     func_0004DDA8(1, p->v1, &p->pos, p->h182 - 12000, 0x1000);
     func_0004DDA8(0, p->v1, &p->pos, -p->h182 - 2000, (p->h180 >> 2) - (short)((p->h182 >> 7) - 1000));
 
@@ -81,9 +81,9 @@ void func_0004CF50(void)
             q->count--;
             v = q->list[q->count];
             if (v >= 100) {
-                func_0004D6B0(9, 4, v - 100, 0, 0x1000);
+                StartSound(9, 4, v - 100, 0, 0x1000);
             } else if (*(int *)&D_00096770 != 0 && *(int *)&D_00096834 != 2) {
-                func_0004D6B0(9, 3, v, -4000, 0x1000);
+                StartSound(9, 3, v, -4000, 0x1000);
             }
             D_000BD498.vol = D_000BD498.vol * 5 / 6;
         }

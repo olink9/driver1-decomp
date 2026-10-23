@@ -2,7 +2,7 @@
 typedef struct { int vx, vy, vz, pad; } VECTOR;
 typedef struct { short s, c; } CS;
 
-extern long long D_0009687C;
+extern long long pauseflag;
 extern long long D_00096DA8;
 extern long long D_0009752C;
 typedef struct { int v; int pad[3]; } I8;
@@ -17,9 +17,9 @@ extern int D_00096A78;
 extern int D_00096A60;
 extern int D_00096A58;
 extern int D_00096A6C;
-extern VECTOR D_0008A8F0;
+extern VECTOR camera_position;
 extern VECTOR D_000BE9B4;
-extern short D_0008EAA8[];
+extern short rcossin_tbl[];
 extern int SquareRoot0();
 extern int ratan2();
 extern void func_00077D6C();
@@ -30,7 +30,7 @@ void func_0003DC00(void)
     int dx, dy, dz, d, ang, r, t, n, y;
     unsigned short pad;
 
-    if (*(int *)&D_0009687C == 0 || *(int *)&D_00096DA8 == 2) {
+    if (*(int *)&pauseflag == 0 || *(int *)&D_00096DA8 == 2) {
         pad = *(unsigned short *)&D_0009752C;
         if ((pad & 3) != 3) {
             if (pad & 1) {
@@ -50,9 +50,9 @@ void func_0003DC00(void)
         }
         D_00096A78 += (D_00096A74 - D_00096A78) >> 1;
         if ((*(unsigned short *)&D_0009752C & 3) == 3) {
-            D_0008A8F0.vx = D_000BE9B4.vx;
-            D_0008A8F0.vy = -D_000BE9B4.vy + D_0008A1E0.v;
-            D_0008A8F0.vz = D_000BE9B4.vz + D_00096A60;
+            camera_position.vx = D_000BE9B4.vx;
+            camera_position.vy = -D_000BE9B4.vy + D_0008A1E0.v;
+            camera_position.vz = D_000BE9B4.vz + D_00096A60;
         } else {
             n = D_00096A6C;
             t = D_00096A58;
@@ -61,16 +61,16 @@ void func_0003DC00(void)
             D_00096A58 = r;
             r -= D_00096A78 >> 16;
             ang = r & 0xfff;
-            D_0008A8F0.vx = D_000BE9B4.vx + D_0008EAA8[ang * 2] * D_00096A60 / 4096;
+            camera_position.vx = D_000BE9B4.vx + rcossin_tbl[ang * 2] * D_00096A60 / 4096;
             y = D_000BE9B4.vy;
-            D_0008A8F0.vy = D_0008A1E0.v - y;
-            D_0008A8F0.vz = D_000BE9B4.vz + D_0008EAA8[ang * 2 + 1] * D_00096A60 / 4096;
+            camera_position.vy = D_0008A1E0.v - y;
+            camera_position.vz = D_000BE9B4.vz + rcossin_tbl[ang * 2 + 1] * D_00096A60 / 4096;
         }
-        dx = D_000BE9B4.vx - D_0008A8F0.vx;
-        dz = D_000BE9B4.vz - D_0008A8F0.vz;
+        dx = D_000BE9B4.vx - camera_position.vx;
+        dz = D_000BE9B4.vz - camera_position.vz;
         dy = 600;
         d = SquareRoot0(dx * dx + dy * dy + dz * dz);
-        D_00096C48.v = (ratan2(d, D_0008A8F0.vy > 0 ? 600 : -600) - 1200) & 0xfff;
+        D_00096C48.v = (ratan2(d, camera_position.vy > 0 ? 600 : -600) - 1200) & 0xfff;
         D_00096C4A.v = -ratan2(dx, dz) & 0xfff;
         D_00096C4C.v = 0;
     }

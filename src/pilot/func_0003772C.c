@@ -1,8 +1,8 @@
 /* Gouraud-style quad (POLY_G4, one colour) from scratchpad vertex list */
 typedef struct { char *primptr; unsigned int *ot; } DB;
-extern long long D_00097530;
-#define current (*(DB **)&D_00097530)
-extern int func_0007B1E8();
+extern long long current;
+#define current (*(DB **)&current)
+extern int NormalClip();
 typedef struct { unsigned addr:24; unsigned len:8; } P_TAG;
 #define setaddr(_p, _addr) (((P_TAG *)(_p))->addr = (unsigned long)(_addr))
 #define getaddr(_p) (unsigned long)(((P_TAG *)(_p))->addr)
@@ -40,7 +40,7 @@ void func_0003772C(void)
     zbuff = *(short **)0x1F80001C;
     prims = (PG4 *)current->primptr;
 
-    if (func_0007B1E8(outlongs[src->v0], outlongs[src->v1], outlongs[src->v2]) > 0) {
+    if (NormalClip(outlongs[src->v0], outlongs[src->v1], outlongs[src->v2]) > 0) {
         prims->r0 = src->r;
         prims->g0 = src->g;
         prims->b0 = src->b;

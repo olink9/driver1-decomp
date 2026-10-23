@@ -27,7 +27,7 @@ extern int D_00097728;
 extern long long D_000974C0;
 extern long long D_00096834;
 extern int D_000C4C90[];
-extern S9B0A4 D_0009B0A4;
+extern S9B0A4 car_data;
 extern int D_0008BBC8[];
 extern char D_000BC9BC[];
 extern char D_00099120[];
@@ -50,9 +50,9 @@ void func_000651F0(Obj *obj)
             D_00097730++;
         }
     } else if (D_00097704 != 0 && D_00097708 >= 0x293) {
-        if (*(int *)&D_000974C0 >= 0xF1 && D_0009B0A4.f108 >= 0x15) {
-            v = func_000635B0(D_0009B0A4.fF8);
-            if (D_0009B0A4.f104 < 0)
+        if (*(int *)&D_000974C0 >= 0xF1 && car_data.f108 >= 0x15) {
+            v = func_000635B0(car_data.fF8);
+            if (car_data.f104 < 0)
                 v = (v + 2) & 3;
             s = v & 0xFF;
             switch (*(int *)&D_00096834) {
@@ -79,8 +79,8 @@ void func_000651F0(Obj *obj)
             D_00097734++;
         }
         if (D_00097708 >= D_000C4C90[0]) {
-            v = func_000635B0(D_0009B0A4.fF8);
-            if (D_0009B0A4.f104 < 0)
+            v = func_000635B0(car_data.fF8);
+            if (car_data.f104 < 0)
                 v = (v + 2) & 3;
             func_00019314(D_00099120, v & 0xFF);
         }

@@ -1,10 +1,10 @@
 /* Flat black triangle (POLY_F3) from scratchpad vertex list, optional semi-trans with dummy POLY_FT3 tpage reset */
 typedef struct { char *primptr; unsigned int *ot; } DB;
-extern long long D_00097530;
-#define current (*(DB **)&D_00097530)
+extern long long current;
+#define current (*(DB **)&current)
 extern long long D_00096978;
 #define semitrans (*(unsigned char *)&D_00096978)
-extern int func_0007B1E8();
+extern int NormalClip();
 typedef struct { unsigned addr:24; unsigned len:8; } P_TAG;
 #define setaddr(_p, _addr) (((P_TAG *)(_p))->addr = (unsigned long)(_addr))
 #define getaddr(_p) (unsigned long)(((P_TAG *)(_p))->addr)
@@ -50,7 +50,7 @@ void func_00036FB4(void)
     zbuff = *(short **)0x1F80001C;
     prims = (PF3 *)current->primptr;
 
-    if (func_0007B1E8(outlongs[src->v0], outlongs[src->v1], outlongs[src->v2]) > 0) {
+    if (NormalClip(outlongs[src->v0], outlongs[src->v1], outlongs[src->v2]) > 0) {
         ((unsigned char *)prims)[3] = 4;
         prims->rgb0 = 0;
         ((unsigned char *)prims)[7] = 0x20;

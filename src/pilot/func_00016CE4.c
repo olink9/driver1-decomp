@@ -26,13 +26,13 @@ extern int D_00096FF0;
 extern char D_00096FC4;
 extern char D_00096FBC;
 extern unsigned char D_00099AF0[];
-extern void func_00012498();
+extern void ClearMem();
 extern void func_0001250C();
 extern void func_00021D54();
 extern void func_00021DE8();
 extern void func_00021F5C();
 
-static inline void ClearMem(unsigned char *p, int n)
+static inline void ClearMemInline(unsigned char *p, int n)
 {
     unsigned char *end = p + n;
 
@@ -53,12 +53,12 @@ void func_00016CE4(void)
     ENT *e;
     unsigned char *q;
 
-    ClearMem((unsigned char *)D_00098950, 2000);
-    ClearMem((unsigned char *)D_000C4E38, 0x1EA0);
-    func_00012498(D_00099158, 0x28);
+    ClearMemInline((unsigned char *)D_00098950, 2000);
+    ClearMemInline((unsigned char *)D_000C4E38, 0x1EA0);
+    ClearMem(D_00099158, 0x28);
     if (*(int *)&D_00096834 != 2) {
         b = &D_00099120;
-        ClearMem((unsigned char *)b, 0x38);
+        ClearMemInline((unsigned char *)b, 0x38);
         b->s1E = 450;
         b->s1A = -1;
         b->s1C = -1;

@@ -1,0 +1,50 @@
+name: MCARD.BIN
+sha1: d25d51e8bf2226168551f46da83b238f7a62754b
+options:
+  basename: mcard
+  target_path: orig/MCARD.BIN
+  elf_path: build/mcard.elf
+  base_path: .
+  platform: psx
+  compiler: PSYQ
+  asm_path: asm/mcard
+  src_path: src/mcard
+  build_path: build/mcard
+  ld_script_path: mcard.ld
+  ld_dependencies: True
+  find_file_boundaries: False
+  # no gp_value: the overlays are built -G0 (not one $gp-relative access in .text)
+  # main + overlays as one address space, so references into main (gNight, D_000967C8)
+  # are symbolized instead of being left as raw (0x96850 >> 16) constants
+  global_vram_start: 0x10000
+  global_vram_end: 0x200000
+  o_as_suffix: True
+  use_legacy_include_asm: False
+  section_order: [".rodata", ".text", ".data", ".bss"]
+  symbol_addrs_path:
+    - symbol_addrs.txt            # main (calls/refs into the executable)
+    - build/main_syms.txt         # every main symbol, from build/slus_008.42.elf (tools/mainsyms.py)
+    - symbol_addrs.mcard.txt
+    - symbol_addrs.frontend.txt     # FRONTEND and MCARD are resident together and call each other
+  reloc_addrs_path:
+    - reloc_addrs.mcard.txt
+  undefined_funcs_auto_path: undefined_funcs_auto.mcard.txt
+  undefined_syms_auto_path: undefined_syms_auto.mcard.txt
+  subalign: 2
+  ld_align_section_vram_end: False
+  ld_align_segment_vram_end: False
+  string_encoding: ASCII
+  data_string_encoding: ASCII
+  rodata_string_guesser_level: 2
+  data_string_guesser_level: 2
+segments:
+  - name: mcard
+    type: code
+    start: 0x0
+    vram: 0xE6600
+    subsegments:
+      - [0x0, rodata, mcard_rodata]
+      - [0x760, asm, mcard]
+      - [0x6F2C, data, mcard_data]
+      - [0x72AC, data, mcard_tail]   # zero tail (bss carried in the file); split as data for exact bytes
+  - [0xC488]

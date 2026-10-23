@@ -1,13 +1,13 @@
 /* POLY_FT3 face plus a semi-transparent POLY_FT3 overlay (second uv set, fixed clut/tpage) */
 typedef struct { char *primptr; unsigned int *ot; } DB;
-extern long long D_00097530;
-#define current (*(DB **)&D_00097530)
-extern long long D_000971A0;
+extern long long current;
+#define current (*(DB **)&current)
+extern long long combointensity;
 extern long long D_000974B4;
-extern unsigned short D_00087030[][32];
-extern unsigned short D_00086F30[];
+extern unsigned short texture_cluts[][32];
+extern unsigned short texture_pages[];
 extern unsigned char *D_000972F0;
-extern int func_0007B1E8();
+extern int NormalClip();
 
 typedef struct {
     unsigned char id, texture_set;
@@ -49,8 +49,8 @@ void func_0003837C(unsigned char col)
     prims = (PFT3 *)current->primptr;
     uvs = *(unsigned char **)0x1F800038;
 
-    if (func_0007B1E8(((int *)outlongs)[src->v0], ((int *)outlongs)[src->v1], ((int *)outlongs)[src->v2]) > 0) {
-        *(int *)&prims->r0 = *(int *)&D_000971A0;
+    if (NormalClip(((int *)outlongs)[src->v0], ((int *)outlongs)[src->v1], ((int *)outlongs)[src->v2]) > 0) {
+        *(int *)&prims->r0 = *(int *)&combointensity;
         ((unsigned char *)prims)[3] = 7;
         ((unsigned char *)prims)[0x23] = 7;
         prims[1].r0 = col;
@@ -83,10 +83,10 @@ void func_0003837C(unsigned char col)
         prims[1].v1 = uvs[src->e1 * 2 + 1];
         prims[1].u2 = uvs[src->e2 * 2];
         prims[1].v2 = uvs[src->e2 * 2 + 1];
-        prims->clut = D_00087030[src->texture_set][src->texture_id];
-        prims->tpage = D_00086F30[src->texture_set];
-        prims[1].clut = D_00087030[*(int *)&D_000974B4][0];
-        prims[1].tpage = D_00086F30[*(int *)&D_000974B4] | 0x20;
+        prims->clut = texture_cluts[src->texture_set][src->texture_id];
+        prims->tpage = texture_pages[src->texture_set];
+        prims[1].clut = texture_cluts[*(int *)&D_000974B4][0];
+        prims[1].tpage = texture_pages[*(int *)&D_000974B4] | 0x20;
         prims[1].code |= 2;
         z = (zbuff[src->v0] + zbuff[src->v1] + zbuff[src->v2]) / 3;
         ((P_TAG *)&prims[1])->addr = ((P_TAG *)&current->ot[z])->addr;

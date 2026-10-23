@@ -1,9 +1,9 @@
 /* semi-transparent textured quad (POLY_FT4) from 4 model vertices */
 typedef struct { char *primptr; unsigned int *ot; } DB;
-extern long long D_00097530;
-#define current (*(DB **)&D_00097530)
-extern unsigned short D_00087030[][32];
-extern unsigned short D_00086F30[];
+extern long long current;
+#define current (*(DB **)&current)
+extern unsigned short texture_cluts[][32];
+extern unsigned short texture_pages[];
 
 typedef struct { short vx, vy, vz, pad; } SVECTOR;
 
@@ -81,8 +81,8 @@ void func_0002C29C(POLYFT4SRC *src, short *verts)
     gte_ldv3(&v[2], &v[3], &v[1]);
     gte_rtpt();
     page = src->page;
-    clut = D_00087030[page][src->clut] << 16;
-    tpage = D_00086F30[page] << 16;
+    clut = texture_cluts[page][src->clut] << 16;
+    tpage = texture_pages[page] << 16;
     prims->uv0 = src->uv[2] | clut;
     prims->uv1 = src->uv[3] | tpage;
     prims->uv2 = src->uv[1];

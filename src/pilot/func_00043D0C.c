@@ -5,8 +5,8 @@ typedef struct {
     int f120; int f124; char p2[0x132 - 0x128]; unsigned char f132;
     char p3[0x18C - 0x133];
 } CAR;
-extern T100 D_0009AF04[];
-extern CAR D_0009B0A4[];
+extern T100 car_cosmetics[];
+extern CAR car_data[];
 extern CAR D_0009B1D4[];
 extern char D_000B9170[];
 extern void func_00043FDC();
@@ -21,15 +21,15 @@ void func_00043D0C(int idx) {
     col[1] = 0;
     col[2] = 0;
     if (idx == 0)
-        t = &D_0009AF04[0];
+        t = &car_cosmetics[0];
     else
-        t = &D_0009AF04[*((unsigned char *)&D_0009B1D4[idx] - 0x12E)];
+        t = &car_cosmetics[*((unsigned char *)&D_0009B1D4[idx] - 0x12E)];
     v = t->v;
-    if (D_0009B0A4[idx].f124 < 500) {
+    if (car_data[idx].f124 < 500) {
         func_00043FDC(&v, idx, col, 25, D_000B9170, 0);
         *p += 8;
     }
-    if (D_0009B0A4[idx].f120 < 500) {
+    if (car_data[idx].f120 < 500) {
         *(short *)&v = -*(short *)&v;
         func_00043FDC(&v, idx, col, 25, D_000B9170, 0);
         *p += 8;

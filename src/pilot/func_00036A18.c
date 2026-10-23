@@ -1,11 +1,11 @@
 /* gouraud textured triangle (POLY_GT3), same family as func_00035DA8 */
 typedef struct { char *primptr; unsigned int *ot; } DB;
-extern long long D_00097530;
-#define current (*(DB **)&D_00097530)
-extern long long D_000971A0;
-extern unsigned short D_00087030[][32];
-extern unsigned short D_00086F30[];
-extern int func_0007B1E8();
+extern long long current;
+#define current (*(DB **)&current)
+extern long long combointensity;
+extern unsigned short texture_cluts[][32];
+extern unsigned short texture_pages[];
+extern int NormalClip();
 
 typedef struct {
     unsigned char id, page;
@@ -44,10 +44,10 @@ void func_00036A18(void)
     zbuff = *(short **)0x1F80001C;
     prims = (PGT3 *)current->primptr;
 
-    if (func_0007B1E8(outlongs[src->v0], outlongs[src->v1], outlongs[src->v2]) > 0) {
-        prims->rgb0 = *(int *)&D_000971A0;
-        prims->rgb1 = *(int *)&D_000971A0;
-        prims->rgb2 = *(int *)&D_000971A0;
+    if (NormalClip(outlongs[src->v0], outlongs[src->v1], outlongs[src->v2]) > 0) {
+        prims->rgb0 = *(int *)&combointensity;
+        prims->rgb1 = *(int *)&combointensity;
+        prims->rgb2 = *(int *)&combointensity;
         ((unsigned char *)prims)[3] = 9;
         ((unsigned char *)prims)[7] = 0x34;
         prims->x0 = ((short *)&outlongs[src->v0])[0];
@@ -62,8 +62,8 @@ void func_00036A18(void)
         prims->v1 = src->uv1[1];
         prims->u2 = src->uv2[0];
         prims->v2 = src->uv2[1];
-        prims->clut = D_00087030[src->page][src->clut];
-        prims->tpage = D_00086F30[src->page];
+        prims->clut = texture_cluts[src->page][src->clut];
+        prims->tpage = texture_pages[src->page];
         z = (zbuff[src->v0] + zbuff[src->v1] + zbuff[src->v2]) / 3;
         ((P_TAG *)prims)->addr = ((P_TAG *)&current->ot[z])->addr;
         ((P_TAG *)&current->ot[z])->addr = (unsigned int)prims;

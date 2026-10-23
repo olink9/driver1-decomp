@@ -1,8 +1,8 @@
 /* Flat triangle (POLY_F3) from scratchpad vertex list, black */
 typedef struct { char *primptr; unsigned int *ot; } DB;
-extern long long D_00097530;
-#define current (*(DB **)&D_00097530)
-extern int func_0007B1E8();
+extern long long current;
+#define current (*(DB **)&current)
+extern int NormalClip();
 typedef struct { unsigned addr:24; unsigned len:8; } P_TAG;
 #define setaddr(_p, _addr) (((P_TAG *)(_p))->addr = (unsigned long)(_addr))
 #define getaddr(_p) (unsigned long)(((P_TAG *)(_p))->addr)
@@ -33,7 +33,7 @@ void func_00035BC8(void)
     zbuff = *(short **)0x1F80001C;
     prims = (PF3 *)current->primptr;
 
-    if (func_0007B1E8(outlongs[src->a], outlongs[src->b], outlongs[src->c]) > 0) {
+    if (NormalClip(outlongs[src->a], outlongs[src->b], outlongs[src->c]) > 0) {
         prims->rgb0 = 0;
         z = (zbuff[src->a] + zbuff[src->b] + zbuff[src->c]) / 3;
         ((unsigned char *)prims)[3] = 4;

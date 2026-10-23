@@ -1,0 +1,224 @@
+old_symbol	name	evidence
+func_00012498	ClearMem	b048
+func_0001B380	LongQuaternion2Matrix	b022 +queue/d2map Driver2 match; f-03 +queue/d2map Driver2 match
+func_0001BAC0	GlobalTimeStep	b131 +queue/d2map Driver2 match
+func_0001D3EC	SetShadowPoints	b034 +queue/d2map Driver2 match
+func_0001D648	StepCars	b010 +queue/d2map Driver2 match
+func_0001D6E4	StepOneCar	b130
+func_0001F5B0	MapHeight	b069 likely; b132
+func_0001FAFC	CheckCarToCarCollisions	b081 +queue/d2map Driver2 match; b131 +queue/d2map Driver2 match
+func_00020844	jump_debris	b027 +queue/d2map Driver2 match
+func_000217C8	ROADS_GetRouteData	b108 likely; b132
+func_0002258C	LoadGameLevel	b030 +queue/d2map Driver2 match
+func_00022700	InitModelNames	b021 +queue/d2map Driver2 match
+func_0002452C	main	b049
+func_00025638	ReInitFrontend	b021 +queue/d2map Driver2 match
+func_0002A084	DrawTyreTracks	b096 +queue/d2map Driver2 match
+func_0002A808	SubdivShadow	b101 +queue/d2map Driver2 match
+func_0002ADEC	PlaceShadowForCar	b081 +queue/d2map Driver2 match
+func_0002B20C	clipAgainstZ	b070 +queue/d2map Driver2 match
+func_0002B560	clippedPoly	b078 likely +queue/d2map Driver2 match
+func_0002B9BC	sQuad	b078 +queue/d2map Driver2 match
+func_0002C8FC	DrawMapPSX	b126
+func_0002DADC	InitFrustrumMatrix	b016 +queue/d2map Driver2 match; f-02 +queue/d2map Driver2 match
+func_0002DFEC	ProcessMapLump	b053
+func_00032DEC	test_changemode	b035 +queue/d2map Driver2 match
+func_00033604	UpdateSpool	b039 +queue/d2map Driver2 match
+func_000337D4	InitSpooling	b010 +queue/d2map Driver2 match
+func_00033870	SendTPage	b058 +queue/d2map Driver2 match; r3-11 +queue/d2map Driver2 match
+func_00033B10	LoadInAreaTSets	f-05
+func_00033D18	SendSBK	b024 +queue/d2map Driver2 match; r2-031 +queue/d2map Driver2 match
+func_00033F9C	CheckLoadAreaData	b056 +queue/d2map Driver2 match
+func_00034204	ClearRegion	b081
+func_000342D4	LoadRegionData	f-05; r3-16
+func_00034638	UnpackRegion	b009 +queue/d2map Driver2 match
+func_000346C8	ProcessSpoolInfoLump	b025 +queue/d2map Driver2 match
+func_0003497C	data_cb_textures	b033 +queue/d2map Driver2 match
+func_00034B18	ready_cb_textures	b028 +queue/d2map Driver2 match
+func_00034C74	ready_cb_regions	b019 +queue/d2map Driver2 match
+func_00034D74	data_cb_regions	b030 +queue/d2map Driver2 match
+func_00035044	ready_cb_soundbank	b023 +queue/d2map Driver2 match
+func_00035174	data_cb_misc	b029 +queue/d2map Driver2 match
+func_00035394	StartSpooling	b010 +queue/d2map Driver2 match
+func_00037EF8	wjmDraw3	b048 +queue/d2map Driver2 match
+func_00039978	CheckUnpackNewRegions	b081 +queue/d2map Driver2 match
+func_0003B208	DrawCarWheels	b094
+func_0003B748	DrawWheelObject	b054 +queue/d2map Driver2 match
+func_0003C6CC	MangleWheelModels	b063 +queue/d2map Driver2 match
+func_0003C998	CameraCollisionCheck	b103 +queue/d2map Driver2 match; r3-03 +queue/d2map Driver2 match
+func_0003D4D0	PlaceCameraAtLocation	b023 +queue/d2map Driver2 match
+func_0003DEE0	OK_To_Zoom	b012 +queue/d2map Driver2 match
+func_0003E6A0	DentCar	b082; r2-025
+func_0003ECD4	InitHubcap	b008 +queue/d2map Driver2 match
+func_0003ED78	LoseHubcap	b059 +queue/d2map Driver2 match
+func_0003F01C	MoveHubcap	b062 +queue/d2map Driver2 match
+func_0003F2E0	bcollided2d	b073 +queue/d2map Driver2 match
+func_0003F658	bFindCollisionPoint	b050 +queue/d2map Driver2 match
+func_0003F88C	bFindCollisionTime	b055 +queue/d2map Driver2 match
+func_0003FF0C	CarBuildingCollision	b118 +queue/d2map Driver2 match
+func_00040BAC	PlacePoolForCar	b106 +queue/d2map Driver2 match
+func_00041CE4	SwirlLeaves	b026 likely +queue/d2map Driver2 match; r3-11 +queue/d2map Driver2 match
+func_000426B4	AddGroundDebris	b038 +queue/d2map Driver2 match
+func_0004315C	find_lamp_streak	b006 +queue/d2map Driver2 match
+func_000431CC	damage_lamp	b011 likely +queue/d2map Driver2 match
+func_00043270	damage_object	b038 +queue/d2map Driver2 match
+func_0004428C	ShowLight1	b046 +queue/d2map Driver2 match
+func_0004449C	ShowLight	b069 likely +queue/d2map Driver2 match; b120 +queue/d2map Driver2 match
+func_000451A8	RoundShadow	b061 +queue/d2map Driver2 match
+func_00045460	ShowGroundLight	b061 +queue/d2map Driver2 match
+func_00045718	ShowFlare	b065 +queue/d2map Driver2 match
+func_00045A04	DisplayWater	b064 +queue/d2map Driver2 match
+func_00045CEC	DisplaySpark	b067 +queue/d2map Driver2 match
+func_000466D4	GetSmokeDrift	b020 likely +queue/d2map Driver2 match; f-03 +queue/d2map Driver2 match
+func_00046E44	DrawLensFlare	b100 +queue/d2map Driver2 match
+func_000473F0	DisplaySun	b100
+func_00047824	Setup_Debris	b056; b131
+func_00047A90	Setup_Smoke	b093
+func_000481C8	DisplayDebris	b087 +queue/d2map Driver2 match
+func_00048660	HandleDebris	b108 +queue/d2map Driver2 match
+func_00048E88	DisplaySmoke	b096 +queue/d2map Driver2 match
+func_000493CC	add_haze	b029 +queue/d2map Driver2 match
+func_00049538	SetupRain	b004 likely +queue/d2map Driver2 match
+func_00049590	DrawRainDrops	b073 +queue/d2map Driver2 match
+func_00049DB8	AddRainDrops	b060 +queue/d2map Driver2 match
+func_0004A064	DisplaySplashes	b069 +queue/d2map Driver2 match
+func_0004A398	DisplayLightReflections	b061 +queue/d2map Driver2 match
+func_0004A654	DoLightning	b014 +queue/d2map Driver2 match
+func_0004C610	GetEngineRevs	b022 +queue/d2map Driver2 match; r2-026 +queue/d2map Driver2 match
+func_0004C96C	PlaySpeech	b004 likely +queue/d2map Driver2 match
+func_0004D3DC	InitSound	b018 +queue/d2map Driver2 match
+func_0004D4D4	ClearChannelFields	b012
+func_0004D544	ResetSound	b012 +queue/d2map Driver2 match
+func_0004D648	SetMasterVolume	b018
+func_0004D6B0	StartSound	b009 +queue/d2map Driver2 match
+func_0004D7E4	Start3DSoundVolPitch	b015 +queue/d2map Driver2 match; r2-037 +queue/d2map Driver2 match
+func_0004D968	CompleteSoundSetup	b015 likely; r2-037
+func_0004DACC	SetChannelPitch	b013 +queue/d2map Driver2 match
+func_0004E214	LoadSoundBank	b023 +queue/d2map Driver2 match; f-04 +queue/d2map Driver2 match
+func_0004E398	StartXM	b007 likely +queue/d2map Driver2 match
+func_0004E4B0	GetFreeChannel	b015 likely; r2-037
+func_0004E840	AllocateReverb	b018
+func_0004E9C4	Calc_Object_MatrixYZX	b008 +queue/d2map Driver2 match
+func_0004EB10	InvertMatrix	b006 +queue/d2map Driver2 match
+func_0004F34C	PlotSkyPoly	b086 +queue/d2map Driver2 match
+func_0004FA7C	ScaleCamera	b018 +queue/d2map Driver2 match
+func_0004FB70	Getlong	b009 likely +queue/d2map Driver2 match
+func_0005073C	FadeGameScreen	b031 +queue/d2map Driver2 match; r2-026 +queue/d2map Driver2 match
+func_000508B0	ShowLoadingScreen	b083 +queue/d2map Driver2 match
+func_00050CF8	CloseShutters	b023 +queue/d2map Driver2 match
+func_00050E28	Loadfile	b083
+func_00050EC4	LoadfileSeg	b069
+func_0005122C	sector_ready	b016 +queue/d2map Driver2 match
+func_000512FC	loadsectors	b007 likely +queue/d2map Driver2 match
+func_00051898	Find_TexID	b009 +queue/d2map Driver2 match
+func_0005192C	GetTEXINFName	b021 +queue/d2map Driver2 match
+func_00051A40	ProcessTextureInfo	b010 +queue/d2map Driver2 match; r2-034 +queue/d2map Driver2 match
+func_00052240	GetTextureDetails	b042 +queue/d2map Driver2 match
+func_00052C10	DrawAnimatingObject	b015 +queue/d2map Driver2 match; r2-039 +queue/d2map Driver2 match
+func_0005334C	animate_garage_door	b023 +queue/d2map Driver2 match
+func_00053C88	DrawN	b039 +queue/d2map Driver2 match
+func_00053E54	DrawCompass	b065 +queue/d2map Driver2 match; b124 +queue/d2map Driver2 match
+func_000541C8	InitOverheadMap	b020 +queue/d2map Driver2 match
+func_00054618	FlashOverheadMap	b024 +queue/d2map Driver2 match; b124 +queue/d2map Driver2 match
+func_0005474C	DrawOverheadMap	b124
+func_00055A20	DrawSightCone	b057 +queue/d2map Driver2 match; b124 +queue/d2map Driver2 match
+func_00056278	LoadMapTile	b020 likely; b124
+func_000563CC	SetMapPos	b124
+func_000564A4	draw_box	b030 +queue/d2map Driver2 match; b124 +queue/d2map Driver2 match
+func_00056BDC	DrawPercentageBar	b099 +queue/d2map Driver2 match
+func_00057734	DrawStopZone	b075 +queue/d2map Driver2 match
+func_00058A84	setCamera	b011 likely +queue/d2map Driver2 match; f-01 +queue/d2map Driver2 match
+func_00058B2C	RecordCamera	b053 +queue/d2map Driver2 match
+func_00058D70	FindNextChange	b006 +queue/d2map Driver2 match
+func_00058DE0	CheckCameraChange	f-05
+func_00058FCC	CameraBar	b102 +queue/d2map Driver2 match
+func_00059658	FindFreeCamera	b053; f-02
+func_0005972C	ShowIcons	b084 +queue/d2map Driver2 match
+func_00059BBC	ShowReplayMenu	b040 weak +queue/d2map Driver2 match
+func_00059D94	ControlReplay	b132 +queue/d2map Driver2 match
+func_0005B784	DoAutoDirect	b086 +queue/d2map Driver2 match
+func_0005BC04	SelectCameraCar	b132
+func_0005BFF0	cjpRecord	b069
+func_0005C458	dist	b006 +queue/d2map Driver2 match
+func_0005C5B0	NoMoreCamerasErrorMessage	b012 +queue/d2map Driver2 match; f-02 +queue/d2map Driver2 match
+func_0005C660	FirstCamera	b132 (certain) +queue/d2map Driver2 match
+func_0005C7D0	SetTextColour	b012
+func_0005C7EC	StringWidth	b007 likely +queue/d2map Driver2 match
+func_0005C864	PrintStringRightAligned	b099
+func_0005C99C	LoadFont	b039 +queue/d2map Driver2 match
+func_0005CC68	PrintString	b059
+func_0005CF10	PrintDigit	b054 +queue/d2map Driver2 match
+func_0005DBDC	DrawCiv	b129
+func_00060C18	SetPedestrianTurn	b008 +queue/d2map Driver2 match
+func_00060E4C	FindSeated	b020 likely +queue/d2map Driver2 match; f-03 +queue/d2map Driver2 match
+func_00066FF0	DrawExplosion	b109 +queue/d2map Driver2 match
+func_00067EE0	Long2DDistance	b025 +queue/d2map Driver2 match
+func_0006ADFC	SetColourByValue	b026 likely +queue/d2map Driver2 match; r2-013 +queue/d2map Driver2 match
+func_0006D56C	ReInitSystem	b011 +queue/d2map Driver2 match
+func_0006D610	PlayRender	b007 likely +queue/d2map Driver2 match
+func_0006F760	cbready	b013 +queue/d2map Driver2 match
+func_0006F940	XM_CloseVAB	b005 guess +queue/d2map Driver2 match
+func_0006F994	XM_CloseVAB2	b007 likely +queue/d2map Driver2 match
+func_0006FB14	InitXMData	b057 +queue/d2map Driver2 match
+func_0006FDF0	XM_Init	b090 +queue/d2map Driver2 match
+func_000702BC	JPlayNote	b054 +queue/d2map Driver2 match
+func_00070508	JPlayEffects	b013 likely +queue/d2map Driver2 match
+func_00070728	SPE	b047 +queue/d2map Driver2 match
+func_00070B68	DoEEffects	b074 +queue/d2map Driver2 match
+func_00070EFC	SetNote	b017 +queue/d2map Driver2 match
+func_00070FD8	SetInstr	b019 +queue/d2map Driver2 match
+func_000710D0	SetPer	b046 +queue/d2map Driver2 match; r2-013 +queue/d2map Driver2 match
+func_000712E4	Arpeggio	b019 +queue/d2map Driver2 match
+func_000713DC	DoVolSlide	b009 +queue/d2map Driver2 match
+func_0007146C	DoXMPanSlide	b010 +queue/d2map Driver2 match
+func_00071504	DoS3MRetrig	b047 +queue/d2map Driver2 match
+func_00071724	DoToneSlide	b083 +queue/d2map Driver2 match
+func_0007178C	DoVibrato	b022 +queue/d2map Driver2 match
+func_000718A8	DoTremolo	b029 +queue/d2map Driver2 match
+func_00071A10	UpdateXMData	b013 +queue/d2map Driver2 match
+func_00071AC8	UpdateWithTimer	b018 +queue/d2map Driver2 match
+func_00071BB4	XM_DoFullUpdate	b014 +queue/d2map Driver2 match
+func_00071C74	UpdatePatternData	b091 +queue/d2map Driver2 match
+func_00072150	CalcPlayPos	b013 +queue/d2map Driver2 match
+func_000722C0	JCalcPat	b006 +queue/d2map Driver2 match
+func_0007232C	ApplyEffs	b018 +queue/d2map Driver2 match; b071 +queue/d2map Driver2 match
+func_00072684	UpdateEffs	b013 +queue/d2map Driver2 match
+func_00072740	DoDolbySS	b018 +queue/d2map Driver2 match
+func_0007282C	UpdateHardware	b072 +queue/d2map Driver2 match
+func_00072B8C	IntVols	b072
+func_00072BC0	GetFreq2	b004 likely +queue/d2map Driver2 match
+func_00073020	XM_SetSongPos	b017 +queue/d2map Driver2 match
+func_00073104	PlaySFX	b072
+func_000731A0	InitSPUChannel	b090
+func_00073208	CurrentKeyStat	b012 +queue/d2map Driver2 match
+func_000732D8	SetVol	b072
+func_00073304	SetFrq	b072 +queue/d2map Driver2 match
+func_00073324	SilenceXM	b017 +queue/d2map Driver2 match
+func_00073408	XM_Pause	b017 +queue/d2map Driver2 match
+func_000734E8	XM_Restart	b018 +queue/d2map Driver2 match
+func_000735DC	XM_SetMasterVol	b004 likely +queue/d2map Driver2 match
+func_00073630	ClearSPU	b009 +queue/d2map Driver2 match
+func_000736E4	GetFreeSongID	b004 likely +queue/d2map Driver2 match
+func_000737CC	JPClearSPUFlags	b090
+func_00074158	SetDispMask	b083 lib
+func_00074464	StoreImage	b100 lib
+func_00074D54	SetDrawMode	b113 lib
+func_000774C4	memset	b012 lib
+func_00077784	VSyncCallback	b018 lib
+func_00079AC0	SpuInit	b018 lib
+func_00079D20	SetRotMatrix	b018 lib
+func_0007A3B0	CdControl	b069 lib
+func_0007A684	CdPosToInt	b069 lib
+func_0007A704	SpuSetTransferMode	r2-031 (likely); r3-16 (fairly certain)
+func_0007B1E8	NormalClip	b048 lib
+func_0007D2C4	TransMatrix	b018 lib
+func_0007D2F4	SetTransMatrix	b018 lib
+func_0007D5A4	LoadClut	b083 lib
+func_0007DCBC	CdRead	b069 lib
+func_0007DE58	CdReadSync	b069 lib
+func_0007EA74	strcpy	b069 lib
+func_0007EA84	SetLineF2	b099 lib
+func_0007EAA4	SetLineF4	b099 lib
+func_0007EAC4	RotTrans	b062 lib; b124 (from args)
+func_0007EAF4	RotTransPers	b048 lib
+func_0007EF18	SpuGetAllKeysStatus	b012 lib

@@ -14,7 +14,7 @@ typedef struct {
     int x, z;
 } XZ;
 
-extern ENTRY D_0009B0A4[];
+extern ENTRY car_data[];
 extern long long D_00096884;
 extern int D_00097368;
 extern int D_00097398;
@@ -28,26 +28,26 @@ extern int D_0009730C;
 extern unsigned char D_00097310;
 extern unsigned char D_00097328;
 extern int D_00097324;
-extern int D_0009732C;
+extern int current_region;
 extern int D_00097320;
 extern int D_0009731C;
 extern XZ D_00099158[];
-extern VEC D_0008A8F0;
+extern VEC camera_position;
 
-extern void func_00034638();
-extern void func_00039978();
-extern void func_00033F9C();
-extern void func_00035394();
+extern void UnpackRegion();
+extern void CheckUnpackNewRegions();
+extern void CheckLoadAreaData();
+extern void StartSpooling();
 
 void func_00039D94(void)
 {
     int cz, cx, rz, rx, t;
     XZ *p;
 
-    cz = (D_0009B0A4[*(int *)&D_00096884].xD0 + D_00097368) / 3000;
+    cz = (car_data[*(int *)&D_00096884].xD0 + D_00097368) / 3000;
     rz = cz / D_0009733C;
     t = D_00096A24 / D_0009733C;
-    cx = (D_0009B0A4[*(int *)&D_00096884].xC8 + D_00097398) / 3000;
+    cx = (car_data[*(int *)&D_00096884].xC8 + D_00097398) / 3000;
     rx = cx / D_0009733C;
 
     D_00097300 = cz;
@@ -57,25 +57,25 @@ void func_00039D94(void)
     D_0009730C = rx;
     D_00097310 = D_0009730C & 1;
     D_00097328 = D_00097310 + (D_00097318 << 1);
-    D_00097324 = D_0009732C;
-    D_0009732C = rx + rz * t;
+    D_00097324 = current_region;
+    current_region = rx + rz * t;
     D_00097320 = cx - rx * D_0009733C;
     D_0009731C = cz - rz * D_0009733C;
 
     if (D_00097324 == -1)
     {
-        func_00034638(D_0009732C, D_00097328);
+        UnpackRegion(current_region, D_00097328);
         p = &D_00099158[D_00097328];
         p->x = D_0009730C * D_0009733C * 3000 - D_00097398;
         p->z = D_00097314 * D_0009733C * 3000 - D_00097368;
     }
 
-    func_00039978();
+    CheckUnpackNewRegions();
 
-    if (D_00097324 == D_0009732C || D_00097324 == -1)
-        func_00033F9C(D_00097320, D_0009731C);
+    if (D_00097324 == current_region || D_00097324 == -1)
+        CheckLoadAreaData(D_00097320, D_0009731C);
 
-    D_000972FC = (D_0008A8F0.vx + D_00097398) / 3000;
-    D_00097300 = (D_0008A8F0.vz + D_00097368) / 3000;
-    func_00035394();
+    D_000972FC = (camera_position.vx + D_00097398) / 3000;
+    D_00097300 = (camera_position.vz + D_00097368) / 3000;
+    StartSpooling();
 }

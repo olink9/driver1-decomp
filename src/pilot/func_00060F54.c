@@ -21,8 +21,8 @@ typedef struct { int x, z; unsigned short rot; char c0a; } Src;
 extern int D_000976C0;
 extern int D_000C0340[];
 extern Obj D_000BFA7C[];
-extern short D_0008EAA8[];
-extern int func_0001F5B0();
+extern short rcossin_tbl[];
+extern int MapHeight();
 extern void func_0005D974();
 
 void func_00060F54(Src *src, int arg)
@@ -43,9 +43,9 @@ void func_00060F54(Src *src, int arg)
             o->s22 = 0;
             o->s24 = 0;
             o->s1a = src->rot;
-            o->x = src->x - (D_0008EAA8[(src->rot & 0xfff) * 2] * 45 >> 11);
-            o->z = src->z - (D_0008EAA8[(src->rot & 0xfff) * 2 + 1] * 45 >> 11);
-            o->y = -func_0001F5B0(o);
+            o->x = src->x - (rcossin_tbl[(src->rot & 0xfff) * 2] * 45 >> 11);
+            o->z = src->z - (rcossin_tbl[(src->rot & 0xfff) * 2 + 1] * 45 >> 11);
+            o->y = -MapHeight(o);
             o->s42 = idx;
             o->c53 = arg;
             func_0005D974(o);

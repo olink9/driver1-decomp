@@ -49,7 +49,7 @@ extern long long D_000976EC;
 extern int D_00097748;
 extern int D_0009774C;
 extern ENT D_00098950[];
-extern int D_0009B0A4[];
+extern int car_data[];
 extern int D_000C039C[];
 extern unsigned char D_000C439C[];
 extern int func_00063114(OBJ *obj, int x, int z, int idx);
@@ -62,12 +62,12 @@ static inline int dist(OBJ *obj)
     int dx, dz;
 
     a = obj->f48;
-    b = D_0009B0A4[0xC8 / 4];
+    b = car_data[0xC8 / 4];
     dx = a - b;
     if (dx < 0)
         dx = b - a;
     c = obj->f4C;
-    d = D_0009B0A4[0xD0 / 4];
+    d = car_data[0xD0 / 4];
     dz = c - d;
     if (dz < 0)
         dz = d - c;

@@ -29,8 +29,8 @@ typedef struct {
 
 extern int D_000973B0;
 extern PolyEnt D_000AB728[];
-extern unsigned short D_00087030[][32];
-extern unsigned short D_00086F30[];
+extern unsigned short texture_cluts[][32];
+extern unsigned short texture_pages[];
 extern int D_00089F1C[];
 extern Ent20 D_000BE9FC[][30];
 extern long long D_000975CC;
@@ -113,8 +113,8 @@ void func_0003BDC8(PolyLists *out, ModelHdr *hdr, int reset, int flag, int flag2
                 if (pass == 2) {
                     p->a = poly[4] + ((poly[5] + (poly[6] << 8)) << 8);
                     p->b = 0;
-                    p->c = (D_00087030[poly[1]][*(unsigned short *)(poly + 2)] << 16) | *(unsigned short *)(poly + 8);
-                    p->d = (D_00086F30[poly[1]] << 16) | *(unsigned short *)(poly + 10);
+                    p->c = (texture_cluts[poly[1]][*(unsigned short *)(poly + 2)] << 16) | *(unsigned short *)(poly + 8);
+                    p->d = (texture_pages[poly[1]] << 16) | *(unsigned short *)(poly + 10);
                     p->e = *(unsigned short *)(poly + 12);
                     count++;
                     p->f = i;
@@ -124,8 +124,8 @@ void func_0003BDC8(PolyLists *out, ModelHdr *hdr, int reset, int flag, int flag2
                 if (pass == 3) {
                     p->a = poly[4] + ((poly[5] + ((poly[7] + (poly[6] << 8)) << 8)) << 8);
                     p->b = 0;
-                    p->c = (D_00087030[poly[1]][*(unsigned short *)(poly + 2)] << 16) | *(unsigned short *)(poly + 8);
-                    p->d = (D_00086F30[poly[1]] << 16) | *(unsigned short *)(poly + 10);
+                    p->c = (texture_cluts[poly[1]][*(unsigned short *)(poly + 2)] << 16) | *(unsigned short *)(poly + 8);
+                    p->d = (texture_pages[poly[1]] << 16) | *(unsigned short *)(poly + 10);
                     p->e = (*(unsigned short *)(poly + 12) << 16) | *(unsigned short *)(poly + 14);
                     count++;
                     p->f = i;
@@ -135,19 +135,19 @@ void func_0003BDC8(PolyLists *out, ModelHdr *hdr, int reset, int flag, int flag2
                 pg = poly;
                 if (pass == 0 && flag) {
                     D_000BE9FC[poly[1] - *(int *)&D_000975CC][*(unsigned short *)(poly + 2)].v =
-                        D_00087030[poly[1]][*(unsigned short *)(poly + 2)];
+                        texture_cluts[poly[1]][*(unsigned short *)(poly + 2)];
                     p->a = poly[4] + ((poly[5] + (poly[6] << 8)) << 8);
                     p->b = poly[8] + ((poly[9] + (poly[10] << 8)) << 8);
                     p->c = (((char *)&D_000BE9FC[poly[1] - *(int *)&D_000975CC][*(unsigned short *)(poly + 2)] - (char *)D_000BE9FC) << 14) | *(unsigned short *)(poly + 12);
-                    p->d = (D_00086F30[poly[1]] << 16) | *(unsigned short *)(poly + 14);
+                    p->d = (texture_pages[poly[1]] << 16) | *(unsigned short *)(poly + 14);
                     p->e = *(unsigned short *)(poly + 16);
                     count++;
                     p->f = i;
                 } else if ((flag2 ? pass == 5 : pass == 2) && !flag) {
                     p->a = pg[4] + ((pg[5] + (pg[6] << 8)) << 8);
                     p->b = pg[8] + ((pg[9] + (pg[10] << 8)) << 8);
-                    p->c = (D_00087030[pg[1]][*(unsigned short *)(pg + 2)] << 16) | *(unsigned short *)(pg + 12);
-                    p->d = (D_00086F30[pg[1]] << 16) | *(unsigned short *)(pg + 14);
+                    p->c = (texture_cluts[pg[1]][*(unsigned short *)(pg + 2)] << 16) | *(unsigned short *)(pg + 12);
+                    p->d = (texture_pages[pg[1]] << 16) | *(unsigned short *)(pg + 14);
                     p->e = *(unsigned short *)(pg + 16);
                     count++;
                     p->f = i;
@@ -157,19 +157,19 @@ void func_0003BDC8(PolyLists *out, ModelHdr *hdr, int reset, int flag, int flag2
                 pg = poly;
                 if (pass == 1 && flag) {
                     D_000BE9FC[poly[1] - *(int *)&D_000975CC][*(unsigned short *)(poly + 2)].v =
-                        D_00087030[poly[1]][*(unsigned short *)(poly + 2)];
+                        texture_cluts[poly[1]][*(unsigned short *)(poly + 2)];
                     p->a = poly[4] + ((poly[5] + ((poly[7] + (poly[6] << 8)) << 8)) << 8);
                     p->b = poly[8] + ((poly[9] + ((poly[11] + (poly[10] << 8)) << 8)) << 8);
                     p->c = (((char *)&D_000BE9FC[poly[1] - *(int *)&D_000975CC][*(unsigned short *)(poly + 2)] - (char *)D_000BE9FC) << 14) | *(unsigned short *)(poly + 12);
-                    p->d = (D_00086F30[poly[1]] << 16) | *(unsigned short *)(poly + 14);
+                    p->d = (texture_pages[poly[1]] << 16) | *(unsigned short *)(poly + 14);
                     p->e = (*(unsigned short *)(poly + 16) << 16) | *(unsigned short *)(poly + 18);
                     count++;
                     p->f = i;
                 } else if ((flag2 ? pass == 6 : pass == 3) && !flag) {
                     p->a = pg[4] + ((pg[5] + ((pg[7] + (pg[6] << 8)) << 8)) << 8);
                     p->b = pg[8] + ((pg[9] + ((pg[11] + (pg[10] << 8)) << 8)) << 8);
-                    p->c = (D_00087030[pg[1]][*(unsigned short *)(pg + 2)] << 16) | *(unsigned short *)(pg + 12);
-                    p->d = (D_00086F30[pg[1]] << 16) | *(unsigned short *)(pg + 14);
+                    p->c = (texture_cluts[pg[1]][*(unsigned short *)(pg + 2)] << 16) | *(unsigned short *)(pg + 12);
+                    p->d = (texture_pages[pg[1]] << 16) | *(unsigned short *)(pg + 14);
                     p->e = (*(unsigned short *)(pg + 16) << 16) | *(unsigned short *)(pg + 18);
                     count++;
                     p->f = i;

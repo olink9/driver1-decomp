@@ -1,12 +1,12 @@
 /* FAKEMATCH: second extern name (__asm__ alias) for the same symbol to defeat CSE */
 /* Overmap target arrow (D2 overmap.c DrawTargetArrow-like): G4/G3 arrow + DR_TPAGE into ot[0] */
 typedef struct { char *primptr; unsigned int *ot; } DB;
-extern long long D_00097530;
-#define current (*(DB **)&D_00097530)
+extern long long current;
+#define current (*(DB **)&current)
 extern long long D_00096834;
 #define GameLevel (*(int *)&D_00096834)
-extern long long D_00096850;
-#define gTimeOfDay (*(int *)&D_00096850)
+extern long long gNight;
+#define gTimeOfDay (*(int *)&gNight)
 
 typedef struct { int vx, vy, vz, pad; } VECTOR;
 typedef struct { unsigned addr:24; unsigned len:8; } TAG;
@@ -36,13 +36,13 @@ typedef struct { int pad[5]; int scale; } OVERMAP;
 typedef struct { char pad[0xC8]; int x; int y; int z; char pad2[0x18C - 0xD4]; } CAR;
 
 extern OVERMAP D_0008B080[];
-extern CAR D_0009B0A4[];
+extern CAR car_data[];
 extern VECTOR D_0008909C;
 /* second name for the same object: the target rebuilds &D_0008909C for the second call instead of CSE-ing it */
 extern VECTOR camb __asm__("D_0008909C");
 extern int D_00096D58;
 
-extern int func_00067EE0();
+extern int Long2DDistance();
 extern void func_000539C8();
 
 #define setlen(p, _len) (((TAG *)(p))->len = (unsigned char)(_len))
@@ -60,12 +60,12 @@ void func_00055CA0(VECTOR *pos)
     POLY_G3 *poly3;
     DR_TPAGE *tp;
 
-    vertex[2].vx = pos->vx - D_0009B0A4[0].x;
-    vertex[2].vz = pos->vz - D_0009B0A4[0].z;
+    vertex[2].vx = pos->vx - car_data[0].x;
+    vertex[2].vz = pos->vz - car_data[0].z;
     vertex[0].vx = (vertex[2].vz + 2) >> 2;
     vertex[0].vz = (2 - vertex[2].vx) >> 2;
 
-    dist = func_00067EE0(&D_0008909C, &vertex[0]) / D_0008B080[GameLevel].scale;
+    dist = Long2DDistance(&D_0008909C, &vertex[0]) / D_0008B080[GameLevel].scale;
 
     if (dist > D_00096D58) {
         vertex[0].vx = vertex[0].vx * D_00096D58 / dist;
@@ -78,7 +78,7 @@ void func_00055CA0(VECTOR *pos)
     scale = D_0008B080[GameLevel].scale;
     pot = current->ot;
 
-    len = func_00067EE0(&camb, &vertex[2]);
+    len = Long2DDistance(&camb, &vertex[2]);
 
     shade = 180;
     if (gTimeOfDay != 0)

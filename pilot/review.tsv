@@ -1,2 +1,6 @@
 func_00051ADC	94.13	MATCH 100.0 with --aspsx 2.69 (gp_allow_offset on .comm RECTs D_00097550/D_00097574/D_000975A0, like func_0002A5CC); src/pilot/func_00051ADC.wip.c
-func_00043270	99.95	only diff: %hi/%lo(D_001E4038/D_001E40A0) vs literal 0x1E4038/0x1E40A0; byte-identical if those symbols are defined absolute at 0x1E4038 and 0x1E40A0
+damage_object	99.95	only diff: %hi/%lo(D_001E4038/D_001E40A0) vs literal 0x1E4038/0x1E40A0; byte-identical if those symbols are defined absolute at 0x1E4038 and 0x1E40A0
+func_0004AD94	99.98	byte-identical: only diff %hi/%lo(D_000BC004-0x20) vs splat label D_000BBFE4 (same address); fnscore reloc_target() regex drops negative addends - with [+-] it scores 100.0; src/pilot/func_0004AD94.wip.c
+func_001C2F78	99.96	byte-identical: only diff %hi/%lo(D_000D0200) vs literal 0xD0200 (n = *(int *)buf, buf = 0xD0200 load address); src/pilot/frontend/func_001C2F78.c
+func_001C70F0	99.94	byte-identical; splat prints literal %lo offsets (-0x2724 = %lo(D_0009D8DC), 0x2E50/0x2E48 = %lo(D_001D2E50/48)) in the jump-table case bodies; jtbl vs [.rodata] label
+func_000EC89C	99.88	byte-identical: only diff is the final jr ra delay-slot nop, which splat puts outside the function (word at 0x000ED528 = D_000ED528 in mcard .data); src/pilot/mcard/func_000EC89C.c

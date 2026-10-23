@@ -5,7 +5,7 @@ typedef struct {
     unsigned char *p;
 } HDR;
 extern int D_00089F1C[];
-extern long long D_000970E8;
+extern long long gLightsOn;
 extern long long D_00097128;
 
 void func_000538E8(HDR *h) {
@@ -15,12 +15,12 @@ void func_000538E8(HDR *h) {
     if (h->n == 0) return;
     do {
         if (p[0] == 9) {
-            if (*(int *)&D_000970E8 == 0) v = *(unsigned char *)&D_00097128 - 0x18;
+            if (*(int *)&gLightsOn == 0) v = *(unsigned char *)&D_00097128 - 0x18;
             else v = 0xFF;
             p[8] = v; p[9] = v; p[10] = v;
         }
         if (p[0] == 8) {
-            if (*(int *)&D_000970E8 == 0) v = *(unsigned char *)&D_00097128;
+            if (*(int *)&gLightsOn == 0) v = *(unsigned char *)&D_00097128;
             else v = 0xFF;
             p[4] = v; p[5] = v; p[6] = v;
         }

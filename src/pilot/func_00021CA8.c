@@ -1,6 +1,6 @@
 extern int *D_00097048;
 extern int D_0009D904[];
-extern void func_0004FB70();
+extern void Getlong();
 
 void func_00021CA8(void) {
     int n;
@@ -9,7 +9,7 @@ void func_00021CA8(void) {
     int t, cnt;
     base = D_00097048;
     p = (short *)(base + 1);
-    func_0004FB70(&n, base);
+    Getlong(&n, base);
     for (i = 0x383; i >= 0; i--) D_0009D904[i] = 0;
     cnt = n;
     for (i = 0; i < cnt; i++) {

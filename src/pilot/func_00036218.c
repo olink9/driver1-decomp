@@ -1,9 +1,9 @@
 /* G4 variant of func_00035FF4 (flat-gouraud quad, POLY_G4) */
 typedef struct { unsigned addr:24; unsigned len:8; } TAG;
 typedef struct { char *primptr; unsigned int *ot; } DB;
-extern long long D_00097530;
-#define current (*(DB **)&D_00097530)
-extern int func_0007B1E8();
+extern long long current;
+#define current (*(DB **)&current)
+extern int NormalClip();
 
 typedef struct {
     unsigned char id, pad[3];
@@ -36,7 +36,7 @@ void func_00036218(void)
     zbuff = *(short **)0x1F80001C;
     prims = (PG4 *)current->primptr;
 
-    if (func_0007B1E8(outlongs[src->v0], outlongs[src->v1], outlongs[src->v2]) > 0) {
+    if (NormalClip(outlongs[src->v0], outlongs[src->v1], outlongs[src->v2]) > 0) {
         prims->rgb0 = src->color0;
         prims->rgb1 = src->color1;
         prims->rgb2 = src->color2;

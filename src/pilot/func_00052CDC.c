@@ -1,7 +1,7 @@
 /* per-mission/per-car extra-object setup dispatch (switch on D_00096834, then on kind) */
 extern long long D_00097050, D_00097054;
 extern long long D_00096834;
-extern long long D_000970E8;
+extern long long gLightsOn;
 extern void func_0004343C();
 extern void func_00042EBC();
 extern void func_00042C8C();
@@ -67,17 +67,17 @@ void func_00052CDC(OBJ *obj, int kind)
             }
             break;
         case 2:
-            if (*(int *)&D_000970E8)
+            if (*(int *)&gLightsOn)
                 func_00042C8C(obj, 0, -0x2BC, 0, 0);
             break;
         case 3:
-            if (*(int *)&D_000970E8) {
+            if (*(int *)&gLightsOn) {
                 func_00042EBC(obj, 0x271, -0x546, 0, 1);
                 func_00042EBC(obj, -0x271, -0x546, 0, 1);
             }
             break;
         case 4:
-            if (*(int *)&D_000970E8)
+            if (*(int *)&gLightsOn)
                 func_00042EBC(obj, -0x258, -0x5AA, 0, 1);
             break;
         case 5:
@@ -95,19 +95,19 @@ void func_00052CDC(OBJ *obj, int kind)
             func_00053764(angle, obj, -0x2EE);
             break;
         case 2:
-            if (*(int *)&D_000970E8)
+            if (*(int *)&gLightsOn)
                 func_00042EBC(obj, -0x2EE, -0x73A, 0, 1);
             break;
         case 3:
-            if (*(int *)&D_000970E8)
+            if (*(int *)&gLightsOn)
                 func_00042EBC(obj, -0x12C, -0x6D6, 0, 1);
             break;
         case 4:
-            if (*(int *)&D_000970E8)
+            if (*(int *)&gLightsOn)
                 func_00042C8C(obj, 0, -0x578, 0, 1);
             break;
         case 5:
-            if (*(int *)&D_000970E8)
+            if (*(int *)&gLightsOn)
                 func_00042C8C(obj, 0, -0x546, 0, 1);
             break;
         }
@@ -142,17 +142,17 @@ void func_00052CDC(OBJ *obj, int kind)
             func_00053764(angle, obj, -0x3DE);
             break;
         case 2:
-            if (*(int *)&D_000970E8)
+            if (*(int *)&gLightsOn)
                 func_00042EBC(obj, -0x2EE, -0x8CA, 0, 2);
             break;
         case 3:
-            if (*(int *)&D_000970E8) {
+            if (*(int *)&gLightsOn) {
                 func_00042EBC(obj, 0x5AA, -0xF0A, 0, 3);
                 func_00042EBC(obj, -0x5AA, -0xF0A, 0, 3);
             }
             break;
         case 4:
-            if (*(int *)&D_000970E8)
+            if (*(int *)&gLightsOn)
                 func_00042C8C(obj, 0, -0x492, 0, 0);
             break;
         case 5:

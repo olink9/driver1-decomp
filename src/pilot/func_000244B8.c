@@ -1,6 +1,6 @@
 extern int D_00096858;
 extern char D_000967BF;
-extern long long D_00097668;
+extern long long ReplayParameterPtr;
 extern int D_00096884;
 extern int D_00096888;
 extern long long D_00096780;
@@ -13,7 +13,7 @@ void func_000244B8(void) {
     if (D_00096858 != 0) {
         D_000967BF = 0;
     }
-    func_0001AF2C(0x17, *(int *)&D_00097668 + 4, *(short *)(*(int *)&D_00097668 + 0x10), (unsigned char)D_000967BF, 4);
+    func_0001AF2C(0x17, *(int *)&ReplayParameterPtr + 4, *(short *)(*(int *)&ReplayParameterPtr + 0x10), (unsigned char)D_000967BF, 4);
     D_00096884 = 0x17;
     D_00096888 = 0;
     *(int *)&D_00096780 = 1;

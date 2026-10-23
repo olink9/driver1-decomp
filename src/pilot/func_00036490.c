@@ -1,11 +1,11 @@
 /* func_00036490 - flat textured triangle (POLY_FT3), sibling of func_00035FF4 */
 typedef struct { char *primptr; unsigned int *ot; } DB;
-extern long long D_00097530;
-#define current (*(DB **)&D_00097530)
-extern long long D_000971A0;
-extern unsigned short D_00087030[][32]; /* texture_cluts */
-extern unsigned short D_00086F30[];     /* texture_pages */
-extern int func_0007B1E8();
+extern long long current;
+#define current (*(DB **)&current)
+extern long long combointensity;
+extern unsigned short texture_cluts[][32]; /* texture_cluts */
+extern unsigned short texture_pages[];     /* texture_pages */
+extern int NormalClip();
 
 typedef struct {
     unsigned char id, texture_set;
@@ -41,8 +41,8 @@ void func_00036490(void)
     zbuff = *(short **)0x1F80001C;
     prims = (PFT3 *)current->primptr;
 
-    if (func_0007B1E8(outlongs[src->v0], outlongs[src->v1], outlongs[src->v2]) > 0) {
-        prims->rgb = *(int *)&D_000971A0;
+    if (NormalClip(outlongs[src->v0], outlongs[src->v1], outlongs[src->v2]) > 0) {
+        prims->rgb = *(int *)&combointensity;
         ((unsigned char *)prims)[3] = 7;
         ((unsigned char *)prims)[7] = 0x24;
         prims->x0 = ((short *)&outlongs[src->v0])[0];
@@ -57,8 +57,8 @@ void func_00036490(void)
         prims->v1 = src->uv1[1];
         prims->u2 = src->uv2[0];
         prims->v2 = src->uv2[1];
-        prims->clut = D_00087030[src->texture_set][src->texture_id];
-        prims->tpage = D_00086F30[src->texture_set];
+        prims->clut = texture_cluts[src->texture_set][src->texture_id];
+        prims->tpage = texture_pages[src->texture_set];
         z = (zbuff[src->v0] + zbuff[src->v1] + zbuff[src->v2]) / 3;
         prims->tag = (prims->tag & 0xFF000000) | (current->ot[z] & 0xFFFFFF);
         current->ot[z] = (current->ot[z] & 0xFF000000) | ((unsigned int)prims & 0xFFFFFF);

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Compile one candidate C file and score one function against the original.
 
-    tools/fnscore.py SYMBOL FILE.c [--cc 2.7.2] [--opt -O2] [-G 8] [--aspsx 2.79] [--asm]
+    tools/fnscore.py SYMBOL FILE.c [--target main|frontend|mcard|cred|iview] [--cc 2.7.2] [--opt -O2] [-G 8] [--aspsx 2.79] [--asm]
 
 Prints `MATCH <percent>`; 100.0 only when objdiff marks no instruction as
 different (never rounded). The target is the function's split asm
@@ -11,14 +11,29 @@ original PsyQ ccpsx -> aspsx pipeline. Relocations to the same symbol name count
 as equal; a candidate's own rodata (a string, a jump table) against the
 original's D_/jtbl_ label counts as equal when the bytes at the original
 address match (jump tables: same entry count). --asm prints both listings.
+--target picks the binary (tools/targets.py): its asm_fn/nonmatchings/<target>/ dir,
+original file, address -> file offset mapping and -G / MASPSX_EXTERN_G defaults (main
+-G8 / 4, the overlays -G0 / 0). Without it, the target whose asm dir has SYMBOL.s
+(main first).
 Run inside distrobox `build`.
 """
 import argparse, json, os, re, struct, subprocess, sys, tempfile
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import targets  # noqa: E402
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 B = os.path.join(ROOT, "build", "fnscore")
 FN = os.path.join(ROOT, "asm_fn", "nonmatchings", "main")
 EXE = os.path.join(ROOT, "orig", "SLUS_008.42")
+TARGET = "main"
+
+
+def set_target(name):
+    """Point FN / EXE / exe_bytes at another binary (tools/targets.py)."""
+    global FN, EXE, TARGET
+    t = targets.get(name)
+    TARGET, FN, EXE = name, targets.path(t, "fn"), targets.path(t, "orig")
 OBJDIFF = os.environ.get("OBJDIFF", os.path.expanduser("~/.local/opt/decomp/objdiff-cli"))
 AS = ["mips-linux-gnu-as", "-EL", "-Iinclude", "-march=r3000", "-mtune=r3000", "-no-pad-sections", "-G0"]
 CPP = [os.path.join(ROOT, "compilers", "gcc-2.7.2-psx", "cpp"), "-Iinclude", "-Iinclude/shim", "-Iinclude/psyq", "-Isrc", "-undef", "-Wall", "-lang-c", "-nostdinc",
@@ -62,7 +77,7 @@ def compile_c(path, out, a):
         # empirical (2026-10-14): externs of <= 4 bytes are $gp-relative, 8-byte ones are not
         # empirical (2026-10-20): .comm symbols + offset are never gp-relative (aspsx 2.69 behaviour) -
         # all 778 matches unchanged, and func_0002A5CC / func_00051ADC need it
-        env = dict(os.environ, MASPSX_EXTERN_G=os.environ.get("MASPSX_EXTERN_G", "4"),
+        env = dict(os.environ, MASPSX_EXTERN_G=os.environ.get("MASPSX_EXTERN_G", extern_g(a)),
                    MASPSX_GP_ALLOW_OFFSET=os.environ.get("MASPSX_GP_ALLOW_OFFSET", "0"))
         r = subprocess.run(mx, stdin=open(s), cwd=ROOT, capture_output=True, text=True, env=env)
         if r.returncode:
@@ -76,7 +91,14 @@ def compile_c(path, out, a):
     return None
 
 
+def extern_g(a):
+    """MASPSX_EXTERN_G default for the namespace's target (main "4", overlays "0")."""
+    return targets.get(getattr(a, "target", None) or "main")["extern_g"]
+
+
 def exe_bytes(addr, n):
+    if TARGET != "main":
+        return targets.file_bytes(targets.get(TARGET), addr, n)
     d = open(EXE, "rb").read()
     return d[0x800 + addr - 0x10000: 0x800 + addr - 0x10000 + n]
 
@@ -115,7 +137,7 @@ def reloc_target(row):
     """(name, addend) of an instruction's relocation target from objdiff's text:
     '%hi(D_000A8014+0xd)' -> ('D_000A8014', 13); '%lo([.rodata]+0x10)' -> ('.rodata', 16)."""
     t = (row.get("instruction") or {}).get("formatted", "")
-    m = re.search(r"%(?:hi|lo|gp_rel)\(\[?([^)\]+]+)\]?(?:\+(0x[0-9a-fA-F]+|\d+))?\)", t)
+    m = re.search(r"%(?:hi|lo|gp_rel)\(\[?([^)\]+-]+)\]?(?:([+-]0x[0-9a-fA-F]+|[+-]\d+))?\)", t)  # signed addend (run 3)
     if not m:
         m = re.search(r"\b(jtbl_\w+|D_[0-9A-F]{8})\b()", t)
     if not m:
@@ -198,7 +220,9 @@ def main():
     ap.add_argument("file")
     ap.add_argument("--cc", default="2.7.2-cdk")
     ap.add_argument("--opt", default="-O2")
-    ap.add_argument("-G", default="8")
+    ap.add_argument("--target", choices=targets.NAMES, default=None,
+                    help="binary the symbol belongs to (default: the one whose asm dir has SYMBOL.s, main first)")
+    ap.add_argument("-G", default=None, help="cc1/maspsx -G (default: the target's, main 8, overlays 0)")
     ap.add_argument("--aspsx", default="2.79")
     ap.add_argument("--extra", default="")
     ap.add_argument("--asm", action="store_true")
@@ -206,8 +230,12 @@ def main():
     ap.add_argument("--diff", action="store_true", help="print only the rows that differ")
     ap.add_argument("--quiet", action="store_true", help="print only the MATCH line")
     a = ap.parse_args()
+    a.target = a.target or targets.of_symbol(a.symbol)
+    set_target(a.target)
+    if a.G is None:
+        a.G = targets.get(a.target)["G"]
     if not sfile_of(a.symbol):
-        sys.exit(f"{a.symbol}: no asm_fn/nonmatchings/main/{a.symbol}.s")
+        sys.exit(f"{a.symbol}: no {os.path.relpath(FN, ROOT)}/{a.symbol}.s")
     t = target_obj(a.symbol)
     cand = os.path.join(B, "c_" + a.symbol + ".o")
     err = compile_c(os.path.abspath(a.file), cand, a)

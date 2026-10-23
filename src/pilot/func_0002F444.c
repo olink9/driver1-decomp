@@ -5,8 +5,8 @@ typedef struct { short m[3][3]; int t[3]; } MATRIX;
 typedef struct { int vx, vy, vz, pad; } VECTOR;
 
 typedef struct { char *primptr; unsigned int *ot; } DB;
-extern long long D_00097530;
-#define current (*(DB **)&D_00097530)
+extern long long current;
+#define current (*(DB **)&current)
 
 typedef struct { unsigned addr:24; unsigned len:8; } P_TAG;
 
@@ -20,17 +20,17 @@ typedef struct {
 } PF4;
 
 extern VECTOR D_00089384[];
-extern VECTOR D_0008A8F0;
-extern MATRIX D_000BBE84;
+extern VECTOR camera_position;
+extern MATRIX inv_camera_matrix;
 extern short D_000BBE90[];
 extern MATRIX D_000890BC;
 extern VECTOR D_0008909C;
-extern long long D_00096850;
+extern long long gNight;
 extern int D_000969A8;
 extern int D_000969AC;
 extern int D_000969B0;
 extern void func_0002C564();
-extern void func_00079D20();
+extern void SetRotMatrix();
 
 #define gte_SetTransVector(r0) __asm__ volatile ( \
     "lw $12, 0(%0);" "lw $13, 4(%0);" "lw $14, 8(%0);" \
@@ -74,10 +74,10 @@ void func_0002F444(void)
     int i;
 
     for (i = 0; i < 12; i++) {
-        v.vx = D_00089384[i].vx - D_0008A8F0.vx;
-        v.vy = D_00089384[i].vy - D_0008A8F0.vy;
-        v.vz = D_00089384[i].vz - D_0008A8F0.vz;
-        if (D_000BBE84.m[2][0] > 0) {
+        v.vx = D_00089384[i].vx - camera_position.vx;
+        v.vy = D_00089384[i].vy - camera_position.vy;
+        v.vz = D_00089384[i].vz - camera_position.vz;
+        if (inv_camera_matrix.m[2][0] > 0) {
             if (v.vx > 0x3FF70)
                 v.vx = 0x3FF70;
             if (v.vx < 20000)
@@ -96,68 +96,68 @@ void func_0002F444(void)
         sv[i].vy = v.vy;
         sv[i].vz = v.vz;
     }
-    func_00079D20(&D_000890BC);
+    SetRotMatrix(&D_000890BC);
     gte_SetTransVector(&D_0008909C);
 
     {
         int col = D_000969A8;
-        if (*(int *)&D_00096850)
+        if (*(int *)&gNight)
             col >>= 2;
         DrawQuad(&sv[0], &sv[1], &sv[5], &sv[4], col);
     }
     {
         int col = D_000969AC;
-        if (*(int *)&D_00096850)
+        if (*(int *)&gNight)
             col >>= 2;
         DrawQuad(&sv[1], &sv[2], &sv[6], &sv[5], col);
     }
     {
         int col = D_000969B0;
-        if (*(int *)&D_00096850)
+        if (*(int *)&gNight)
             col >>= 2;
         DrawQuad(&sv[2], &sv[3], &sv[7], &sv[6], col);
     }
     {
         int col = D_000969AC;
-        if (*(int *)&D_00096850)
+        if (*(int *)&gNight)
             col >>= 2;
         DrawQuad(&sv[3], &sv[0], &sv[4], &sv[7], col);
     }
     if (D_000BBE90[0] > 0) {
         {
             int col = D_000969B0;
-            if (*(int *)&D_00096850)
+            if (*(int *)&gNight)
                 col >>= 2;
             DrawQuad(&sv[6], &sv[7], &sv[11], &sv[10], col);
         }
         {
             int col = D_000969B0;
-            if (*(int *)&D_00096850)
+            if (*(int *)&gNight)
                 col >>= 2;
             DrawQuad(&sv[5], &sv[6], &sv[10], &sv[10], col);
         }
         {
             int col = D_000969B0;
-            if (*(int *)&D_00096850)
+            if (*(int *)&gNight)
                 col >>= 2;
             DrawQuad(&sv[4], &sv[7], &sv[11], &sv[11], col);
         }
     } else {
         {
             int col = D_000969B0;
-            if (*(int *)&D_00096850)
+            if (*(int *)&gNight)
                 col >>= 2;
             DrawQuad(&sv[2], &sv[3], &sv[9], &sv[8], col);
         }
         {
             int col = D_000969B0;
-            if (*(int *)&D_00096850)
+            if (*(int *)&gNight)
                 col >>= 2;
             DrawQuad(&sv[1], &sv[2], &sv[8], &sv[8], col);
         }
         {
             int col = D_000969B0;
-            if (*(int *)&D_00096850)
+            if (*(int *)&gNight)
                 col >>= 2;
             DrawQuad(&sv[0], &sv[3], &sv[9], &sv[9], col);
         }

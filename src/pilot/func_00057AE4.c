@@ -37,8 +37,8 @@ typedef struct {
     short x2, y2; unsigned char u2, v2; unsigned short pad2;
 } FT3;
 
-extern long long D_00097530;
-extern long long D_00096DC4;
+extern long long current;
+extern long long FastForward;
 extern long long D_00096834;
 extern long long D_000974B4;
 extern long long D_0009754C;
@@ -47,9 +47,9 @@ extern unsigned short D_000975FC;
 extern int D_000975EC;
 extern int D_000975DC;
 extern MAPDEF D_0008B080[];
-extern CAR D_0009B0A4[];
-extern unsigned short D_00087030[][32];
-extern unsigned short D_00086F30[];
+extern CAR car_data[];
+extern unsigned short texture_cluts[][32];
+extern unsigned short texture_pages[];
 extern VEC D_000BE9B4;
 extern char D_00010CD4[];
 extern void DrawPrim();
@@ -57,8 +57,8 @@ extern void func_00058278();
 extern void func_0005813C();
 extern void func_000585D8();
 extern void func_0005847C();
-extern void func_000541C8();
-extern void func_00056278();
+extern void InitOverheadMap();
+extern void LoadMapTile();
 extern void func_0005C8F4();
 
 #define MODE (*(int *)&D_00096834)
@@ -81,8 +81,8 @@ void func_00057AE4(void)
     FT4 *ft;
     FT3 *f3;
 
-    *(int *)&D_00096DC4 = 1;
-    tile = (TILE *)**(int **)&D_00097530;
+    *(int *)&FastForward = 1;
+    tile = (TILE *)**(int **)&current;
     ((unsigned char *)tile)[3] = 3;
     tile->code = 0x60;
     tile->r0 = 0;
@@ -96,8 +96,8 @@ void func_00057AE4(void)
 
     w = D_0008B080[MODE].width;
     h = D_0008B080[MODE].height;
-    pos.x = D_0009B0A4[0].x;
-    pos.y = D_0009B0A4[0].z;
+    pos.x = car_data[0].x;
+    pos.y = car_data[0].z;
     ox = (0x200 - w) >> 1;
     oy = (0xF0 - h) >> 1;
     func_00058278(&pos);
@@ -137,7 +137,7 @@ void func_00057AE4(void)
                 y1 = y0 + sx;
             }
             do {
-                gt = (GT4 *)**(int **)&D_00097530;
+                gt = (GT4 *)**(int **)&current;
                 ((unsigned char *)gt)[3] = 0xC;
                 gt->code = 0x3C;
                 gt->r0 = shade; gt->g0 = shade; gt->b0 = shade; 
@@ -154,13 +154,13 @@ void func_00057AE4(void)
                 gt->x1 = x1; gt->y1 = y0;
                 gt->x2 = x0; gt->y2 = y1;
                 gt->x3 = x1; gt->y3 = y1;
-                gt->clut = D_00087030[*(int *)&D_000974B4][0];
-                gt->tpage = D_00086F30[*(int *)&D_000974B4] | 0x20;
+                gt->clut = texture_cluts[*(int *)&D_000974B4][0];
+                gt->tpage = texture_pages[*(int *)&D_000974B4] | 0x20;
             } while (0);
             DrawPrim(gt);
-            func_00056278(0, i, j);
+            LoadMapTile(0, i, j);
 
-            ft = (FT4 *)**(int **)&D_00097530;
+            ft = (FT4 *)**(int **)&current;
             ((unsigned char *)ft)[3] = 9;
             ft->code = 0x2C;
             ft->r0 = 0x80; ft->g0 = 0x80; ft->b0 = 0x80; 
@@ -170,7 +170,7 @@ void func_00057AE4(void)
             ft->x2 = x0; ft->y2 = y1;
             ft->x3 = x1; ft->y3 = y1;
             ft->clut = D_000975FC;
-            ft->tpage = D_00086F30[*(int *)&D_0009754C];
+            ft->tpage = texture_pages[*(int *)&D_0009754C];
             if (MODE == 0 || MODE == 5) {
                 ft->u0 = 0x80; ft->v0 = 0;
                 ft->u1 = 0x9F; ft->v1 = 0;
@@ -213,8 +213,8 @@ void func_00057AE4(void)
         func_0005813C(&col, &pos2);
         func_0005847C(&pos, &pos2);
     }
-    func_000541C8();
-    f3 = (FT3 *)**(int **)&D_00097530;
+    InitOverheadMap();
+    f3 = (FT3 *)**(int **)&current;
     ((unsigned char *)f3)[3] = 7;
     f3->code = 0x24;
     f3->x0 = -1; f3->y0 = -1;

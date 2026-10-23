@@ -19,7 +19,7 @@ typedef struct { int a; char *b; } ARG;
 extern PL D_000C6F04;
 extern int D_0009D8DC[];
 extern long long D_00097534, D_000967D4, D_000967F4, D_00096808, D_00096C90, D_00096C94;
-extern long long D_00096874, D_00096834, D_0009687C, D_000970A4, D_0008C388, D_00096A08;
+extern long long D_00096874, D_00096834, pauseflag, D_000970A4, D_0008C388, D_00096A08;
 extern long long D_000967E8, D_0009709C;
 extern char *D_0008C388_[] __asm__("D_0008C388");
 extern unsigned char D_000977BC, D_00096F1C, D_00096F1D, D_00096EFC, D_00096EFD;
@@ -37,7 +37,7 @@ extern MENTRY D_0008CCD4[], D_0008CB54[], D_0008CA84[], D_0008CC04[], D_0008C994
 extern MENTRY D_0008C854[], D_0008C784[];
 
 extern void func_0004DF28(), func_000359BC(), func_000514E0(), func_00025C04();
-extern void func_0005C7D0(), func_0005C8F4(), func_0005CC68();
+extern void SetTextColour(), func_0005C8F4(), PrintString();
 extern int func_0006E854(), func_0006C4BC();
 extern int sprintf();
 
@@ -193,7 +193,7 @@ next:
             SetMenu(D_0008C7F4, D_0008C784, 6);
         }
         first = 0;
-        *(int *)&D_0009687C = 1;
+        *(int *)&pauseflag = 1;
     }
 
     D_00096F08 = 1;
@@ -207,20 +207,20 @@ next:
         }
         if (*(int *)&D_000967E8 == 0) {
             if (*(int *)&D_00096A08 == 0) {
-                func_0005C7D0(0xFF, 0xFF, 0xFF);
+                SetTextColour(0xFF, 0xFF, 0xFF);
                 func_0005C8F4(D_000115F4, 0x78);
             } else if (*(int *)&D_00096A08 == -1) {
-                func_0005C7D0(0xFF, 0xFF, 0xFF);
+                SetTextColour(0xFF, 0xFF, 0xFF);
                 func_0005C8F4(D_0001160C, 0x78);
             } else {
                 p = D_000977C0;
                 i = 0;
                 while (p[i].text != 0) {
-                    func_0005C7D0(p[i].r, p[i].g, p[i].b);
+                    SetTextColour(p[i].r, p[i].g, p[i].b);
                     switch (p[i].flag) {
                     case 0:
                     default:
-                        func_0005CC68(p[i].text, p[i].x, p[i].y);
+                        PrintString(p[i].text, p[i].x, p[i].y);
                         break;
                     case 1:
                         func_0005C8F4(p[i].text, p[i].y);
@@ -228,7 +228,7 @@ next:
                     }
                     i++;
                 }
-                func_0005C7D0(0xFF, 0xFF, 0xFF);
+                SetTextColour(0xFF, 0xFF, 0xFF);
             }
             if (D_00096F08 != -1) {
                 D_000977C0[D_00096F08].r = 0xFF;
@@ -239,6 +239,6 @@ next:
         first = 0;
     }
     if (*(int *)&D_0009709C != 0 || D_00096F10 > 0)
-        *(int *)&D_0009687C = 1;
+        *(int *)&pauseflag = 1;
     return D_00096F10;
 }

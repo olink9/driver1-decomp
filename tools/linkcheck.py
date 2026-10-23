@@ -5,7 +5,11 @@
     tools/linkcheck.py SYM...               # only these (src/pilot/SYM.c)
     tools/linkcheck.py --wip SYM...         # also accept src/pilot/SYM.wip.c for these
     tools/linkcheck.py --all --wip SYM...   # the default set plus these
-    [-o pilot/linkcheck.tsv] [-j 8]
+    [-o pilot/linkcheck.tsv] [-j 8] [--target main|frontend|mcard|cred|iview]
+
+--target (tools/targets.py, default main) checks an overlay instead: its baseline asm,
+linker script, original file and sha1, C from src/pilot/<target>/, -G0 (output under
+build/linkcheck-<target>/). Main's behaviour is unchanged.
 
 How it works (all output under build/linkcheck/, nothing else is written):
   * The committed baseline asm (asm/2C8C.s, asm/data/*.s, asm/header.s) - the same
@@ -57,6 +61,7 @@ import argparse, concurrent.futures as cf, glob, hashlib, os, re, struct, subpro
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, "tools"))
 import fnscore  # noqa: E402
+import targets  # noqa: E402
 from elftools.elf.elffile import ELFFile  # noqa: E402
 
 LC = os.path.join(ROOT, "build", "linkcheck")
@@ -72,6 +77,30 @@ VRAM, FILEOFF = 0x10000, 0x800
 ASMFILES = {"asm/2C8C.s": "build/asm/2C8C.o", "asm/data/800.rodata.s": "build/asm/data/800.rodata.o",
             "asm/data/75B14.data.s": "build/asm/data/75B14.data.o", "asm/data/87800.bss.s": "build/asm/data/87800.bss.o",
             "asm/header.s": "build/asm/header.o"}
+TARGET = "main"
+TEXT_ASM = "asm/2C8C.s"
+G, EXTERN_G = "8", "4"
+SRCDIR = os.path.join(ROOT, "src", "pilot")
+BSS_LO = "main_BSS_START"
+
+
+def configure(name):
+    """Point every module setting at target `name` (tools/targets.py)."""
+    global TARGET, LC, BASE, ORIG, LDSCRIPT, SHA1, VRAM, FILEOFF, ASMFILES, TEXT_ASM, UNDEF, G, EXTERN_G
+    global SRCDIR, BSS_LO, RAM_END
+    t = targets.get(name)
+    TARGET = name
+    if name != "main":
+        LC = os.path.join(ROOT, "build", "linkcheck-" + name)
+        BASE = os.path.join(LC, "base")
+    ORIG, LDSCRIPT, SHA1 = targets.path(t, "orig"), targets.path(t, "ldscript"), t["sha1"]
+    VRAM, FILEOFF = t["vram"], t["fileoff"]
+    ASMFILES, TEXT_ASM, UNDEF = dict(t["asmfiles"]), t["text_asm"], list(t["undef"])
+    G, EXTERN_G = t["G"], t["extern_g"]
+    SRCDIR, BSS_LO, RAM_END = targets.path(t, "src"), t["bss_lo"], t["bss_hi"]
+    fnscore.set_target(name)
+
+
 ADDR_RE = re.compile(r"/\*\s+[0-9A-F]+\s+([0-9A-F]{8})\b")
 
 
@@ -225,7 +254,7 @@ def data_layout(files, pieces):
     layout, dups, touched = {}, [], set()
     placed = []                                              # (addr, end, bytes)
     for src, (secname, blocks) in files.items():
-        if src == "asm/2C8C.s" or blocks[0].addr is None:
+        if src == TEXT_ASM or blocks[0].addr is None:
             continue
         lo, hi = blocks[0].addr, blocks[-1].addr + blocks[-1].size
         mine = sorted(p for p in pieces if lo <= p[0] < hi)
@@ -307,7 +336,9 @@ def gen_script(files, repl, pieces, provides, tag, pads=None):
     pads = pads or {}
     out = []
     for line in open(LDSCRIPT).read().split("\n"):
-        m = re.match(r"(\s*)(build/asm/\S+\.o)\((\.\w+)\);$", line)
+        m = re.match(r"(\s*)(build/\S+\.o)\((\.\w+)\);$", line)
+        if m and m.group(2) not in ASMFILES.values():
+            m = None
         if not m:
             if line.strip() == "/DISCARD/ :":
                 for k, (a, txt) in enumerate(dups):
@@ -323,7 +354,7 @@ def gen_script(files, repl, pieces, provides, tag, pads=None):
         secname, blocks = files[src]
         if secname != sec:
             continue                                   # e.g. 800.rodata.o(.bss): empty
-        if src == "asm/2C8C.s":
+        if src == TEXT_ASM:
             for b in blocks:
                 if b.name in repl:
                     out.append(f"{ind}{repl[b.name]}(.text);")
@@ -490,7 +521,8 @@ def place_c(cobj, block, addrs):
             raise LinkErr(f"cannot place C {s} ({secs[s]} bytes): inconsistent bases " +
                           ",".join(f"0x{x:X}" for x in sorted(b)))
         a = b.pop()
-        if "main_BSS_START" not in addrs or a < addrs["main_BSS_START"] or a + secs[s] > RAM_END:
+        lo = addrs.get(BSS_LO) if isinstance(BSS_LO, str) else BSS_LO
+        if lo is None or a < lo or a + secs[s] > RAM_END:
             raise LinkErr(f"C {s} at 0x{a:X} (0x{secs[s]:X} bytes) is outside the original bss")
         out.append((a, secs[s], cobj, s, None))
     for s in need:
@@ -558,13 +590,13 @@ def maspsx_text(cpath, cobj):
     """The maspsx output (assembler input) of cpath, with fnscore.compile_c's settings;
     checked: assembled unchanged, it reproduces cobj."""
     o_keep = cobj[:-2] + ".keep.o"
-    a = types.SimpleNamespace(cc="2.7.2-cdk", opt="-O2", G="8", aspsx="2.79", extra="", keep_s=True)
+    a = types.SimpleNamespace(cc="2.7.2-cdk", opt="-O2", G=G, aspsx="2.79", extra="", keep_s=True, target=TARGET)
     err = fnscore.compile_c(cpath, o_keep, a)
     if err:
         raise LinkErr("compile error: " + " ".join(err.split())[:200])
     # the same maspsx step as fnscore.compile_c; checked below by reassembling unchanged
-    mx = [sys.executable, os.path.join(ROOT, "tools/maspsx/maspsx.py"), "--aspsx-version=2.79", "--expand-div", "-G8"]
-    env = dict(os.environ, MASPSX_EXTERN_G=os.environ.get("MASPSX_EXTERN_G", "4"),
+    mx = [sys.executable, os.path.join(ROOT, "tools/maspsx/maspsx.py"), "--aspsx-version=2.79", "--expand-div", f"-G{G}"]
+    env = dict(os.environ, MASPSX_EXTERN_G=os.environ.get("MASPSX_EXTERN_G", EXTERN_G),
                MASPSX_GP_ALLOW_OFFSET=os.environ.get("MASPSX_GP_ALLOW_OFFSET", "0"))
     r = subprocess.run(mx, stdin=open(o_keep[:-2] + ".cc1.s"), cwd=ROOT, capture_output=True, text=True, env=env)
     if r.returncode:
@@ -689,7 +721,7 @@ def split_c(cpath, cobj, block, addrs, rodata, bss):
 def compile_one(sym, path):
     o = os.path.join(LC, "obj", os.path.basename(path)[:-2] + ".o")
     os.makedirs(os.path.dirname(o), exist_ok=True)
-    a = types.SimpleNamespace(cc="2.7.2-cdk", opt="-O2", G="8", aspsx="2.79", extra="", keep_s=False)
+    a = types.SimpleNamespace(cc="2.7.2-cdk", opt="-O2", G=G, aspsx="2.79", extra="", keep_s=False, target=TARGET)
     os.makedirs(fnscore.B, exist_ok=True)
     err = fnscore.compile_c(path, o, a)
     return o, err
@@ -710,9 +742,11 @@ def main():
     ap.add_argument("--all", action="store_true", help="include every matched src/pilot/*.c as well")
     ap.add_argument("-o", "--out", default=None, help="write a TSV (symbol, pass/fail, detail)")
     ap.add_argument("-j", "--jobs", type=int, default=8)
+    ap.add_argument("--target", choices=targets.NAMES, default="main", help="binary to relink (default main)")
     a = ap.parse_args()
+    configure(a.target)
 
-    pilot = os.path.join(ROOT, "src", "pilot")
+    pilot = SRCDIR
     todo = []                                                   # (sym, path) - snapshot now
     if a.all or (not a.symbols and not a.wip):
         for p in sorted(glob.glob(os.path.join(pilot, "*.c"))):
@@ -738,7 +772,7 @@ def main():
     os.makedirs(srcdir, exist_ok=True)
 
     files = prepare(a.jobs)
-    tblocks = {b.name: b for b in files["asm/2C8C.s"][1]}
+    tblocks = {b.name: b for b in files[TEXT_ASM][1]}
     base_script = gen_script(files, {}, [], {}, "baseline")
     elf, exe = link(base_script, "baseline")
     orig = open(ORIG, "rb").read()
@@ -759,7 +793,7 @@ def main():
         if snap[sym] is None:
             raise LinkErr(f"{os.path.relpath(path, ROOT)} vanished")
         if sym not in tblocks:
-            raise LinkErr(f"no asm block named {sym} in asm/2C8C.s")
+            raise LinkErr(f"no asm block named {sym} in {TEXT_ASM}")
         # compile the snapshot, not the live file (other agents edit src/pilot)
         cpath = os.path.join(srcdir, os.path.basename(path))
         write_if_changed(cpath, snap[sym])
@@ -791,7 +825,7 @@ def main():
         cut = data_layout(files, pieces)[2]
         prov = {}
         for s, b in owner.items():
-            if (b.src == "asm/2C8C.s" and b.name in dropped) or (b.src, b.idx) in cut:
+            if (b.src == TEXT_ASM and b.name in dropped) or (b.src, b.idx) in cut:
                 if s in addrs and s not in repl:
                     prov[s] = addrs[s]
         return prov

@@ -16,10 +16,10 @@ typedef struct {
     int f118;
 } Car;
 
-extern Car D_0009B0A4[];
+extern Car car_data[];
 extern short D_000988C8[];
 extern short D_00096FE8;
-extern long long D_00096850;
+extern long long gNight;
 extern unsigned char D_000C6F02[];
 extern char D_00010000[];
 extern char D_00010018[];
@@ -38,8 +38,8 @@ void func_0001A9BC(void)
     unsigned short v;
     int t;
 
-    dir = func_000635B0(D_0009B0A4[0].fF8);
-    r = func_00021558(D_0009B0A4[0].fC8, D_0009B0A4[0].fD0);
+    dir = func_000635B0(car_data[0].fF8);
+    r = func_00021558(car_data[0].fC8, car_data[0].fD0);
     v = r;
     if (v == 0xFFFF) {
         D_00096FE8 = -1;
@@ -56,25 +56,25 @@ void func_0001A9BC(void)
         }
     }
 
-    t = func_00020AE4(D_0009B0A4[0].fC8, D_0009B0A4[0].fD0);
+    t = func_00020AE4(car_data[0].fC8, car_data[0].fD0);
     if (t != -1 && (t & 0xC000) == 0 && t == ((dir + 2) & 3)) {
         D_000988C8[16]++;
-        if (D_0009B0A4[0].f108 > 120)
+        if (car_data[0].f108 > 120)
             D_000C6F02[0] = 1;
     } else {
         D_000988C8[16] = 0;
     }
     func_000650E4(D_000988C8, 8, 0x1000);
 
-    if (*(int *)&D_00096850 != 0 && D_0009B0A4[0].f114 > 1000 && D_0009B0A4[0].f118 > 1000)
+    if (*(int *)&gNight != 0 && car_data[0].f114 > 1000 && car_data[0].f118 > 1000)
         func_000650E4(D_000988C8, 9, 0x1000);
 
-    if (D_0009B0A4[0].f100 != 0 || abs(D_0009B0A4[0].f110) > 16000)
+    if (car_data[0].f100 != 0 || abs(car_data[0].f110) > 16000)
         D_000988C8[20]++;
     else
         D_000988C8[20] = 0;
     func_000650E4(D_000988C8, 10, 0x1000);
 
-    if (D_0009B0A4[0].f108 > 180)
+    if (car_data[0].f108 > 180)
         func_000650E4(D_000988C8, 2, 0x1000);
 }

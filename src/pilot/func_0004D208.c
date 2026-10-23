@@ -16,12 +16,12 @@ extern long long D_000974CC;
 extern int D_000974BC;
 extern int D_000974C4;
 extern char D_000106C0[];
-extern void func_0004E214();
-extern void func_0004E840();
-extern void func_00050EC4();
-extern void func_0006FB14();
-extern int func_0006FDF0();
-extern void func_00073408();
+extern void LoadSoundBank();
+extern void AllocateReverb();
+extern void LoadfileSeg();
+extern void InitXMData();
+extern int XM_Init();
+extern void XM_Pause();
 extern int func_00073804();
 extern int func_00073880();
 extern int func_00073888();
@@ -48,9 +48,9 @@ void func_0004D208(int a0)
             x = 3;
             y = 0x2000;
         }
-        func_0004E840(x, y);
+        AllocateReverb(x, y);
         *(int *)&D_00097298 = a0;
-        func_00050EC4(addr, buf, a0 << 3, 12);
+        LoadfileSeg(addr, buf, a0 << 3, 12);
         t = P;
         v = buf[1] - buf[0];
         w = buf[2] - buf[1];
@@ -58,10 +58,10 @@ void func_0004D208(int a0)
         D_000974C4 = t;
         P = t + ((v + 3) & -4);
         D_000974BC = P;
-        func_00050EC4(addr, t, buf[0], v + w);
+        LoadfileSeg(addr, t, buf[0], v + w);
         if (D_00096C88_ == -1) {
             D_00096C8C_ = func_00073804();
-            func_0004E214(D_000974BC, w, 2);
+            LoadSoundBank(D_000974BC, w, 2);
             addr = (char *)func_000738CC();
             func_000738D4(P);
             P = P + (int)addr;
@@ -70,8 +70,8 @@ void func_0004D208(int a0)
             P = P + (int)addr;
         }
     }
-    func_0006FB14(D_000974C4, 0, 0);
-    D_00096C88_ = func_0006FDF0(D_00096C8C_, 0, 0, 16, 1, -1, 0, 0);
+    InitXMData(D_000974C4, 0, 0);
+    D_00096C88_ = XM_Init(D_00096C8C_, 0, 0, 16, 1, -1, 0, 0);
     if (D_00096C78_)
-        func_00073408(D_00096C88_);
+        XM_Pause(D_00096C88_);
 }

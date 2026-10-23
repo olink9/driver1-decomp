@@ -1,11 +1,11 @@
-/* Textured quad (POLY_FT4) from scratchpad vertex list, colour from D_000971A0 */
+/* Textured quad (POLY_FT4) from scratchpad vertex list, colour from combointensity */
 typedef struct { char *primptr; unsigned int *ot; } DB;
-extern long long D_00097530;
-#define current (*(DB **)&D_00097530)
-extern long long D_000971A0;
-extern unsigned short D_00087030[][32];
-extern unsigned short D_00086F30[];
-extern int func_0007B1E8();
+extern long long current;
+#define current (*(DB **)&current)
+extern long long combointensity;
+extern unsigned short texture_cluts[][32];
+extern unsigned short texture_pages[];
+extern int NormalClip();
 typedef struct { unsigned addr:24; unsigned len:8; } P_TAG;
 #define setaddr(_p, _addr) (((P_TAG *)(_p))->addr = (unsigned long)(_addr))
 #define getaddr(_p) (unsigned long)(((P_TAG *)(_p))->addr)
@@ -48,8 +48,8 @@ void func_00036724(void)
     zbuff = *(short **)0x1F80001C;
     prims = (PFT4 *)current->primptr;
 
-    if (func_0007B1E8(outlongs[src->v0], outlongs[src->v1], outlongs[src->v2]) > 0) {
-        prims->rgb0 = *(int *)&D_000971A0;
+    if (NormalClip(outlongs[src->v0], outlongs[src->v1], outlongs[src->v2]) > 0) {
+        prims->rgb0 = *(int *)&combointensity;
         ((unsigned char *)prims)[3] = 9;
         ((unsigned char *)prims)[7] = 0x2C;
         prims->x0 = ((short *)&outlongs[src->v0])[0];
@@ -68,8 +68,8 @@ void func_00036724(void)
         prims->v2 = src->uv3[1];
         prims->u3 = src->uv2[0];
         prims->v3 = src->uv2[1];
-        prims->clut = D_00087030[src->texture_set][src->texture_id];
-        prims->tpage = D_00086F30[src->texture_set];
+        prims->clut = texture_cluts[src->texture_set][src->texture_id];
+        prims->tpage = texture_pages[src->texture_set];
         z = (zbuff[src->v0] + zbuff[src->v1] + zbuff[src->v2] + zbuff[src->v3]) / 4;
         addPrim(current->ot + z, prims);
         current->primptr += 0x28;

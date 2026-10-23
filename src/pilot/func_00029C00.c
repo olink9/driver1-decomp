@@ -10,18 +10,18 @@ extern int D_000A5D7C[];
 extern int D_000A1CCC[];
 extern VECTOR D_000A20DC[];
 extern VECTOR D_000A211C[];
-extern TRAIL D_000A295C[][64];
-extern unsigned short *D_000A0E20[];
+extern TRAIL track_buffer[][64];
+extern unsigned short *modelpointers[];
 extern B8 D_00097028;
 extern int D_000A294C[];
-extern long long D_00097424;
+extern long long wetness;
 extern short D_0008EAAA[];
 extern int D_000A1C08[];
 extern B8 D_0009701C;
 
-extern int func_000217C8();
-extern void func_000466D4();
-extern void func_00047A90();
+extern int ROADS_GetRouteData();
+extern void GetSmokeDrift();
+extern void Setup_Smoke();
 extern void func_00047FA4();
 extern int ratan2();
 
@@ -45,12 +45,12 @@ void func_00029C00(int player)
     b = &D_000A211C[player];
     if (idx >= 64)
         idx -= 64;
-    t = &D_000A295C[player][idx];
+    t = &track_buffer[player][idx];
 
-    if (func_000217C8(b->vx, b->vz, surf) != 0) {
-        if (D_000A0E20[surf[0]][0] & 0x80)
+    if (ROADS_GetRouteData(b->vx, b->vz, surf) != 0) {
+        if (modelpointers[surf[0]][0] & 0x80)
             return;
-        if (D_000A0E20[surf[0]][1] & 0x4000) {
+        if (modelpointers[surf[0]][1] & 0x4000) {
             t->type = 2;
             D_00097028.v = 1;
         } else
@@ -63,13 +63,13 @@ void func_00029C00(int player)
     pos.vz = b->vz;
 
     if ((D_000A294C[player]++ & 3) == 1) {
-        func_000466D4(&vel);
+        GetSmokeDrift(&vel);
         if (t->type == 2) {
             VECTOR v2 = {0, 50, 0};
-            func_00047A90(&pos, 100, 500, 3, 0, &vel, 0);
+            Setup_Smoke(&pos, 100, 500, 3, 0, &vel, 0);
             func_00047FA4(&pos, &v2, 5, 2);
-        } else if (*(int *)&D_00097424 == 0) {
-            func_00047A90(&pos, 100, 500, 2, 0, &vel, 0);
+        } else if (*(int *)&wetness == 0) {
+            Setup_Smoke(&pos, 100, 500, 2, 0, &vel, 0);
         }
     }
 

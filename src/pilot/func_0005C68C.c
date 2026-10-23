@@ -4,7 +4,7 @@ extern int D_000976A0;
 extern int D_00097688;
 extern volatile long long D_00097534;
 extern char *D_000BF7EC[];
-extern void func_00050E28();
+extern void Loadfile();
 extern int printf();
 
 void func_0005C68C(void)
@@ -16,7 +16,7 @@ void func_0005C68C(void)
 
     int t = *(int *)&D_00097098;
     D_000976A0 = t;
-    func_00050E28(D_00096E30, t);
+    Loadfile(D_00096E30, t);
     p = (unsigned char *)D_000976A0;
     D_00097688 = 0xA4;
     *(int *)&D_00097098 = *(int *)&D_00097098 + 0x9C4;

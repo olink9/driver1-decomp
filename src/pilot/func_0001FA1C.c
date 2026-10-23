@@ -1,15 +1,15 @@
-extern char D_0009B0A4[];
+extern char car_data[];
 extern long long D_00096898;
 extern int D_0009700C, D_00097010, D_00097014, D_00097018, D_00097034;
-extern void func_000774C4();
+extern void memset();
 extern int func_000776E4();
 extern void func_0001B4A4();
 
 void func_0001FA1C(void) {
     int buf[4];
     int i;
-    char *p = D_0009B0A4;
-    func_000774C4(buf, 0, 16);
+    char *p = car_data;
+    memset(buf, 0, 16);
     D_00097010 = 1;
     if ((*(unsigned char *)&D_00096898) == 0) {
         D_00097018 = -((func_000776E4() & 0x3ff) + 0x2ee);

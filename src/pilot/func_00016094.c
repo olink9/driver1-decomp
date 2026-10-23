@@ -25,7 +25,7 @@ extern CAR D_0009B230[];
 extern ENT D_00098950[];
 extern int func_00017A64(void);
 extern void func_00020A64(CAR *);
-extern void func_000774C4(void *, int, int);
+extern void memset(void *, int, int);
 extern void func_0001B4A4(CAR *, VECTOR *);
 extern void func_0003EB0C(int, unsigned int);
 extern void func_0001B720(CAR *, int);
@@ -69,7 +69,7 @@ CAR *func_00016094(int model, int a1, int a2, int x, int z)
         cp->y = 200;
         cp->z = z;
         func_00020A64(cp);
-        func_000774C4(&v, 0, 16);
+        memset(&v, 0, 16);
         v.vx = cp->x;
         v.vy = cp->y;
         v.vz = cp->z;

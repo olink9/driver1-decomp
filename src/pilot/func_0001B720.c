@@ -44,15 +44,15 @@ typedef struct {
     char pad4E[0x64 - 0x4E];
 } COS;
 
-extern COS D_0009AF04[];
+extern COS car_cosmetics[];
 extern long long D_00096858;
 extern COS D_000853D8[];
 extern CAR D_0009D438;
 extern long long D_00096898;
 extern short D_0008EAAA[];
 extern int func_000525B8();
-extern void func_0001D3EC();
-extern void func_0001B380();
+extern void SetShadowPoints();
+extern void LongQuaternion2Matrix();
 
 static inline void RebuildCarMatrix(ST *st, CAR *cp)
 {
@@ -79,7 +79,7 @@ static inline void RebuildCarMatrix(ST *st, CAR *cp)
         st->orientation[2] = (sm * st->orientation[2] + 0x800) >> 12;
         st->orientation[3] = (sm * st->orientation[3] + 0x800) >> 12;
     }
-    func_0001B380(st->orientation, cp->where);
+    LongQuaternion2Matrix(st->orientation, cp->where);
 }
 
 void func_0001B720(CAR *cp, int init)
@@ -88,7 +88,7 @@ void func_0001B720(CAR *cp, int init)
     int i;
 
     i = cp->model;
-    dz = D_0009AF04[i].d0 + D_0009AF04[i].d1;
+    dz = car_cosmetics[i].d0 + car_cosmetics[i].d1;
     if (cp == &D_0009D438) {
         if (*(unsigned char *)&D_00096898 == 3 || *(unsigned char *)&D_00096898 == 6) {
             i = func_000525B8();
@@ -114,5 +114,5 @@ void func_0001B720(CAR *cp, int init)
     }
 
     RebuildCarMatrix(&cp->st, cp);
-    func_0001D3EC(cp);
+    SetShadowPoints(cp);
 }

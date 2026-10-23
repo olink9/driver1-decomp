@@ -21,16 +21,16 @@ typedef struct {
 
 typedef struct { short type; short pad[3]; } SURF;
 
-extern long long D_0009687C;
-extern CAR D_0009B0A4[];
-extern unsigned short *D_000A0E20[];
+extern long long pauseflag;
+extern CAR car_data[];
+extern unsigned short *modelpointers[];
 extern MATRIX D_000AF6A0[];
 extern PARTICLE D_000B92A0[];
 extern int func_000776E4();
-extern void func_00079D20();
+extern void SetRotMatrix();
 extern void func_0004EAC0();
 extern int func_00042678();
-extern int func_000217C8();
+extern int ROADS_GetRouteData();
 
 void func_000412D4(int car, short height, int type)
 {
@@ -40,7 +40,7 @@ void func_000412D4(int car, short height, int type)
     int idx;
     PARTICLE *p;
 
-    if (*(int *)&D_0009687C)
+    if (*(int *)&pauseflag)
         return;
 
     count = 15;
@@ -55,18 +55,18 @@ void func_000412D4(int car, short height, int type)
             pos.vx = (func_000776E4() & 0x1FF) - 256;
             pos.vz = (func_000776E4() & 0x400) - 512;
         }
-        func_00079D20(&D_000AF6A0[car]);
+        SetRotMatrix(&D_000AF6A0[car]);
         func_0004EAC0(&pos);
-        pos.vx += D_0009B0A4[car].t[0];
+        pos.vx += car_data[car].t[0];
         pos.vy = -height;
-        pos.vz += D_0009B0A4[car].t[2];
+        pos.vz += car_data[car].t[2];
 
         idx = func_00042678();
         if (idx < 0)
             return;
 
         if (type) {
-            if (func_000217C8(pos.vx, pos.vz, &surf) && (*D_000A0E20[surf.type] & 0x80)) {
+            if (ROADS_GetRouteData(pos.vx, pos.vz, &surf) && (*modelpointers[surf.type] & 0x80)) {
                 p = &D_000B92A0[idx];
                 p->pos = pos;
                 p->flags = 0x8006;

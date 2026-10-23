@@ -17,7 +17,7 @@ extern int D_0009742C;
 extern int D_00097430;
 extern int D_00097444;
 extern int D_00097478;
-extern int D_00097480;
+extern int LightSortCorrect;
 extern int D_00097488;
 extern int D_0009745C;
 extern short D_0009744C;
@@ -26,9 +26,9 @@ extern long long D_00097450;
 extern short D_0009746C;
 extern long long D_0009746E;
 extern long long D_00097470;
-extern S24 D_000B738C[];
+extern S24 Known_Lamps[];
 extern short D_000B9048[];
-extern S40 D_000BABC0[];
+extern S40 debris[];
 extern char D_000B9008[];
 extern char D_000BBA80[];
 extern TRI *D_0008A864[];
@@ -43,7 +43,7 @@ extern S24b D_000B7F3C[];
 extern int func_000776E4();
 extern void func_0004EA98();
 extern void func_0004EAC0();
-extern void func_00079D20();
+extern void SetRotMatrix();
 
 void func_00042290(void)
 {
@@ -55,15 +55,15 @@ void func_00042290(void)
 
     *(int *)&D_00096CD0 = 0;
     for (i = 0; i < 20; i++)
-        D_000B738C[i].f16 = 0;
+        Known_Lamps[i].f16 = 0;
     D_00097448 = 0;
     if (*(int *)&D_00096804 == 1)
         return;
     D_00097488 = func_000776E4() % 7;
     for (D_00097414 = 0; D_00097414 < 60; D_00097414++) {
         D_000B9048[D_00097414] = D_00097414;
-        D_000BABC0[D_00097414].f1E = 0;
-        D_000BABC0[D_00097414].f1C = D_00097414;
+        debris[D_00097414].f1E = 0;
+        debris[D_00097414].f1C = D_00097414;
     }
     *(short *)&D_00097450 = 0;
     *(short *)&D_0009744E = 0;
@@ -76,9 +76,9 @@ void func_00042290(void)
         func_0004EA98(D_000BBA80, &D_0009746C);
         for (i = 0; i < 5; i++) {
             if (i == 1)
-                func_00079D20(D_000BBA80);
+                SetRotMatrix(D_000BBA80);
             else
-                func_00079D20(D_000B9008);
+                SetRotMatrix(D_000B9008);
             t = *D_0008A864[i];
             func_0004EAC0(&t.v[0]);
             func_0004EAC0(&t.v[1]);
@@ -122,6 +122,6 @@ void func_00042290(void)
         D_000B8190[j].f0 = 0;
     for (j = 0; j < 8; j++)
         D_000B7F3C[j].f0 = 0;
-    D_00097480 = -10;
+    LightSortCorrect = -10;
     D_0009745C = 0;
 }

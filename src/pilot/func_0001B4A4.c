@@ -43,11 +43,11 @@ typedef struct {
     char pad4E[0x64 - 0x4E];
 } COS;
 
-extern COS D_0009AF04[];
+extern COS car_cosmetics[];
 extern long long D_00096858;
 extern long long D_000972E4;
 extern long long D_000972DC;
-extern void func_0001B380();
+extern void LongQuaternion2Matrix();
 
 static inline void RebuildCarMatrix(ST *st, CAR *cp)
 {
@@ -74,7 +74,7 @@ static inline void RebuildCarMatrix(ST *st, CAR *cp)
         st->orientation[2] = (sm * st->orientation[2] + 0x800) >> 12;
         st->orientation[3] = (sm * st->orientation[3] + 0x800) >> 12;
     }
-    func_0001B380(st->orientation, cp->where);
+    LongQuaternion2Matrix(st->orientation, cp->where);
 }
 
 void func_0001B4A4(CAR *cp, int *startpos)
@@ -82,7 +82,7 @@ void func_0001B4A4(CAR *cp, int *startpos)
     int dz;
     int i;
 
-    dz = D_0009AF04[cp->model].d0 + D_0009AF04[cp->model].d1;
+    dz = car_cosmetics[cp->model].d0 + car_cosmetics[cp->model].d1;
     dz = dz / 32;
     cp->f17F = 0;
     cp->f17E = 0;

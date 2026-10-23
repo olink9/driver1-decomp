@@ -10,8 +10,8 @@ typedef struct {
     char pad3[132 - 0x6C];
 } CH;
 extern CH D_000BD498[];
-extern int func_0004E4B0();
-extern int func_0004D968();
+extern int GetFreeChannel();
+extern int CompleteSoundSetup();
 int func_0004D8B0(int ch, int bank, int sample, int x, int y, int z)
 {
     CH *c;
@@ -20,7 +20,7 @@ int func_0004D8B0(int ch, int bank, int sample, int x, int y, int z)
 
     n = ch;
     if (ch < 0)
-        n = func_0004E4B0();
+        n = GetFreeChannel();
     ch = n;
     if ((unsigned)ch >= 16)
         return -1;
@@ -31,5 +31,5 @@ int func_0004D8B0(int ch, int bank, int sample, int x, int y, int z)
     c->pos[1] = y;
     c->pos[2] = z;
     c->srcvolume = 0;
-    return func_0004D968(ch, bank, sample, 0x1000);
+    return CompleteSoundSetup(ch, bank, sample, 0x1000);
 }

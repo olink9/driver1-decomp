@@ -17,7 +17,7 @@ extern int D_000C0340[];
 extern int D_000976C0, D_000976B8;
 extern char D_000976C8;
 extern L *D_000976CC;
-extern void func_000774C4();
+extern void memset();
 extern void func_0005EFD0();
 
 void func_0005EF08(void)
@@ -27,7 +27,7 @@ void func_0005EF08(void)
     L *l;
 
     l = D_000976CC;
-    func_000774C4(D_000BFA7C, 0, 0x6E0);
+    memset(D_000BFA7C, 0, 0x6E0);
     func_0005EFD0();
     D_000976C0 = 0;
     for (i = 0; i < 20; i++) {

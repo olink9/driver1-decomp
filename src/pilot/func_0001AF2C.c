@@ -25,11 +25,11 @@ typedef struct {
     char pad12[0x50 - 0x12];
 } CIV;
 
-extern CAR_DATA D_0009B0A4[];
+extern CAR_DATA car_data[];
 extern CIV D_00098900[];
-extern VECTOR D_0008A8F0;
+extern VECTOR camera_position;
 extern long long D_00096834;
-extern int func_0001F5B0(VECTOR *pos);
+extern int MapHeight(VECTOR *pos);
 extern void func_0001B4A4(CAR_DATA *cp, VECTOR *pos);
 extern void func_0001B720(CAR_DATA *cp, int n);
 extern void func_0003EB0C(int a, int b);
@@ -54,11 +54,11 @@ void func_0001AF2C(int slot, VECTOR *pos, int a2, int type, int arg4)
     CAR_DATA *cp;
     CIV *civ;
 
-    ClearMem((unsigned char *)&D_0009B0A4[slot], sizeof(CAR_DATA));
+    ClearMem((unsigned char *)&car_data[slot], sizeof(CAR_DATA));
     tmp.vx = pos->vx;
     tmp.vz = pos->vz;
-    tmp.vy = func_0001F5B0(&tmp) + 0xA3;
-    cp = &D_0009B0A4[slot];
+    tmp.vy = MapHeight(&tmp) + 0xA3;
+    cp = &car_data[slot];
     func_0001B4A4(cp, &tmp);
     cp->fF8 = a2;
     func_0001B720(cp, 1);
@@ -79,9 +79,9 @@ void func_0001AF2C(int slot, VECTOR *pos, int a2, int type, int arg4)
         func_0003EB0C(0, 0);
     }
 
-    D_0009B0A4[slot].id = slot;
-    D_0009B0A4[slot].controlType = type;
-    D_0008A8F0.vx = D_0009B0A4[slot].x;
-    D_0008A8F0.vy = -400;
-    D_0008A8F0.vz = D_0009B0A4[slot].z;
+    car_data[slot].id = slot;
+    car_data[slot].controlType = type;
+    camera_position.vx = car_data[slot].x;
+    camera_position.vy = -400;
+    camera_position.vz = car_data[slot].z;
 }

@@ -33,7 +33,7 @@ extern unsigned char D_00099AF0[];
 extern int D_00099120[];
 extern int D_0009677C, D_00096FD0, D_00096FF0;
 extern unsigned char D_00096FC4;
-extern volatile long long D_000970D8;
+extern volatile long long CameraCnt;
 extern long long D_0009704C;
 extern int func_00019DAC();
 extern void func_000197E0(), func_00063AB4(), func_0001A008();
@@ -64,9 +64,9 @@ int func_00019AF4(OBJ *p)
         e = &D_00098950[id];
         snd = e->f5;
         if (e->f1 != 0 && D_0009677C != 0) {
-            if (*(volatile int *)&D_000970D8 != D_00096FD0 || id != D_00096FF0) {
+            if (*(volatile int *)&CameraCnt != D_00096FD0 || id != D_00096FF0) {
                 D_00096FF0 = id;
-                D_00096FD0 = *(volatile int *)&D_000970D8;
+                D_00096FD0 = *(volatile int *)&CameraCnt;
             }
         }
         if (snd != 0)

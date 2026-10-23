@@ -27,7 +27,7 @@ typedef struct {
 
 extern CAR D_0009B230[];
 extern COP D_000C4690[];
-extern short D_0008EAA8[];
+extern short rcossin_tbl[];
 extern int ratan2();
 #define ABS(x) ((x) < 0 ? -(x) : (x))
 
@@ -80,16 +80,16 @@ int func_00063E54(COP *cop, unsigned char *p)
             if (speed != 0)
                 steps = d / speed;
             if (steps < 4) {
-                cdx = (speed * D_0008EAA8[(cang & 0xFFF) * 2]) >> 12;
-                cdz = (speed * D_0008EAA8[(cang & 0xFFF) * 2 + 1]) >> 12;
-                kdx = (carspeed * D_0008EAA8[(ang & 0xFFF) * 2]) >> 12;
-                kdz = (carspeed * D_0008EAA8[(ang & 0xFFF) * 2 + 1]) >> 12;
+                cdx = (speed * rcossin_tbl[(cang & 0xFFF) * 2]) >> 12;
+                cdz = (speed * rcossin_tbl[(cang & 0xFFF) * 2 + 1]) >> 12;
+                kdx = (carspeed * rcossin_tbl[(ang & 0xFFF) * 2]) >> 12;
+                kdz = (carspeed * rcossin_tbl[(ang & 0xFFF) * 2 + 1]) >> 12;
             } else {
                 steps = steps / 4;
-                cdx = (speed * D_0008EAA8[(cang & 0xFFF) * 2]) >> 10;
-                cdz = (speed * D_0008EAA8[(cang & 0xFFF) * 2 + 1]) >> 10;
-                kdx = (carspeed * D_0008EAA8[(ang & 0xFFF) * 2]) >> 10;
-                kdz = (carspeed * D_0008EAA8[(ang & 0xFFF) * 2 + 1]) >> 10;
+                cdx = (speed * rcossin_tbl[(cang & 0xFFF) * 2]) >> 10;
+                cdz = (speed * rcossin_tbl[(cang & 0xFFF) * 2 + 1]) >> 10;
+                kdx = (carspeed * rcossin_tbl[(ang & 0xFFF) * 2]) >> 10;
+                kdz = (carspeed * rcossin_tbl[(ang & 0xFFF) * 2 + 1]) >> 10;
             }
             if (steps > 20)
                 steps = 20;

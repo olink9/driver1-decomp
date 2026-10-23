@@ -15,8 +15,8 @@ extern I4 D_00097134;
 extern int D_00097158;
 extern unsigned int *D_00096950;
 extern CLIPPT D_000A1BC8[];
-extern long long D_00097530;
-#define current (*(DB **)&D_00097530)
+extern long long current;
+#define current (*(DB **)&current)
 #define pts D_000A1BC8
 
 extern void func_00028AF8(int a, int b);

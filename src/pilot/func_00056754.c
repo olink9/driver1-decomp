@@ -2,8 +2,8 @@
 #include "gte.h"
 
 typedef struct { char *primptr; unsigned int *ot; } DB;
-extern long long D_00097530;
-#define current (*(DB **)&D_00097530)
+extern long long current;
+#define current (*(DB **)&current)
 
 typedef struct { short vx, vy, vz, pad; } SVECTOR;
 typedef struct { long vx, vy, vz, pad; } VECTOR;
@@ -33,12 +33,12 @@ typedef struct { unsigned addr:24; unsigned len:8; } P_TAG;
     "swc2  $12, 0( %0 );" "swc2  $13, 0( %1 );" "swc2  $14, 0( %2 )" : : "r"(r0), "r"(r1), "r"(r2) : "memory")
 #define b062_stsz(r0) __asm__ volatile ("swc2  $19, 0( %0 )" : : "r"(r0) : "memory")
 
-extern VECTOR D_0008A8F0;   /* camera_position */
+extern VECTOR camera_position;   /* camera_position */
 extern MATRIX D_000B8FE8;
 extern int func_000398B0();
 extern int func_0002C5F0();
 extern void func_0002C564();
-extern void func_00057734();
+extern void DrawStopZone();
 
 void func_00056754(MDL_b062 *m, VECTOR *pos, int flag)
 {
@@ -61,9 +61,9 @@ void func_00056754(MDL_b062 *m, VECTOR *pos, int flag)
     n = 1;
     verts = m->verts;
     while (n--) {
-        vp->vx = pp->vx - D_0008A8F0.vx;
-        vp->vy = pp->vy - D_0008A8F0.vy;
-        vp->vz = pp->vz - D_0008A8F0.vz;
+        vp->vx = pp->vx - camera_position.vx;
+        vp->vy = pp->vy - camera_position.vy;
+        vp->vz = pp->vz - camera_position.vz;
         func_0002C564(vp);
         pp++;
         vp++;
@@ -92,5 +92,5 @@ void func_00056754(MDL_b062 *m, VECTOR *pos, int flag)
         current->primptr += 20;
     }
     if (!flag)
-        func_00057734(pos);
+        DrawStopZone(pos);
 }

@@ -48,16 +48,16 @@ typedef struct {
 } PFT4;
 
 extern OBJ **D_0009719C;
-extern MODEL *D_000A0E20[];
-extern VECTOR D_0008A8F0;
-extern MATRIX D_000A5E3C[];
+extern MODEL *modelpointers[];
+extern VECTOR camera_position;
+extern MATRIX CompoundMatrix[];
 extern long long D_000974B4;
-extern unsigned short D_00087030[][32];
-extern unsigned short D_00086F30[];
-extern long long D_00097530;
-#define current (*(DB **)&D_00097530)
+extern unsigned short texture_cluts[][32];
+extern unsigned short texture_pages[];
+extern long long current;
+#define current (*(DB **)&current)
 extern int func_0002680C();
-extern void func_00074D54();
+extern void SetDrawMode();
 
 #define gte_SetRotMatrix(r0) __asm__ volatile ( \
     "lw    $12, 0( %0 );" "lw    $13, 4( %0 );" "ctc2  $12, $0;" "ctc2  $13, $1;" \
@@ -101,19 +101,19 @@ void func_0002EB94(int count)
 
     for (i = 0; i < count; i++) {
         obj = list[i];
-        model = D_000A0E20[obj->model];
+        model = modelpointers[obj->model];
         polys = model->polys;
         verts = model->verts;
         if (i == 0) {
             if (obj->flags & 0x20)
-                uvbase->u = (D_0008A8F0.vx >> 7) & 0x3F;
+                uvbase->u = (camera_position.vx >> 7) & 0x3F;
             else
-                uvbase->u = (D_0008A8F0.vz >> 7) & 0x3F;
-            uvbase->v = (D_0008A8F0.vy >> 5) & 0x3F;
+                uvbase->u = (camera_position.vz >> 7) & 0x3F;
+            uvbase->v = (camera_position.vy >> 5) & 0x3F;
             z = func_0002680C(obj);
-            gte_SetRotMatrix(&D_000A5E3C[obj->flags]);
-            clut = D_00087030[*(int *)&D_000974B4][0] << 16;
-            tpage = (D_00086F30[*(int *)&D_000974B4] | 0x20) << 16;
+            gte_SetRotMatrix(&CompoundMatrix[obj->flags]);
+            clut = texture_cluts[*(int *)&D_000974B4][0] << 16;
+            tpage = (texture_pages[*(int *)&D_000974B4] | 0x20) << 16;
         }
         gte_ldv3c(verts);
         gte_rtpt();
@@ -169,7 +169,7 @@ void func_0002EB94(int count)
             ft3->uv1tpage = uv[1].w | tpage;
             ft3->uv2 = uv[2].w;
             polys = (unsigned char *)(f3 + 1);
-            func_00074D54(polys, 1, 1, 0x40, 0);
+            SetDrawMode(polys, 1, 1, 0x40, 0);
             addPrim(&current->ot[z], ft3);
             addPrim(&current->ot[z], f3);
             addPrim(&current->ot[z], polys);
@@ -199,7 +199,7 @@ void func_0002EB94(int count)
             ft4->uv2 = uv[3].w;
             ft4->uv3 = uv[2].w;
             polys = (unsigned char *)(f4 + 1);
-            func_00074D54(polys, 1, 1, 0x40, 0);
+            SetDrawMode(polys, 1, 1, 0x40, 0);
             addPrim(&current->ot[z], ft4);
             addPrim(&current->ot[z], f4);
             addPrim(&current->ot[z], polys);

@@ -4,7 +4,7 @@ typedef struct { char pad[1960]; } S1960;
 extern S50 D_00098950[];
 extern S1960 D_000C4690[];
 extern int D_0009677C;
-extern volatile long long D_000970D8;
+extern volatile long long CameraCnt;
 extern int D_00096FD0;
 extern int D_00096FF0;
 extern unsigned char D_00096FC4;
@@ -19,9 +19,9 @@ void func_00017C50(int a)
     unsigned char x = p->f5;
 
     if (p->f1 != 0 && D_0009677C != 0) {
-        if (*(volatile int *)&D_000970D8 != D_00096FD0 || a != D_00096FF0) {
+        if (*(volatile int *)&CameraCnt != D_00096FD0 || a != D_00096FF0) {
             D_00096FF0 = a;
-            D_00096FD0 = *(volatile int *)&D_000970D8;
+            D_00096FD0 = *(volatile int *)&CameraCnt;
         }
     }
     if (x != 0) {
