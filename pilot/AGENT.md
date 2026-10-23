@@ -31,6 +31,23 @@ Work through them in order. For each one:
 --expand-div -G8`, plus the extern patch below) and GNU as. These are fnscore's defaults; don't change them.
 GCC 2.7.2-psx and 2.8.x each failed functions that cdk matches.
 
+## Overlays: FRONTEND.BIN / MCARD.BIN (added 2026-10-23)
+Same compiler, but **built -G0** (confirmed on 8 functions: 6 FRONTEND, 2 MCARD; -G8 fails them). fnscore,
+linkcheck and permsetup pick this up by themselves: don't pass `-G`.
+- Queue: `pilot/queue-frontend.tsv` / `pilot/queue-mcard.tsv` (`tools/nextbatch.py N --target frontend`).
+- Write `src/pilot/frontend/<SYMBOL>.c` (MCARD: `src/pilot/mcard/`). `tools/fnasm.py SYMBOL` and
+  `tools/fnscore.py SYMBOL src/pilot/frontend/SYMBOL.c --diff` find the overlay from the symbol name
+  (or pass `--target frontend`). Log to the same `pilot/results.tsv`.
+- **Every global is absolute** (`lui` + `%lo`), including main's `.sdata` variables that main itself reaches
+  through `$gp`. Declare globals with their natural type (`extern int D_x;`, `extern short`, `extern char`, arrays
+  `extern T D_x[]`); main's `extern long long` 8-byte trick is a -G8 artifact and does NOT apply here.
+- References into main use main's spelling (`func_00073F88`, `SetDispMask`, `D_000967F4`); FRONTEND and MCARD call
+  each other directly (`func_000E6D60`, `func_001C334C`), declare those as plain externs.
+- A raw `(0xE6600 >> 16)` / `(0xE6600 & 0xFFFF)` in the asm is a plain number (a load address or buffer), not a symbol:
+  write it as an integer constant, e.g. `(char *)0xE6600`.
+- Proof: `tools/linkcheck.py --target frontend` (`--target mcard`) relinks the overlay; final arbiter as for main.
+- ~200 FRONTEND functions are 8-40 B menu callbacks (`return 0;`, `D_x = 0;`, `f(); return 0;`): 1 attempt each.
+
 ## What the pilot learned
 - **Globals come in three addressing forms; declare them to match:**
   - `%gp_rel(D_x)($gp)`: a small extern of ≤4 bytes: `extern int D_x;` / `extern char D_x;`.

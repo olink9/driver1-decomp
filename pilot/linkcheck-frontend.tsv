@@ -1,0 +1,8 @@
+symbol	result	detail
+func_001C0CEC	pass	src/pilot/frontend/func_001C0CEC.c: 0x001C0CEC size 0xC; exe identical
+func_001C0EE8	pass	src/pilot/frontend/func_001C0EE8.c: 0x001C0EE8 size 0x28; exe identical
+func_001C5F78	pass	src/pilot/frontend/func_001C5F78.c: 0x001C5F78 size 0x20; exe identical
+func_001C60D0	pass	src/pilot/frontend/func_001C60D0.c: 0x001C60D0 size 0x8; exe identical
+func_001C6EA4	pass	src/pilot/frontend/func_001C6EA4.c: 0x001C6EA4 size 0x18; exe identical
+func_001CA270	pass	src/pilot/frontend/func_001CA270.c: 0x001CA270 size 0x28; exe identical
+(combined)	pass	6 passing functions linked together: sha1 62f9e054eccd83f0aa688b6e1b5aad5693f35849

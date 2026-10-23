@@ -1,0 +1,4 @@
+symbol	result	detail
+func_000EC260	pass	src/pilot/mcard/func_000EC260.c: 0x000EC260 size 0x20; exe identical
+func_000EC4DC	pass	src/pilot/mcard/func_000EC4DC.c: 0x000EC4DC size 0x2C; exe identical
+(combined)	pass	2 passing functions linked together: sha1 d25d51e8bf2226168551f46da83b238f7a62754b

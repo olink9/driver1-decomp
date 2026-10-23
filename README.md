@@ -126,6 +126,19 @@ Scoring one function, and the link check:
 .venv/bin/python tools/progress.py                                    # the table above
 ```
 
+Code overlays (FRONTEND.BIN at 0x1C0000 and MCARD.BIN at 0xE6600, resident together; copy them from
+`\DRIVER\` on the disc to `orig/`). They are built `-G0` (no `$gp` access at all), and references into the
+executable resolve through main's ELF (`tools/mainsyms.py` exports its symbols), so build main first:
+```sh
+make && .venv/bin/python tools/mainsyms.py      # build/main_syms.txt + build/main_syms.ld
+for y in frontend mcard fn_frontend fn_mcard; do .venv/bin/python -m splat split $y.yaml; done
+make overlays                                   # build/FRONTEND.BIN: OK, build/MCARD.BIN: OK
+.venv/bin/python tools/fnscore.py func_001C0CEC src/pilot/frontend/func_001C0CEC.c   # target found from the symbol
+.venv/bin/python tools/linkcheck.py --target frontend -o pilot/linkcheck-frontend.tsv
+```
+`tools/targets.py` lists the binaries; `--target main|frontend|mcard` works in fnscore, linkcheck,
+permsetup, mkqueue, nextbatch and progress.
+
 `objdiff-cli` is expected at `~/.local/opt/decomp/objdiff-cli`; set `OBJDIFF` to override. The Driver 2
 hints in `fnasm.py` need two optional checkouts, each with its own environment variable:
 - `REDRIVER2_GAME`: the `src_rebuild/Game` directory of OpenDriver2/REDRIVER2.
@@ -136,11 +149,14 @@ hints in `fnasm.py` need two optional checkouts, each with its own environment v
 | Path | |
 |---|---|
 | `src/pilot/*.c` | matched functions, one file each; `.wip.c` = best attempt so far |
+| `src/pilot/frontend/`, `src/pilot/mcard/` | the same for the FRONTEND.BIN / MCARD.BIN overlays |
 | `include/` | PsyQ types and macros (PsyCross headers, configured for real PSX layouts), `gte.h` |
 | `slus_008.42.yaml`, `fn.yaml` | splat configs: baseline build, and one asm file per function |
+| `frontend.yaml`, `mcard.yaml`, `fn_*.yaml` | the same for the overlays; `symbol_addrs.<overlay>.txt` are their symbols |
 | `symbol_addrs.txt` | named symbols (PsyQ library, confirmed names) |
 | `pilot/AGENT.md` | the matching guide: toolchain, rules, ~80 compiler patterns learned so far |
 | `pilot/queue.tsv` | all 799 game functions, smallest first |
+| `pilot/queue-frontend.tsv`, `pilot/queue-mcard.tsv` | the overlays' 362 + 35 functions |
 | `pilot/results.tsv`, `pilot/linkcheck.tsv` | every attempt, and the link-check verdicts |
 | `pilot/d2map.tsv` | Driver 1 ↔ Driver 2 function pairs (code similarity) |
 | `pilot/names-proposed.tsv` | names proposed by the workers (raw); `names-applied.tsv` / `names-rejected.tsv` are the reviewed split |
