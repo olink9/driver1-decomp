@@ -56,9 +56,9 @@ Overlay matches include `FAKEMATCH` files: FRONTEND 15, MCARD 3, CRED 1, IVIEW 4
 <!-- /progress -->
 
 **What these numbers cover:**
-- The counts are for the game code in the main executable. The PsyQ (Sony SDK) library functions come after
+- The first two tables cover the game code in the main executable; the third adds the overlays. The PsyQ (Sony SDK) library functions come after
   `__main` (0x738F0). They are identified from signatures but not decompiled, since the PC port replaces them.
-- The code overlays FRONTEND.BIN, MCARD.BIN, CRED.BIN and IVIEW.BIN are split and matched (rows below); the FMV
+- The code overlays FRONTEND.BIN, MCARD.BIN, CRED.BIN and IVIEW.BIN are split and matched (third table); the FMV
   player NFMV.EXE is not split yet.
 - **Near-misses** are complete C files that differ from the original only in small ways, almost always a
   different register choice by the compiler. They already behave like the original. They just aren't proven
