@@ -1,0 +1,51 @@
+name: FRONTEND.BIN
+sha1: 62f9e054eccd83f0aa688b6e1b5aad5693f35849
+options:
+  basename: frontend
+  target_path: orig/FRONTEND.BIN
+  elf_path: build/frontend.elf
+  base_path: .
+  platform: psx
+  compiler: PSYQ
+  asm_path: asm_fn
+  src_path: build/fnsrc_frontend
+  build_path: build/fn_frontend
+  ld_script_path: build/fn_frontend.ld
+  ld_dependencies: True
+  find_file_boundaries: False
+  # no gp_value: the overlays are built -G0 (not one $gp-relative access in .text)
+  # main + overlays as one address space, so references into main (gNight, D_000967C8)
+  # are symbolized instead of being left as raw (0x96850 >> 16) constants
+  global_vram_start: 0x10000
+  global_vram_end: 0x200000
+  auto_decompile_empty_functions: False   # every function gets a per-function .s (scoring target)
+  o_as_suffix: True
+  use_legacy_include_asm: False
+  section_order: [".rodata", ".text", ".data", ".bss"]
+  symbol_addrs_path:
+    - symbol_addrs.txt            # main (calls/refs into the executable)
+    - build/main_syms.txt         # every main symbol, from build/slus_008.42.elf (tools/mainsyms.py)
+    - symbol_addrs.frontend.txt
+    - symbol_addrs.mcard.txt     # FRONTEND and MCARD are resident together and call each other
+  reloc_addrs_path:
+    - reloc_addrs.frontend.txt
+  undefined_funcs_auto_path: build/fn_frontend.undefined_funcs_auto.txt
+  undefined_syms_auto_path: build/fn_frontend.undefined_syms_auto.txt
+  subalign: 2
+  ld_align_section_vram_end: False
+  ld_align_segment_vram_end: False
+  string_encoding: ASCII
+  data_string_encoding: ASCII
+  rodata_string_guesser_level: 2
+  data_string_guesser_level: 2
+segments:
+  - name: frontend
+    type: code
+    start: 0x0
+    vram: 0x1C0000
+    subsegments:
+      - [0x0, rodata, frontend_rodata]
+      - [0xAE8, c, frontend]
+      - [0xDC80, data, frontend_data]
+      - [0xF878, data, frontend_tail]   # zero tail (bss carried in the file); split as data for exact bytes
+  - [0x13308]

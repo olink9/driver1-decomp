@@ -16,3 +16,10 @@ undefined_syms_auto.txt
 .splache
 __pycache__/
 perm/
+# overlays: splat output, regenerated from frontend.yaml / mcard.yaml (+ fn_*.yaml)
+frontend.ld
+mcard.ld
+frontend.d
+mcard.d
+undefined_funcs_auto.*.txt
+undefined_syms_auto.*.txt
