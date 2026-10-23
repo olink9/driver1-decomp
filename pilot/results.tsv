@@ -1497,3 +1497,5 @@ time	symbol	size	best	attempts	status
 2026-10-23T20:00:51Z	func_001CB95C	188	100.0	6	matched	ov1-wip
 2026-10-23T20:04:42Z	func_001C62CC	164	83.17	8	gave_up	ov1-wip
 2026-10-23T20:06:23Z	func_001C2114	1328	95.13	2	gave_up	ov1-wip
+2026-10-23T20:10:24Z	func_000E806C	2836	99.84	15	gave_up	ov1
+2026-10-23T20:10:24Z	func_000EC89C	3212	99.88	15	matched	ov1

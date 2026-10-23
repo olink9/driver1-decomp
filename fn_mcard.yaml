@@ -46,6 +46,6 @@ segments:
     subsegments:
       - [0x0, rodata, mcard_rodata]
       - [0x760, c, mcard]
-      - [0x6F28, data, mcard_data]
+      - [0x6F2C, data, mcard_data]
       - [0x72AC, data, mcard_tail]   # zero tail (bss carried in the file); split as data for exact bytes
   - [0xC488]
