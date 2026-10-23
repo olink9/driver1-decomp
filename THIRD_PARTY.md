@@ -53,3 +53,10 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
+
+## GCC pass sources (pilot/gccsrc/)
+
+`loop.c`, `flow.c`, `global.c`, `local-alloc.c`, `jump.c` from GCC 2.7.2.3 and `local-alloc-2.95.c` from GCC 2.95,
+unmodified, kept as a reference for the compiler heuristics the matching notes discuss. Copyright Free Software
+Foundation; licensed under the GNU General Public License version 2 or later (see the header of each file). They are
+not built or linked into anything here.
