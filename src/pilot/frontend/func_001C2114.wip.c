@@ -3,6 +3,9 @@
  * s-reg (s3) over 5/0x29; the target keeps the masks local (lui a3/t1 in the body) so 5->fp, 0x29->s7, current->s6,
  * and done->s5 in both loops (mode 0 swaps done/0x29 as a knock-on). Needs one more moved invariant before rect 1's
  * mask or a shorter mask life; tried mask forms, while/do, i++ position, i>2, if(c)/if(z)/if(w) in the helper.
+ * (wipB) -dL: 8 moves before the mask (jtbl hi+lo, &col, hi 88, hi 8C, hi current, 5, 0x29) -> threshold 4; the mask
+ *   (life 58) is hoisted at 4*58=232 >= 154. A 9th move before insn 448, or a 0xFF000000-first order, would stop it.
+ *   Hoisted-but-unallocated is ruled out: mask refs 5 beat 5/0x29 (3 refs) in global-alloc.
  * Rect helper = inline copy of func_001C2014 (its pad[32] gives the 0x40 spill slot); tbl part = func_001C1BD4 inlined. */
 typedef struct { unsigned addr:24; unsigned len:8; } P_TAG;
 typedef struct { unsigned int tag; unsigned char r0, g0, b0, code; short x0, y0, x1, y1, x2, y2, x3, y3; } PF4;

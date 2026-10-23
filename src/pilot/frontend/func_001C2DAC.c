@@ -1,6 +1,5 @@
-/* WIP 91.65: body matches exactly; only the prologue differs - the target issues all four saves (ra,s2,s1,s0) before
-   'lui/lw D_001CDEC8', ours hoists the load above them (sched2 tie: li vs saves, 'greater potential hazard').
-   Tried: volatile, unsized [] and struct forms of D_001CDEC8, switch, inline helper, no param. */
+/* func_001C2DAC. FAKEMATCH: the empty volatile asm at the top is a sched2 barrier that keeps the four prologue saves
+   above the lui/lw of D_001CDEC8 (no C form found: volatile, [], struct, switch, inline helper, no param all tried). */
 typedef struct { short x, y, w, h; } RECT16;
 typedef struct {
     RECT16 clip;
@@ -37,6 +36,7 @@ void func_001C2DAC(int unused)
     char *p;
     DB *db;
 
+    __asm__ volatile(""); /* FAKEMATCH: sched barrier */
     if (D_001CDEC8 == 1) {
         t = D_001CDE98;
         mode = 1;
