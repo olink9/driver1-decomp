@@ -1463,3 +1463,5 @@ time	symbol	size	best	attempts	status
 2026-10-23T18:33:05Z	func_001C2F78	980	99.96	8	matched	ov1 FAKEMATCH frame RECT; reloc-only diff (review.tsv)
 2026-10-23T18:34:35Z	func_001C5268	1000	100.0	2	matched	ov1
 2026-10-23T18:37:09Z	func_000E96F8	1512	99.76	28	gave_up	ov1
+2026-10-23T18:38:41Z	func_001C9E58	1044	100.0	5	matched	ov1
+2026-10-23T18:39:54Z	func_001C70F0	1100	99.94	3	matched	ov1 reloc-only diff (review.tsv)
