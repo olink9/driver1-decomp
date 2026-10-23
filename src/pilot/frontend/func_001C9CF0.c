@@ -28,9 +28,8 @@ void func_001C9CF0(void)
     D_001D31F0.y = b.y = -rcossin_tbl[ang * 2 + 1];
     D_001D31F0.z = b.z = 0;
     func_001C9E58(&a, &b);
-    D_001D31E0.x = 0;
-    D_00096C48.vx = 0;
-    D_00096C48.vy = D_001D31E0.y = ratan2(camera_position.x - a.x, a.z - camera_position.z) & 0xfff;
+    D_001D31E0.x = D_00096C48.vx = 0;
+    D_001D31E0.y = D_00096C48.vy = ratan2(camera_position.x - a.x, a.z - camera_position.z) & 0xfff;
     if (D_001D320C == 0)
         D_001D31B8--;
     else
