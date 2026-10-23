@@ -16,3 +16,9 @@ header saying what is left. Score with `tools/fnscore.py SYMBOL file --diff` (it
 - Systematic lessons (things the next worker should know) go in your final reply, one line each.
 
 Final reply: `<batch>: matched N / wip M / gave up K`, one line per wip/give-up with the remaining cause, then lessons.
+
+## Lessons from fr-001..004 (160/160 matched)
+- `lui/li/sb|sh|sw %lo(D)` = `extern char|short|int D; D = N;`. Two-offset stores off one base = `extern char D[]; D[0x14]=n; D[0x24]=n;` in asm order.
+- A store via a SEPARATE `addiu +0x10` then `sb 0xC(v0)` = a pointer local: `T *p = D; p += 1; p->r = 255;` (index forms fold the offset, ~80%).
+- `jal X; v0 = 0` in the slot = `int f(void){ g(); return 0; }`. A trailing `addiu v0,-1` in the jr slot is `return -1` only if v0 is not just the last stored value.
+- Generating C from fnasm output with a small script works well for families of identical shapes.
