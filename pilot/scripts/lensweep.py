@@ -1,5 +1,5 @@
 import sys, os, re, subprocess
-os.chdir(os.path.expanduser("~/dev/driver1"))
+os.chdir(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".."))
 exec(open('build/r4-13/climb.py').read().split('src=open')[0].split('def parse')[1].join(['def parse','']) if False else '')
 def parse(l):
     m=re.match(r'\s*([A-Za-z_]\w*(?:\[\d\])?)\s*=(.*);',l)

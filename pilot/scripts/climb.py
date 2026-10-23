@@ -1,7 +1,7 @@
 # run inside distrobox: python climb.py base.c outprefix
 import sys, os, re, io, contextlib
-sys.path.insert(0, os.path.expanduser("~/dev/driver1/tools"))
-os.chdir(os.path.expanduser("~/dev/driver1"))
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "tools"))
+os.chdir(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".."))
 import fnscore
 fnscore.B = "build/r4-13/fsm"; os.makedirs(fnscore.B, exist_ok=True)
 def score(path):

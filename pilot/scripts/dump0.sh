@@ -1,6 +1,6 @@
 #!/bin/bash
 # usage: dump.sh file.c flags...   -> dumps in $W/dump/
-cd .
+cd "$(dirname "$0")/../.."
 W=${DUMP_DIR:-build/dump0-$$}; mkdir -p $W   # per-worker dir: set DUMP_DIR
 mkdir -p $W/dump; rm -f $W/dump/*
 f=$1; shift
