@@ -1,3 +1,4 @@
+/* WIP 92.3%: load/lui order and the a0 vs v0 split of x and x+1 differ (ov1). */
 extern int D_00096808;
 extern int D_001D2DC0;
 extern char D_001CDFC0[];

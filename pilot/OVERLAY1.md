@@ -24,3 +24,4 @@ Final reply: `<batch>: matched N / wip M / gave up K`, one line per wip/give-up 
 - Generating C from fnasm output with a small script works well for families of identical shapes.
 - (fr-005/6) Table flag setters `D_tbl[D_idx].f = 1` = 16-byte struct, `char f` at +4; `if (i != -1) D_tbl[i].f = 0;` with `int i = D_idx;`. Toggles: `D_x ^= 1;` with `int D_x`. C89: declarations only at block start.
 - (fr-010..012) `f2(D,0,0)` with `extern char D[]` (array extern = lui/addiu address). Keep a call result across a later call: `int r = g(); f2(...); return r;`. Address-constant tables: `extern int D[]; D[2] = (int)sym;`.
+- (fr-013..015) Two pointers over one struct array: `E *q = p; while (q->f) { ...; q++; }` with the real element size (add trailing fields). A store in the first jal's delay slot = the global assigned before the first call. `D += 100; if (D > 0) D = 0;` gives blez. Unused locals that only size the frame count as FAKEMATCH - tag them.
