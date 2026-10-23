@@ -1,8 +1,10 @@
-/* WIP 87.14: everything up to PrintString matches. Left: the two func_0005D164 arms of the D_000EF144 < 3U test are
-   identical in C, so they come out identical and get cross-jumped into one; the target keeps two copies with
-   different schedules (then-arm loads D_000EF140 first and stores the stack args last). 14 address-expression
-   variants and a 0/1/2 switch (gives a signed tree) all fold the same - the original arms must differ somehow.
-   The s1/s2 swap of the %hi(D_000EF13C)/%hi(D_000EF140) pseudos follows from the missing arm. */
+/* WIP 89.93 (was 87.14): the then-arm now addresses the name as `(E *)((char *)D[c].e + f*0x44)` so the two
+   func_0005D164 arms stay separate (target keeps two copies). Left: SCHEDULE of the then-arm - target computes the whole
+   address first (F' into a2, then C', then +8/+F'/+0x18) and sets a2/a3/stack args last; here both arms set the
+   constants first and the then-arm cross-jumps into the else-arm's jal. Tried (ov1-wip M): block-local `char *p`,
+   `E *e` pointer, int f / int c locals, struct-cast (INT1) reads of D_000EF13C/EF140 (all re-merge the arms).
+   The s0/s1 swap (%hi(D_000EF140) vs D_000EE930 base) is new with this form. Untried: why sched1 puts the arg
+   constants first in the target else-arm but last in the then-arm (read .sched for both arms). */
 typedef struct { int a; short b; char pad[0x12]; char name[0x28]; unsigned char idx; unsigned char n; unsigned char f42; unsigned char f43; } E;
 typedef struct { unsigned short s; char c2; char c3; void *p4; E e[15]; } H;
 typedef struct { unsigned addr:24; unsigned len:8; } P_TAG;
@@ -49,9 +51,10 @@ void func_000E91B8(void)
     func_000EB104(1);
     if ((D_000EE930[D_000EF13C].s & 2) && (D_000EE930[D_000EF13C].e[D_000EF140].f43 & 1)) {
         x = PrintString(D_000E6864, 0x18, 0xCE);
-        if ((unsigned int)D_000EF144 < 3)
-            func_0005D164(D_000EE930[D_000EF13C].e[D_000EF140].name, x, 0xCE, 0x1000, 0xE00, 1);
-        else
+        if ((unsigned int)D_000EF144 < 3) {
+            int f = D_000EF140 * 0x44;
+            func_0005D164(((E *)((char *)D_000EE930[D_000EF13C].e + f))->name, x, 0xCE, 0x1000, 0xE00, 1);
+        } else
             func_0005D164(D_000EE930[D_000EF13C].e[D_000EF140].name, x, 0xCE, 0x1000, 0xE00, 1);
     } else if (D_000EE930[D_000EF13C].s != 4 && D_000EE930[D_000EF13C].s != 1) {
         if (D_000EF144 < 3)

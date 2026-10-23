@@ -5,7 +5,12 @@
  * so msg is rematerialised (`lui t0; addiu t0` at its 4 uses) and %hi(D_000EFC00) gets s7, shifting done to s6.
  * Tried: msg as hoisted constant (no user var), msg set earlier/later/twice/chained, volatile/long long/goto loop for
  * D_000EFC00, h as hoisted vs user var, extra refs via duplicated case arms. Needs one more ref on msg (8 refs ->
- * floor_log2 3) or a non-REG_EQUIV msg. */
+ * floor_log2 3) or a non-REG_EQUIV msg.
+ * (ov1-wip M) .greg numbers: done (91) 8/322 -> 745, HIGH(D_000EFC00) 240 7/250 -> 560, h 85 7/252 -> 555,
+ * msg 84 7/306 -> 457. Target has msg s6 / done s7, so msg must beat done too: needs >745 (8 refs -> 784, or 7 refs
+ * without the REG_EQUIV doubling -> 915). Both HIGH and the hoisted constant 2 are reloaded into t0 in the target
+ * (spilled), buf is spilled to 0x64(sp) in both. Tried: pre-loop stores of the literal (CSE still uses msg), a
+ * block-local `s` copied into msg. */
 typedef struct { short x, y, w, h; } RECT;
 typedef struct DB { int a; char *b; int c; char pad[0x74]; } DB;
 typedef struct { char fname[0x18]; char title[0x24]; int size; unsigned char idx; unsigned char n; unsigned char f42; unsigned char f43; } E;

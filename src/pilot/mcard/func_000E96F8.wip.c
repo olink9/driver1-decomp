@@ -2,7 +2,13 @@
    `dst` param). global-alloc priority: dst 9 refs/267 insns = 1011, port 2 refs/20 = 1000 -> dst picks s4 first. Target
    needs port in (1011, 1176) (c = D_000ED86C copy is 1176) or dst <= 1000. Tried: all 24 helper param orders (port after
    b fixes regs but schedules the copy after b's address), caller-local card before/after the clamp, `port <<= 4` (4000,
-   overshoots to s1), loop via separate `p` (p gets t3), dst[i], ?: clamp, strncmp inline helper, nested/early returns. */
+   overshoots to s1), loop via separate `p` (p gets t3), dst[i], ?: clamp, strncmp inline helper, nested/early returns.
+   (ov1-wip M) Exact numbers from .greg: dst 81 = 9 refs/267 -> 1011, port 236 = 2/20 -> 1000 (int compare, tie -> lower
+   pseudo). Target sched order of port's range is identical to ours (copy is first in the post-clamp block, reorg puts it
+   in the beqz slot), so port's 20 is probably right and dst must be <1000 but >size (82: 4/109 -> 734): 8 refs at ~267,
+   or 9 refs at >=271 insns. dst refs = param copy 1 + 2 struct-copy pointer copies + loop sb (2) + loop addiu (4).
+   Tried: copy loop as goto loop (dst 6 refs -> drops below size, +1 insn), dst[i] (no giv reduction, worse), helper
+   param order (b, port) (copy lands after b's addiu), int/unsigned/void variants of the helper params/return. */
 typedef struct { char fname[0x18]; char title[0x24]; unsigned int size; unsigned char idx; unsigned char n; unsigned char f42; unsigned char f43; } E;
 typedef struct { unsigned short s; unsigned char c2; char c3; void *p4; E e[15]; } H;
 typedef struct { unsigned char data[0x5E0]; int sum; } SAVE;
