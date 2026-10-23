@@ -1467,3 +1467,7 @@ time	symbol	size	best	attempts	status
 2026-10-23T18:39:54Z	func_001C70F0	1100	99.94	3	matched	ov1 reloc-only diff (review.tsv)
 2026-10-23T19:02:58Z	func_001C2114	1328	95.13	15	gave_up	ov1
 2026-10-23T19:02:58Z	func_001CC894	1220	99.97	15	gave_up	ov1
+2026-10-23T19:08:09Z	func_001C1270	1596	100.0	6	matched	ov1
+2026-10-23T19:09:25Z	func_000E7508	1572	96.93	15	gave_up	ov1
+2026-10-23T19:09:25Z	func_000EA484	1656	100.0	14	matched	ov1
+2026-10-23T19:09:46Z	func_001CC1D0	1436	100.0	2	matched	ov1
