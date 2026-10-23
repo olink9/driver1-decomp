@@ -1474,3 +1474,5 @@ time	symbol	size	best	attempts	status
 2026-10-23T19:20:29Z	func_001C3988	1608	100.0	13	matched	ov1
 2026-10-23T19:20:29Z	func_001C26E4	1736	100.0	2	matched	ov1
 2026-10-23T19:20:29Z	func_001C8640	1736	100.0	4	matched	ov1
+2026-10-23T19:36:15Z	func_000E9CE0	1956	100.0	27	matched	ov1
+2026-10-23T19:36:15Z	func_000EB728	2308	100.0	5	matched	ov1

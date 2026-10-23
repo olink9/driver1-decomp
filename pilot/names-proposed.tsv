@@ -410,3 +410,6 @@ func_00078114	MemCardAccept	mc-011 usage guess
 func_00077E48	MemCardStart	mc-011 usage guess
 func_00077E98	MemCardStop	mc-011 usage guess
 func_0007A7F4	GetClut	frontend+mcard usage
+func_0007EC88	strlen	mc/fr usage
+func_0007B218	strncmp	mc usage
+func_0007B228	strcmp	mc usage
