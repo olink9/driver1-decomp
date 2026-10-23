@@ -1,0 +1,2 @@
+extern int D_001CEC5C, D_001CDED0;
+void func_001C786C(void){ D_001CEC5C = D_001CEC5C - 1; if (D_001CEC5C < 0) D_001CEC5C = 0; else D_001CDED0 = 1; }

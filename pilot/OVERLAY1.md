@@ -22,3 +22,4 @@ Final reply: `<batch>: matched N / wip M / gave up K`, one line per wip/give-up 
 - A store via a SEPARATE `addiu +0x10` then `sb 0xC(v0)` = a pointer local: `T *p = D; p += 1; p->r = 255;` (index forms fold the offset, ~80%).
 - `jal X; v0 = 0` in the slot = `int f(void){ g(); return 0; }`. A trailing `addiu v0,-1` in the jr slot is `return -1` only if v0 is not just the last stored value.
 - Generating C from fnasm output with a small script works well for families of identical shapes.
+- (fr-005/6) Table flag setters `D_tbl[D_idx].f = 1` = 16-byte struct, `char f` at +4; `if (i != -1) D_tbl[i].f = 0;` with `int i = D_idx;`. Toggles: `D_x ^= 1;` with `int D_x`. C89: declarations only at block start.
