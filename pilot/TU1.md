@@ -176,3 +176,9 @@ Step 4 (move definitions into the owning file) - the recipe that worked:
 - A walk advancing a record pointer by a SUB-stride (`car + j*16`) must stay a byte-offset record pointer; a real array index changes allocation.
 - Per-function compare of a TU against its pre-change object: pilot/scripts/cmpfn.sh FILE.c BASE.o (~5 s; cmpall.sh no longer works once the pilots are gone).
 - car_data has at least 25 slots (handling.c loops 25, uses slot 23 as D_0009D438) - the header comment's "20" is wrong.
+## Lessons (Step 3 A: civ_ai.c onto structs.h - 50 views -> 0, byte-identical)
+- K&R definitions remove "unprototyped callers pass ints to a char parameter" views at no byte cost (even with a struct passed by value).
+- To keep the FULL result of a function declared narrower: call through a cast function pointer with the full prototype (still a direct jal); a plain call adds andi.
+- Narrow reads from wider fields and `&arr[i].field` for interior symbols are byte-free.
+- Let the compiler drive renames: delete the local typedef, parse "no member named" errors, rename only those lines (~200 renames, no mistakes).
+- Grep trap: `\bC\b` matches "AI.C" in comments - check one-letter type names by hand.
