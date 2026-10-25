@@ -87,3 +87,9 @@ Step 4 (move definitions into the owning file) - the recipe that worked:
 - mktu misses a static inline copy of a function the TU itself defines (redefinition error) - rename the copy `<fn>_inl`.
 - Big TUs: `nm -S` sizes vs glabel addresses find the guilty function before fdiff.sh.
 - handling.c stops before func_00020AE4 (main wip, 90.22) - 0x20AE4-0x212F0 is left for later.
+## Lessons (batch E: overmap director pedest mission job_fx - byte-identical)
+- After any size mismatch run fnscore over EVERY function of the TU (linkcheck names only the first).
+- Map int-indexed pilot views (`((int *)&X)[k]`) onto real struct fields (add fields if needed) - casts change register allocation / fold offsets.
+- Return types: pick what the CALLERS' bytes need (a narrower return makes callers sign-extend).
+- Duplicate static inline copies of a function the file also defines -> one GNU89 `inline` definition (same bytes).
+- Keep `#include "gte.h"` when rewriting a header by script. The #undef trap also hits macros the merged file defines itself.
