@@ -6,7 +6,7 @@
  */
 /* Conflicts from mktu (75) resolved, one spelling per type and extern:
  *  - Shared records get one type, with D2 names where D2 has them (SMOKE, DEBRIS, LEAF, RAIN_TYPE,
- *    TEXTURE_DETAILS); CAR_DATA, LAMP and CIV_SLOT carry only the fields this file touches. Pilot field names
+ *    TEXTURE_DETAILS); LAMP carries only the fields this file touches (CAR_DATA, CIV_SLOT: see Step 3). Pilot field names
  *    were mapped onto them by offset.
  *  - Where a function read a record through a shape that does not fit the shared one (other widths or
  *    signedness, arrays over struct fields, pointer types), its own shape is kept under a per-function name
@@ -22,34 +22,22 @@
  *  - Inline copies of find_lamp_streak/ReleaseRainDrop are renamed per function (the real ones are defined here).
  *  - #include "common.h" dropped (add_haze, func_0004287C, AddGroundDebris): its PsyQ VECTOR/MATRIX/POLY_*
  *    clash with the file-local ones; P_TAG/TILE and add_haze's libgpu macros are declared locally.
+ * Step 3 (include/structs.h): CAR_DATA, CIV_SLOT, TEXTURE_DETAILS (debris' TEXINF / TD / SPRTEX_* / TEXINF_* /
+ *    TEXTURE_DETAILS_DisplayDebris views: u0..v3 -> coords.u0..v3, tpage/clut -> tpageid/clutid), MODEL (flags ->
+ *    shape_flags, s8 -> bounding_sphere), DB, VECTOR/SVECTOR/MATRIX/CVECTOR/VECTOR_NOPAD/SXY come from the header.
+ *    car_data views folded: f114..f124 -> damage[0..4], rot -> direction, e8 -> angle.vx, t[] -> pos;
+ *    CAR (D_0009B16C), CAR2, CAR_f46000, CAR_SwirlLeaves, CAR_DATA_PlacePoolForCar, CAR_f412D4, S; CIV -> CIV_SLOT
+ *    (type = f1). D_0009B16C (= &car_data[0].pos) and D_0009B1D4 (= car_data + 0x130) stay as symbols - the
+ *    original's %hi/%lo name them - and are read as car records through CARS_AT(sym, off).
+ *    Kept views: TEXINF_DisplaySmoke (ushort uv0..uv3; *(unsigned short *)&coords casts reschedule DisplaySmoke),
+ *    DB_ShowLight1/DB_ShowLight (ot as unsigned long **), DB_DrawLensFlare (disp_y at 0x6E, beyond the header's
+ *    DB); the remaining TYPE_<function> views are SMOKE/DEBRIS/LEAF/RAIN/MODEL-cosmetics shapes, not car records.
  */
 #include "gte.h"
+#include "structs.h"
 
 /* ---- types ---- */
-typedef struct { int vx, vy, vz, pad; } VECTOR;
-typedef struct { short vx, vy, vz, pad; } SVECTOR;
-typedef struct { short m[3][3]; int t[3]; } MATRIX;
-typedef struct { int vx, vy, vz; } VECTOR_NOPAD;
 typedef struct { unsigned char r, g, b, pad; } RGB;
-typedef struct { short x, y; } SXY;
-typedef struct {
-    char pad0[2];
-    unsigned char model;       /* 0x02 */
-    char pad3[0xC8 - 3];
-    VECTOR pos;                /* 0xC8 */
-    char padD8[0xE8 - 0xD8];
-    short e8;                  /* 0xE8 */
-    char padEA[0xF8 - 0xEA];
-    int rot;                   /* 0xF8 */
-    char padFC[0x114 - 0xFC];
-    int f114, f118, f11C, f120, f124; /* 0x114 */
-    char pad128[0x132 - 0x128];
-    unsigned char flash;       /* 0x132 */
-    char pad133;
-    SXY trails[4][4];          /* 0x134 */
-    short old_clock[4];        /* 0x174 */
-    char pad17C[0x18C - 0x17C];
-} CAR_DATA;
 typedef struct {
     VECTOR position;           /* 0x00 */
     VECTOR drift;              /* 0x10 */
@@ -100,11 +88,6 @@ typedef struct {
     SVECTOR oldposition;       /* 0x0C */
 } RAIN_TYPE;
 typedef struct {
-    unsigned char u0, v0, u1, v1, u2, v2, u3, v3;
-    unsigned short tpageid;
-    unsigned short clutid;
-} TEXTURE_DETAILS;
-typedef struct {
     SXY trails[4];             /* 0x00 */
     int id;                    /* 0x10 */
     short clock;               /* 0x14 */
@@ -114,16 +97,7 @@ typedef struct {
 typedef struct { unsigned addr:24; unsigned len:8; unsigned char r0, g0, b0, code; } P_TAG;
 typedef struct { unsigned int tag; unsigned char r0, g0, b0, code; short x0, y0; short w, h; } TILE;
 
-typedef struct {
-    char f0;                   /* 0x00 */
-    unsigned char f1;          /* 0x01 */
-    char pad2[0x11 - 2];
-    unsigned char f11;         /* 0x11 */
-    char pad12[0x50 - 0x12];
-} CIV_SLOT;
 
-typedef struct { char *primptr; unsigned int *ot; } DB;
-typedef struct { unsigned char r, g, b, cd; } CVECTOR;
 typedef struct {
     unsigned int tag;
     unsigned char r0, g0, b0, code;
@@ -140,17 +114,7 @@ typedef struct {
     unsigned char u3, v3;
     unsigned short pad2;
 } POLY_FT4;
-typedef struct {
-    unsigned char u0, v0, u1, v1, u2, v2, u3, v3;
-    unsigned short tpageid;
-    unsigned short clutid;
-} TEXINF;
 typedef struct { unsigned char v; char pad[7]; } B8;
-typedef struct {
-    char pad0[0xC8];
-    long t[3];
-    char pad1[0x18C - 0xD4];
-} CAR;
 typedef struct {
     VECTOR pos;
     char pad0[0x38 - 0x10];
@@ -175,8 +139,6 @@ typedef struct {
     short life;
     short frame;
 } PART;
-typedef struct { int vx, vy, vz, pad; } VEC;
-typedef struct { short vx, vy, vz, pad; } SVEC;
 typedef struct { unsigned char r, g, b, pad; } RGBX;
 typedef struct { int vx, vy, vz; } V3;
 typedef struct { V3 v[3]; } TRI;
@@ -197,7 +159,6 @@ typedef struct {
     int pad[2];
     int x;
 } ENT;
-typedef struct { unsigned short flags; char pad[6]; short s8; } MODEL;
 typedef struct { int pad0; int y; int z; char pad[2]; unsigned short type; } OBJ;
 typedef struct { int f0; int f4; int f8; } T;
 typedef struct {
@@ -212,16 +173,11 @@ struct Q { int a, b; };
 struct L { int a, b, c, d, id; char e, g, set; char f; };
 typedef struct { COP *cop; char active; char pad[3]; int rot; short vx, vy, vz; short p2; int c0; } DAM;
 typedef struct { short x, y, z, pad; } SV;
-typedef struct { unsigned char b0; char b1; unsigned char b2; char pad[0x18C - 3]; } CAR2;
 typedef struct { char p0[0x18]; B8 v; char p1[100 - 0x20]; } T100;
-typedef struct { char p0[0xC8]; int x; char p1[4]; int z; char p2[0x14]; short e8; char p3[0xE]; int rot; char p4[0x90]; } S;
-typedef struct { unsigned char r, g, b, cd; } CVEC;
 typedef struct { int m[8]; } MAT;
-typedef struct { unsigned char u0, v0, u1, v1, u2, v2, u3, v3; unsigned short tpageid, clutid; } TD;
 typedef struct { unsigned long tag; unsigned char r0, g0, b0, code; short x0, y0; unsigned char u0, v0; unsigned short clut;
   short x1, y1; unsigned char u1, v1; unsigned short tpage; short x2, y2; unsigned char u2, v2; unsigned short pad2;
   short x3, y3; unsigned char u3, v3; unsigned short pad3; } PFT4;
-typedef struct { unsigned char r, g, b, cd; } CV;
 typedef struct { unsigned long tag; unsigned char r0, g0, b0, code; short x0, y0;
   unsigned char r1, g1, b1, p1; short x1, y1; unsigned char r2, g2, b2, p2; short x2, y2;
   unsigned char r3, g3, b3, p3; short x3, y3; } PG4;
@@ -236,7 +192,6 @@ typedef struct {
     unsigned char r2, g2, b2, pad2;
     short x2, y2;
 } POLY_G3;
-typedef struct { char pad0; unsigned char type; char pad[0x4E]; } CIV;
 typedef struct { short vx, vy; } DVECTOR;
 typedef struct { short x, y, w, h; } RECT16;
 typedef struct { unsigned int tag; unsigned int code[5]; } DR_MOVE;
@@ -256,7 +211,6 @@ typedef struct {
     short x2, y2;
     unsigned char u2, v2; unsigned short pad1;
 } POLY_FT3;
-typedef struct { short vx, vy, vz, pad; } ANGLE8;
 typedef struct { signed char vx, vy, vz, pad; } BVECTOR;
 typedef struct { BVECTOR v0, v1, v2; } TRI_POINT;
 typedef struct {
@@ -299,16 +253,6 @@ typedef struct {
 
 /* ---- per-function views: the shape each function used (see the head comment) ---- */
 typedef struct {
-    char pad[0xC8];
-    int t[3];
-    char pad2[396 - 0xD4];
-} CAR_DATA_PlacePoolForCar;
-typedef struct {
-    char pad0[0xC8];
-    long t[3];
-    char pad1[0x18C - 0xD4];
-} CAR_f412D4;
-typedef struct {
     VECTOR pos;
     char pad0[0x38 - 0x10];
     short s38, s3A, s3C, s3E;
@@ -324,13 +268,8 @@ typedef struct {
     short a, b, c, pad2, d, e;
 } PARTICLE_f4157C;
 typedef struct {
-    unsigned char u0, v0, u1, v1, u2, v2, u3, v3;
-    unsigned short tpage;
-    unsigned short clut;
-} SPRTEX_f41690;
-typedef struct {
-    VEC position;
-    SVEC direction;
+    VECTOR position;
+    SVECTOR direction;
     unsigned short life;
     unsigned short flags;
     unsigned short num;
@@ -344,7 +283,6 @@ typedef struct {
     char sin_addition2;
 } LEAF_f41AC4;
 typedef struct { V3 position; int pad0; short dir[4]; short pad[1]; unsigned short flags; char pad3[0x2C-0x1C]; } LEAF_SwirlLeaves;
-typedef struct { V3 t; char pad[0x30]; int wheel_speed; char pad2[0x18C - 0x40]; } CAR_SwirlLeaves;
 typedef struct { int x, y, z; } V3_f42290;
 typedef struct { V3_f42290 v[3]; } TRI_f42290;
 typedef struct { char pad0[0x16]; unsigned char f16; char pad17[0x18 - 0x17]; } S24_f42290;
@@ -368,41 +306,23 @@ typedef struct { char pad[0x20]; SV v; char pad2[0x3c]; } MODEL_f4388C;
 typedef struct { char pad[8]; SV a; SV b; char pad2[100 - 0x18]; } MODEL_f439E4;
 typedef struct { char c[8]; } B8_f43D0C;
 typedef struct { char p0[0x18]; B8_f43D0C v; char p1[100 - 0x20]; } T100_f43D0C;
-typedef struct { short vx, vy, vz, pad; } SV_ShowLight1;
 typedef struct { unsigned char *primptr; unsigned long **ot; } DB_ShowLight1;
-typedef struct { short vx, vy, vz, pad; } SV_ShowLight;
 typedef struct { unsigned char *primptr; unsigned long **ot; } DB_ShowLight;
-typedef struct {
-    unsigned char c[8];
-    unsigned short tpageid;
-    unsigned short clutid;
-} TEXINF_ShowGroundLight;
-typedef struct {
-    unsigned char c[8];
-    unsigned short tpageid;
-    unsigned short clutid;
-} TEXINF_ShowFlare;
-typedef struct { char pad0; unsigned char flash; char pad[394]; } CAR_f46000;
 typedef struct {
     SVECTOR a;
     char pad8[0x18 - 8];
     SVECTOR b;
     char pad20[0x64 - 0x20];
 } MODEL_f46234;
-typedef struct { char pad[0x28]; SVEC sv; char pad2[100 - 0x30]; } E_f467DC;
-typedef struct { char pad[0x30]; SVEC sv; char pad2[100 - 0x38]; } E_f46A1C;
-typedef struct { char pad[0x38]; SVEC sv; char pad2[100 - 0x40]; } E_f46C58;
+typedef struct { char pad[0x28]; SVECTOR sv; char pad2[100 - 0x30]; } E_f467DC;
+typedef struct { char pad[0x30]; SVECTOR sv; char pad2[100 - 0x38]; } E_f46A1C;
+typedef struct { char pad[0x38]; SVECTOR sv; char pad2[100 - 0x40]; } E_f46C58;
 typedef struct {
     char *primptr;
     unsigned int *ot;
     char pad[0x6E - 8];
     unsigned short disp_y;
 } DB_DrawLensFlare;
-typedef struct {
-    unsigned char u0, v0, u1, v1, u2, v2, u3, v3;
-    unsigned short tpage;
-    unsigned short clut;
-} SPRTEX_DisplaySun;
 typedef struct {
     int position[4];
     SVECTOR direction;      
@@ -432,11 +352,11 @@ typedef struct {
     char pad4C[4];
 } SMOKE_Setup_Smoke;
 typedef struct {
-    VEC pos;        
-    VEC opos;       
+    VECTOR pos;        
+    VECTOR opos;       
     short vel[3];   
     short pad26;
-    VEC spos;       
+    VECTOR spos;       
     short s38;      
     short pad3a;
     short s3C;      
@@ -448,11 +368,6 @@ typedef struct {
     short pad4c;
     short s4E;      
 } DEBRIS_f47FA4;
-typedef struct {
-    struct { unsigned char u0, v0, u1, v1, u2, v2, u3, v3; } coords;
-    unsigned short tpageid;
-    unsigned short clutid;
-} TEXTURE_DETAILS_DisplayDebris;
 typedef struct {
     VECTOR position;        
     char pad10[8];
@@ -467,7 +382,7 @@ typedef struct { unsigned short shape_flags; } MODEL_HandleDebris;
 typedef struct {
     unsigned short uv0, uv1, uv2, uv3;
     unsigned short tpageid, clutid;
-} TEXINF_DisplaySmoke;
+} TEXINF_DisplaySmoke;   /* kept: TEXTURE_DETAILS with *(unsigned short *) casts reschedules DisplaySmoke */
 typedef struct {
     unsigned int tag;
     unsigned char r0, g0, b0, code;
@@ -480,26 +395,14 @@ typedef struct {
     short x3, y3;
     unsigned int uv3;
 } PFT4_DisplaySmoke;
-typedef struct { unsigned char *primptr; unsigned long *ot; } DB_add_haze;
 typedef struct { int pad[4]; unsigned short p; unsigned short q; } R_SetupRain;
-typedef struct {
-    unsigned short coords[4];
-    unsigned short tpageid;
-    unsigned short clutid;
-} TEXTURE_DETAILS_DrawRainDrops;
 typedef struct {
     int vx, vy, vz;
     SVECTOR oldposition;
 } RAIN_TYPE_DrawRainDrops;
 typedef struct { unsigned char b[8]; } B8_DrawRainDrops;
-typedef struct { char *primptr; unsigned int *ot; int pad; int id; } DB_f49914;
 typedef struct { int vx, vy, vz; short ox, oy, oz; short index; } RAIN_TYPE_f49914;
-typedef struct {
-    unsigned char coords[8];
-    unsigned short tpageid;
-    unsigned short clutid;
-} TEXINF_f49914;
-typedef struct { VEC position; short oldx; short index; } RAIN_TYPE_AddRainDrops;
+typedef struct { VECTOR position; short oldx; short index; } RAIN_TYPE_AddRainDrops;
 typedef struct { short type; short a, b, c; } ROUTE_DATA_AddRainDrops;
 typedef struct { short flags; unsigned short flags2; } MODEL_AddRainDrops;
 /* ---- externs ---- */
@@ -540,7 +443,9 @@ extern short D_000B7EC8[];
 extern LEAF D_000B7584[];
 extern long long gNight;
 extern unsigned char D_00096AA8;
-extern CAR D_0009B16C[];
+extern char D_0009B16C[];   /* = &car_data[0].pos (0x9B0A4 + 0xC8) */
+/* car_data reached through an interior symbol (D_0009B16C, D_0009B1D4): the original's %hi/%lo name it */
+#define CARS_AT(sym, off) ((CAR_DATA *)((char *)(sym) - (off)))
 extern long long D_00096834;
 extern long long D_00096854;
 extern long long D_00096CD0;
@@ -640,7 +545,7 @@ extern long long D_000967F4;
 extern long long D_00096C48;
 extern long long D_00096C4A;
 extern char car_cosmetics[];
-extern char D_0009B1D4[];
+extern char D_0009B1D4[];   /* = (char *)car_data + 0x130 */
 extern CIV_SLOT D_00098950[];
 extern int D_00097404;
 extern int D_00097408;
@@ -657,7 +562,7 @@ extern short D_0008EAAA[];
 extern unsigned char D_0008A8D8[];
 extern long long FastForward;
 extern long long CameraCnt;
-extern CIV D_00098900[];
+extern CIV_SLOT D_00098900[];
 extern int D_00096AA4;
 extern int D_00096AB8;
 extern short rcossin_tbl[];
@@ -674,7 +579,7 @@ extern SVECTOR D_00096C2C;
 extern SVECTOR D_00096C24;
 extern short D_000B722C[];
 extern FLAREREC D_0008A878[];
-extern TEXINF lf_tex __asm__("D_000B9110");
+extern TEXTURE_DETAILS lf_tex __asm__("D_000B9110");
 extern void StoreImage();
 extern int SquareRoot0();
 extern void SetDrawMove();
@@ -717,9 +622,9 @@ void func_0004388C();
 void func_000439E4();
 void func_00043D0C();
 void func_00043E8C();
-void func_00043FDC(SVEC *pos, int car, CVEC *col, short size, int arg4, int flag);
-void ShowLight1(void *v1, unsigned char *col, short size, TD *texture);
-void ShowLight(void *v1, CV *col, short size, TD *texture);
+void func_00043FDC(SVECTOR *pos, int car, CVECTOR *col, short size, int arg4, int flag);
+void ShowLight1(void *v1, unsigned char *col, short size, TEXTURE_DETAILS *texture);
+void ShowLight(void *v1, CVECTOR *col, short size, TEXTURE_DETAILS *texture);
 void RoundShadow(VECTOR *v1, CVECTOR *col, short size);
 void ShowGroundLight(VECTOR *v1, CVECTOR *col, short size);
 void ShowFlare(VECTOR *v1, CVECTOR *col, short size, int rotation);
@@ -735,7 +640,7 @@ void DrawLensFlare();
 void DisplaySun();
 void Setup_Debris();
 void Setup_Smoke();
-void func_00047FA4(VEC *pos, VEC *vel, int count, unsigned char type);
+void func_00047FA4(VECTOR *pos, VECTOR *vel, int count, unsigned char type);
 void DisplayDebris(DEBRIS_DisplayDebris *debris, unsigned char type);
 void HandleDebris();
 void DisplaySmoke();
@@ -775,7 +680,7 @@ void PlacePoolForCar(int idx, CVECTOR *col, int front)
     VECTOR mid_position;
     VECTOR toss;
     int z;
-    CAR_DATA_PlacePoolForCar *cp;
+    CAR_DATA *cp;
     int in_car;
     int sub_level;
     int car_road_height;
@@ -786,7 +691,7 @@ void PlacePoolForCar(int idx, CVECTOR *col, int front)
     POLY_FT4 *poly;
     char *VertIdx;
 
-    cp = &((CAR_DATA_PlacePoolForCar *)car_data)[idx];
+    cp = &car_data[idx];
     in_car = 0;
     sub_level = 0;
     if (cameraview.v == 2)
@@ -866,8 +771,8 @@ void PlacePoolForCar(int idx, CVECTOR *col, int front)
     mid_position.vy = 0;
     mid_position.vz = -500;
     func_0004EAC0(&mid_position);
-    mid_position.vx += cp->t[0];
-    mid_position.vz += cp->t[2];
+    mid_position.vx += cp->pos.vx;
+    mid_position.vz += cp->pos.vz;
     car_road_height = -MapHeight(&mid_position);
 
     i = 0;
@@ -876,8 +781,8 @@ void PlacePoolForCar(int idx, CVECTOR *col, int front)
     for (; (sub_level == 3) ? (i < 12) : (i < 4); i++, ptr1++, ptr++) {
         ptr1->vy = 0;
         func_0004EAC0(ptr1);
-        toss.vx = ptr1->vx + cp->t[0];
-        toss.vz = ptr1->vz + cp->t[2];
+        toss.vx = ptr1->vx + cp->pos.vx;
+        toss.vz = ptr1->vz + cp->pos.vz;
         ptr->vx = toss.vx - camera_position.vx;
         ptr->vz = toss.vz - camera_position.vz;
         averagepos.vx += ptr->vx;
@@ -896,14 +801,14 @@ void PlacePoolForCar(int idx, CVECTOR *col, int front)
         gte_ldv3c(s);
         gte_rtpt();
         poly = (POLY_FT4 *)current->primptr;
-        poly->u0 = D_000B91E0.u0;
-        poly->v0 = D_000B91E0.v0;
-        poly->u1 = D_000B91E0.u1;
-        poly->v1 = D_000B91E0.v1;
-        poly->u2 = D_000B91E0.u2;
-        poly->v2 = D_000B91E0.v2;
-        poly->u3 = D_000B91E0.u3;
-        poly->v3 = D_000B91E0.v3;
+        poly->u0 = D_000B91E0.coords.u0;
+        poly->v0 = D_000B91E0.coords.v0;
+        poly->u1 = D_000B91E0.coords.u1;
+        poly->v1 = D_000B91E0.coords.v1;
+        poly->u2 = D_000B91E0.coords.u2;
+        poly->v2 = D_000B91E0.coords.v2;
+        poly->u3 = D_000B91E0.coords.u3;
+        poly->v3 = D_000B91E0.coords.v3;
         ((P_TAG *)poly)->len = 9;
         poly->code = 0x2C;
         poly->code |= 2;
@@ -994,9 +899,9 @@ void func_000412D4(int car, short height, int type)
         }
         SetRotMatrix(&D_000AF6A0[car]);
         func_0004EAC0(&pos);
-        pos.vx += ((CAR_f412D4 *)car_data)[car].t[0];
+        pos.vx += car_data[car].pos.vx;
         pos.vy = -height;
-        pos.vz += ((CAR_f412D4 *)car_data)[car].t[2];
+        pos.vz += car_data[car].pos.vz;
 
         idx = func_00042678();
         if (idx < 0)
@@ -1126,27 +1031,27 @@ void func_00041690(void)
             poly = (POLY_FT4 *)current->primptr;
 
             if (p->frame >= 4) {
-                poly->u0 = (*(SPRTEX_f41690 *)&D_000BBE24).u0;
-                poly->v0 = (*(SPRTEX_f41690 *)&D_000BBE24).v0;
-                poly->u1 = (*(SPRTEX_f41690 *)&D_000BBE24).u1;
-                poly->v1 = (*(SPRTEX_f41690 *)&D_000BBE24).v1;
-                poly->u2 = (*(SPRTEX_f41690 *)&D_000BBE24).u2;
-                poly->v2 = (*(SPRTEX_f41690 *)&D_000BBE24).v2;
-                poly->u3 = (*(SPRTEX_f41690 *)&D_000BBE24).u3;
-                poly->v3 = (*(SPRTEX_f41690 *)&D_000BBE24).v3;
-                poly->tpage = (*(SPRTEX_f41690 *)&D_000BBE24).tpage;
-                poly->clut = (*(SPRTEX_f41690 *)&D_000BBE24).clut;
+                poly->u0 = D_000BBE24.coords.u0;
+                poly->v0 = D_000BBE24.coords.v0;
+                poly->u1 = D_000BBE24.coords.u1;
+                poly->v1 = D_000BBE24.coords.v1;
+                poly->u2 = D_000BBE24.coords.u2;
+                poly->v2 = D_000BBE24.coords.v2;
+                poly->u3 = D_000BBE24.coords.u3;
+                poly->v3 = D_000BBE24.coords.v3;
+                poly->tpage = D_000BBE24.tpageid;
+                poly->clut = D_000BBE24.clutid;
             } else {
-                poly->u0 = (*(SPRTEX_f41690 *)&D_000BBE34).u0;
-                poly->v0 = (*(SPRTEX_f41690 *)&D_000BBE34).v0;
-                poly->u1 = (*(SPRTEX_f41690 *)&D_000BBE34).u1;
-                poly->v1 = (*(SPRTEX_f41690 *)&D_000BBE34).v1;
-                poly->u2 = (*(SPRTEX_f41690 *)&D_000BBE34).u2;
-                poly->v2 = (*(SPRTEX_f41690 *)&D_000BBE34).v2;
-                poly->u3 = (*(SPRTEX_f41690 *)&D_000BBE34).u3;
-                poly->v3 = (*(SPRTEX_f41690 *)&D_000BBE34).v3;
-                poly->tpage = (*(SPRTEX_f41690 *)&D_000BBE34).tpage;
-                poly->clut = (*(SPRTEX_f41690 *)&D_000BBE34).clut;
+                poly->u0 = D_000BBE34.coords.u0;
+                poly->v0 = D_000BBE34.coords.v0;
+                poly->u1 = D_000BBE34.coords.u1;
+                poly->v1 = D_000BBE34.coords.v1;
+                poly->u2 = D_000BBE34.coords.u2;
+                poly->v2 = D_000BBE34.coords.v2;
+                poly->u3 = D_000BBE34.coords.u3;
+                poly->v3 = D_000BBE34.coords.v3;
+                poly->tpage = D_000BBE34.tpageid;
+                poly->clut = D_000BBE34.clutid;
             }
 
             ((P_TAG *)poly)->len = 9;
@@ -1197,7 +1102,7 @@ static inline int AllocateLeaf(void)
         return D_000B7EC8[D_00097430++];
     return -1;
 }
-void func_00041AC4(VEC *Position, int num_leaves, int Type)
+void func_00041AC4(VECTOR *Position, int num_leaves, int Type)
 {
     int num;
     int temprand;
@@ -1272,8 +1177,8 @@ void SwirlLeaves(int car) {
     V3 *CarPos;
     int WheelSpeed;
 
-    CarPos = &((CAR_SwirlLeaves *)D_0009B16C)[car].t;
-    WheelSpeed = *(int *)((int)((CAR_SwirlLeaves *)D_0009B16C) + car * sizeof(CAR_SwirlLeaves) + 0x3c);
+    CarPos = (V3 *)&CARS_AT(D_0009B16C, 0xC8)[car].pos;
+    WheelSpeed = CARS_AT(D_0009B16C, 0xC8)[car].wheel_speed;
     if (WheelSpeed + 39999U <= 0x1d4be || D_00096AC0 == 0)
         return;
     lpLeaf = ((LEAF_SwirlLeaves *)D_000B7584);
@@ -1343,7 +1248,7 @@ void func_00041E2C(void)
     GetTextureDetails("RESTREP", &D_000B7EA8);
     GetTextureDetails("SEA", &D_000B9180);
     *(int *)&D_00096CD0 = 0;
-    D_000B9120.u1 = D_000B9120.u3 = D_000B9120.u0 + 8;
+    D_000B9120.coords.u1 = D_000B9120.coords.u3 = D_000B9120.coords.u0 + 8;
     if (*(int *)&D_00096834 == 2 || *(int *)&D_00096834 == 6) {
         GetTextureDetails("STOPWTCH", &D_000B9160);
         GetTextureDetails("TRAIL", &D_000B9190);
@@ -1515,7 +1420,7 @@ void func_0004287C(void)
         m = D_0001064C;
         m2 = D_000AF9C0;
         model = mt[obj->type];
-        if (!(model->flags & 0x4000))
+        if (!(model->shape_flags & 0x4000))
             RotMatrixY((px[-3] * ((unsigned char*)px)[-16] * 3) & 0xfff, mp);
         RotMatrixZ((px[-3] * ((unsigned char*)px)[-16]) & 0xfff, mp);
         pos.vx = *px - camera_position.vx;
@@ -1535,9 +1440,9 @@ void func_0004287C(void)
         pos.vy = obj->y;
         pos.vz = obj->z;
         func_0002DBB4();
-        if (func_0002C5F0(&pos, model->s8) == -1)
+        if (func_0002C5F0(&pos, model->bounding_sphere) == -1)
             continue;
-        if (model->flags & 0x4000) {
+        if (model->shape_flags & 0x4000) {
             int *sp = (int *)0x1F8001F0;
             int lv;
             lv = *(int *)&D_00097128;
@@ -1898,9 +1803,9 @@ void func_0004388C(int idx)
     else
         m = &((MODEL_f4388C *)car_cosmetics)[car_data[idx].model];
     v = m->v;
-    if (car_data[idx].f124 < 500)
+    if (car_data[idx].damage[4] < 500)
         ((void (*)())func_00043FDC)(&v, idx, col, 20, ((char *)&D_000B9170), 0);
-    if (car_data[idx].f120 < 500) {
+    if (car_data[idx].damage[3] < 500) {
         v.x = -v.x;
         ((void (*)())func_00043FDC)(&v, idx, col, 20, ((char *)&D_000B9170), 0);
     }
@@ -1919,8 +1824,8 @@ void func_000439E4(int idx, int mode)
     MODEL_f439E4 *m;
     unsigned char c;
     int t;
-    unsigned char *b0 = &((CAR2 *)D_0009B1D4)[idx].b0;
-    unsigned char *b2 = &((CAR2 *)D_0009B1D4)[idx].b2;
+    unsigned char *b0 = &CARS_AT(D_0009B1D4, 0x130)[idx].f130;
+    unsigned char *b2 = &CARS_AT(D_0009B1D4, 0x130)[idx].flash;
     if (*b0 < 128)
         t = *b0 * 2;
     else
@@ -1940,23 +1845,23 @@ void func_000439E4(int idx, int mode)
     v1 = m->b;
     v2 = m->a;
     if (mode == 0 || mode == 2) {
-        if (car_data[idx].f124 < 500) {
+        if (car_data[idx].damage[4] < 500) {
             *b2 += c >> 3;
             ((void (*)())func_00043FDC)(&v1, idx, col, 30, ((char *)&D_000B9170), 0);
         }
-        if (car_data[idx].f114 < 500) {
+        if (car_data[idx].damage[0] < 500) {
             col[0] = c;
             ((void (*)())func_00043FDC)(&v2, idx, col, 30, ((char *)&D_000B9170), 1);
         }
     }
     if ((unsigned)(mode - 1) < 2) {
-        if (car_data[idx].f120 < 500) {
+        if (car_data[idx].damage[3] < 500) {
             v1.x = -v1.x;
             *b2 += c >> 3;
             col[0] = c;
             ((void (*)())func_00043FDC)(&v1, idx, col, 30, ((char *)&D_000B9170), 0);
         }
-        if (car_data[idx].f118 < 500) {
+        if (car_data[idx].damage[1] < 500) {
             col[0] = c;
             v2.x = -v2.x;
             ((void (*)())func_00043FDC)(&v2, idx, col, 30, ((char *)&D_000B9170), 1);
@@ -1971,19 +1876,19 @@ void func_00043D0C(int idx) {
     T100_f43D0C *t;
     unsigned char *p;
     col[0] = 200;
-    p = &((CAR_DATA *)D_0009B1D4)[idx].model;
+    p = &CARS_AT(D_0009B1D4, 0x130)[idx].flash;
     col[1] = 0;
     col[2] = 0;
     if (idx == 0)
         t = &((T100_f43D0C *)car_cosmetics)[0];
     else
-        t = &((T100_f43D0C *)car_cosmetics)[*((unsigned char *)&((CAR_DATA *)D_0009B1D4)[idx] - 0x12E)];
+        t = &((T100_f43D0C *)car_cosmetics)[CARS_AT(D_0009B1D4, 0x130)[idx].model];
     v = t->v;
-    if (car_data[idx].f124 < 500) {
+    if (car_data[idx].damage[4] < 500) {
         ((void (*)())func_00043FDC)(&v, idx, col, 25, ((char *)&D_000B9170), 0);
         *p += 8;
     }
-    if (car_data[idx].f120 < 500) {
+    if (car_data[idx].damage[3] < 500) {
         *(short *)&v = -*(short *)&v;
         ((void (*)())func_00043FDC)(&v, idx, col, 25, ((char *)&D_000B9170), 0);
         *p += 8;
@@ -1998,10 +1903,10 @@ void func_00043E8C(int i)
     int tilt, t;
 
 
-    r = car_data[i].rot;
+    r = car_data[i].direction;
     cam = &camera_position;
     cx = car_data[i].pos.vx;
-    tilt = car_data[i].e8;
+    tilt = car_data[i].angle.vx;
     a = r & 0xfff;
     b = (r + 0x800) & 0xfff;
     ang = ratan2(cx - camera_position.vx, car_data[i].pos.vz - cam->vz);
@@ -2018,11 +1923,11 @@ void func_00043E8C(int i)
 }
 
 /* ---------------- func_00043FDC (src/pilot/func_00043FDC.c) ---------------- */
-void func_00043FDC(SVEC *pos, int car, CVEC *col, short size, int arg4, int flag)
+void func_00043FDC(SVECTOR *pos, int car, CVECTOR *col, short size, int arg4, int flag)
 {
     VECTOR v2;
     VECTOR v;
-    SVEC sv;
+    SVECTOR sv;
     int fade;
     int tmp;
     unsigned char cd = flag;
@@ -2076,8 +1981,8 @@ extern long long current;
 #define stsxy(a) __asm__ volatile("swc2 $14,0(%0)" : : "r"(a) : "memory")
 #define stsz(a) __asm__ volatile("swc2 $19,0(%0)" : : "r"(a) : "memory")
 #define ldv0(r0) __asm__ volatile("lwc2 $0,0(%0);lwc2 $1,4(%0)" : : "r"(r0))
-void ShowLight1(void *v1, unsigned char *col, short size, TD *texture) {
-    SV_ShowLight1 vert[4];
+void ShowLight1(void *v1, unsigned char *col, short size, TEXTURE_DETAILS *texture) {
+    SVECTOR vert[4];
     int z;
     PFT4 *poly;
 
@@ -2096,14 +2001,14 @@ void ShowLight1(void *v1, unsigned char *col, short size, TD *texture) {
     ldv3();
     rtpt();
     poly = (PFT4 *)current->primptr;
-    poly->u0 = texture->u0;
-    poly->v0 = texture->v0;
-    poly->u1 = texture->u1;
-    poly->v1 = texture->v1;
-    poly->u2 = texture->u2;
-    poly->v2 = texture->v2;
-    poly->u3 = texture->u3;
-    poly->v3 = texture->v3;
+    poly->u0 = texture->coords.u0;
+    poly->v0 = texture->coords.v0;
+    poly->u1 = texture->coords.u1;
+    poly->v1 = texture->coords.v1;
+    poly->u2 = texture->coords.u2;
+    poly->v2 = texture->coords.v2;
+    poly->u3 = texture->coords.u3;
+    poly->v3 = texture->coords.v3;
     ((unsigned char *)poly)[3] = 9;
     ((unsigned char *)poly)[7] = 0x2E;
     poly->r0 = col[0];
@@ -2154,8 +2059,8 @@ extern long long current;
 #define ldv0(r0) __asm__ volatile("lwc2 $0,0(%0);lwc2 $1,4(%0)" : : "r"(r0))
 #define addPrimZ(p) \
     ((P_TAG *)(p))->addr = ((P_TAG *)&current->ot[z])->addr; ((P_TAG *)&current->ot[z])->addr = (unsigned)(p)
-void ShowLight(void *v1, CV *col, short size, TD *texture) {
-    SV_ShowLight vert[4];
+void ShowLight(void *v1, CVECTOR *col, short size, TEXTURE_DETAILS *texture) {
+    SVECTOR vert[4];
     int z;
     PFT4 *poly;
     int index;
@@ -2180,14 +2085,14 @@ void ShowLight(void *v1, CV *col, short size, TD *texture) {
     ldv3c(&vert[0]);
     rtpt();
     poly = (PFT4 *)current->primptr;
-    poly->u0 = texture->u0;
-    poly->v0 = texture->v0;
-    poly->u1 = texture->u1;
-    poly->v1 = texture->v1;
-    poly->u2 = texture->u2;
-    poly->v2 = texture->v2;
-    poly->u3 = texture->u3;
-    poly->v3 = texture->v3;
+    poly->u0 = texture->coords.u0;
+    poly->v0 = texture->coords.v0;
+    poly->u1 = texture->coords.u1;
+    poly->v1 = texture->coords.v1;
+    poly->u2 = texture->coords.u2;
+    poly->v2 = texture->coords.v2;
+    poly->u3 = texture->coords.u3;
+    poly->v3 = texture->coords.v3;
     ((unsigned char *)poly)[3] = 9;
     ((unsigned char *)poly)[7] = 0x2E;
     poly->r0 = col->r;
@@ -2224,8 +2129,8 @@ void ShowLight(void *v1, CV *col, short size, TD *texture) {
             PG4 *trail;
             PFT3 *null;
             int angle, width, dx, dy, length;
-            SV_ShowLight tail;
-            SV_ShowLight head;
+            SVECTOR tail;
+            SVECTOR head;
             tail.vx = Known_Lamps[D_00097464].trails[(FrameCnt - 3) & 3].x;
             tail.vy = Known_Lamps[D_00097464].trails[(FrameCnt - 3) & 3].y;
             head.vx = (poly->x0 + poly->x3) >> 1;
@@ -2302,8 +2207,8 @@ void ShowLight(void *v1, CV *col, short size, TD *texture) {
         PG4 *trail;
         PFT3 *null;
         int angle, width, dx, dy, length, c, sn;
-        SV_ShowLight tail;
-        SV_ShowLight head;
+        SVECTOR tail;
+        SVECTOR head;
         tail.vx = car_data[D_0009740C].trails[index][(FrameCnt - 3) & 3].x;
         tail.vy = car_data[D_0009740C].trails[index][(FrameCnt - 3) & 3].y;
         head.vx = (poly->x0 + poly->x3) >> 1;
@@ -2514,17 +2419,17 @@ void ShowGroundLight(VECTOR *v1, CVECTOR *col, short size)
 
     poly = (POLY_FT4 *)current->primptr;
 
-    poly->u0 = (*(TEXINF_ShowGroundLight *)&D_000B9110).c[0];
-    poly->v0 = (*(TEXINF_ShowGroundLight *)&D_000B9110).c[1];
-    poly->u1 = (*(TEXINF_ShowGroundLight *)&D_000B9110).c[2];
-    poly->v1 = (*(TEXINF_ShowGroundLight *)&D_000B9110).c[3];
-    poly->u2 = (*(TEXINF_ShowGroundLight *)&D_000B9110).c[4];
-    poly->v2 = (*(TEXINF_ShowGroundLight *)&D_000B9110).c[5];
-    poly->u3 = (*(TEXINF_ShowGroundLight *)&D_000B9110).c[6];
-    poly->v3 = (*(TEXINF_ShowGroundLight *)&D_000B9110).c[7];
+    poly->u0 = D_000B9110.coords.u0;
+    poly->v0 = D_000B9110.coords.v0;
+    poly->u1 = D_000B9110.coords.u1;
+    poly->v1 = D_000B9110.coords.v1;
+    poly->u2 = D_000B9110.coords.u2;
+    poly->v2 = D_000B9110.coords.v2;
+    poly->u3 = D_000B9110.coords.u3;
+    poly->v3 = D_000B9110.coords.v3;
 
-    poly->tpage = (*(TEXINF_ShowGroundLight *)&D_000B9170).tpageid | 0x40;
-    poly->clut = (*(TEXINF_ShowGroundLight *)&D_000B9170).clutid;
+    poly->tpage = D_000B9170.tpageid | 0x40;
+    poly->clut = D_000B9170.clutid;
 
     ((P_TAG *)poly)->len = 9;
     poly->code = 0x2E;
@@ -2619,14 +2524,14 @@ void ShowFlare(VECTOR *v1, CVECTOR *col, short size, int rotation)
 
     poly = (POLY_FT4 *)current->primptr;
 
-    poly->u0 = (*(TEXINF_ShowFlare *)&D_000B9130).c[0];
-    poly->v0 = (*(TEXINF_ShowFlare *)&D_000B9130).c[1];
-    poly->u1 = (*(TEXINF_ShowFlare *)&D_000B9130).c[2];
-    poly->v1 = (*(TEXINF_ShowFlare *)&D_000B9130).c[3];
-    poly->u2 = (*(TEXINF_ShowFlare *)&D_000B9130).c[4];
-    poly->v2 = (*(TEXINF_ShowFlare *)&D_000B9130).c[5] - 1;
-    poly->u3 = (*(TEXINF_ShowFlare *)&D_000B9130).c[6];
-    poly->v3 = (*(TEXINF_ShowFlare *)&D_000B9130).c[7] - 1;
+    poly->u0 = D_000B9130.coords.u0;
+    poly->v0 = D_000B9130.coords.v0;
+    poly->u1 = D_000B9130.coords.u1;
+    poly->v1 = D_000B9130.coords.v1;
+    poly->u2 = D_000B9130.coords.u2;
+    poly->v2 = D_000B9130.coords.v2 - 1;
+    poly->u3 = D_000B9130.coords.u3;
+    poly->v3 = D_000B9130.coords.v3 - 1;
 
     ((P_TAG *)poly)->len = 9;
     poly->code = 0x2E;
@@ -2647,8 +2552,8 @@ void ShowFlare(VECTOR *v1, CVECTOR *col, short size, int rotation)
         gte_ldv0(&vert[3]);
         gte_rtps();
 
-        poly->tpage = (*(TEXINF_ShowFlare *)&D_000B9130).tpageid | 0x20;
-        poly->clut = (*(TEXINF_ShowFlare *)&D_000B9130).clutid;
+        poly->tpage = D_000B9130.tpageid | 0x20;
+        poly->clut = D_000B9130.clutid;
 
         addPrim(current->ot + z, poly);
         current->primptr += sizeof(POLY_FT4);
@@ -2735,14 +2640,14 @@ void DisplayWater(SMOKE *smoke)
     gte_ldv0(&vert[3]);
     gte_rtps();
 
-    poly->u0 = D_000B9200.u0;
-    poly->v0 = D_000B9200.v0;
-    poly->u1 = D_000B9200.u1;
-    poly->v1 = D_000B9200.v1;
-    poly->u2 = D_000B9200.u2;
-    poly->v2 = D_000B9200.v2;
-    poly->u3 = D_000B9200.u3;
-    poly->v3 = D_000B9200.v3;
+    poly->u0 = D_000B9200.coords.u0;
+    poly->v0 = D_000B9200.coords.v0;
+    poly->u1 = D_000B9200.coords.u1;
+    poly->v1 = D_000B9200.coords.v1;
+    poly->u2 = D_000B9200.coords.u2;
+    poly->v2 = D_000B9200.coords.v2;
+    poly->u3 = D_000B9200.coords.u3;
+    poly->v3 = D_000B9200.coords.v3;
     poly->clut = D_000B9200.clutid;
 
     gte_stsz(&z4);
@@ -2878,12 +2783,12 @@ void func_00046000(int player)
     int c;
 
     sign = 1;
-    flash = &((CAR_f46000 *)D_0009B1D4)[player].flash;
+    flash = &CARS_AT(D_0009B1D4, 0x130)[player].f131;
     if (*(int *)&D_0009688C == player && *(unsigned char *)&(*(long long *)&cameraview) == 2)
         return;
     if (*(int *)&FastForward != 0)
         return;
-    if (*(short *)(&((CAR_f46000 *)D_0009B1D4)[player].flash - 0x125) < 100)
+    if (CARS_AT(D_0009B1D4, 0x130)[player].where.m[1][1] < 100)
         return;
     k = (D_00097488 + player) & 7;
     for (side = 1; side != -1; side--) {
@@ -2926,7 +2831,7 @@ void func_00046234(int player)
     SVECTOR v2;
     CVECTOR col;
     int n;
-    CIV *c;
+    CIV_SLOT *c;
     unsigned char *flash;
     MODEL_f46234 *m;
     CAR_DATA *car;
@@ -2941,7 +2846,7 @@ void func_00046234(int player)
         m = &((MODEL_f46234 *)car_cosmetics)[car_data[player].model];
     if (player != 0) {
         c = &D_00098900[player];
-        if (c->type == 1)
+        if (c->f1 == 1)
             return;
     }
 
@@ -2950,17 +2855,17 @@ void func_00046234(int player)
     v2.vy = v.vy;
     v2.vz = v.vz;
 
-    v.vz += car_data[player].f114 >> 6;
+    v.vz += car_data[player].damage[0] >> 6;
     D_0009740C = player;
-    v2.vz += car_data[player].f114 >> 6;
-    if (car_data[player].f114 < 1000) {
+    v2.vz += car_data[player].damage[0] >> 6;
+    if (car_data[player].damage[0] < 1000) {
         D_00097458 = 1;
         col.r = 255;
         col.b = 255;
         col.g = 255;
         ((void (*)())func_00043FDC)(&v, player, &col, 30, ((char *)&D_000B9170), 9);
         n++;
-        if (car_data[player].f114 < 500) {
+        if (car_data[player].damage[0] < 500) {
             n++;
             D_00097458 = 2;
             col.r = 255;
@@ -2975,16 +2880,16 @@ void func_00046234(int player)
     v2.vx = v.vx + 30;
     v2.vy = v.vy;
 
-    v.vz += car_data[player].f118 >> 6;
+    v.vz += car_data[player].damage[1] >> 6;
     v2.vz = v.vz;
-    if (car_data[player].f118 < 1000) {
+    if (car_data[player].damage[1] < 1000) {
         D_00097460 = 1;
         col.r = 255;
         col.b = 255;
         col.g = 255;
         ((void (*)())func_00043FDC)(&v, player, &col, 30, ((char *)&D_000B9170), 0x11);
         n++;
-        if (car_data[player].f118 < 500) {
+        if (car_data[player].damage[1] < 500) {
             n++;
             D_00097460 = 2;
             col.r = 255;
@@ -3001,11 +2906,11 @@ void func_00046234(int player)
     col.g = 0;
     v = m->b;
 
-    if (car_data[player].f124 < 500) {
+    if (car_data[player].damage[4] < 500) {
         ((void (*)())func_00043FDC)(&v, player, &col, 25, ((char *)&D_000B9170), 2);
         *flash += 16;
     }
-    if (car_data[player].f120 < 500) {
+    if (car_data[player].damage[3] < 500) {
         v.vx = -v.vx;
         ((void (*)())func_00043FDC)(&v, player, &col, 25, ((char *)&D_000B9170), 4);
         *flash += 16;
@@ -3062,9 +2967,9 @@ void GetSmokeDrift(VECTOR *Wind)
 void func_000467DC(int a, int b, unsigned char c)
 {
     VECTOR pos;
-    SVEC sv;
+    SVECTOR sv;
     VECTOR v;
-    SVEC sv2;
+    SVECTOR sv2;
     E_f467DC *e;
     if ((*(int *)&CameraCnt & 3) != (a & 3))
         return;
@@ -3081,7 +2986,7 @@ void func_000467DC(int a, int b, unsigned char c)
     pos.vz = car_data[a].pos.vz;
     gte_SetRotMatrix(((char *)D_000AF6A0) + a * 32);
     sv = e->sv;
-    sv.vz -= car_data[a].f120 >> 6;
+    sv.vz -= car_data[a].damage[3] >> 6;
     sv2 = e->sv;
     gte_SetTransVec0(&pos);
     gte_ldv0(&sv2);
@@ -3098,7 +3003,7 @@ void func_000467DC(int a, int b, unsigned char c)
 }
 
 /* ---------------- func_00046A1C (src/pilot/func_00046A1C.c) ---------------- */
-static inline void xform(SVEC *in, VECTOR *out)
+static inline void xform(SVECTOR *in, VECTOR *out)
 {
     gte_SetTransVec0(out);
     gte_ldv0(in);
@@ -3109,8 +3014,8 @@ void func_00046A1C(int a, int b, int c)
 {
     VECTOR pos;
     VECTOR v;
-    SVEC sv;
-    SVEC sv2;
+    SVECTOR sv;
+    SVECTOR sv2;
     E_f46A1C *e;
     if ((*(int *)&CameraCnt & 3) != (a & 3))
         return;
@@ -3142,9 +3047,9 @@ void func_00046A1C(int a, int b, int c)
 void func_00046C58(int a)
 {
     VECTOR pos;
-    SVEC sv;
+    SVECTOR sv;
     VECTOR zero;
-    SVEC sv2;
+    SVECTOR sv2;
     E_f46C58 *e;
     if ((*(int *)&CameraCnt & 1) != (a & 1))
         return;
@@ -3290,14 +3195,14 @@ void DrawLensFlare(void)
                 poly->x3 = xpos + ((flaresize * 3) >> 1);
                 poly->y3 = ypos + pFlareInfo->size;
 
-                poly->u0 = lf_tex.u0;
-                poly->v0 = D_000B9110.v0;
-                poly->u1 = D_000B9110.u1;
-                poly->v1 = D_000B9110.v1;
-                poly->u2 = D_000B9110.u2;
-                poly->v2 = D_000B9110.v2 - 4;
-                poly->u3 = D_000B9110.u3;
-                poly->v3 = D_000B9110.v3 - 4;
+                poly->u0 = lf_tex.coords.u0;
+                poly->v0 = D_000B9110.coords.v0;
+                poly->u1 = D_000B9110.coords.u1;
+                poly->v1 = D_000B9110.coords.v1;
+                poly->u2 = D_000B9110.coords.u2;
+                poly->v2 = D_000B9110.coords.v2 - 4;
+                poly->u3 = D_000B9110.coords.u3;
+                poly->v3 = D_000B9110.coords.v3 - 4;
 
                 poly->clut = D_000B9110.clutid;
                 poly->tpage = D_000B9110.tpageid | 0x20;
@@ -3380,16 +3285,16 @@ void DisplaySun(DVECTOR *pos, int a1, int a2, int intensity)
     poly->y2 = pos->vy + 10;
     poly->x3 = pos->vx + 12;
     poly->y3 = pos->vy + 10;
-    poly->u0 = (*(SPRTEX_DisplaySun *)&D_000B9240).u0;
-    poly->v0 = (*(SPRTEX_DisplaySun *)&D_000B9240).v0;
-    poly->u1 = (*(SPRTEX_DisplaySun *)&D_000B9240).u1;
-    poly->v1 = (*(SPRTEX_DisplaySun *)&D_000B9240).v1;
-    poly->u2 = (*(SPRTEX_DisplaySun *)&D_000B9240).u2;
-    poly->v2 = (*(SPRTEX_DisplaySun *)&D_000B9240).v2 - 1;
-    poly->u3 = (*(SPRTEX_DisplaySun *)&D_000B9240).u3;
-    poly->v3 = (*(SPRTEX_DisplaySun *)&D_000B9240).v3 - 1;
-    poly->clut = (*(SPRTEX_DisplaySun *)&D_000B9240).clut;
-    poly->tpage = (*(SPRTEX_DisplaySun *)&D_000B9240).tpage | 0x20;
+    poly->u0 = D_000B9240.coords.u0;
+    poly->v0 = D_000B9240.coords.v0;
+    poly->u1 = D_000B9240.coords.u1;
+    poly->v1 = D_000B9240.coords.v1;
+    poly->u2 = D_000B9240.coords.u2;
+    poly->v2 = D_000B9240.coords.v2 - 1;
+    poly->u3 = D_000B9240.coords.u3;
+    poly->v3 = D_000B9240.coords.v3 - 1;
+    poly->clut = D_000B9240.clutid;
+    poly->tpage = D_000B9240.tpageid | 0x20;
     addPrim(current->ot + 0x1079, poly);
     current->primptr += sizeof(POLY_FT4);
 
@@ -3416,16 +3321,16 @@ void DisplaySun(DVECTOR *pos, int a1, int a2, int intensity)
     poly->y2 = pos->vy - r.vx;
     poly->x3 = pos->vx - ((r.vx * 3) >> 1);
     poly->y3 = pos->vy - r.vy;
-    poly->u0 = (*(SPRTEX_DisplaySun *)&D_000B9130).u0;
-    poly->v0 = (*(SPRTEX_DisplaySun *)&D_000B9130).v0;
-    poly->u1 = (*(SPRTEX_DisplaySun *)&D_000B9130).u1;
-    poly->v1 = (*(SPRTEX_DisplaySun *)&D_000B9130).v1;
-    poly->u2 = (*(SPRTEX_DisplaySun *)&D_000B9130).u2;
-    poly->v2 = (*(SPRTEX_DisplaySun *)&D_000B9130).v2 - 1;
-    poly->u3 = (*(SPRTEX_DisplaySun *)&D_000B9130).u3;
-    poly->v3 = (*(SPRTEX_DisplaySun *)&D_000B9130).v3 - 1;
-    poly->clut = (*(SPRTEX_DisplaySun *)&D_000B9130).clut;
-    poly->tpage = (*(SPRTEX_DisplaySun *)&D_000B9130).tpage | 0x20;
+    poly->u0 = D_000B9130.coords.u0;
+    poly->v0 = D_000B9130.coords.v0;
+    poly->u1 = D_000B9130.coords.u1;
+    poly->v1 = D_000B9130.coords.v1;
+    poly->u2 = D_000B9130.coords.u2;
+    poly->v2 = D_000B9130.coords.v2 - 1;
+    poly->u3 = D_000B9130.coords.u3;
+    poly->v3 = D_000B9130.coords.v3 - 1;
+    poly->clut = D_000B9130.clutid;
+    poly->tpage = D_000B9130.tpageid | 0x20;
     addPrim(current->ot + 0x1078, poly);
     current->primptr += sizeof(POLY_FT4);
 }
@@ -3512,7 +3417,7 @@ static inline int AllocateSmoke(void)
         return D_000BB530[D_0009742C++];
     return -1;
 }
-void Setup_Smoke(VEC *ipos, int start_w, int end_w, int SmokeType, int WheelSpeed, VEC *Drift, int Exhaust)
+void Setup_Smoke(VECTOR *ipos, int start_w, int end_w, int SmokeType, int WheelSpeed, VECTOR *Drift, int Exhaust)
 {
     int num;
     SMOKE_Setup_Smoke *mysmoke;
@@ -3650,7 +3555,7 @@ static inline int alloc(void)
     }
     return -1;
 }
-void func_00047FA4(VEC *pos, VEC *vel, int count, unsigned char type)
+void func_00047FA4(VECTOR *pos, VECTOR *vel, int count, unsigned char type)
 {
     int i;
     int n;
@@ -3773,10 +3678,10 @@ void DisplayDebris(DEBRIS_DisplayDebris *debris, unsigned char type)
             v[3].vy = debrisvec.vy - tv->v0.vy;
             v[3].vz = debrisvec.vz - tv->v0.vz;
 
-            *(unsigned int *)&poly1->u0 = *(unsigned short *)&(*(TEXTURE_DETAILS_DisplayDebris *)&D_000B90D0).coords.u0 | (*(TEXTURE_DETAILS_DisplayDebris *)&D_000B90D0).clutid << 16;
-            *(unsigned int *)&poly1->u1 = *(unsigned short *)&(*(TEXTURE_DETAILS_DisplayDebris *)&D_000B90D0).coords.u1 | (*(TEXTURE_DETAILS_DisplayDebris *)&D_000B90D0).tpageid << 16;
-            *(unsigned int *)&poly1->u2 = *(unsigned short *)&(*(TEXTURE_DETAILS_DisplayDebris *)&D_000B90D0).coords.u2;
-            *(unsigned int *)&poly1->u3 = *(unsigned short *)&(*(TEXTURE_DETAILS_DisplayDebris *)&D_000B90D0).coords.u3;
+            *(unsigned int *)&poly1->u0 = *(unsigned short *)&D_000B90D0.coords.u0 | D_000B90D0.clutid << 16;
+            *(unsigned int *)&poly1->u1 = *(unsigned short *)&D_000B90D0.coords.u1 | D_000B90D0.tpageid << 16;
+            *(unsigned int *)&poly1->u2 = *(unsigned short *)&D_000B90D0.coords.u2;
+            *(unsigned int *)&poly1->u3 = *(unsigned short *)&D_000B90D0.coords.u3;
 
             gte_stsxy3(&poly1->x0, &poly1->x1, &poly1->x2);
             gte_stsz(&z);
@@ -3803,12 +3708,12 @@ void DisplayDebris(DEBRIS_DisplayDebris *debris, unsigned char type)
 
             setlen(poly, 7);
             poly->code = 0x24;
-            poly->u0 = (*(TEXTURE_DETAILS_DisplayDebris *)&D_000B9260).coords.u0;
-            poly->v0 = (*(TEXTURE_DETAILS_DisplayDebris *)&D_000B9260).coords.v0;
-            poly->u1 = (*(TEXTURE_DETAILS_DisplayDebris *)&D_000B9260).coords.u1;
-            poly->v1 = (*(TEXTURE_DETAILS_DisplayDebris *)&D_000B9260).coords.v1;
-            poly->u2 = (*(TEXTURE_DETAILS_DisplayDebris *)&D_000B9260).coords.u2;
-            poly->v2 = (*(TEXTURE_DETAILS_DisplayDebris *)&D_000B9260).coords.v2;
+            poly->u0 = D_000B9260.coords.u0;
+            poly->v0 = D_000B9260.coords.v0;
+            poly->u1 = D_000B9260.coords.u1;
+            poly->v1 = D_000B9260.coords.v1;
+            poly->u2 = D_000B9260.coords.u2;
+            poly->v2 = D_000B9260.coords.v2;
 
             gte_stsxy3(&poly->x0, &poly->x1, &poly->x2);
             gte_stsz(&z);
@@ -3816,8 +3721,8 @@ void DisplayDebris(DEBRIS_DisplayDebris *debris, unsigned char type)
             poly->r0 = debris->rgb.r;
             poly->g0 = debris->rgb.g;
             poly->b0 = debris->rgb.b;
-            poly->tpage = (*(TEXTURE_DETAILS_DisplayDebris *)&D_000B9260).tpageid;
-            poly->clut = (*(TEXTURE_DETAILS_DisplayDebris *)&D_000B9260).clutid;
+            poly->tpage = D_000B9260.tpageid;
+            poly->clut = D_000B9260.clutid;
 
             if (z > 223) {
                 addPrim(current->ot + (z >> 3), poly);
@@ -4254,7 +4159,7 @@ void DisplaySmoke(SMOKE *smoke)
 #define addPrim(ot, p) setaddr(p, getaddr(ot)), setaddr(ot, p)
 /* Driver 2: add_haze */
 extern long long current;
-#define current (*(DB_add_haze **)&current)
+#define current (*(DB **)&current)
 void add_haze(int top_col, int bot_col, short ot_pos)
 {
     TILE *polys;
@@ -4368,8 +4273,8 @@ void DrawRainDrops(void)
     gte_SetTransVector(&D_0008909C);
 
     RainPtr = ((RAIN_TYPE_DrawRainDrops *)D_000B81C8);
-    tpage = (*(TEXTURE_DETAILS_DrawRainDrops *)&D_000B9170).tpageid | 0x200000;
-    clut = (*(TEXTURE_DETAILS_DrawRainDrops *)&D_000B9170).clutid << 16;
+    tpage = D_000B9170.tpageid | 0x200000;
+    clut = D_000B9170.clutid << 16;
     Count = D_00097428;
 
     while (Count--) {
@@ -4406,9 +4311,9 @@ void DrawRainDrops(void)
             *(int *)&RainPtr->oldposition = *(int *)&poly->x2;
             if (notfirst) {
                 w = (z >> 10) - 2;
-                *(unsigned int *)&poly->u0 = (*(TEXTURE_DETAILS_DrawRainDrops *)&D_000B9170).coords[0] | clut;
-                *(unsigned int *)&poly->u1 = (*(TEXTURE_DETAILS_DrawRainDrops *)&D_000B9170).coords[1] | tpage;
-                *(unsigned int *)&poly->u2 = (*(TEXTURE_DETAILS_DrawRainDrops *)&D_000B9170).coords[2];
+                *(unsigned int *)&poly->u0 = *(unsigned short *)&D_000B9170.coords.u0 | clut;
+                *(unsigned int *)&poly->u1 = *(unsigned short *)&D_000B9170.coords.u1 | tpage;
+                *(unsigned int *)&poly->u2 = *(unsigned short *)&D_000B9170.coords.u2;
                 poly->x1 = poly->x2 - w;
                 poly->y1 = poly->y2;
                 addPrim(current->ot + (z >> 3), poly);
@@ -4437,7 +4342,7 @@ void DrawRainDrops(void)
 #define gte_stsxy(r0) __asm__ volatile ("swc2  $14, 0( %0 )" : : "r"(r0) : "memory")
 #define gte_stsz(r0) __asm__ volatile ("swc2  $19, 0( %0 )" : : "r"(r0) : "memory")
 extern long long current;
-#define current (*(DB_f49914 **)&current)
+#define current (*(DB **)&current)
 static inline void ReleaseRainDrop_f49914(int RainIndex)
 {
     D_000B8028[--D_00097428] = RainIndex;
@@ -4517,21 +4422,21 @@ void func_00049914(void)
 
             gte_ldv0(&v[1]);
             gte_rtps();
-            poly->tpage = (*(TEXINF_f49914 *)&D_000B9170).tpageid | 0x20;
-            poly->clut = (*(TEXINF_f49914 *)&D_000B9170).clutid;
+            poly->tpage = D_000B9170.tpageid | 0x20;
+            poly->clut = D_000B9170.clutid;
             gte_stsxy(&poly->x1);
 
             gte_SetTransVec0(&p2);
             gte_ldv0(&v[2]);
             gte_rtps();
-            poly->u0 = (*(TEXINF_f49914 *)&D_000B9170).coords[0];
-            poly->v0 = (*(TEXINF_f49914 *)&D_000B9170).coords[1];
-            poly->u1 = (*(TEXINF_f49914 *)&D_000B9170).coords[2];
-            poly->v1 = (*(TEXINF_f49914 *)&D_000B9170).coords[3];
-            poly->u2 = (*(TEXINF_f49914 *)&D_000B9170).coords[4];
-            poly->v2 = (*(TEXINF_f49914 *)&D_000B9170).coords[5];
-            poly->u3 = (*(TEXINF_f49914 *)&D_000B9170).coords[6];
-            poly->v3 = (*(TEXINF_f49914 *)&D_000B9170).coords[7];
+            poly->u0 = D_000B9170.coords.u0;
+            poly->v0 = D_000B9170.coords.v0;
+            poly->u1 = D_000B9170.coords.u1;
+            poly->v1 = D_000B9170.coords.v1;
+            poly->u2 = D_000B9170.coords.u2;
+            poly->v2 = D_000B9170.coords.v2;
+            poly->u3 = D_000B9170.coords.u3;
+            poly->v3 = D_000B9170.coords.v3;
             gte_stsxy(&poly->x2);
 
             gte_ldv0(&v[3]);
@@ -4569,7 +4474,7 @@ static inline void ReleaseRainDrop_AddRainDrops(int RainIndex)
 }
 void AddRainDrops(void)
 {
-    SVEC v;
+    SVECTOR v;
     ROUTE_DATA_AddRainDrops routeData;
     RAIN_TYPE_AddRainDrops *rt;
     int RainIndex;
