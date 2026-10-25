@@ -44,13 +44,8 @@
 
 /* ---- file-local records (fields this file touches) ---- */
 typedef struct {
-    char pad0[0x4 - 0x0];
-    short f4; /* 0x4 */
-    char pad6[0xA - 0x6];
-    short fA; /* 0xA */
-    short fC; /* 0xC */
-    char padE[0x12 - 0xE];
-    short f12; /* 0x12 */
+    unsigned char lanes[4]; /* 0x0 lane count per direction */
+    short pos[4][2]; /* 0x4 per-direction x, z (cells) */
 } ROAD_INFO;
 typedef struct {
     short model; /* 0x0 */
@@ -214,10 +209,6 @@ typedef struct {
     unsigned char dir;
     char padc[4];
 } ROAD16;
-typedef struct {
-    unsigned char lanes[4];
-    char pad[16];
-} RINFO;
 extern long long D_00096884;
 extern int func_000612FC();
 extern void func_00063AB4();
@@ -1305,13 +1296,6 @@ void func_00014F28(void) {
 }
 
 /* ---------------- func_00014FC4 (src/pilot/func_00014FC4.c) ---------------- */
-#define D_0009E744 D_0009E744__func_00014FC4
-#define JUNC JUNC__func_00014FC4
-typedef struct {
-    unsigned char lanes[4];
-    short pos[4][2];
-} JUNC;
-extern JUNC D_0009E744[] __asm__("D_0009E744");
 void func_00014FC4(j, dir, flip, mode, lane, out)
     int j, dir, flip, mode;
     unsigned char lane;
@@ -1386,8 +1370,6 @@ void func_00014FC4(j, dir, flip, mode, lane, out)
     out[0] = x;
     out[1] = z;
 }
-#undef D_0009E744
-#undef JUNC
 
 /* ---------------- func_00015338 (src/pilot/func_00015338.c) ---------------- */
 #define P P__func_00015338
@@ -1407,10 +1389,10 @@ unsigned char func_00015338(P *p)
     t0 = ((unsigned char *)r)[d];
     if (t0 == 1) return 0;
     switch (d) {
-    case 0: q = (c->pos.vx + 750) / 1500; a3 = q - r->f4; break;
-    case 1: q = (c->pos.vz - 750) / 1500; a3 = r->fA - q; break;
-    case 2: q = (c->pos.vx - 750) / 1500; a3 = r->fC - q; break;
-    case 3: q = (c->pos.vz + 750) / 1500; a3 = q - r->f12; break;
+    case 0: q = (c->pos.vx + 750) / 1500; a3 = q - r->pos[0][0]; break;
+    case 1: q = (c->pos.vz - 750) / 1500; a3 = r->pos[1][1] - q; break;
+    case 2: q = (c->pos.vx - 750) / 1500; a3 = r->pos[2][0] - q; break;
+    case 3: q = (c->pos.vz + 750) / 1500; a3 = q - r->pos[3][1]; break;
     }
     return t0 - a3 - 1;
 }
@@ -2061,7 +2043,6 @@ void func_00016CE4(void)
 
 /* ---------------- func_00016F0C (src/pilot/func_00016F0C.c) ---------------- */
 #define CAR CAR__func_00016F0C
-#define D_0009E744 D_0009E744__func_00016F0C
 #define JUNC JUNC__func_00016F0C
 #define NODE NODE__func_00016F0C
 /* func_00016F0C - cop/civ car: choose exit at a junction (no Driver 2 match) */
@@ -2094,7 +2075,6 @@ typedef struct {
     char pad[12];
     short junc;
 } NODE;
-extern RINFO D_0009E744[] __asm__("D_0009E744");
 #define junctions (*(JUNC **)&D_00097040)
 #define roads16 (*(ROAD16 **)&D_00097044)
 #define SETEXIT() \
@@ -2302,7 +2282,6 @@ int func_00016F0C(CAR *car, NODE *node)
 #undef roads16
 #undef SETEXIT
 #undef CAR
-#undef D_0009E744
 #undef JUNC
 #undef NODE
 
@@ -3042,8 +3021,6 @@ int func_00019314(REC_99120 *p, int dir)
 }
 
 /* ---------------- func_0001943C (src/pilot/func_0001943C.c) ---------------- */
-#define D_0009E744 D_0009E744__func_0001943C
-#define JN JN__func_0001943C
 #define NODE NODE__func_0001943C
 #define P P__func_0001943C
 typedef struct {
@@ -3065,8 +3042,6 @@ typedef struct {
     unsigned char list[1];
 } P;
 typedef struct { int a; int b; int c; int d; int e; } NODE;
-typedef struct { unsigned char b[20]; } JN;
-extern JN D_0009E744[] __asm__("D_0009E744");
 void func_0001943C(P *p)
 {
     int dir;
@@ -3098,8 +3073,8 @@ void func_0001943C(P *p)
     }
     r = p->f1C = func_00020DB4(p->x, p->z, dir, p->f10);
     if (r != -1) {
-        JN *j = &D_0009E744[r];
-        p->f25 = j->b[dir] + j->b[(dir + 2) & 3];
+        ROAD_INFO *j = &D_0009E744[r];
+        p->f25 = j->lanes[dir] + j->lanes[(dir + 2) & 3];
     } else {
         p->f25 = 0;
         p->f18 = 0;
@@ -3147,8 +3122,6 @@ void func_0001943C(P *p)
             func_0001A024(p);
     }
 }
-#undef D_0009E744
-#undef JN
 #undef NODE
 #undef P
 
