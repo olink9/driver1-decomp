@@ -19,10 +19,12 @@
  *
  * Conflicts (mktu listed 47), resolved by build/tu-civ_ai/nsgen2.py + cfg2.py (rerunnable from the pilots):
  *  - Records: CIV_SLOT (D_00098900/D_00098950, 0x50; D_00098950 is D_00098900[1]), CAR_DATA (car_data and
- *    D_0009B230 = car_data[1], 0x18C), REC_C4690 (D_000C4690/D_000C4E38, 0x7A8), ROAD_INFO (D_0009E744,
- *    0x14) and CELL_OBJ (D_00099180, 0xC) are built from the fields the pilots touch (fXX = offset). A
- *    function whose pilot shape fits was rewritten onto them (type name, field names; char signedness was
- *    allowed to differ - the build confirms the bytes); scalar `car_data.x` users became `car_data[0].x`.
+ *    D_0009B230 = car_data[1], 0x18C) and PURSUER (D_000C4690/D_000C4E38, 0x7A8) come from include/structs.h
+ *    (Step 3; CAR_DATA renames: x/y/z at 0xC8 = pos.vx/vy/vz, f18/f20 = where.t[0]/t[2], f2 = model,
+ *    fEA = angle.vy, fF8 = direction, f104 = wheel_speed, f108 = speed, f17C = totalDamage). ROAD_INFO
+ *    (D_0009E744, 0x14) and CELL_OBJ (D_00099180, 0xC) stay file-local (fXX = offset). A function whose pilot
+ *    shape fits was rewritten onto them (type name, field names; char signedness was allowed to differ - the
+ *    build confirms the bytes); scalar `car_data.x` users became `car_data[0].x`.
  *  - Functions: one unprototyped `RET f();` where every caller agreed on the return type (void callers
  *    of an int function allowed) and no prototype had a char/short parameter.
  *  - CameraCnt is volatile everywhere, D_00096FC4 unsigned char; D_00096898, D_00099120, rcossin_tbl,
@@ -38,73 +40,9 @@
  *  - The static inline ClearMem copies (5 functions) and other inline helpers keep per-section names.
  *  - #include "common.h" (func_000148C4) is dropped: nothing from it was used.
  */
-/* ---- canonical records (fields this file touches) ---- */
-typedef struct {
-    unsigned char id; /* 0x0 */
-    unsigned char f1; /* 0x1 */
-    unsigned char f2; /* 0x2 */
-    unsigned char f3; /* 0x3 */
-    char pad4[0x5 - 0x4];
-    unsigned char f5; /* 0x5 */
-    char pad6[0x7 - 0x6];
-    unsigned char f7; /* 0x7 */
-    unsigned char f8; /* 0x8 */
-    unsigned char f9; /* 0x9 */
-    unsigned char fA; /* 0xA */
-    unsigned char fB; /* 0xB */
-    char padC[0x10 - 0xC];
-    unsigned char f10; /* 0x10 */
-    unsigned char f11; /* 0x11 */
-    short f12; /* 0x12 */
-    unsigned char f14; /* 0x14 */
-    unsigned char f15; /* 0x15 */
-    char pad16[0x17 - 0x16];
-    unsigned char f17; /* 0x17 */
-    int f18; /* 0x18 */
-    int f1C; /* 0x1C */
-    int f20; /* 0x20 */
-    int f24; /* 0x24 */
-    int f28; /* 0x28 */
-    int f2C; /* 0x2C */
-    int f30; /* 0x30 */
-    int f34; /* 0x34 */
-    int f38; /* 0x38 */
-    int f3C; /* 0x3C */
-    int f40; /* 0x40 */
-    int f44; /* 0x44 */
-    int x; /* 0x48 */
-    int z; /* 0x4C */
-} CIV_SLOT;
-typedef struct {
-    unsigned char id; /* 0x0 */
-    char pad1[0x2 - 0x1];
-    unsigned char f2; /* 0x2 */
-    char pad3[0x18 - 0x3];
-    int f18; /* 0x18 */
-    char pad1C[0x20 - 0x1C];
-    int f20; /* 0x20 */
-    char pad24[0xC8 - 0x24];
-    int x; /* 0xC8 */
-    int y; /* 0xCC */
-    int z; /* 0xD0 */
-    char padD4[0xEA - 0xD4];
-    short fEA; /* 0xEA */
-    char padEC[0xF4 - 0xEC];
-    int fF4; /* 0xF4 */
-    int fF8; /* 0xF8 */
-    int fFC; /* 0xFC */
-    char pad100[0x104 - 0x100];
-    int f104; /* 0x104 */
-    int f108; /* 0x108 */
-    char pad10C[0x12C - 0x10C];
-    short f12C; /* 0x12C */
-    char pad12E[0x17C - 0x12E];
-    short f17C; /* 0x17C */
-    char pad17E[0x18C - 0x17E];
-} CAR_DATA;
-typedef struct {
-    char pad0[0x7A8 - 0x0];
-} REC_C4690;
+#include "structs.h"
+
+/* ---- file-local records (fields this file touches) ---- */
 typedef struct {
     char pad0[0x4 - 0x0];
     short f4; /* 0x4 */
@@ -271,7 +209,6 @@ extern long long D_000973B4;
 extern long long D_000973B8;
 extern long long D_00096990;
 extern long long current;
-typedef struct { char *primptr; unsigned long *ot; char *primtab; } DB;
 extern int func_000398B0();
 extern void func_0003A698();
 extern void func_00043E8C();
@@ -469,8 +406,8 @@ extern CIV_SLOT D_00098950[];
 extern CIV_SLOT D_00098900[];
 extern CAR_DATA D_0009B230[];
 extern CAR_DATA car_data[];
-extern REC_C4690 D_000C4690[];
-extern REC_C4690 D_000C4E38[];
+extern PURSUER D_000C4690[];
+extern PURSUER D_000C4E38[];
 extern ROAD_INFO D_0009E744[];
 extern CELL_OBJ D_00099180[];
 extern volatile long long CameraCnt;
@@ -580,8 +517,8 @@ int func_0001262C(CIV_SLOT *cp)
     }
 
     cp = D_00098900;
-    px = D_0009B230[id].x;
-    pz = D_0009B230[id].z;
+    px = D_0009B230[id].pos.vx;
+    pz = D_0009B230[id].pos.vz;
 
     for (i = 0; i < 23; i++, cp++) {
         if (i == 0) {
@@ -595,11 +532,11 @@ int func_0001262C(CIV_SLOT *cp)
         if (other == id && i != 0)
             continue;
         if (i != 0) {
-            x = D_0009B230[other].x;
-            z = D_0009B230[other].z;
+            x = D_0009B230[other].pos.vx;
+            z = D_0009B230[other].pos.vz;
         } else {
-            x = car_data[0].x;
-            z = car_data[0].z;
+            x = car_data[0].pos.vx;
+            z = car_data[0].pos.vz;
         }
         if (x - px >= 0) {
             if (x - px < dist) ; else continue;
@@ -611,7 +548,7 @@ int func_0001262C(CIV_SLOT *cp)
             continue;
 
         if (!done) {
-            ang = -D_0009B230[id].fF8 & 0xFFF;
+            ang = -D_0009B230[id].direction & 0xFFF;
             c = rcossin_tbl[ang * 2 + 1];
             s = rcossin_tbl[ang * 2];
             ox = (-range * c) >> 12;
@@ -637,7 +574,7 @@ int func_0001262C(CIV_SLOT *cp)
             done = 1;
         }
 
-        ang = (i != 0 ? -D_0009B230[other].fF8 : -car_data[0].fF8) & 0xFFF;
+        ang = (i != 0 ? -D_0009B230[other].direction : -car_data[0].direction) & 0xFFF;
         box = &D_000978B0[((ang & 0x3FF) / 4) * 8];
 
         switch (ang & 0xC00) {
@@ -1373,31 +1310,31 @@ void func_000148C4(void)
     memset(&car_data[0], 0, 0x18C);
     if (D_000C6F04.b2de != 0 && G04 == 0) {
         int a = D_000C6F04.a4, b = D_000C6F04.a8, c = D_000C6F04.ac;
-        car_data[0].f2 = 0;
-        car_data[0].x = a;
-        car_data[0].y = b;
-        car_data[0].z = c;
+        car_data[0].model = 0;
+        car_data[0].pos.vx = a;
+        car_data[0].pos.vy = b;
+        car_data[0].pos.vz = c;
         func_00020A64(&car_data[0]);
-        v.x = car_data[0].x; v.y = car_data[0].y; v.z = car_data[0].z;
+        v.x = car_data[0].pos.vx; v.y = car_data[0].pos.vy; v.z = car_data[0].pos.vz;
         func_0001B4A4(&car_data[0], &v);
-        car_data[0].fF8 = D_000C6F04.f12c;
+        car_data[0].direction = D_000C6F04.f12c;
         func_0001B720(&car_data[0], 0);
     } else {
         v.x = D_0008531C[G34].x; v.y = D_0008531C[G34].y; v.z = D_0008531C[G34].z;
         p = &car_data[0];
-        if (G34 == 2) p->fF8 = 0; else p->fF8 = 0x400;
-        p->x = D_0008531C[G34].x;
-        p->y = D_0008531C[G34].y;
-        p->z = D_0008531C[G34].z;
-        p->y = MapHeight(&p->x) + 0xA4;
-        v.y = p->y;
+        if (G34 == 2) p->direction = 0; else p->direction = 0x400;
+        p->pos.vx = D_0008531C[G34].x;
+        p->pos.vy = D_0008531C[G34].y;
+        p->pos.vz = D_0008531C[G34].z;
+        p->pos.vy = MapHeight(&p->pos.vx) + 0xA4;
+        v.y = p->pos.vy;
         func_0001B4A4(p, &v);
         func_0001B720(&car_data[0], 0);
-        car_data[0].f2 = 0;
+        car_data[0].model = 0;
     }
-    camera_position.x = car_data[0].x;
-    camera_position.y = -car_data[0].y - 200;
-    camera_position.z = car_data[0].z;
+    camera_position.x = car_data[0].pos.vx;
+    camera_position.y = -car_data[0].pos.vy - 200;
+    camera_position.z = car_data[0].pos.vz;
 }
 #undef G04
 #undef G34
@@ -1649,10 +1586,10 @@ unsigned char func_00015338(P *p)
     t0 = ((unsigned char *)r)[d];
     if (t0 == 1) return 0;
     switch (d) {
-    case 0: q = (c->x + 750) / 1500; a3 = q - r->f4; break;
-    case 1: q = (c->z - 750) / 1500; a3 = r->fA - q; break;
-    case 2: q = (c->x - 750) / 1500; a3 = r->fC - q; break;
-    case 3: q = (c->z + 750) / 1500; a3 = q - r->f12; break;
+    case 0: q = (c->pos.vx + 750) / 1500; a3 = q - r->f4; break;
+    case 1: q = (c->pos.vz - 750) / 1500; a3 = r->fA - q; break;
+    case 2: q = (c->pos.vx - 750) / 1500; a3 = r->fC - q; break;
+    case 3: q = (c->pos.vz + 750) / 1500; a3 = q - r->f12; break;
     }
     return t0 - a3 - 1;
 }
@@ -1901,8 +1838,8 @@ int func_000154A8(int id, int road, unsigned char flag, int x, int z)
         cp->f1 = 1;
         cp->fA = 0;
         cp->fB = 0xFF;
-        cp->x48 = D_0009B230[cp->id].x / 1500;
-        cp->x4C = D_0009B230[cp->id].z / 1500;
+        cp->x48 = D_0009B230[cp->id].pos.vx / 1500;
+        cp->x4C = D_0009B230[cp->id].pos.vz / 1500;
     } else {
         cp->f1 = 2;
         cp->f8 = 1;
@@ -1947,13 +1884,13 @@ int func_000154A8(int id, int road, unsigned char flag, int x, int z)
         cp->x12 = info.s10;
     }
 
-    car->x = x;
-    car->z = z;
+    car->pos.vx = x;
+    car->pos.vz = z;
     func_00020A64(car);
     if (road != -1)
-        car->fF8 = cp->x24 << 10;
+        car->direction = cp->x24 << 10;
     else
-        car->fF8 = flag << 10;
+        car->direction = flag << 10;
     cp->x40 = cp->x44 = 0x7FFFFFFF;
     cp->x38 = 0;
     cp->x3C = 0x82;
@@ -1985,11 +1922,11 @@ int func_000154A8(int id, int road, unsigned char flag, int x, int z)
             cp->x11 = one;
         }
     }
-    car->f2 = cp->x10;
+    car->model = cp->x10;
     func_0003EB0C(id + 1, cp->x10);
     func_0001B720(car, 1);
-    cp->x48 = D_0009B230[cp->id].x / 1500;
-    cp->x4C = D_0009B230[cp->id].z / 1500;
+    cp->x48 = D_0009B230[cp->id].pos.vx / 1500;
+    cp->x4C = D_0009B230[cp->id].pos.vz / 1500;
     cp->f9 = func_00015338(cp);
     cp->x17 = 2;
     if (*(int *)&gLightsOn)
@@ -2047,18 +1984,18 @@ CAR_DATA *func_00016094(int model, int a1, int a2, int x, int z)
         e->f28 = -1;
         e->f8 = 0;
         e->f2 = 0;
-        cp->x = x;
-        cp->y = 200;
-        cp->z = z;
+        cp->pos.vx = x;
+        cp->pos.vy = 200;
+        cp->pos.vz = z;
         func_00020A64(cp);
         memset(&v, 0, 16);
-        v.vx = cp->x;
-        v.vy = cp->y;
-        v.vz = cp->z;
+        v.vx = cp->pos.vx;
+        v.vy = cp->pos.vy;
+        v.vz = cp->pos.vz;
         v2 = v;
         func_0001B4A4(cp, &v2);
-        cp->fF8 = a2;
-        cp->f2 = model;
+        cp->direction = a2;
+        cp->model = model;
         e->f10 = model;
         e->f44 = 0x7FFFFFFF;
         e->f40 = 0x7FFFFFFF;
@@ -2068,8 +2005,8 @@ CAR_DATA *func_00016094(int model, int a1, int a2, int x, int z)
         e->f5 = 0;
         func_0003EB0C(slot + 1, e->f10);
         func_0001B720(cp, 1);
-        e->x = D_0009B230[e->id].x / 1500;
-        e->z = D_0009B230[e->id].z / 1500;
+        e->x = D_0009B230[e->id].pos.vx / 1500;
+        e->z = D_0009B230[e->id].pos.vz / 1500;
         e->f17 = 0;
     }
     return cp;
@@ -2138,10 +2075,10 @@ CAR_DATA *func_0001638C(int dir, int x, int z)
     e->f8 = one;
     func_00021820(x, z, func_000635B0(dir), &seg);
     func_00016F0C(e, &seg);
-    cp->x = x;
-    cp->z = z;
+    cp->pos.vx = x;
+    cp->pos.vz = z;
     func_00020A64(cp);
-    cp->fF8 = dir;
+    cp->direction = dir;
     e->f44 = 0x7FFFFFFF;
     e->f40 = 0x7FFFFFFF;
     e->f38 = 0;
@@ -2164,11 +2101,11 @@ CAR_DATA *func_0001638C(int dir, int x, int z)
     pd->f794 = 0;
     (*(int *)&D_00097764)++;
     e->f1 = 4;
-    cp->f2 = e->f10;
+    cp->model = e->f10;
     func_0003EB0C(slot + 1, e->f10);
     func_0001B720(cp, 1);
-    e->x = D_0009B230[e->id].x / 1500;
-    e->z = D_0009B230[e->id].z / 1500;
+    e->x = D_0009B230[e->id].pos.vx / 1500;
+    e->z = D_0009B230[e->id].pos.vz / 1500;
     e->f9 = func_00015338(e);
     e->f17 = 2;
     if (*(int *)&gLightsOn != 0)
@@ -2227,12 +2164,12 @@ int func_00016760(int x, int y, int z, int dir, int flag)
         e->f7 = 1;
     e->fA = 0;
     e->fB = 0xFF;
-    cp->x = x;
-    cp->y = y;
-    cp->z = z;
-    cp->fF8 = dir;
+    cp->pos.vx = x;
+    cp->pos.vy = y;
+    cp->pos.vz = z;
+    cp->direction = dir;
     func_00020A64(cp);
-    v.y = cp->y;
+    v.y = cp->pos.vy;
     e->f44 = 0x7FFFFFFF;
     e->f40 = 0x7FFFFFFF;
     e->f38 = 0;
@@ -2257,12 +2194,12 @@ int func_00016760(int x, int y, int z, int dir, int flag)
         e->f1 = 1;
     }
     e->f5 = 0;
-    cp->f2 = e->f10;
+    cp->model = e->f10;
     func_0003EB0C(slot + 1, e->f10);
     func_0001B4A4(cp, &v);
     func_0001B720(cp, 0);
-    e->x = D_0009B230[e->id].x / 1500;
-    e->z = D_0009B230[e->id].z / 1500;
+    e->x = D_0009B230[e->id].pos.vx / 1500;
+    e->z = D_0009B230[e->id].pos.vz / 1500;
     return slot;
 }
 #undef ClearMem
@@ -2647,16 +2584,16 @@ unsigned char func_00017780(OBJ *p, int a1, int a2, unsigned char mode)
 
     if (p->x40 != 0x7FFFFFFF && p->x38 != 0 && (mode == 0 || mode == 2))
     {
-        d = p->x40 - e->f18;
+        d = p->x40 - e->where.t[0];
         if (abs(d) <= 32)
         {
             if (p->flags & 1)
             {
-                e->f18 = p->x40;
+                e->where.t[0] = p->x40;
                 p->x40 = 0x7FFFFFFF;
                 p->flags &= 0xDE;
                 e->fF4 = 0;
-                e->fEA = 0;
+                e->angle.vy = 0;
                 if (p->flags & 0x10)
                     p->flags = (p->flags & 0xEF) | 8;
             }
@@ -2686,16 +2623,16 @@ unsigned char func_00017780(OBJ *p, int a1, int a2, unsigned char mode)
 
     if (p->x44 != 0x7FFFFFFF && p->x38 != 0 && (mode == 1 || mode == 3))
     {
-        d = p->x44 - e->f20;
+        d = p->x44 - e->where.t[2];
         if (abs(d) <= 32)
         {
             if (p->flags & 1)
             {
-                e->f20 = p->x44;
+                e->where.t[2] = p->x44;
                 p->x44 = 0x7FFFFFFF;
                 p->flags &= 0xDE;
                 e->fF4 = 0;
-                e->fEA = 0;
+                e->angle.vy = 0;
                 if (p->flags & 0x10)
                     p->flags = (p->flags & 0xEF) | 8;
             }
@@ -2979,7 +2916,7 @@ void func_00017DE8(OBJ *c)
 int func_00018100(unsigned char *p, int target) {
     int cur, diff, a3;
     a3 = 0;
-    cur = D_0009B230[*p].fF8 & 0xFFF;
+    cur = D_0009B230[*p].direction & 0xFFF;
     diff = ((target - cur + 0x800) & 0xFFF) - 0x800;
     if (cur != target) {
         if (abs(diff) < 0x80) a3 = diff / 2;
@@ -3039,7 +2976,7 @@ void func_000181B4(OBJ_b062 *p)
 
     steer = 0;
     ang = p->x30 << 10;
-    dir = D_0009B230[p->id].fF8 & 0xFFF;
+    dir = D_0009B230[p->id].direction & 0xFFF;
     d = ((ang - dir + 0x800) & 0xFFF) - 0x800;
     if (dir != ang) {
         if (abs(d) < 128)
@@ -3136,7 +3073,7 @@ void func_00018550(A *a)
     B *b;
 
     s = &D_0009B230[*(unsigned char *)a];
-    if (s->f17C == 0) {
+    if (s->totalDamage == 0) {
         a->f3C = 0;
         a->f38 = 0;
         a->c15 = 1;
@@ -3244,9 +3181,9 @@ void func_00018900(CIV_SLOT *cp)
     c = D_00098950;
 
     func_00014FC4(cp->f28, cp->f24, 0, 2, 0xfe, pos);
-    cp->x = D_0009B230[cp->id].x / 1500;
+    cp->x = D_0009B230[cp->id].pos.vx / 1500;
     px = pos[0] / 1500;
-    cp->z = D_0009B230[cp->id].z / 1500;
+    cp->z = D_0009B230[cp->id].pos.vz / 1500;
 
     if (cp->f24 & 1) {
         for (i = 0; i < 22; i++, c++) {
@@ -3289,7 +3226,7 @@ void func_00018900(CIV_SLOT *cp)
     cp->f1 = 2;
     cp->f8 = 1;
     cp->f3C = 0x82;
-    func_00021820(D_0009B230[cp->id].x, D_0009B230[cp->id].z, cp->f24, tmp);
+    func_00021820(D_0009B230[cp->id].pos.vx, D_0009B230[cp->id].pos.vz, cp->f24, tmp);
     cp->f18 = tmp[0];
     func_00016F0C(cp, tmp);
 }
@@ -3313,8 +3250,8 @@ void func_00018C74(CIV_SLOT *p)
     func_00014FC4(p->f28, p->f24, 0, 2, 0xFF, pos);
     tx = pos[0] / 1500;
     tz = pos[1] / 1500;
-    p->x = D_0009B230[p->id].x / 1500;
-    p->z = D_0009B230[p->id].z / 1500;
+    p->x = D_0009B230[p->id].pos.vx / 1500;
+    p->z = D_0009B230[p->id].pos.vz / 1500;
 
     if (p->f24 & 1)
     {
@@ -3369,8 +3306,8 @@ int func_00018F44(CIV_SLOT *cp, int maxdist, int mode)
     c = D_00098950;
     if (cp->f14 != 0)
         return -1;
-    cp->x = D_0009B230[cp->id].x / 1500;
-    cp->z = D_0009B230[cp->id].z / 1500;
+    cp->x = D_0009B230[cp->id].pos.vx / 1500;
+    cp->z = D_0009B230[cp->id].pos.vz / 1500;
     if (mode) {
         for (i = 0; i < 22; i++, c++) {
             if (cp->id != c->id && c->f1 != 0 && cp->f28 == c->f28 && cp->f24 == c->f24 && cp->f9 == c->f9) {
@@ -3400,8 +3337,8 @@ int func_00018F44(CIV_SLOT *cp, int maxdist, int mode)
     }
     for (i = 0; i < 22; i++, c++) {
         if (cp->id != c->id && c->f1 != 1 && c->f1 != 0 && cp->f28 == c->f28 && cp->f24 == c->f24 && cp->f9 == c->f9) {
-            c->x = D_0009B230[c->id].x / 1500;
-            c->z = D_0009B230[c->id].z / 1500;
+            c->x = D_0009B230[c->id].pos.vx / 1500;
+            c->z = D_0009B230[c->id].pos.vz / 1500;
             switch (cp->f24) {
             case 0:
                 if (c->z > cp->z)
@@ -3926,8 +3863,8 @@ static inline void remove_civ(int i)
 static inline void step_car(CAR_DATA *car, int idx)
 {
     idx &= 0xFFF;
-    car->x += (rcossin_tbl[idx * 2] * 500 + 0x800) >> 12;
-    car->z += (rcossin_tbl[idx * 2 + 1] * 500 + 0x800) >> 12;
+    car->pos.vx += (rcossin_tbl[idx * 2] * 500 + 0x800) >> 12;
+    car->pos.vz += (rcossin_tbl[idx * 2 + 1] * 500 + 0x800) >> 12;
 }
 void func_0001A30C(void)
 {
@@ -3943,12 +3880,12 @@ void func_0001A30C(void)
 
     if (D_0009677C || D_00096780) {
         CAR_DATA *base = D_0009B230 - 1;
-        px = base[23].x;
-        pz = base[23].z;
+        px = base[23].pos.vx;
+        pz = base[23].pos.vz;
     } else {
         CAR_DATA *base = D_0009B230 - 1;
-        px = base[0].x;
-        pz = base[0].z;
+        px = base[0].pos.vx;
+        pz = base[0].pos.vz;
     }
     cell.x = px + 750;
     cell.z = pz - 750;
@@ -3962,18 +3899,18 @@ void func_0001A30C(void)
         count = 22;
 
     for (i = 0; i < count; i++, civ++, car++) {
-        int idx = car->fF8;
+        int idx = car->direction;
         if (civ->f1 != 1)
             step_car(car, idx);
         D_0008539C[civ->f1](civ);
         if (civ->f1 != 0) {
             int dx, dz;
-            dx = D_0009B230[i].x - px;
+            dx = D_0009B230[i].pos.vx - px;
             if (dx < 0)
-                dx = px - D_0009B230[i].x;
-            dz = D_0009B230[i].z - pz;
+                dx = px - D_0009B230[i].pos.vx;
+            dz = D_0009B230[i].pos.vz - pz;
             if (dz < 0)
-                dz = pz - D_0009B230[i].z;
+                dz = pz - D_0009B230[i].pos.vz;
             dx /= 1500;
             dz /= 1500;
             if (dx * dx + dz * dz >= 730) {
@@ -3981,18 +3918,18 @@ void func_0001A30C(void)
                     remove_civ(i);
                 continue;
             }
-            civ->x = D_0009B230[civ->id].x / 1500;
-            civ->z = D_0009B230[civ->id].z / 1500;
+            civ->x = D_0009B230[civ->id].pos.vx / 1500;
+            civ->z = D_0009B230[civ->id].pos.vz / 1500;
             if ((*(int *)civ & 0xFFFF00) == 0x100 && car->f12C == 0) {
                 if (civ->fA >= 20)
                     continue;
                 civ->fA++;
             }
             if (civ->f1 != 4) {
-                if (car->f104 > 0)
-                    civ->f38 = car->f108;
+                if (car->wheel_speed > 0)
+                    civ->f38 = car->speed;
                 else
-                    civ->f38 = -car->f108;
+                    civ->f38 = -car->speed;
                 if (i < 22) {
                     func_00013D88(civ, car);
                     func_0001D608(car, 0);
