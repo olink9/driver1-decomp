@@ -8,31 +8,19 @@
  *   D_000975F0/98  RECT (the saved tpage/clut rects); func_00052198's copies a, b are RECT, not struct B8
  *   M, modelpointers  M *[] with func_00052A78's M (flags, id); func_00052434's unused M typedef dropped,
  *                  it stores (M *)p and reads through char * as before
+ * Step 3 (include/structs.h): MODEL (the pilot MODEL and func_00052A78's M: flags -> shape_flags, id ->
+ *   instance_number; poly_block cast at the use), TEXINF (w/h -> width/height), TEXTURE_DETAILS (TD: coords[k] ->
+ *   coords.u0..v3; texture_number/texture_page added to the header). RECT16 = RECT. No views.
  * func_00051ADC was matched with --aspsx 2.69 (gp_allow_offset=False); the TU links identical as it is.
  */
 
+#include "structs.h"
+
 /* ---- types ---- */
-typedef struct {
-    short x, y, w, h;
-} RECT16;
-typedef struct { char pad[0xE]; unsigned short num_polys; char pad2[4]; unsigned char *poly_block; } MODEL;
-typedef struct {
-    short pad0;
-    unsigned short nameoffset;
-    unsigned char x, y, w, h;
-} TEXINF;
 typedef struct { short x, y, w, h; } RECT;
 typedef struct { int id; int size; } TPENT;
 typedef struct { short x, y; } XY;
 typedef struct { int a; int b; } PAIR;
-typedef struct {
-    unsigned char coords[8];
-    unsigned short tpageid;
-    unsigned short clutid;
-    unsigned char texture_number;
-    unsigned char texture_page;
-} TD;
-typedef struct { unsigned short flags; short pad; short id; } M;
 typedef struct { int w[25]; } BLOCK100;
 typedef struct { int a, b, c; } E;
 typedef struct { int a, b, c, d; } E16;
@@ -85,7 +73,7 @@ extern int D_00096CD0;
 extern char D_00096CD8[];
 extern long long D_0009712C;
 extern long long D_00097370;
-extern M *modelpointers[];
+extern MODEL *modelpointers[];
 extern long long D_00096834;
 extern BLOCK100 D_000853D8[];
 extern BLOCK100 D_000855CC[];
@@ -105,7 +93,7 @@ extern int D_0008AE5C[];
 extern E16 *D_0008AE3C[];
 extern int D_0008AE8C[];
 extern int D_000975AC;
-extern M *func_000396A8();
+extern MODEL *func_000396A8();
 extern int D_000BE754[];
 
 /* ---- functions defined in this file ---- */
@@ -127,7 +115,7 @@ void func_00052C04();
 
 /* ---------------- func_000516AC (src/pilot/func_000516AC.c) ---------------- */
 /* Driver 2: IncrementClutNum (texture.c) */
-void func_000516AC(RECT16 *clut)
+void func_000516AC(RECT *clut)
 {
     clut->x += 16;
     if (clut->x == 1024) {
@@ -181,7 +169,7 @@ int func_000516E4(short *a0, short *a1, int a2, int *a3)
 /* ---------------- Find_TexID (src/pilot/Find_TexID.c) ---------------- */
 /* Driver 2: Find_TexID */
 int Find_TexID(MODEL *model, int t_id) {
-    unsigned char *polylist = model->poly_block;
+    unsigned char *polylist = (unsigned char *)model->poly_block;
     int i;
     for (i = 0; i < model->num_polys; i++) {
         switch (*polylist & 0x1F) {
@@ -421,7 +409,7 @@ void func_00052198(void)
 /* Driver 2: GetTextureDetails */
 void GetTextureDetails(name, info)
 char *name;
-TD *info;
+TEXTURE_DETAILS *info;
 {
     int i, j;
     int texamt;
@@ -439,14 +427,14 @@ TD *info;
                 info->clutid = texture_cluts[i][j];
                 info->texture_number = j;
                 info->texture_page = i;
-                info->coords[0] = texinf[j].x;
-                info->coords[1] = texinf[j].y;
-                info->coords[2] = texinf[j].x + texinf[j].w - 1;
-                info->coords[3] = texinf[j].y;
-                info->coords[4] = texinf[j].x;
-                info->coords[5] = texinf[j].y + texinf[j].h - 1;
-                info->coords[6] = texinf[j].x + texinf[j].w - 1;
-                info->coords[7] = texinf[j].y + texinf[j].h - 1;
+                info->coords.u0 = texinf[j].x;
+                info->coords.v0 = texinf[j].y;
+                info->coords.u1 = texinf[j].x + texinf[j].width - 1;
+                info->coords.v1 = texinf[j].y;
+                info->coords.u2 = texinf[j].x;
+                info->coords.v2 = texinf[j].y + texinf[j].height - 1;
+                info->coords.u3 = texinf[j].x + texinf[j].width - 1;
+                info->coords.v3 = texinf[j].y + texinf[j].height - 1;
                 return;
             }
         }
@@ -465,7 +453,7 @@ void func_00052434(int *p)
     *(int *)&D_00097370 = n;
     for (i = 0; i < n; i++) {
         int sz = *p++;
-        modelpointers[i] = (M *)p;
+        modelpointers[i] = (MODEL *)p;
         p = (int *)((char *)p + sz);
     }
     for (i = 0; i < n; i++) {
@@ -618,7 +606,7 @@ void func_00052A78(void)
     int k, i, j;
     int s0;
     E16 *p;
-    M *r;
+    MODEL *r;
     int idx = *(int *)&D_00096834;
 
     D_000975AC = D_0008AE5C[idx];
@@ -631,12 +619,12 @@ void func_00052A78(void)
                 for (s0 = 0; r != modelpointers[s0]; s0++)
                     ;
                 p->b = s0;
-                r->flags |= 4;
+                r->shape_flags |= 4;
             }
             for (j = 0; j < *(int *)&D_00097370; j++) {
-                M *t = modelpointers[j];
-                if (t->id == s0)
-                    t->flags |= 4;
+                MODEL *t = modelpointers[j];
+                if (t->instance_number == s0)
+                    t->shape_flags |= 4;
             }
         }
     }
