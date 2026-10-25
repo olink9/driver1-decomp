@@ -6,6 +6,8 @@
  *   + 0xC8); D_000C0104's P -> PEDESTRIAN (D_000C0104 = D_000BFA7C[19]; kept as its own symbol - the original's
  *   %hi/%lo name it): e28/e2c/e30 -> target.vx/vy/vz, e3c -> flags, b50 -> speed, b55 -> pal, b56 -> type.
  *   No views; LERP/OBJ/OBJ2/T/V/S17C/En stay local (this file's records).
+ * Step 4: no data of its own - its .sbss users D_000976C8/CC (reached through $gp) and the .data table
+ * D_0008B9F8 belong to pedest.c, which defines them. extern long long -> int + maspsx abs= (cameraview, CameraCnt).
  */
 /* MKTU CONFLICTS (first spelling active, others commented at their place below):
  * typedef V3:
@@ -34,6 +36,7 @@
  * } OBJ;    <- func_000618C8
  */
 
+/* maspsx: abs=cameraview,CameraCnt */
 #include "common.h"
 #include "structs.h"
 
@@ -66,8 +69,8 @@ extern int D_000976CC;
 extern void ClearMem(void *p, int n);
 extern char D_000976C8;
 extern VECTOR_NOPAD camera_position;
-extern long long cameraview;
-extern long long CameraCnt;
+extern int cameraview;
+extern int CameraCnt;
 extern int D_0008B9F8[];
 extern int SquareRoot0();
 extern CAR_DATA car_data[];
