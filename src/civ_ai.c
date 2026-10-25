@@ -1102,8 +1102,6 @@ void func_000143CC(void)
 #undef cellmid
 
 /* ---------------- func_000147C4 (src/pilot/func_000147C4.c) ---------------- */
-#define rcossin_tbl rcossin_tbl__func_000147C4
-extern E rcossin_tbl[] __asm__("rcossin_tbl");
 void func_000147C4(void)
 {
     SXY last, v;
@@ -1112,7 +1110,7 @@ void func_000147C4(void)
     int i;
     memset(&last, 0, 4);
     for (i = 0; i < 0x1000; i += 0x20) {
-        e = rcossin_tbl[i & 0xFFF];
+        e = ((E *)rcossin_tbl)[i & 0xFFF];
         v.x = e.x;
         v.y = e.y;
         v.x = (v.x * 19 + 0x800) >> 12;
@@ -1126,7 +1124,6 @@ void func_000147C4(void)
         }
     }
 }
-#undef rcossin_tbl
 
 /* ---------------- func_000148C4 (src/pilot/func_000148C4.c) ---------------- */
 #define G04 (*(int *)&D_00096804)
@@ -3135,7 +3132,10 @@ static inline void PlaceOne(int x, int z, int dir, int seed, int val)
     r = (func_0004FFE8(seed) & 0x3FF) - 0x600;
     D_00098950[func_00016760(x, -250, z, ((dir + 2) & 3) * 1024 - r, 1)].f28 = val;
 }
-void func_000197E0(POS pos, int val, int dir, int count, unsigned char flag)
+void func_000197E0(pos, val, dir, count, flag)
+    POS pos;
+    int val, dir, count;
+    unsigned char flag;
 {
     int *p[2];
     POS tmp;
@@ -3197,7 +3197,6 @@ void func_000197E0(POS pos, int val, int dir, int count, unsigned char flag)
 /* ---------------- func_00019AF4 (src/pilot/func_00019AF4.c) ---------------- */
 #define NODE NODE__func_00019AF4
 #define OBJ OBJ__func_00019AF4
-#define func_000197E0 func_000197E0__func_00019AF4
 typedef struct {
     int x;
     int y;
@@ -3217,7 +3216,6 @@ typedef struct {
     unsigned char ids[1];
 } OBJ;
 typedef struct { int a; int b; int c; int d; int e; } NODE;
-extern void func_000197E0() __asm__("func_000197E0");
 int func_00019AF4(OBJ *p)
 {
     int x;
@@ -3279,7 +3277,6 @@ int func_00019AF4(OBJ *p)
 }
 #undef NODE
 #undef OBJ
-#undef func_000197E0
 
 /* ---------------- func_00019DAC (src/pilot/func_00019DAC.c) ---------------- */
 #define O O__func_00019DAC
