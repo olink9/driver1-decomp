@@ -11,10 +11,9 @@
  * Step 3: CAR_DATA comes from include/structs.h (the anonymous scalar car_data.x/z view = car_data[0].pos).
  * Step 4: the file defines its data in address order, each section one block: .data 0x8ABAC-0x8B080 (the animated-
  *   object tables, D_0008AE3C/5C/7C, and the 25 smashable objects D_0008AE8C - bcollide.c and texture.c read them),
- *   .sdata 0x96D18, .sbss 0x975AC; its .rodata jump tables (0x10C18) were already its own. The names the tables
- *   point at are this file's too (.sdata 0x96CE4-0x96D17, .rodata 0x10A40-0x10C17, in front of the jump tables;
- *   "TLIGHT01".. are shared between tables, so one object) but stay asm labels: linkcheck pairs .sdata/.rodata
- *   through code relocations only. D_0008ABAC (used only by overmap.c) is placed here: it sits between system.c's
+ *   .rodata 0x10A40-0x10C84 (the tables' long names - shared between tables, so one object - then the jump
+ *   tables), .sdata 0x96CE4-0x96D1C (the short names, an unreferenced "", D_00096D18), .sbss 0x975AC.
+ *   D_0008ABAC (used only by overmap.c) is placed here: it sits between system.c's
  *   .data and these tables. abs= replaces the old `extern long long` spellings; .bss stays extern (.comm).
  */
 /* maspsx: abs=D_00096834,D_00097050,D_00097054,gLightsOn,D_00097704,D_00097708,D_00096808,D_00096878,CameraCnt,D_00097128 */
@@ -62,10 +61,8 @@ typedef struct {
 } HDR;
 
 /* ---- objanim.c's own data (Step 4), in address order ---- */
-/* .data 0x8ABAC-0x8B080. The name pointers point at strings that stay asm: the .sdata ones (D_00096CE4..D_00096D0C)
- * and .rodata 0x10A40-0x10C17 (D_00010A40 + offset) - linkcheck pairs .sdata/.rodata through code relocations only. */
-extern char D_00010A40[];
-extern char D_00096CE4[], D_00096CEC[], D_00096CF4[], D_00096CFC[], D_00096D04[], D_00096D0C[];
+/* .data 0x8ABAC-0x8B080. The names are C literals: gcc emits an initialiser's literals in reverse order, the short
+ * ones into .sdata (0x96CE4..), the others at the head of .rodata (0x10A40-0x10C17); "TLIGHT01".. are shared. */
 /* used only by overmap.c (0x100 bytes between system.c's and this file's tables; owner unproven) */
 int D_0008ABAC[64] = {
     0x1E, 0x3E, 0x1B, 3, -1, -1, -1, -1, 0x1B, 6, 0x1B, 0x43, -1, -1, -1, -1,
@@ -75,26 +72,26 @@ int D_0008ABAC[64] = {
 };
 /* animated-object tables per level: { index, 0, name, flag } (AO) */
 AO D_0008ACAC[7] = {
-    { 0, 0, (int)(D_00010A40 + 0xC), 0 }, { 1, 0, (int)D_00010A40, 0 },
-    { 2, 0, (int)D_00096D04, 0 }, { 3, 0, (int)D_00096CFC, 1 },
-    { 4, 0, (int)D_00096CF4, 1 }, { 5, 0, (int)D_00096CEC, 0 },
-    { 6, 0, (int)D_00096CE4, 0 }
+    { 0, 0, (int)"TLIGHT01", 0 }, { 1, 0, (int)"TLIGHT02", 0 },
+    { 2, 0, (int)"SLAMP1", 0 }, { 3, 0, (int)"SLAMP3", 1 },
+    { 4, 0, (int)"SLAMP2", 1 }, { 5, 0, (int)"GARAGE", 0 },
+    { 6, 0, (int)"GUITAR", 0 }
 };
 AO D_0008AD1C[6] = {
-    { 0, 0, (int)(D_00010A40 + 0x48), 0 }, { 1, 0, (int)(D_00010A40 + 0xC), 0 },
-    { 2, 0, (int)(D_00010A40 + 0x3C), 1 }, { 3, 0, (int)(D_00010A40 + 0x30), 1 },
-    { 4, 0, (int)(D_00010A40 + 0x24), 0 }, { 5, 0, (int)(D_00010A40 + 0x18), 0 }
+    { 0, 0, (int)"TLIGHT00", 0 }, { 1, 0, (int)"TLIGHT01", 0 },
+    { 2, 0, (int)"SLIGHT00", 1 }, { 3, 0, (int)"SLIGHT01", 1 },
+    { 4, 0, (int)"SLIGHT03", 0 }, { 5, 0, (int)"SLIGHT02", 0 }
 };
 AO D_0008AD7C[5] = {
-    { 0, 0, (int)(D_00010A40 + 0x48), 0 }, { 1, 0, (int)(D_00010A40 + 0xC), 0 },
-    { 2, 0, (int)(D_00010A40 + 0x3C), 1 }, { 3, 0, (int)(D_00010A40 + 0x30), 1 },
-    { 4, 0, (int)(D_00010A40 + 0x18), 0 }
+    { 0, 0, (int)"TLIGHT00", 0 }, { 1, 0, (int)"TLIGHT01", 0 },
+    { 2, 0, (int)"SLIGHT00", 1 }, { 3, 0, (int)"SLIGHT01", 1 },
+    { 4, 0, (int)"SLIGHT02", 0 }
 };
 AO D_0008ADCC[7] = {
-    { 0, 0, (int)(D_00010A40 + 0x48), 0 }, { 1, 0, (int)(D_00010A40 + 0xC), 0 },
-    { 2, 0, (int)(D_00010A40 + 0x3C), 1 }, { 3, 0, (int)(D_00010A40 + 0x30), 1 },
-    { 4, 0, (int)(D_00010A40 + 0x18), 0 }, { 5, 0, (int)D_00096D0C, 0 },
-    { 6, 0, (int)(D_00010A40 + 0x54), 0 }
+    { 0, 0, (int)"TLIGHT00", 0 }, { 1, 0, (int)"TLIGHT01", 0 },
+    { 2, 0, (int)"SLIGHT00", 1 }, { 3, 0, (int)"SLIGHT01", 1 },
+    { 4, 0, (int)"SLIGHT02", 0 }, { 5, 0, (int)"MANHOLE", 0 },
+    { 6, 0, (int)"BURNING_DRUM", 0 }
 };
 AO *D_0008AE3C[8] = { D_0008ACAC, D_0008AD1C, 0, D_0008AD7C, 0, D_0008ADCC, 0, 0 };
 int D_0008AE5C[8] = { 7, 6, 0, 4, 0, 6, 0, 0 };
@@ -103,34 +100,36 @@ struct { int x, y, z, pad; } D_0008AE7C[1] = { { 0x1A5E0, 0, -0x5FC3A, 0 } };
 /* the smashable objects { model, name, sound, volume, pitch } (D2 SMASHABLE_OBJECT, 25 of them); D_0008AEB4
  * (= entry 2, bcollide.c) is reached by name: PROVIDEd by the link */
 int D_0008AE8C[25][5] = {
-    { 0, (int)(D_00010A40 + 0x1CC), 0xB, 0, 0x320 },
-    { 0, (int)(D_00010A40 + 0x1C0), 0xA, 0xFA0, 0x1000 },
-    { 0, (int)(D_00010A40 + 0x1B0), 0xB, 0, 0x320 },
-    { 0, (int)(D_00010A40 + 0x1A0), 0xB, 0, 0x320 },
-    { 0, (int)(D_00010A40 + 0x194), 0xD, -0x1964, 0xC80 },
-    { 0, (int)(D_00010A40 + 0x184), 0xD, -0x1964, 0xC80 },
-    { 0, (int)(D_00010A40 + 0x174), 0xC, -0xCE4, 0x960 },
-    { 0, (int)(D_00010A40 + 0x164), 0xD, -0x1964, 0xC80 },
-    { 0, (int)(D_00010A40 + 0x154), 0xD, -0x1964, 0xC80 },
-    { 0, (int)(D_00010A40 + 0x144), 0xD, -0x1964, 0xC80 },
-    { 0, (int)(D_00010A40 + 0x130), 0xD, -0x1964, 0xC80 },
-    { 0, (int)(D_00010A40 + 0x120), 0xC, -0xCE4, 0x960 },
-    { 0, (int)(D_00010A40 + 0x110), 0xC, -0xCE4, 0x960 },
-    { 0, (int)(D_00010A40 + 0x100), 0xD, -0x1964, 0xC80 },
-    { 0, (int)(D_00010A40 + 0xF4), 0xD, -0x1964, 0xC80 },
-    { 0, (int)(D_00010A40 + 0xE4), 0xC, -0x1D4C, 0x2328 },
-    { 0, (int)(D_00010A40 + 0xD4), 0xD, -0x1964, 0xC80 },
-    { 0, (int)(D_00010A40 + 0xC4), 0xB, 0, 0x320 },
-    { 0, (int)(D_00010A40 + 0xB4), 0xB, 0, 0x320 },
-    { 0, (int)(D_00010A40 + 0xA4), 0xB, 0, 0x320 },
-    { 0, (int)(D_00010A40 + 0x94), 0xB, 0, 0x320 },
-    { 0, (int)(D_00010A40 + 0x84), 0xB, 0, 0x320 },
-    { 0, (int)(D_00010A40 + 0x74), 0xB, 0, 0x320 },
-    { 0, (int)(D_00010A40 + 0x64), 0xB, 0, 0x320 },
+    { 0, (int)"CONE_TASTIC", 0xB, 0, 0x320 },
+    { 0, (int)"BOX_TASTIC", 0xA, 0xFA0, 0x1000 },
+    { 0, (int)"CONE1_TASTIC", 0xB, 0, 0x320 },
+    { 0, (int)"CONE2_TASTIC", 0xB, 0, 0x320 },
+    { 0, (int)"BIN_TASTIC", 0xD, -0x1964, 0xC80 },
+    { 0, (int)"BARRIER_TASTIC", 0xD, -0x1964, 0xC80 },
+    { 0, (int)"BARREL_TASTIC", 0xC, -0xCE4, 0x960 },
+    { 0, (int)"TABLE_TASTIC", 0xD, -0x1964, 0xC80 },
+    { 0, (int)"CHAIR_TASTIC", 0xD, -0x1964, 0xC80 },
+    { 0, (int)"UMBRELLA_TASTIC", 0xD, -0x1964, 0xC80 },
+    { 0, (int)"UMBRELLA1_TASTIC", 0xD, -0x1964, 0xC80 },
+    { 0, (int)"PHONE_TASTIC", 0xC, -0xCE4, 0x960 },
+    { 0, (int)"PHONE1_TASTIC", 0xC, -0xCE4, 0x960 },
+    { 0, (int)"SIGN00_TASTIC", 0xD, -0x1964, 0xC80 },
+    { 0, (int)"NEWS_TASTIC", 0xD, -0x1964, 0xC80 },
+    { 0, (int)"PARKING_TASTIC", 0xC, -0x1D4C, 0x2328 },
+    { 0, (int)"FENCE_TASTIC", 0xD, -0x1964, 0xC80 },
+    { 0, (int)"CONE_TASTIC1", 0xB, 0, 0x320 },
+    { 0, (int)"CONE_TASTIC2", 0xB, 0, 0x320 },
+    { 0, (int)"CONE_TASTIC3", 0xB, 0, 0x320 },
+    { 0, (int)"CONE_TASTIC4", 0xB, 0, 0x320 },
+    { 0, (int)"TRAININGCONES1", 0xB, 0, 0x320 },
+    { 0, (int)"TRAININGCONES2", 0xB, 0, 0x320 },
+    { 0, (int)"TRAININGCONES3", 0xB, 0, 0x320 },
     { 0, 0, 0, 0, 0 }
 };
 
-/* .sdata 0x96D18 (the strings before it, 0x96CE4-0x96D17, are the names the tables above point at) */
+/* .sdata 0x96CE4-0x96D1C: the short names the tables above point at (gcc puts literals of up to 8 bytes in .sdata),
+ * an empty string no code or table names (spelled as a char array), D_00096D18 */
+char D_00096D14[4] = "";
 int D_00096D18 = 0;
 
 /* .sbss 0x975AC (also reached through $gp by texture.c) */
