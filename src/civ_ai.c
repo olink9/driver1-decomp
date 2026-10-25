@@ -219,44 +219,10 @@ extern int func_000612FC();
 extern void func_00063AB4();
 struct O { unsigned char a; char p1[7]; char c8; char p2[2]; unsigned char cB; char p3[0x1C]; int i28; };
 typedef struct {
-    int x;
-    int pad4;
-    int z;
-} XZ;
-typedef struct {
     int a;
     int b;
 } PAIR;
 extern void func_0004D740();
-typedef struct {
-    unsigned char id;
-    unsigned char x1;
-    unsigned char x2;
-    char pad3[6];
-    unsigned char x9;
-    char padA[8];
-    short x12;
-    unsigned char x14;
-    char pad15[3];
-    int x18;
-    int x1C;
-    int x20;
-    int x24;
-    int x28;
-    int x2C;
-    int x30;
-    int x34;
-    int x38;
-    int pad3c;
-    int x40;
-    int x44;
-} OBJ_b062;
-typedef struct {
-    int x;
-    int y;
-    int z;
-    char pad[0x18C - 12];
-} POS_b062;
 typedef struct {
     int a;
     int b;
@@ -271,10 +237,6 @@ typedef struct {
     int x;
     int z;
 } XZ_b062;
-typedef struct {
-    char pad[0x26];
-    unsigned char c26;
-} C;
 typedef struct { int x, z; } POS2;
 extern long long D_00096870;
 extern short func_00020DB4();
@@ -2343,55 +2305,42 @@ int func_00016F0C(CAR *car, NODE *node)
 #undef NODE
 
 /* ---------------- func_00017780 (src/pilot/func_00017780.c) ---------------- */
-#define OBJ OBJ__func_00017780
-typedef struct {
-    unsigned char id;
-    char pad1[0x16];
-    unsigned char flags;
-    char pad18[0x24 - 0x18];
-    int x24;
-    char pad28[0x38 - 0x28];
-    int x38;
-    int pad3c;
-    int x40;
-    int x44;
-} OBJ;
-unsigned char func_00017780(OBJ *p, int a1, int a2, unsigned char mode)
+unsigned char func_00017780(CIV_SLOT *p, VECTOR *a1, int *a2, unsigned char mode)
 {
     unsigned char res = 1;
     CAR_DATA *e = &D_0009B230[p->id];
     int d;
 
-    if (p->x40 != 0x7FFFFFFF && p->x38 != 0 && (mode == 0 || mode == 2))
+    if (p->f40 != 0x7FFFFFFF && p->f38 != 0 && (mode == 0 || mode == 2))
     {
-        d = p->x40 - e->where.t[0];
+        d = p->f40 - e->where.t[0];
         if (abs(d) <= 32)
         {
-            if (p->flags & 1)
+            if (p->f17 & 1)
             {
-                e->where.t[0] = p->x40;
-                p->x40 = 0x7FFFFFFF;
-                p->flags &= 0xDE;
+                e->where.t[0] = p->f40;
+                p->f40 = 0x7FFFFFFF;
+                p->f17 &= 0xDE;
                 e->fF4 = 0;
                 e->angle.vy = 0;
-                if (p->flags & 0x10)
-                    p->flags = (p->flags & 0xEF) | 8;
+                if (p->f17 & 0x10)
+                    p->f17 = (p->f17 & 0xEF) | 8;
             }
         }
-        else if (p->x38 >= 11)
+        else if (p->f38 >= 11)
         {
-            if (p->flags & 1)
+            if (p->f17 & 1)
             {
-                if (p->x24 == 2)
+                if (p->f24 == 2)
                 {
-                    if (p->flags & 0x30)
+                    if (p->f17 & 0x30)
                         e->fF4 = -(d / 8);
                     else
                         e->fF4 = -(d / 32);
                 }
                 else
                 {
-                    if (p->flags & 0x30)
+                    if (p->f17 & 0x30)
                         e->fF4 = d / 8;
                     else
                         e->fF4 = d / 32;
@@ -2401,36 +2350,36 @@ unsigned char func_00017780(OBJ *p, int a1, int a2, unsigned char mode)
         }
     }
 
-    if (p->x44 != 0x7FFFFFFF && p->x38 != 0 && (mode == 1 || mode == 3))
+    if (p->f44 != 0x7FFFFFFF && p->f38 != 0 && (mode == 1 || mode == 3))
     {
-        d = p->x44 - e->where.t[2];
+        d = p->f44 - e->where.t[2];
         if (abs(d) <= 32)
         {
-            if (p->flags & 1)
+            if (p->f17 & 1)
             {
-                e->where.t[2] = p->x44;
-                p->x44 = 0x7FFFFFFF;
-                p->flags &= 0xDE;
+                e->where.t[2] = p->f44;
+                p->f44 = 0x7FFFFFFF;
+                p->f17 &= 0xDE;
                 e->fF4 = 0;
                 e->angle.vy = 0;
-                if (p->flags & 0x10)
-                    p->flags = (p->flags & 0xEF) | 8;
+                if (p->f17 & 0x10)
+                    p->f17 = (p->f17 & 0xEF) | 8;
             }
         }
-        else if (p->x38 >= 11)
+        else if (p->f38 >= 11)
         {
-            if (p->flags & 1)
+            if (p->f17 & 1)
             {
-                if (p->x24 == 1)
+                if (p->f24 == 1)
                 {
-                    if (p->flags & 0x30)
+                    if (p->f17 & 0x30)
                         e->fF4 = -(d / 8);
                     else
                         e->fF4 = -(d / 32);
                 }
                 else
                 {
-                    if (p->flags & 0x30)
+                    if (p->f17 & 0x30)
                         e->fF4 = d / 8;
                     else
                         e->fF4 = d / 32;
@@ -2442,12 +2391,11 @@ unsigned char func_00017780(OBJ *p, int a1, int a2, unsigned char mode)
 
     if (res)
     {
-        p->x40 = 0x7FFFFFFF;
-        p->x44 = 0x7FFFFFFF;
+        p->f40 = 0x7FFFFFFF;
+        p->f44 = 0x7FFFFFFF;
     }
     return res;
 }
-#undef OBJ
 
 /* ---------------- func_00017A50 (src/pilot/func_00017A50.c) ---------------- */
 int func_00017A50(void)
@@ -2555,48 +2503,8 @@ void func_00017D74(struct O *o) {
 }
 
 /* ---------------- func_00017DE8 (src/pilot/func_00017DE8.c) ---------------- */
-#define CAR CAR__func_00017DE8
-#define OBJ OBJ__func_00017DE8
 #define SEG SEG__func_00017DE8
-#define car_data car_data__func_00017DE8
-#define func_00017780 func_00017780__func_00017DE8
 /* func_00017DE8 - no Driver 2 counterpart */
-typedef struct {
-    char pad0[0xC8];
-    XZ pos;
-    int xD4;
-    int xD8[(0x108 - 0xD8) / 4];
-    int x108;
-    char pad10C[0x18C - 0x10C];
-} CAR;
-typedef struct {
-    unsigned char id;
-    unsigned char x1;
-    unsigned char state;
-    unsigned char x3;
-    char pad4[0x9 - 0x4];
-    unsigned char x9;
-    char padA[0xC - 0xA];
-    unsigned char xC;
-    unsigned char xD;
-    char padE[0x12 - 0xE];
-    short x12;
-    unsigned char x14;
-    char pad15[0x17 - 0x15];
-    unsigned char flags;
-    int x18;
-    int x1C;
-    int x20;
-    int x24;
-    char pad28[0x2C - 0x28];
-    int x2C;
-    int x30;
-    int x34;
-    int x38;
-    char pad3C[0x40 - 0x3C];
-    int x40;
-    int x44;
-} OBJ;
 typedef struct {
     int x;
     int z;
@@ -2607,81 +2515,75 @@ typedef struct {
     short pad12;
     int pad14;
 } SEG;
-extern CAR car_data[] __asm__("car_data");
-extern int func_00017780(OBJ *p, XZ *a1, int *a2, unsigned char mode) __asm__("func_00017780");
-void func_00017DE8(OBJ *c)
+void func_00017DE8(CIV_SLOT *c)
 {
     SEG s1;
     SEG s2;
     PAIR pr;
-    XZ *p;
+    VECTOR *p;
     int *pz;
     int ok;
     int r;
     int t;
 
-    if (c->x38 == 0)
+    if (c->f38 == 0)
         return;
-    if (c->state == 1) {
+    if (c->f2 == 1) {
         p = &car_data[c->id + 1].pos;
-        if (func_00021820(p->x, p->z, c->x24, &s1) == 0) {
-            c->x18 = s1.x;
-            c->x1C = s1.z;
-            c->x20 = s1.y;
-            c->x12 = s1.dir;
+        if (func_00021820(p->vx, p->vz, c->f24, &s1) == 0) {
+            c->f18 = s1.x;
+            c->f1C = s1.z;
+            c->f20 = s1.y;
+            c->f12 = s1.dir;
         }
-        if ((unsigned)(c->xD - 1) < 0x7C)
-            c->xD++;
+        if ((unsigned)(c->fD - 1) < 0x7C)
+            c->fD++;
         return;
     }
     p = &car_data[c->id + 1].pos;
-    pz = &p->z;
-    if (func_00018100(c, c->x24 << 10) < 64)
-        ok = func_00017780(c, p, pz, c->x24);
+    pz = &p->vz;
+    if (func_00018100(c, c->f24 << 10) < 64)
+        ok = ((int (*)(CIV_SLOT *, VECTOR *, int *, unsigned char))func_00017780)(c, p, pz, c->f24);
     else
         ok = 0;
-    r = func_00021820(p->x, *pz, c->x24, &s2);
+    r = func_00021820(p->vx, *pz, c->f24, &s2);
     if ((ok != 0 && s2.y == -1) || s2.y == 0x3FFF) {
-        c->state = 1;
+        c->f2 = 1;
         return;
     }
-    if (r == 1 && c->x3 != 0) {
-        func_00014FC4(c->x2C, c->x30, c->x34, 2, c->x9, &pr);
-        c->flags &= ~4;
-        c->x40 = pr.a;
-        c->x44 = pr.b;
-        c->x1 = 3;
-        c->x14 = 0;
+    if (r == 1 && c->f3 != 0) {
+        func_00014FC4(c->f2C, c->f30, c->f34, 2, c->f9, &pr);
+        c->f17 &= ~4;
+        c->f40 = pr.a;
+        c->f44 = pr.b;
+        c->f1 = 3;
+        c->f14 = 0;
         return;
     }
     if (r != 0)
         return;
-    c->x18 = s2.x;
-    c->x1C = s2.z;
-    c->x20 = s2.y;
-    c->x12 = s2.dir;
-    c->x9 = func_00015338(c);
-    if (c->xC != 0)
-        c->xC--;
-    if (car_data[0].x108 < 31)
+    c->f18 = s2.x;
+    c->f1C = s2.z;
+    c->f20 = s2.y;
+    c->f12 = s2.dir;
+    c->f9 = func_00015338(c);
+    if (c->fC != 0)
+        c->fC--;
+    if (car_data[0].speed < 31)
         return;
-    if (c->x38 < 11)
+    if (c->f38 < 11)
         return;
     if (func_0001A1BC(&car_data[c->id + 1]) == 0)
         return;
-    if (c->xC != 0)
+    if (c->fC != 0)
         return;
     t = c->id & 3;
     if (t == 3)
         t = 2;
-    c->xC = 13;
-    func_0004D740(-1, 0, t + 6, &car_data[c->id + 1].pos, car_data[c->id + 1].xD8);
+    c->fC = 13;
+    func_0004D740(-1, 0, t + 6, &car_data[c->id + 1].pos, &car_data[c->id + 1].vel);
 }
-#undef CAR
-#undef OBJ
 #undef SEG
-#undef car_data
-#undef func_00017780
 
 /* ---------------- func_00018100 (src/pilot/func_00018100.c) ---------------- */
 int func_00018100(unsigned char *p, int target) {
@@ -2699,42 +2601,38 @@ int func_00018100(unsigned char *p, int target) {
 }
 
 /* ---------------- func_000181B4 (src/pilot/func_000181B4.c) ---------------- */
-#define D_0009B2F8 D_0009B2F8__func_000181B4
-#define func_00017780 func_00017780__func_000181B4
 /* func_000181B4: car AI - turn toward the target heading, then pick the next road segment */
-extern POS_b062 D_0009B2F8[] __asm__("D_0009B2F8");
-extern void func_00017780(OBJ_b062 *, POS_b062 *, int *, unsigned char) __asm__("func_00017780");
 #define ABSDIFF(a, b) (((a) - (b)) < 0 ? (b) - (a) : (a) - (b))
-void func_000181B4(OBJ_b062 *p)
+void func_000181B4(CIV_SLOT *p)
 {
-    POS_b062 *px;
+    VECTOR *px;
     int *pz;
     int r;
     int ang, dir, d, steer;
     SEG_b062 seg;
     XZ_b062 v;
 
-    if (p->x2 == 1 || p->x38 == 0)
+    if (p->f2 == 1 || p->f38 == 0)
         return;
 
-    px = &D_0009B2F8[p->id];
-    pz = &px->z;
-    r = (short)func_00021558(px->x, px->z);
-    p->x28 = r;
+    px = &D_0009B230[p->id].pos;
+    pz = &px->vz;
+    r = (short)func_00021558(px->vx, px->vz);
+    p->f28 = r;
 
-    if (p->x14 == 0) {
-        switch (p->x24) {
+    if (p->f14 == 0) {
+        switch (p->f24) {
         case 0:
         case 2:
-            if (ABSDIFF(*pz, p->x44) < p->x38 + 700)
-                p->x14 = 1;
+            if (ABSDIFF(*pz, p->f44) < p->f38 + 700)
+                p->f14 = 1;
             else
                 return;
             break;
         case 1:
         case 3:
-            if (ABSDIFF(px->x, p->x40) < p->x38 + 700)
-                p->x14 = 1;
+            if (ABSDIFF(px->vx, p->f40) < p->f38 + 700)
+                p->f14 = 1;
             else
                 return;
             break;
@@ -2742,7 +2640,7 @@ void func_000181B4(OBJ_b062 *p)
     }
 
     steer = 0;
-    ang = p->x30 << 10;
+    ang = p->f30 << 10;
     dir = D_0009B230[p->id].direction & 0xFFF;
     d = ((ang - dir + 0x800) & 0xFFF) - 0x800;
     if (dir != ang) {
@@ -2757,27 +2655,25 @@ void func_000181B4(OBJ_b062 *p)
 
     if (abs(d) < 64) {
         if (!(r & 0x4000)) {
-        p->x1 = 2;
-        p->x24 = p->x30;
-        p->x28 = p->x2C;
-        func_00021820(px->x, *pz, p->x24, &seg);
-        p->x18 = seg.a;
-        p->x1C = seg.b;
-        p->x20 = seg.c;
-        p->x12 = seg.d;
+        p->f1 = 2;
+        p->f24 = p->f30;
+        p->f28 = p->f2C;
+        func_00021820(px->vx, *pz, p->f24, &seg);
+        p->f18 = seg.a;
+        p->f1C = seg.b;
+        p->f20 = seg.c;
+        p->f12 = seg.d;
         if (func_00016F0C(p, &seg)) {
-            func_00014FC4(p->x28, p->x24, p->x34, 2, p->x9, &v);
-            p->x44 = v.z;
-            p->x40 = v.x;
+            func_00014FC4(p->f28, p->f24, p->f34, 2, p->f9, &v);
+            p->f44 = v.z;
+            p->f40 = v.x;
         }
         } else {
-            func_00017780(p, px, pz, p->x30);
+            func_00017780(p, px, pz, p->f30);
         }
     }
 }
 #undef ABSDIFF
-#undef D_0009B2F8
-#undef func_00017780
 
 /* ---------------- func_00018478 (src/pilot/func_00018478.c) ---------------- */
 void func_00018478(unsigned char *p)
