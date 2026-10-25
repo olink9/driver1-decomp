@@ -10,8 +10,13 @@
  *    types come from include/structs.h. CAR px/py/pz (0x18) = where.t[], x/y/z = pos, ax/ay/az (ushort 0xE8) =
  *    angle.vx/vy/vz (short: same bytes), ang = direction.
  *  - D_00096C48/4A/4C: S8 (8 bytes, so absolute like the long long spelling; func_0003D6C0 already went through (short *)).
+ * Step 4: the file defines its own data in address order (.data 0x8A1DC-0x8A6BC, .sdata 0x96A58-0x96A8C, .sbss
+ *   0x973BC-0x973D0; all one block). D_0008A1E0 (= D_0008A1DC.vy) and D_00096A7A (high half of D_00096A78) are
+ *   interior labels the original names: they stay extern (linkcheck PROVIDEs them). abs= lists the other files'
+ *   small globals the original reaches with %hi/%lo (the old `extern long long` spellings). .bss stays extern (.comm).
  * Functions 309-310 (func_0003DF94, func_0003E244, 0x3DF94-0x3E540) are HANDWRITTEN ASM and stay out of this TU.
  */
+/* maspsx: abs=D_000970E4,D_0009733C,D_00097398,D_00097368,D_000970E0,D_000970D4,D_00097108,pauseflag,D_0009752C,D_00096DA8,D_00096A48,tracking_car,cameraview,D_00096899 */
 
 #include "structs.h"
 
@@ -33,55 +38,92 @@ typedef struct { short s, c; } CS;
 typedef struct { int v; int pad[3]; } I8;
 struct V3 { int x, y, z; };
 
+/* ---- camera.c's own data (Step 4), in address order ---- */
+/* .data 0x8A1DC-0x8A6BC: camera offset (D_0008A1E0 = .vy, reached by name: stays extern), the camera matrix,
+ * and an unreferenced short table that fills the block up to denting.c's data */
+VECTOR D_0008A1DC = { -45, -380, -125, 0 };
+MATRIX D_0008A1EC = { { { 0x1000, 0, 0 }, { 0, 0x1000, 0 }, { 0, 0, 0x1000 } }, { 0, 0, 0 } };
+short D_0008A20C[600] = { 0, 1, 3, 9, 0xA, 0xB, 0xC, 0xD, 0xE, 0xF, 0x19, 0x1A, 0x29, 0x2A, 0x2B, 0x2C, 0x2D, 
+0x2E, 0x2F, 0x30, 0x3D, 0x3E, 0x3F, 0x40, 0x41, 0x42, 0x43, 0x47, 0x48, 0x69, 0x6A, 0x95, 0x96, 0x97, 0x98, 
+0x99, 0xA6, 0xA7, 0xAC, 0xAD, 0xAE, 0xB8, 0xB9, 0xBB, 0xBC, 0xC5, 0xC6, 0xC7, 0xC8, 0xC9, 0xCA, 0xCB, 0xCC, 
+0xCD, 0xCE, 0xCF, 0xD0, 0xD5, 0xD6, 0xD7, 0xD8, 0xD9, 0xDA, 0xDB, 0xE5, 0xE6, 0xE7, 0xE8, 0xE9, 0xEA, 0xEB, 
+0xEC, 0xED, 0xEE, -0x1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0x1C, 0x1D, 0x1F, 0x21, 0x23, 0x26, 0x28, 0x31, 0x32, 
+0x33, 0x34, 0x39, 0x3A, 0x45, 0x46, 0x49, 0x4A, 0x4B, 0x4C, 0x4D, 0x50, 0x58, 0x59, 0x5A, 0x5B, 0x5D, 0x5E, 
+0x5F, 0x60, 0x63, 0x65, 0x66, 0x67, 0x68, 0x6D, 0x6E, 0x7B, 0xA0, 0xA1, 0xA2, 0xA3, 0xA8, 0xA9, 0xB1, 0xB2, 
+0xB5, 0xC1, 0xC2, 0xD1, 0xD2, 0xE3, 0xE4, -0x1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };  /* 0x8A1EC */
+
+/* .sdata 0x96A58-0x96A8C (D_00096A64 is used only by main/director/objcoll; D_00096A5C/6A/70/80/88 are the
+ * second halves of 8-byte slots, unreferenced by name) */
+int D_00096A58 = 0x400;
+int D_00096A5C = 0;
+int D_00096A60 = 0x640;
+int D_00096A64 = 0x640;
+short D_00096A68 = 0;
+short D_00096A6A = 0;
+int D_00096A6C = 0x800;
+int D_00096A70 = -10;
+int D_00096A74 = 0;
+int D_00096A78 = 0;
+extern short D_00096A7A;  /* = high half of D_00096A78, reached by name */
+int D_00096A7C = 0;
+int D_00096A80 = 0;
+int D_00096A84 = 0x1F4;
+int D_00096A88 = 1;
+
+/* .sbss 0x973BC-0x973D0 */
+int D_000973BC;
+CAR_DATA *D_000973C0;
+int D_000973C4;
+int D_000973C8;
+int D_000973CC;
+
 /* ---- externs ---- */
 extern VECTOR camera_position;
-extern long long D_000970E4;
-extern long long D_0009733C;
-extern long long D_00097398;
-extern long long D_00097368;
-extern long long D_000970E0;
-extern long long D_000970D4;
-extern long long D_00097108;
-extern int D_00096A60;
+extern int D_000970E4;
+extern int D_0009733C;
+extern int D_00097398;
+extern int D_00097368;
+extern int D_000970E0;
+extern int D_000970D4;
+extern int D_00097108;
 extern CAR_DATA car_data[];
 extern CAR_DATA D_0009D750[];
-extern CAR_DATA *D_000973C0;
-extern long long pauseflag;
-extern long long D_0009752C;
-extern long long D_00096DA8;
-extern int D_00096A74;
-extern int D_00096A78;
+extern int pauseflag;
+extern int D_0009752C;
+extern int D_00096DA8;
 extern short D_00096A7A;
-extern int D_00096A7C;
-extern int D_00096A58;
-extern short D_00096A68;
-extern int D_00096A6C;
-extern int D_000973C4;
-extern int D_000973CC;
-extern int D_000973BC;
 extern short rcossin_tbl[];
-extern VECTOR D_0008A1DC;
 extern S8 D_00096C48;
 extern S8 D_00096C4A;
 extern S8 D_00096C4C;
-extern long long D_00096A48;
+extern int D_00096A48;
 extern int MapHeight();
 extern void func_0004AD94();
 extern int ratan2();
 extern void func_00077D6C();
 extern void func_0004EB7C();
-extern long long tracking_car;
-extern long long cameraview;
-extern int D_000973C8;
+extern int tracking_car;
+extern int cameraview;
 extern int SquareRoot0();
 extern void func_00061374();
-extern long long D_00096899;
-extern int D_00096A84;
+extern int D_00096899;
 extern MATRIX D_000AF6A0[];
 extern MATRIX D_0008AA38;
 extern MATRIX inv_camera_matrix;
 extern MATRIX D_000BBEA4;
-extern MATRIX D_0008A1EC;
 extern MATRIX D_000AF9C0;
 extern struct { int a[4]; int cur; int prev; } D_0009D8DC;
 extern void InvertMatrix();
