@@ -11,6 +11,7 @@
  *    indexes it as int[] (gcc then keeps the base in $s6 across the loop; a cast folds to sym+260 and changes
  *    allocation), so that function keeps a block-scope `extern int D_000C6F04[]` VIEW and the MISSION
  *    declaration follows it.
+ *  - D_000BE9C4/D_000BE9E0: structs.h PERCENTAGE_BAR (was SndS: c -> position).
  *  - DrawSync, VSync, RotMatrix, SVECTOR, VECTOR: taken from the PsyQ headers via common.h.
  * Same file as main.c? Probably: the string literals are interleaved in .rodata - 0x1023C GLOAD.TIM
  * (func_00024754/func_00024F1C) and 0x10258-0x10298 (main(); MCARD.BIN 0x10280 and 0x1028C are also
@@ -28,11 +29,6 @@ typedef struct {
 typedef struct { int a; char pad[52]; } S38;
 typedef struct { short x, y, w, h; } RECT;
 typedef struct { unsigned char v; char pad[7]; } B8;
-typedef struct {
-    char pad0[0xC];
-    short c;
-    char pad1[2];
-} SndS;
 /* func_00025C68's view of car_data[0] (kept: CAR_DATA field access grows it by 12 bytes) */
 typedef struct {
     char pad0[4];
@@ -152,8 +148,8 @@ extern int D_000970A4;
 extern int D_000970D0;
 extern int D_000970EC;
 extern CAR_DATA car_data[];
-extern SndS D_000BE9C4;
-extern SndS D_000BE9E0;
+extern PERCENTAGE_BAR D_000BE9C4;
+extern PERCENTAGE_BAR D_000BE9E0;
 extern void func_00014A8C();
 extern void DrawTyreTracks();
 extern void func_0002C53C();
@@ -872,7 +868,7 @@ void func_00025748(void)
                         cp->damage[i] = 0;
                     cp->totalDamage = 0;
                 } else {
-                    D_000BE9E0.c = cp->totalDamage;
+                    D_000BE9E0.position = cp->totalDamage;
                     DrawPercentageBar(&D_000BE9E0);
                 }
             }
@@ -886,7 +882,7 @@ void func_00025748(void)
             }
 
             if (snd != -1 && D_000967E8 == 0 && D_00096858 == 0) {
-                D_000BE9C4.c = snd;
+                D_000BE9C4.position = snd;
                 DrawPercentageBar(&D_000BE9C4);
             }
         }
