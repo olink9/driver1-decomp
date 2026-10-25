@@ -58,3 +58,28 @@ then lessons (append them to this file under "## Lessons" with your batch name, 
   a data-pointed string. Pilot sizes can be wrong (shadow D_00097178 [8] overlapped D_0009717C): the one-block report finds it.
 - After the move cmpfn/fd.sh show only relocation-form diffs (`.sbss+off` vs the symbol) - linkcheck is the check; use the
   per-function diff only on a size failure (it found D_00097178 needing abs= and main's D_00097060+1 needing gp_allow_offset=1).
+### Batch 3 (camera denting bcollide objcoll gamesnd sound convert+sky loadview+system texture objanim overmap director pres civ_draw - all byte-identical, combined link of the 14 TUs OK)
+- Two more merges, each one block afterwards: convert.c -> sky.c (D2 CONVERT line order runs through both, sky's gp .sbss
+  spans ScaleCamera/Getlong, convert's only data D_0008AA38 sits right before sky's) and loadview.c -> system.c (.sbss
+  0x974FC.. alternates system/loadview variables each side uses alone, 0x97524 is $gp in both; .sdata and .rodata
+  interleave too). One shared $gp symbol alone is NOT enough: texture.c/objanim.c both $gp D_000975AC - kept apart.
+- A <=8-byte initialised array stays in .data with `extern T x[];` first AND a size-less definition `T x[] = {..};`
+  (director's icon lists, pres D_0008B704, system D_0008AB94); with an explicit size (`[2]`) it goes to .sdata anyway.
+- Address form: a complete small type + abs= gives maspsx's `la` (lui/addiu in ONE register, D_00097654); an
+  incomplete first declaration gives cc1's split lui/addiu (D_00096E28) - keep whichever the matched pilot had.
+- Constants the code copies whole are file-scope consts in .rodata at the right point: `const VECTOR D_00010C84`
+  (overmap), `const S9 D_00010920 = { "\\DRIVER\\" }` between loadview's and system's functions - closes .rodata holes.
+- Literals of <= 8 bytes go to .sdata, data-pointed ones included: overmap's level-name table is defined after
+  D_00096D60 so its names land behind it (moving a .data definition down keeps .data order, it is another section).
+- Unreferenced strings: cc1 2.7 emits the literal of `if (0) printf("...")` with no code (tested), which explains
+  sound.c's "InitSound\n".."---------------\n" (.rodata 0x106D0-0x10897) and the .sdata "Pause\n"/"%d" (sound),
+  "%d"/"%x" (pres). Not done: which function each lived in is a guess; the .sdata ones are char arrays for now.
+- Interior labels the original names (VECTOR .vy D_0008A1E0, camera_position.vz D_0008A8F8, RECT +2/+1 bytes,
+  D_00097699/9A): define the whole object, keep the label `extern` (linkcheck PROVIDEs it).
+- An 8-byte .sbss object 4 bytes into the file's .sbss needs sbss_align8=0 (sky D_000974E0, texture's RECTs).
+- Left undefined (no owner evidence): D_000974B4 (objcoll|gamesnd), .sdata 0x96E4C-0x96E5B (after civ_draw, before
+  felony), the "" words at 0x96CCC/0x96CE0. Placed by position only: camera_position + D_00096C48 (objcoll, could be
+  debris), D_0008ABAC (objanim, could be texture), D_000975A8 (texture). .bss stays extern in all 14 files.
+- Helpers (untracked): build/tu4-tools/own.py (labels of a range with users and $gp/abs per TU), gen.py/enc.py (C
+  initialisers from asm/data, enc.py by member widths incl. .asciz), apply.py (insert definitions, drop the externs
+  they replace, `extern long long` -> int + abs=).
