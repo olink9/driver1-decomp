@@ -18,7 +18,12 @@
  *     func_00065424: OBJ, ENT, S7C, CAR, car_data, D_000C4C6C, D_000C4690; func_000660D8: S, car_data;
  *   - func_0006466C's static inline dist() is dist_6466C (part 1 has another dist()).
  * Its OBJ/CAR/CARDEF/SE38/S120/ENT/SLOT shapes are PURSUER/CAR_DATA/CIV_SLOT seen through partial views.
+ * Step 4: defines its own data, in address order: .data 0x8BB6C-0x8BC34 (6 tables), .sdata 0x96E5C-0x96E6C
+ * (D_00096E5C is reached with %hi/%lo -> abs=; the 4 unlabelled words 0x96E4C-0x96E58 before it are left to civ_draw.c's
+ * block), .sbss 0x976F8-0x97768 (D_00097718/1C/20/2C fill unreferenced gaps; D_00097758/5A/5C are the three LIM shorts,
+ * +2/+4 reached absolutely -> abs=). I4 moved up to the part-1 types. extern long long -> real types + abs=.
  */
+/* maspsx: abs=D_00096FBC,D_0009775A,D_0009775C,D_00096FC8,D_00096898,D_00096E5C,D_0009703C,D_000976E8,D_000976EC,D_00096FF4,CameraCnt,D_00096770,D_000974C0,D_00096834,D_00097004,D_00096870 */
 #include "structs.h"
 
 /* include_asm.h's INCLUDE_ASM minus its .include of labels.inc (the build pipeline prepends macro.inc) */
@@ -30,6 +35,52 @@ typedef struct { char p[0x28]; unsigned char f28; } PLY;
 typedef struct { short a, b, c; } LIM;
 typedef struct { short a, b; } P;
 typedef struct { int v; } __attribute__((packed)) U;
+typedef struct { int v; } I4;
+
+/* ---- .data 0x8BB6C-0x8BC34: felony.c's own initialised data, in address order ---- */
+unsigned short D_0008BB6C[12] = { 0x18, 0, 0, 0, 0, 0, 0, 0, 0x18, 0, 0x18, 0 };
+unsigned short D_0008BB84[34] = { 0x80, 0, 0x80, 0x40, 0x40, 0x20, 0x20, 0, 0x80, 0x100, 0x40, 0, 0x293, 0, 0x293, 0x4B, 0x293, 0, 0x293, 0, 0x293, 0x293, 0x526, 0x293, 0x293, 0x293, 0x293, 0x19, 0x293, 0, 0x293, 0, 0x293, 0 };
+U D_0008BBC8[4] = { { 1 }, { 3 }, { 2 }, { 4 } };
+int D_0008BBD8[3] = { 0x122, 0x12C, 0x136 };
+int D_0008BBE4[3] = { 0x154, 0x17C, 0x1A4 };
+unsigned char D_0008BBF0[68] = { 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x81, 0x81, 0x81, 0x82, 0x82, 0x83, 0x83, 0x83, 0x84, 0x84, 0x85, 0x86, 0x86, 0x87, 0x88, 0x88, 0x89, 0x8A, 0x8A, 0x8B, 0x8C, 0x8D, 0x8E, 0x8F, 0x90, 0x90, 0x91, 0x92, 0x93, 0x94, 0x95, 0x96, 0x98, 0x99, 0x9A, 0x9B, 0x9C, 0x9D, 0x9E, 0xA0, 0xA1, 0xA2, 0xA3, 0xA4, 0xA6, 0xA7, 0xA8, 0xAA, 0xAB, 0xAC, 0xAE, 0xAF, 0xB0, 0xB2, 0xB3, 0xB5, 0, 0, 0 };
+
+/* ---- .sdata 0x96E5C-0x96E6C ---- */
+unsigned char D_00096E5C = 0;               /* reached with %hi/%lo: maspsx abs= */
+I4 D_00096E60 = { 0 };
+int D_00096E64 = 0x3C;
+int D_00096E68 = 0;
+
+/* ---- .sbss 0x976F8-0x97768: felony.c's own uninitialised globals, in address order ---- */
+int D_000976F8;
+int D_000976FC;
+int D_00097700;
+int D_00097704;
+int D_00097708;
+int D_0009770C;
+int D_00097710;
+int D_00097714;
+int D_00097718;                     /* unreferenced: fills the gap */
+int D_0009771C;                     /* unreferenced: fills the gap */
+int D_00097720;                     /* unreferenced: fills the gap */
+int D_00097724;
+int D_00097728;
+int D_0009772C;                     /* unreferenced: fills the gap */
+int D_00097730;
+int D_00097734;
+int D_00097738;
+int D_0009773C;
+int D_00097740;
+int D_00097744;
+int D_00097748;
+int D_0009774C;
+int D_00097750;
+int D_00097754;
+short D_00097758;                   /* chase limits (LIM: three shorts) */
+short D_0009775A;
+short D_0009775C;
+int D_00097760;
+int D_00097764;
 
 /* ---- externs ---- */
 extern CAR_DATA car_data[];
@@ -39,50 +90,25 @@ extern CIV_SLOT D_00098950[];
 extern CIV_SLOT D_00098900[];
 extern PLY D_00099120;
 extern char D_000BC9BC[];
-extern long long D_00096FBC;
+extern int D_00096FBC;
 extern int D_000C6FFC[];
-extern int D_00097704;
-extern int D_00097708;
-extern int D_0009770C;
-extern int D_00097744;
-extern short D_00097758;
-extern long long D_0009775A;
-extern long long D_0009775C;
 extern void func_0003A100();
 extern int func_0001B198();
 extern int func_000397F4();
 extern int ratan2();
 extern int SquareRoot0();
 extern void PlaySpeech();
-extern int D_00097764;
 extern void ClearMem();
-extern long long D_00096FC8;
+extern int D_00096FC8;
 extern void func_0001548C();
-extern long long D_00096898;
-extern int D_00097754;
-extern int D_00097750;
-extern int D_00097728;
-extern int D_00097734;
-extern int D_00097730;
-extern int D_000976F8;
-extern int D_00097738;
-extern int D_0009773C;
-extern int D_00097748;
-extern int D_0009774C;
-extern int D_00097724;
-extern int D_00097760;
-extern long long D_00096E5C;
+extern int D_00096898;
 extern int D_000C4C6C[];
 extern short D_000C4C7C[];
 extern P D_000988C8[];
-extern unsigned short D_0008BB6C[];
-extern unsigned short D_0008BB84[];
-extern U D_0008BBC8[];
 extern CAR_DATA D_0009B230[];
 extern PURSUER D_000C4690[];
 extern short rcossin_tbl[];
-extern int D_000976FC;
-extern long long D_0009703C;
+extern int D_0009703C;
 
 /* ---- functions defined in this file ---- */
 void func_000635A8();
@@ -676,12 +702,11 @@ typedef struct {
     int f8;
     int fC;
 } MAPINFO;
-typedef struct { int v; } I4;
 
 /* ---- externs ---- */
 extern B8 D_000976DC;
-extern long long D_000976E8;
-extern long long D_000976EC;
+extern int D_000976E8;
+extern int D_000976EC;
 extern int D_00097748;
 extern int D_0009774C;
 extern ENT D_00098950__p2[] __asm__("D_00098950");
@@ -706,11 +731,11 @@ extern int D_00097714;
 extern int D_00097760;
 extern int D_00097764;
 extern int D_00096E64;
-extern long long D_00096FC8;
-extern long long D_00096FF4;
+extern int D_00096FC8;
+extern int D_00096FF4;
 extern int D_000C4C84[];
 extern int D_000C4C98[];
-extern long long D_00096E5C;
+extern unsigned char D_00096E5C;
 extern S7C D_000C4C7C__p2 __asm__("D_000C4C7C");
 #define D_000C4C7C D_000C4C7C__p2
 extern S120 D_00099120__p2 __asm__("D_00099120");
@@ -726,13 +751,13 @@ extern void func_000635A8();
 extern int D_00097710;
 extern int D_000C4C6C[];
 /* MKTU CONFLICT (func_00065424): extern VEC D_000C4C6C; */
-extern long long CameraCnt;
+extern int CameraCnt;
 extern CARDEF D_0009B230__p2[] __asm__("D_0009B230");
 #define D_0009B230 D_0009B230__p2
 extern CAR D_000C4690__p2[] __asm__("D_000C4690");
 #define D_000C4690 D_000C4690__p2
 /* MKTU CONFLICT (func_00065424): extern OBJ D_000C4690[]; */
-extern long long D_00096770;
+extern int D_00096770;
 extern char D_000BC9BC[];
 extern void PlaySpeech();
 extern int D_00097730;
@@ -740,8 +765,8 @@ extern int D_00097750;
 extern int D_00097734;
 extern int D_00097754;
 extern int D_00097728;
-extern long long D_000974C0;
-extern long long D_00096834;
+extern int D_000974C0;
+extern int D_00096834;
 extern int D_000C4C90[];
 extern int D_0008BBC8__p2[] __asm__("D_0008BBC8");
 #define D_0008BBC8 D_0008BBC8__p2
@@ -752,8 +777,8 @@ extern int D_00097744;
 extern int D_00097740;
 extern I4 D_00096E60;
 extern int D_00097700;
-extern long long D_00097004;
-extern long long D_00096870;
+extern int D_00097004;
+extern int D_00096870;
 extern int D_000C4C8C[];
 extern int D_0009B1AC[];
 extern int D_0008BBD8[];
