@@ -56,18 +56,19 @@ typedef struct {
 } CELL_OBJ;
 
 typedef struct {
-    char pad0[0x10];
-    short f10, f12, f14, f16; /* 0x10 */
+    int x, y, z; /* 0x0 */
+    int fC; /* 0xC */
+    short f10[4]; /* 0x10 */
     unsigned char f18; /* 0x18 */
     char pad19;
     short f1A, f1C, f1E; /* 0x1A */
     char pad20[0x24 - 0x20];
     unsigned char f24; /* 0x24 */
     unsigned char f25; /* 0x25 */
-    unsigned char f26; /* 0x26 */
-    unsigned char f27; /* 0x27 */
+    unsigned char f26; /* 0x26 entries in list */
+    unsigned char f27; /* 0x27 dir */
     unsigned char f28; /* 0x28 */
-    char pad29[0x38 - 0x29];
+    unsigned char list[0x38 - 0x29]; /* 0x29 civ slot ids */
 } REC_99120;
 
 /* ---- shared declarations (identical in every pilot) ---- */
@@ -212,7 +213,6 @@ typedef struct {
 extern long long D_00096884;
 extern int func_000612FC();
 extern void func_00063AB4();
-struct O { unsigned char a; char p1[7]; char c8; char p2[2]; unsigned char cB; char p3[0x1C]; int i28; };
 typedef struct {
     int a;
     int b;
@@ -999,28 +999,25 @@ sw:
 #undef reroute
 
 /* ---------------- func_000142CC (src/pilot/func_000142CC.c) ---------------- */
-#define O O__func_000142CC
-typedef struct { char p0[9]; unsigned char b9; char p1[0xD]; unsigned char f17; int i18; char p2[0x20]; int i3C; } O;
-int func_000142CC(O *o)
+int func_000142CC(CIV_SLOT *o)
 {
     if (o->f17 & 8) {
-        o->i3C -= 16;
-        if (o->i3C < 0) o->i3C = 0;
+        o->f3C -= 16;
+        if (o->f3C < 0) o->f3C = 0;
     } else {
-        if (o->i18 < 0x28A || func_00018F44(o, 1, 0) != -1) {
-            o->i3C = 0;
+        if (o->f18 < 0x28A || func_00018F44(o, 1, 0) != -1) {
+            o->f3C = 0;
             return 0;
         }
-        if (o->i18 >= D_0008530C[o->b9 & 3])
+        if (o->f18 >= D_0008530C[o->f9 & 3])
             goto tab;
-        o->i3C = o->i18 / 24;
-        if (o->i3C < 5) o->i3C = 5;
+        o->f3C = o->f18 / 24;
+        if (o->f3C < 5) o->f3C = 5;
     }
-    return o->i3C;
+    return o->f3C;
 tab:
-    return D_000852FC[o->b9 & 3];
+    return D_000852FC[o->f9 & 3];
 }
-#undef O
 
 /* ---------------- func_000143CC (src/pilot/func_000143CC.c) ---------------- */
 #define cellmid cellmid__func_000143CC
@@ -1369,12 +1366,10 @@ void func_00014FC4(j, dir, flip, mode, lane, out)
 }
 
 /* ---------------- func_00015338 (src/pilot/func_00015338.c) ---------------- */
-#define P P__func_00015338
-typedef struct { unsigned char idx; char p0[0x23]; int dir; int w28; } P;
-unsigned char func_00015338(P *p)
+unsigned char func_00015338(CIV_SLOT *p)
 {
-    CAR_DATA *c = &D_0009B230[p->idx];
-    int w = p->w28;
+    CAR_DATA *c = &D_0009B230[p->id];
+    int w = p->f28;
     ROAD_INFO *r;
     int d, a3, q;
     unsigned char t0;
@@ -1382,8 +1377,8 @@ unsigned char func_00015338(P *p)
     a3 = 0;
     if (w & 0xC000) return 0;
     { ROAD_INFO *b = D_0009E744; r = &b[w]; }
-    d = p->dir;
-    t0 = ((unsigned char *)r)[d];
+    d = p->f24;
+    t0 = r->lanes[d];
     if (t0 == 1) return 0;
     switch (d) {
     case 0: q = (c->pos.vx + 750) / 1500; a3 = q - r->pos[0][0]; break;
@@ -1393,7 +1388,6 @@ unsigned char func_00015338(P *p)
     }
     return t0 - a3 - 1;
 }
-#undef P
 
 /* ---------------- func_0001548C (src/pilot/func_0001548C.c) ---------------- */
 void func_0001548C(int a, char *p)
@@ -2471,12 +2465,12 @@ void func_00017D6C(void)
 }
 
 /* ---------------- func_00017D74 (src/pilot/func_00017D74.c) ---------------- */
-void func_00017D74(struct O *o) {
-    o->c8 = 0;
-    if (o->cB != 0) {
-        o->cB = o->cB - 1;
-    } else if (o->i28 != -1) {
-        if ((func_0004FFE8(o->a) & 0x1F) == o->a) func_00018900(o);
+void func_00017D74(CIV_SLOT *o) {
+    o->f8 = 0;
+    if (o->fB != 0) {
+        o->fB = o->fB - 1;
+    } else if (o->f28 != -1) {
+        if ((func_0004FFE8(o->id) & 0x1F) == o->id) func_00018900(o);
     }
 }
 
@@ -3019,27 +3013,8 @@ int func_00019314(REC_99120 *p, int dir)
 
 /* ---------------- func_0001943C (src/pilot/func_0001943C.c) ---------------- */
 #define NODE NODE__func_0001943C
-#define P P__func_0001943C
-typedef struct {
-    int x;
-    int pad4;
-    int z;
-    int padC;
-    int f10[2];
-    unsigned char f18;
-    unsigned char pad19;
-    short f1A;
-    short f1C;
-    char pad1E[6];
-    unsigned char f24;
-    unsigned char f25;
-    unsigned char f26;
-    unsigned char dir;
-    unsigned char flag;
-    unsigned char list[1];
-} P;
 typedef struct { int a; int b; int c; int d; int e; } NODE;
-void func_0001943C(P *p)
+void func_0001943C(REC_99120 *p)
 {
     int dir;
     int off;
@@ -3052,9 +3027,9 @@ void func_0001943C(P *p)
     int s;
     int f5;
 
-    if (p->flag != 1)
+    if (p->f28 != 1)
         return;
-    dir = p->dir;
+    dir = p->f27;
     q = &(*(NODE **)&D_0009704C)[p->f1A];
     off = -30000;
     if (dir & 1) {
@@ -3120,7 +3095,6 @@ void func_0001943C(P *p)
     }
 }
 #undef NODE
-#undef P
 
 /* ---------------- func_000197E0 (src/pilot/func_000197E0.c) ---------------- */
 #define PlaceOne PlaceOne__func_000197E0
@@ -3196,27 +3170,8 @@ void func_000197E0(pos, val, dir, count, flag)
 
 /* ---------------- func_00019AF4 (src/pilot/func_00019AF4.c) ---------------- */
 #define NODE NODE__func_00019AF4
-#define OBJ OBJ__func_00019AF4
-typedef struct {
-    int x;
-    int y;
-    int z;
-    char pad0C[0x18 - 0x0C];
-    unsigned char f18;
-    char pad19;
-    short f1A;
-    short f1C;
-    short f1E;
-    char pad20[4];
-    unsigned char f24;
-    unsigned char f25;
-    unsigned char count;
-    unsigned char dir;
-    unsigned char f28;
-    unsigned char ids[1];
-} OBJ;
 typedef struct { int a; int b; int c; int d; int e; } NODE;
-int func_00019AF4(OBJ *p)
+int func_00019AF4(REC_99120 *p)
 {
     int x;
     int z;
@@ -3232,11 +3187,11 @@ int func_00019AF4(OBJ *p)
     x = p->x;
     z = p->z;
     node = p->f1C;
-    dir = p->dir;
+    dir = p->f27;
     if (func_00019DAC(p, x, z) == 0)
         return 0;
-    ptr = p->ids;
-    end = p->ids + p->count;
+    ptr = p->list;
+    end = p->list + p->f26;
     while (ptr < end) {
         id = *ptr;
         e = &D_00098950[id];
@@ -3276,36 +3231,26 @@ int func_00019AF4(OBJ *p)
     return 1;
 }
 #undef NODE
-#undef OBJ
 
 /* ---------------- func_00019DAC (src/pilot/func_00019DAC.c) ---------------- */
-#define O O__func_00019DAC
-typedef struct {
-    char pad0[0x10];
-    short s10, s12, s14, s16;
-    unsigned char b18;
-    char pad;
-    short s1A, s1C;
-} O;
-int func_00019DAC(O *o, int x, int y)
+int func_00019DAC(REC_99120 *o, int x, int y)
 {
     int pt[4];
 
-    if (o->s1A == -1)
+    if (o->f1A == -1)
         return 0;
-    if (!func_00019E88(o, x, y, o->s1A))
+    if (!func_00019E88(o, x, y, o->f1A))
         return 0;
-    if (o->s1C == -1)
+    if (o->f1C == -1)
         return 1;
-    if (o->b18) {
-        pt[0] = x + o->s14;
-        pt[2] = y + o->s16;
+    if (o->f18) {
+        pt[0] = x + o->f10[2];
+        pt[2] = y + o->f10[3];
         if (!func_0004A9F4(pt))
             return 0;
     }
-    return func_00019E88(o, x + o->s10, y + o->s12, o->s1C) != 0;
+    return func_00019E88(o, x + o->f10[0], y + o->f10[1], o->f1C) != 0;
 }
-#undef O
 
 /* ---------------- func_00019E88 (src/pilot/func_00019E88.c) ---------------- */
 int func_00019E88(char *p, int x, int z, int id)
@@ -3351,9 +3296,7 @@ void func_0001A008(char *p)
 }
 
 /* ---------------- func_0001A024 (src/pilot/func_0001A024.c) ---------------- */
-#define P P__func_0001A024
-typedef struct { char p0[0x1A]; short f1a; char p1c[2]; short f1e; char p20[4]; unsigned char f24, f25, f26, p27, f28; unsigned char list[1]; } P;
-void func_0001A024(P *p)
+void func_0001A024(REC_99120 *p)
 {
     unsigned char *q;
     unsigned char *end = (unsigned char *)p + (p->f26 + 0x29);
@@ -3379,14 +3322,13 @@ void func_0001A024(P *p)
         q++;
         D_00099AF0[(unsigned char)t] = i;
     }
-    p->f1e = 0;
+    p->f1E = 0;
     p->f28 = 0;
-    p->f1a = -1;
+    p->f1A = -1;
     p->f24 = 0;
     p->f25 = 0;
     p->f26 = 0;
 }
-#undef P
 
 /* ---------------- func_0001A1BC (src/pilot/func_0001A1BC.c) ---------------- */
 /* func_0001A1BC */
