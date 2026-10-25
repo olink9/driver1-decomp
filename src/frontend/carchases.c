@@ -3,7 +3,7 @@
  * duplicate newgame.c's. END: .rodata pad 0x1C09C4. .rodata one block 0x1C0990.
  */
 /* carchases.c: 5 functions func_001C8D08..func_001C8F54 (0x1C8D08-0x1C9048)
- * Step 3: types from include/frontend.h (MENU_TEXT/MENU_ITEM tables); no views left.
+ * Step 3: types from include/frontend.h (MENU_TEXT/MENU_ITEM tables, DB_ENV D_000BDFA4[2]); no views left.
  */
 
 /* ---- types ---- */
@@ -26,7 +26,7 @@ extern int D_000967F4;
 extern void func_00024754();
 extern int D_000967F0;
 extern int D_0009763C;
-extern int D_000BDFA4[];
+extern DB_ENV D_000BDFA4[];
 extern char D_00096895;
 extern void func_000EC280();
 extern void func_000E6D60();
@@ -117,16 +117,16 @@ int func_001C8F54(void)
 {
     func_000EC280(0);
     func_000E6D60("frontend\\font3.bnk", "DRFONT3", 1, -2);
-    func_0007457C(D_000BDFA4[1], 0x1080);
-    func_0007457C(D_000BDFA4[33], 0x1080);
+    func_0007457C(D_000BDFA4[0].ot, 0x1080);
+    func_0007457C(D_000BDFA4[1].ot, 0x1080);
     func_0006F6E8();
     func_000E7508(1, 0x1FABBC, 0x3E00);
     SetDispMask(0);
     if (D_000967F0 == 0) {
         func_001C2DAC(0x280);
         func_001C2F78();
-        func_0007457C(D_000BDFA4[1], 0x1080);
-        func_0007457C(D_000BDFA4[33], 0x1080);
+        func_0007457C(D_000BDFA4[0].ot, 0x1080);
+        func_0007457C(D_000BDFA4[1].ot, 0x1080);
         SetDispMask(1);
         return 0;
     }
