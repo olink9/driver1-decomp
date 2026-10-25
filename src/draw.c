@@ -22,7 +22,7 @@
  *    pos.vx/.., computed = the header's 0xC field), MODEL_DrawMapPSX (f10/f14/fE -> vertices/poly_block/num_polys),
  *    OBJ (unused), MAT, SVEC, struct M (D_000A668C is MATRIX2), PF4_f2F444 (x3 -> xy3). The local UV union is UVW
  *    (structs.h owns UV). MATRIX2 moved to the header. Left local: CELL_DATA, B8 and the libgpu shapes (P_TAG, DVECTOR, PF3/PF4/PFT3/
- *    PFT4) - structs.h pulls in no PsyQ types.
+ *    PFT4) - structs.h pulls in no PsyQ types. D_000C6F04 (int[], [0x104/4], [0x10C/4]) is MISSION (.f104, .f10C).
  */
 #include "gte.h"
 #include "structs.h"
@@ -124,7 +124,7 @@ extern long long D_00096898;
 extern long long D_00097368;
 extern long long D_00097398;
 extern long long D_00097128;
-extern int D_000C6F04[];
+extern MISSION D_000C6F04;
 extern void func_00039D94();
 extern void func_0003A270();
 extern short rcossin_tbl[];
@@ -519,8 +519,8 @@ void func_0002D7C4(int *ox, int *oz, int *col)
     int cx, cz, q1, q2, rx, v;
 
     if (mode == 3 && (func_00030198() & 2)) {
-        D_000C6F04[0x104 / 4] = 0xFF0;
-        D_000C6F04[0x10C / 4] = mode;
+        D_000C6F04.f104 = 0xFF0;
+        D_000C6F04.f10C = mode;
     }
     i = 0;
     func_00039D94();
