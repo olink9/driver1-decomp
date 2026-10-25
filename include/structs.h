@@ -325,4 +325,99 @@ OFS_ASSERT(PEDESTRIAN, motion, 0x4C);
 OFS_ASSERT(PEDESTRIAN, pal, 0x55);
 OFS_ASSERT(PEDESTRIAN, type, 0x56);
 
+/* ---- D_000C6F04: the mission (DMS script) state, 0x2E8 bytes (mission.c; also main.c, glaunch.c, pause.c,
+ * draw.c, civ_ai.c). Names are mission.c's; D2's mission code differs too much to borrow its names. ---- */
+typedef struct {
+    int *ptr;                       /* 0x0 */
+    short s4, s6, s8;               /* 0x4 */
+    unsigned char a, b, c;          /* 0xA */
+    unsigned char pad[3];
+} MS_SOUND;                         /* 0x10 */
+typedef struct {
+    int x, y, z;                    /* 0x00 */
+    int dir;                        /* 0x0C */
+    int g, h, i;                    /* 0x10 */
+    short s[6];                     /* 0x1C car damage[] */
+    short s17C;                     /* 0x28 car totalDamage */
+    short pad;
+} MS_SAVE;                          /* 0x2C: player checkpoint (saved/cur) */
+typedef struct {
+    int x, y, z;                    /* 0x00 */
+    int dir;                        /* 0x0C */
+    short s[6];                     /* 0x10 */
+    short s1C;                      /* 0x1C */
+    unsigned char b1E, b1F;         /* 0x1E civ slot f10/f11 */
+} MS_CARSAVE;                       /* 0x20 */
+typedef struct { int f0, f4, f8, fC, f10, f14, f18, f1C, f20, f24; } MS_STATS;
+typedef struct { int h, i, j, k; } MS_Q4;
+typedef struct {
+    unsigned int a;                 /* 0x00 */
+    unsigned int b;                 /* 0x04 */
+    int c;                          /* 0x08 */
+    int d;                          /* 0x0C flags */
+    VECTOR *e;                      /* 0x10 target position */
+    short f;                        /* 0x14 */
+    int *g;                         /* 0x18 */
+    MS_Q4 q;                        /* 0x1C */
+} MS_TARGET;                        /* 0x2C */
+typedef struct {
+    int *label[5];                  /* 0x000 */
+    MS_SOUND snd[3];                /* 0x014 */
+    int f44, f48, f4C;              /* 0x044 */
+    int *f50;                       /* 0x050 */
+    int f54;                        /* 0x054 */
+    MS_SAVE saved;                  /* 0x058 */
+    MS_SAVE cur;                    /* 0x084 */
+    MS_CARSAVE d[1];                /* 0x0B0 */
+    MS_STATS st;                    /* 0x0D0 */
+    CAR_DATA *fF8;                  /* 0x0F8 */
+    int *fFC;                       /* 0x0FC */
+    int f100;                       /* 0x100 */
+    int f104;                       /* 0x104 mission state (0xFF0 = over, 0x7FFF = passed) */
+    int f108;
+    int f10C;                       /* 0x10C end reason */
+    int f110;
+    int f114;
+    int f118;
+    int f11C;                       /* 0x11C flags */
+    int f120;
+    int *f124;
+    int *f128;
+    int f12C;                       /* 0x12C */
+    MS_TARGET ent[6];               /* 0x130 */
+    VECTOR tgt[6];                  /* 0x238 */
+    int f298;                       /* 0x298 target count */
+    int f29C;                       /* 0x29C */
+    int f2A0;                       /* 0x2A0 */
+    int x, y, z;                    /* 0x2A4 */
+    int f2B0;
+    int *end;                       /* 0x2B4 */
+    int *pc;                        /* 0x2B8 script pointer */
+    int f2BC;
+    int f2C0;                       /* 0x2C0 */
+    int f2C4;                       /* 0x2C4 */
+    int f2C8;
+    int f2CC;
+    int f2D0;                       /* 0x2D0 */
+    int f2D4;
+    int f2D8;
+    short f2DC;                     /* 0x2DC */
+    unsigned char f2DE, f2DF, f2E0, f2E1, f2E2, f2E3;
+    unsigned char f2E4;             /* 0x2E4 */
+    unsigned char f2E5, f2E6, f2E7;
+} MISSION;
+SIZE_ASSERT(MS_SOUND, 0x10);
+SIZE_ASSERT(MS_SAVE, 0x2C);
+SIZE_ASSERT(MS_CARSAVE, 0x20);
+SIZE_ASSERT(MS_TARGET, 0x2C);
+SIZE_ASSERT(MISSION, 0x2E8);
+OFS_ASSERT(MISSION, saved, 0x58);
+OFS_ASSERT(MISSION, st, 0xD0);
+OFS_ASSERT(MISSION, f104, 0x104);
+OFS_ASSERT(MISSION, ent, 0x130);
+OFS_ASSERT(MISSION, tgt, 0x238);
+OFS_ASSERT(MISSION, pc, 0x2B8);
+OFS_ASSERT(MISSION, f2DC, 0x2DC);
+OFS_ASSERT(MISSION, f2E4, 0x2E4);
+
 #endif
