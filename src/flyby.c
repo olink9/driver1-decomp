@@ -5,7 +5,7 @@
  * Step 3 (include/structs.h, after common.h): DB (current->id), VECTOR (VEC4), VECTOR_NOPAD (V3; x/y/z -> vx/vy/vz).
  *   No views; E16 (the fly-by path keys) stays local.
  * Step 4: defines its own data, in address order: .data 0x8D0AC-0x8D0EC, .sdata 0x96F74-0x96F90 (D_00096F78/7C
- * unreferenced; D_00096F8D[3] is padding only linkcheck needs - the asm label block of D_00096F8C is 4 bytes), .sbss
+ * unreferenced; D_00096F8D-8F are padding only linkcheck needs - the asm label block of D_00096F8C is 4 bytes), .sbss
  * 0x977D4-0x977E0 (D_000977DC unreferenced); "FB\\%d\\FB%d.FB" (.rodata 0x11640) is a C literal.
  * extern long long -> int + maspsx abs= (5).
  */
@@ -67,7 +67,7 @@ int D_00096F80 = 5;
 int D_00096F84 = 0;
 int D_00096F88 = 0xFF;
 unsigned char D_00096F8C = 0;
-char D_00096F8D[3] = { 0 };  /* padding to ladder.c's .sdata: linkcheck needs the label block covered to an aligned end */
+char D_00096F8D = 0, D_00096F8E = 0, D_00096F8F = 0;   /* pad the D_00096F8C label block (linkcheck needs it covered) */
 
 /* ---- .sbss 0x977D4-0x977E0 (D_000977DC: unreferenced gap filler) ---- */
 int D_000977D4;
