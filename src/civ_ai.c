@@ -17,6 +17,14 @@
  *    counterpart of D2 CIV_AI.C. D2 COP_AI-like code is not identified here (cop logic seems to live
  *    in the felony area; D_0008539C also points at func_00065424 there).
  *
+ * Step 4: the file defines its own data, each section in address order and ONE block (.data 0x85314-0x853D7,
+ *    .sdata 0x96770-0x96783, .sbss 0x96FBC-0x96FF7). D_00096778 (glaunch.c), D_00096FC8 (felony/mission) and
+ *    D_00096FE4 (main.c) are only used elsewhere; D_000853C8, D_00096FDC/E0 are unreferenced fillers.
+ *    D_00085314 (int[2]) needs __attribute__((section(".data"))): at 8 bytes cc1 puts it in .sdata.
+ *    D_0008530C stays an extern label (= D_00085314 - 8, indexed with f9 & 3 = 2..3).
+ *    .sbss below 0x97000 is zero words in splat's .data asm: tools/linkcheck.py places it like data (SBSS_LO).
+ *    maspsx abs= lists every other file's small global the original reaches with %hi/%lo (was `long long`).
+ *
  * Conflicts (mktu listed 47) were first resolved by build/tu-civ_ai/nsgen2.py + cfg2.py with ~50 per-function
  * `__asm__` views; Step 3 removed every one of them (byte-identical at each step):
  *  - Records: CIV_SLOT (D_00098900/D_00098950, 0x50; D_00098950 is D_00098900[1]), CAR_DATA (car_data and
@@ -41,6 +49,7 @@
  *  - The static inline ClearMem copies (4 functions) and other inline helpers keep per-section names.
  *  - #include "common.h" (func_000148C4) is dropped: nothing from it was used.
  */
+/* maspsx: abs=D_00097044,D_00097040,D_00097050,D_00097054,D_00097038,D_000967A8,D_00097374,D_00096804,D_00096834,D_000973B4,D_000973B8,D_00096990,current,D_0009704C,D_0009D500,D_0009D508,D_0009B16C,D_0009B174,gLightsOn,D_00097764,D_00096884,D_00096870,gNight,D_00097058,CameraCnt,D_00096898 */
 #include "structs.h"
 
 /* ---- file-local records (fields this file touches) ---- */
@@ -82,7 +91,7 @@ typedef struct {
     short padA;
     int padC;
 } Node;
-extern long long D_00097044;
+extern int D_00097044;
 typedef struct {
     short a;
     short h;
@@ -93,7 +102,7 @@ typedef struct {
     unsigned char b;
     char pad[3];
 } FOUND;
-extern long long D_00097040;
+extern int D_00097040;
 typedef struct {
     char p0[3];
     char f3;
@@ -112,21 +121,17 @@ typedef struct {
 typedef struct {
     int a, b, c, d, e, f;
 } SEG_b095;
-extern long long D_00097050;
-extern long long D_00097054;
-extern long long D_00097038;
+extern int D_00097050;
+extern int D_00097054;
+extern int D_00097038;
 extern int D_000852FC[];
 extern int D_0008530C[];
 typedef struct {
     int x;
     int z;
 } CELLPOS;
-extern int D_00096780;
-extern int D_0009677C;
-extern int D_00096FD4;
-extern int D_00096FD8;
-extern long long D_000967A8;
-extern long long D_00097374;
+extern int D_000967A8;
+extern int D_00097374;
 extern int D_0009E714[];
 extern short *D_0009E724[];
 extern int *D_0009D8F4[];
@@ -136,15 +141,14 @@ typedef struct { char p0[0x12C]; int f12c; char p1[0x2A4 - 0x130]; int a4, a8, a
 typedef struct { int x, y, z, w; } V3;
 typedef struct { int x, y, z; } V3s;
 extern B_t D_000C6F04;
-extern long long D_00096804;
-extern long long D_00096834;
-extern V3 D_0008531C[];
+extern int D_00096804;
+extern int D_00096834;
 extern int MapHeight();
 extern int D_0009784C[];
-extern long long D_000973B4;
-extern long long D_000973B8;
-extern long long D_00096990;
-extern long long current;
+extern int D_000973B4;
+extern int D_000973B8;
+extern int D_00096990;
+extern int current;
 extern int func_000398B0();
 extern void func_0003A698();
 extern void func_00043E8C();
@@ -173,16 +177,13 @@ typedef struct {
     short s10;
     short p12;
 } INFO;
-extern long long D_0009704C;
-extern long long D_0009D500;
-extern long long D_0009D508;
-extern long long D_0009B16C;
-extern long long D_0009B174;
-extern long long gLightsOn;
-extern int D_00096FF4;
-extern int D_00096774;
-extern int D_00096770;
-extern long long D_00097764;
+extern int D_0009704C;
+extern int D_0009D500;
+extern int D_0009D508;
+extern int D_0009B16C;
+extern int D_0009B174;
+extern int gLightsOn;
+extern int D_00097764;
 extern int func_00063AA8();
 extern int func_000635B0();
 extern int func_00063B14();
@@ -192,10 +193,6 @@ typedef struct {
 extern int func_00058A00();
 extern void func_000589B4();
 extern char D_00099158[];
-extern short D_00096FE8;
-extern int D_00096FD0;
-extern int D_00096FF0;
-extern char D_00096FBC;
 extern unsigned char D_00099AF0[];
 extern void func_00021D54();
 extern void func_00021DE8();
@@ -211,7 +208,7 @@ typedef struct {
     unsigned char dir;
     char padc[4];
 } ROAD16;
-extern long long D_00096884;
+extern int D_00096884;
 extern int func_000612FC();
 extern void func_00063AB4();
 typedef struct {
@@ -234,7 +231,7 @@ typedef struct {
     int z;
 } XZ_b062;
 typedef struct { int x, z; } POS2;
-extern long long D_00096870;
+extern int D_00096870;
 extern short func_00020DB4();
 typedef struct {
     int x;
@@ -242,11 +239,8 @@ typedef struct {
 } POS;
 extern int func_0004A9F4();
 extern short D_0008EAAA[];
-extern void(*D_0008539C[])();
-extern int D_00096FCC;
-extern int D_00096FEC;
 extern void func_00064FE0();
-extern long long gNight;
+extern int gNight;
 extern unsigned char D_000C6F02[];
 extern char D_00010000[];
 extern char D_00010018[];
@@ -255,7 +249,7 @@ extern int sprintf();
 typedef struct {
     short s0; short a; short b; char pad[10];
 } RD;
-extern long long D_00097058;
+extern int D_00097058;
 extern CIV_SLOT D_00098950[];
 extern CIV_SLOT D_00098900[];
 extern CAR_DATA D_0009B230[];
@@ -266,17 +260,57 @@ extern ROAD_INFO D_0009E744[];
 extern CELL_OBJ D_00099180[];
 extern SXY D_00099B08[];
 extern VECTOR camera_position;
-extern CAR_DATA *D_00096FC0;
 extern short D_000988C8[];
-extern volatile long long CameraCnt;
-extern unsigned char D_00096FC4;
-extern long long D_00096898;   /* majority spelling; other pilots keep a view */
+extern volatile int CameraCnt;
+extern int D_00096898;   /* majority spelling; other pilots keep a view */
 extern REC_99120 D_00099120;
 extern int func_00021558();   /* majority spelling; other pilots keep a view */
 extern int func_00021820();
 extern int func_00063B74();
 extern void ClearMem();
 extern short rcossin_tbl[];   /* majority spelling; other pilots keep a view */
+
+/* ---- the file's own data (Step 4), each section in address order ---- */
+/* .data 0x85314-0x853D7 */
+/* 8 bytes: cc1 -G8 would put it in .sdata; the original has it in .data */
+int D_00085314[2] __attribute__((section(".data"))) = { 0xE74, 0xED8 };   /* read as D_0008530C[f9 & 3] (f9 & 3 = 2..3) */
+V3 D_0008531C[8] = {
+    { 0x20B70, 0xBB8, 0x66B84, 0 }, { 0xFFFE7381, 0x3E7, 0x20617, 0 },
+    { 0xFFFFD6FC, 0xBB8, 0xFFFFA980, 0 }, { 0xFFF83163, 0, 0xFFFCF1DF, 0 },
+    { 0x24548, 0x1813, 0xFFFE4A80, 0 }, { 0xFFFD67F0, 0x1813, 0x58228, 0 },
+    { 0xFFFFD6FC, 0xFFFFE7ED, 0xFFFFA980, 0 }, { 0xFFFFDCDD, 0xFFFFE7ED, 0xF8A7, 0 },
+};
+void func_00017D6C(); void func_00017D74(); void func_00017DE8(); void func_000181B4(); void func_00065424();
+void func_00018478(); void func_000184DC(); void func_00018540(); void func_00018548(); void func_00018550();
+void (*D_0008539C[11])() = {
+    func_00017D6C, func_00017D74, func_00017DE8, func_000181B4, func_00065424, func_00018478,
+    func_000184DC, func_00018540, func_00018548, func_00018550, func_00017D6C,
+};
+int D_000853C8[4] = { 0, 0x400, 0x800, 0xC00 };   /* unreferenced */
+
+/* .sdata 0x96770-0x96783 */
+int D_00096770 = 0;
+int D_00096774 = 0;
+int D_00096778 = 1;   /* used only by glaunch.c */
+int D_0009677C = 0;
+int D_00096780 = 0;
+
+/* .sbss 0x96FBC-0x96FF7 */
+char D_00096FBC;
+CAR_DATA *D_00096FC0;
+unsigned char D_00096FC4;
+int D_00096FC8;   /* used by felony.c, mission.c */
+int D_00096FCC;
+int D_00096FD0;
+int D_00096FD4;
+int D_00096FD8;
+int D_00096FDC;   /* unreferenced */
+int D_00096FE0;   /* unreferenced */
+int D_00096FE4;   /* used only by main.c */
+short D_00096FE8;
+int D_00096FEC;
+int D_00096FF0;
+int D_00096FF4;
 
 /* ---- functions (unprototyped: callers were compiled against several spellings) ---- */
 void func_0001250C();
