@@ -8,7 +8,8 @@
  * func_0006C438 is renamed func_0006C438_inl.
  * Step 3 (include/structs.h): MENU and ENT (the pause-menu handler tables D_0008C474.., D_0008D064, D_000977CC/D0)
  *   are MENU_ITEM (f0/f4 -> enter/leave, b[0..3] -> left/right/up/down); DB from the header (x -> ot slot, primtab);
- *   the unused MTEXT is dropped. No views; MENTRY/PL/ARG stay local (PL is mission.c's D_000C6F04 record).
+ *   the unused MTEXT is dropped; PL (D_000C6F04) is MISSION (w104/w2A0/b2E4 -> f104/f2A0/f2E4, +0xD0 -> &st).
+ *   No views; MENTRY/ARG stay local.
  */
 /* MKTU CONFLICTS (first spelling active, others commented at their place below):
  * decl D_00096F08:
@@ -58,14 +59,6 @@ typedef struct {
     char *text;
     unsigned char r, g, b, pf;
 } MENTRY;
-typedef struct {
-    char p0[0x104];
-    int w104;
-    char p108[0x2A0 - 0x108];
-    int w2A0;
-    char p2A4[0x2E4 - 0x2A4];
-    unsigned char b2E4;
-} PL;
 typedef struct { int a; char *b; } ARG;
 
 /* ---- externs ---- */
@@ -124,7 +117,7 @@ extern char D_00096F6C[];
 extern void SetMasterVolume();
 extern void func_0004E454();
 extern int sprintf();
-extern PL D_000C6F04;
+extern MISSION D_000C6F04;
 extern int D_0009D8DC[];
 extern long long D_00097534;
 extern long long D_000967D4;
@@ -628,12 +621,12 @@ int func_0006C964(int mode)
     first = 1;
     *(volatile int *)&D_00097534;
     func_0004DF28();
-    if (D_000C6F04.b2E4 == 0
+    if (D_000C6F04.f2E4 == 0
         && !(*(int *)&D_000967D4 != 0 && *(int *)&D_000967F4 == 0x16)
-        && !((*(int *)&D_000967F4 == 0x12 || *(int *)&D_000967F4 == 0x16) && D_000C6F04.w104 == 0xFF0)
+        && !((*(int *)&D_000967F4 == 0x12 || *(int *)&D_000967F4 == 0x16) && D_000C6F04.f104 == 0xFF0)
         && D_0009D8DC[0] == 0 && D_0009D8DC[1] == 0 && D_0009D8DC[2] == 0 && D_0009D8DC[3] == 0) {
-        arg.a = D_000C6F04.w2A0;
-        arg.b = (char *)&D_000C6F04 + 0xD0;
+        arg.a = D_000C6F04.f2A0;
+        arg.b = (char *)&D_000C6F04.st;
         r = func_0006E854(&arg, *(int *)&D_000967F4, D_000977BC);
         if (r == 1) {
             D_00096F00 = r;
