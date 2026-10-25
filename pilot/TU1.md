@@ -93,3 +93,9 @@ Step 4 (move definitions into the owning file) - the recipe that worked:
 - Return types: pick what the CALLERS' bytes need (a narrower return makes callers sign-extend).
 - Duplicate static inline copies of a function the file also defines -> one GNU89 `inline` definition (same bytes).
 - Keep `#include "gte.h"` when rewriting a header by script. The #undef trap also hits macros the merged file defines itself.
+## Lessons (batch H: roadbits tile models sky civ_draw + pres/pedest/draw extensions - byte-identical)
+- Before merging a low-confidence row run `gpsig.py --range` across BOTH edges: a shared gp .sbss run decides edge functions without trial and error (it moved 4 functions into pres.c, 3 into pedest.c, func_00030198 into draw.c).
+- lh vs lhu decides a short's signedness; two needs in one TU -> `__asm__("sym")` view, or `*(short *)&o->field` for a struct field.
+- A 4-byte record type on a global the original reaches absolutely makes maspsx use $gp: list it in `/* maspsx: abs=... */`.
+- K&R definition settles "a later call passes fewer args" at no byte cost.
+- Boundaries: roadbits.c starts at 0x20DB4 (func_00020AE4, 90.22 wip, belongs on top of it once matched). convert.c + sky.c look like ONE D1 file (D2 split it) - kept as two TUs for now.
