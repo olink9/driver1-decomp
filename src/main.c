@@ -9,7 +9,7 @@
  *  - camera_position: int[]; func_0002360C's Q16 struct copy goes through *(Q16 *).
  *  - D_000967BF: unsigned char. D_00097124: unsigned short (func_000230B0 loads it).
  *  - D_00096E7C: H8; D_00096AA8/AA9, tracking_car: B8 (8 bytes, absolute like long long).
- *  - D_000C6F04: S6F04; func_0002360C passes &D_000C6F04.
+ *  - D_000C6F04: structs.h MISSION (was S6F04: f84 -> &cur); func_0002360C passes &D_000C6F04.
  *  - VSync, func_00079AF0: int ().
  *  - Step 3: CAR_DATA and VECTOR come from include/structs.h (CAR.speed at 0xC = where.m[1][1], f17C =
  *    totalDamage, V16 pos = VECTOR pos, D_000A1AF0 is a VECTOR); CARI stays as func_00022168's int view.
@@ -21,14 +21,6 @@
 /* ---- types ---- */
 typedef struct { int a[99]; } CARI;
 typedef struct { int v[8]; } CL;
-typedef struct {
-    char pad0[0x84];
-    char f84[0x100 - 0x84];
-    int f100;
-    char pad104[0x2DF - 0x104];
-    unsigned char f2DF;
-    unsigned char f2E0;
-} S6F04;
 typedef struct {
     int f0;
     short f4;
@@ -170,7 +162,7 @@ extern char D_000101D8[];
 extern char D_000101E4[];
 extern char D_0008B1A4[];
 extern char D_00096918[];
-extern S6F04 D_000C6F04;
+extern MISSION D_000C6F04;
 extern SE9E0 D_000BE9E0;
 extern int D_00086F00[];
 extern int D_0008A1DC[];
@@ -590,7 +582,7 @@ void func_00022818(void)
     int r;
     int i;
     int n;
-    S6F04 *p;
+    MISSION *p;
 
     if (D_00096834 == 0 || D_00096834 == 6)
         D_000967FC = 0;
@@ -802,7 +794,7 @@ void func_00022818(void)
 
     p = &D_000C6F04;
     if (p->f2E0 != 0 && D_00096834 != 4) {
-        func_000682C0(car_data, p->f84);
+        func_000682C0(car_data, &p->cur);
         p->f2E0 = 0;
     }
 
