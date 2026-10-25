@@ -16,14 +16,14 @@
  * Step 3 (include/structs.h): car_data and the player's car are CAR_DATA (pilot CAR and func_000682C0's struct A:
  *    c8/cc/d0 -> pos, f8/fF8 -> direction, w/f114 -> damage, f12f -> hit, s17c/f17C -> totalDamage, f0 -> id);
  *    D_00098900 is CIV_SLOT[] (M80, ENT_6A318: b1 -> f1); VEC -> VECTOR, V3/POS -> VECTOR_NOPAD.
- *    The mission record D_000C6F04 is ONE type, OBJ (still file-local; pause.c's PL and draw.c's int[] see it
- *    too): its pads got names (f108/f10C/f110, x/y/z at 0x2A4, f2BC/f2C8/f2CC/f2D8, f2DC, f2DE..f2E3), and the
+ *    The mission record D_000C6F04 is ONE type, MISSION, now in structs.h with its parts (OBJ -> MISSION, CP ->
+ *    MS_SAVE, CD -> MS_CARSAVE, STAT -> MS_STATS, SND -> MS_SOUND, ENT -> MS_TARGET, Q4 -> MS_Q4): its pads got names (f108/f10C/f110, x/y/z at 0x2A4, f2BC/f2C8/f2CC/f2D8, f2DC, f2DE..f2E3), and the
  *    per-function views are gone - struct C (cur.h/cur.i/f2A0), MS (CP_68928 saved/cur -> CP, x/y/z, f12C,
  *    f2DE..f2E0), OBJ_68384 (S44 a/b -> CP cur/saved, S32 d -> (S32 *)obj->d, S16 c / dc -> st.f18.. / st.fC,
  *    flags -> f11C), S1 (fD0 -> st.f0), PLR_6A178, PLR_6A318, PLR_6A934 and B (f/cnt -> tgt/f298, b2E* -> f2E*,
  *    f2B4/f2B8 -> end/pc, T29C by cast). The target slot views S0, TH, E_6A318, E_6A60C, E_6A934 (+SUB) and
- *    ENT_68384 are ENT (f0..f10 -> a..e with (VECTOR *) casts where they stored an F *, f14 -> f, f18 -> g,
- *    f1C..f28 / sub -> q.h..k); func_000682C0's struct B is CP (h28 -> s17C, the short walk at 0x1C -> s).
+ *    ENT_68384 are MS_TARGET (f0..f10 -> a..e with (VECTOR *) casts where they stored an F *, f14 -> f, f18 -> g,
+ *    f1C..f28 / sub -> q.h..k); func_000682C0's struct B is MS_SAVE (h28 -> s17C, the short walk at 0x1C -> s).
  *    Kept local: H (D_000BE9C4/E0, the percentage bars, seen differently by glaunch.c/main.c), S16/S32 (the raw
  *    copies func_00068384 makes), script/sound shapes (SND, SNDENT, SNDOBJ, T17C, T38, R20, X15, ST, E, F).
  */
@@ -34,28 +34,6 @@ typedef struct { int w[4]; } S16;
 typedef struct { int w[8]; } S32;
 typedef struct { short a, b; } E_686BC;
 typedef struct { char pad[0xE]; short h; } H;
-typedef struct {
-    int *ptr;
-    short s4;
-    short s6;
-    short s8;
-    unsigned char a;
-    unsigned char b;
-    unsigned char c;
-    char pad[3];
-} SND;
-typedef struct {
-    int x, y, z;
-    int dir;
-    short s[6];
-    short s1C;
-    unsigned char b1E;
-    unsigned char b1F;
-} CD;
-typedef struct {
-    int f0, f4, f8, fC, f10, f14, f18, f1C, f20, f24;
-} STAT;
-typedef struct { int h, i, j, k; } Q4;
 typedef struct {
     char pad[0x34];
     short f34;
@@ -101,89 +79,24 @@ typedef struct {
 } SNDOBJ;
 typedef struct { int flags; int val; } T29C;
 
-typedef struct {
-    int x, y, z;
-    int dir;
-    int g;
-    int h;
-    int i;
-    short s[6];
-    short s17C;
-    short pad;
-} CP;
-typedef struct {
-    unsigned int a;
-    unsigned int b;
-    int c;
-    int d;
-    VECTOR *e;
-    short f;
-    int *g;
-    Q4 q;
-} ENT;
 typedef struct E {
     int st;
     int *nx;
     int *w2;
     int w3;
 } E;
-typedef struct {
-    int *label[5];
-    SND snd[3];         /* 0x14 */
-    char pad44[0x50 - 0x44];
-    int *f50;           /* 0x50 */
-    char pad54[4];
-    CP saved;           /* 0x58 */
-    CP cur;             /* 0x84 */
-    CD d[1];            /* 0xB0 */
-    STAT st;            /* 0xD0 */
-    CAR_DATA *fF8;           /* 0xF8 */
-    int *fFC;           /* 0xFC */
-    int f100;
-    int f104;
-    int f108;
-    int f10C;
-    int f110;
-    int f114;
-    int f118;
-    int f11C;
-    int f120;
-    int *f124;
-    int *f128;
-    int f12C;
-    ENT ent[6];         /* 0x130 */
-    VECTOR tgt[6];         /* 0x238 */
-    int f298;
-    int f29C;
-    int f2A0;
-    int x, y, z;        /* 0x2A4 */
-    int f2B0;
-    int *end;           /* 0x2B4 */
-    int *pc;            /* 0x2B8 */
-    int f2BC;
-    int f2C0;           /* 0x2C0 */
-    int f2C4;           /* 0x2C4 */
-    int f2C8;
-    int f2CC;
-    int f2D0;
-    int f2D4;
-    int f2D8;
-    short f2DC;         /* 0x2DC */
-    unsigned char f2DE, f2DF, f2E0, f2E1, f2E2, f2E3;
-    unsigned char f2E4; /* 0x2E4 */
-} OBJ;
 /* ---- externs ---- */
 extern long long D_00097708;
 extern long long D_00097118;
 extern CAR_DATA car_data[];
-extern OBJ D_000C6F04;
+extern MISSION D_000C6F04;
 extern long long D_00097098;
 extern int D_0009778C;
 extern long long D_0009683C;
 extern long long D_000970EC;
 extern int D_000BE78C[];
 extern char D_000C6EA8[];
-extern ENT D_000C7034[];
+extern MS_TARGET D_000C7034[];
 extern void memset();
 extern void func_0006B97C();
 extern E_686BC D_0008C1E8[];
@@ -252,7 +165,7 @@ extern long long D_0009D5B4;
 extern long long D_00097088;
 extern short func_0006B9D8(char *, int *, short);
 extern int D_000C4C8C[];
-extern ENT *D_000977AC;
+extern MS_TARGET *D_000977AC;
 extern F D_000BE9B4;
 extern int D_00097790;
 extern ST D_000BE774;
@@ -283,7 +196,7 @@ void func_0006A6C8();
 void func_0006A934();
 
 /* ---------------- func_000682C0 (src/pilot/func_000682C0.c) ---------------- */
-void func_000682C0(CAR_DATA *a, CP *b)
+void func_000682C0(CAR_DATA *a, MS_SAVE *b)
 {
     int *p;
     short *q;
@@ -310,13 +223,13 @@ void func_00068360(void)
 /* ---------------- func_00068384 (src/pilot/func_00068384.c) ---------------- */
 /* func_00068384: reset of an object, preserving some fields (Driver 2 name unknown) */
 /* NOTE: the 0xB0 block copy loops step the source by two elements (src += 2) - that is what the original does. */
-void func_00068384(OBJ *obj)
+void func_00068384(MISSION *obj)
 {
-    CP a;
-    CP b;
+    MS_SAVE a;
+    MS_SAVE b;
     S16 c;
     S32 d[1];
-    ENT *p;
+    MS_TARGET *p;
     S32 *src;
     S32 *dst;
 
@@ -543,13 +456,13 @@ void func_00068B88(void) {
  *    (addu v1,s6,zero) alive past cse-skip-blocks and puts it in the bgez delay slot.
  *  - case 93: `p = 0; p = &D_000C017C;` sets p twice so loop.c does not hoist the address
  *    (one set = hoisted and spilled into t3); probably not the original form. */
-static inline void jump(OBJ *o, int v)
+static inline void jump(MISSION *o, int v)
 {
     if (v < 0)
         v = ~v;
     o->pc = o->label[v];
 }
-void func_00068C6C(OBJ *obj)
+void func_00068C6C(MISSION *obj)
 
 {
     int *q;
@@ -589,7 +502,7 @@ void func_00068C6C(OBJ *obj)
             break;
         case 4:
             {
-                SND *r = &obj->snd[q[0]];
+                MS_SOUND *r = &obj->snd[q[0]];
                 r->c = q[1];
                 r->b = q[2];
                 r->s6 = q[3];
@@ -686,7 +599,7 @@ void func_00068C6C(OBJ *obj)
             break;
         case 25:
             {
-                ENT *p;
+                MS_TARGET *p;
                 unsigned int v;
                 for (p = D_000C7034; p < D_000C7034 + 6; p++) {
                     p->a = 0x2EE;
@@ -736,7 +649,7 @@ void func_00068C6C(OBJ *obj)
             break;
         case 33:
             {
-                SND *r = &obj->snd[q[0]];
+                MS_SOUND *r = &obj->snd[q[0]];
                 r->c = q[1];
                 r->b = q[2];
                 r->s6 = q[3];
@@ -792,10 +705,10 @@ void func_00068C6C(OBJ *obj)
         case 69:
             {
                 int i = q[0];
-                ENT *e = &obj->ent[i];
+                MS_TARGET *e = &obj->ent[i];
                 VECTOR *t;
                 unsigned int v;
-                Q4 *qq = &e->q;
+                MS_Q4 *qq = &e->q;
                 e->a = 0x2EE;
                 e->b = 0x5DC0;
                 e->c = 0x1C2;
@@ -824,14 +737,14 @@ void func_00068C6C(OBJ *obj)
             {
                 int i = *q++;
                 short s = *q++;
-                ENT *e = &obj->ent[i];
+                MS_TARGET *e = &obj->ent[i];
                 e->f = s;
                 e->g = q;
             }
             break;
         case 71:
             {
-                ENT *e = &obj->ent[*q++];
+                MS_TARGET *e = &obj->ent[*q++];
                 e->q.h = *q++;
                 e->q.i = *q++;
                 e->q.j = *q++;
@@ -898,7 +811,7 @@ void func_00068C6C(OBJ *obj)
             break;
         case 88:
             {
-                CP *cp = &obj->saved;
+                MS_SAVE *cp = &obj->saved;
                 CAR_DATA *c = &car_data[0];
                 int *src;
                 short *dst;
@@ -963,7 +876,7 @@ void func_00068C6C(OBJ *obj)
             break;
         case 97:
             {
-                ENT *e = &obj->ent[q[0]];
+                MS_TARGET *e = &obj->ent[q[0]];
                 int v = q[1];
                 if (v >= 0)
                     e->e = &car_data[v].pos;
@@ -1000,7 +913,7 @@ void func_00068C6C(OBJ *obj)
             break;
         case 101:
             {
-                STAT *s = &obj->st;
+                MS_STATS *s = &obj->st;
                 int score = obj->f2A0;
                 int best = s->f18;
                 int laps = obj->st.f0;
@@ -1031,7 +944,7 @@ void func_00068C6C(OBJ *obj)
             break;
         case 103:
             {
-                SND *r = &obj->snd[q[0]];
+                MS_SOUND *r = &obj->snd[q[0]];
                 r->s4 = q[1];
                 r->b = q[2];
                 r->a = 1;
@@ -1107,7 +1020,7 @@ void func_00068C6C(OBJ *obj)
             break;
         case 113:
             {
-                CD *d = &obj->d[q[0]];
+                MS_CARSAVE *d = &obj->d[q[0]];
                 CAR_DATA *c = &car_data[q[1]];
                 d->x = c->pos.vx;
                 d->y = c->pos.vy;
@@ -1129,7 +1042,7 @@ void func_00068C6C(OBJ *obj)
             break;
         case 114:
             {
-                CD *d = &obj->d[q[0]];
+                MS_CARSAVE *d = &obj->d[q[0]];
                 CAR_DATA *c;
                 int a, b, dir, x, z;
                 func_00017AA0(2);
@@ -1158,7 +1071,7 @@ void func_00068C6C(OBJ *obj)
 
 /* ---------------- func_00069D08 (src/pilot/func_00069D08.c) ---------------- */
 /* func_00069D08 - no Driver 2 counterpart (cop/target proximity check) */
-int func_00069D08(OBJ *a, ENT *b)
+int func_00069D08(MISSION *a, MS_TARGET *b)
 {
     int dist;
     VECTOR d;
@@ -1266,7 +1179,7 @@ int func_00069D08(OBJ *a, ENT *b)
 }
 
 /* ---------------- func_0006A178 (src/pilot/func_0006A178.c) ---------------- */
-void func_0006A178(OBJ *car, ENT *th)
+void func_0006A178(MISSION *car, MS_TARGET *th)
 {
     VECTOR_NOPAD v;
     unsigned d;
@@ -1311,13 +1224,13 @@ void func_0006A178(OBJ *car, ENT *th)
 }
 
 /* ---------------- func_0006A318 (src/pilot/func_0006A318.c) ---------------- */
-void func_0006A318(OBJ *car)
+void func_0006A318(MISSION *car)
 {
-    ENT *e;
+    MS_TARGET *e;
     int d;
     int best = 0x7FFFFFFF;
     int second = 0x7FFFFFFF;
-    ENT *bestp = 0;
+    MS_TARGET *bestp = 0;
     unsigned char *p;
     CIV_SLOT *q;
     ST *st;
@@ -1352,7 +1265,7 @@ void func_0006A318(OBJ *car)
         if (p == 0)
             break;
         if (q->f1 == 0) {
-            ENT *e2;
+            MS_TARGET *e2;
             for (e2 = car->ent; e2 < &car->ent[6]; e2++) {
                 if (e2->e == (VECTOR *)(p + 0xC8))
                     e2->d &= ~1;
@@ -1389,10 +1302,10 @@ void func_0006A318(OBJ *car)
 }
 
 /* ---------------- func_0006A60C (src/pilot/func_0006A60C.c) ---------------- */
-int func_0006A60C(OBJ *b, int a1, int a2, int a3) {
-    ENT *e;
+int func_0006A60C(MISSION *b, int a1, int a2, int a3) {
+    MS_TARGET *e;
     F *f = (F *)b->tgt;
-    for (e = b->ent; e < (ENT *)b->tgt; e++, f++) {
+    for (e = b->ent; e < (MS_TARGET *)b->tgt; e++, f++) {
         if (!(e->d & 1)) {
             f->a = a2;
             f->c = a3;
@@ -1471,13 +1384,13 @@ void func_0006A6C8(SNDOBJ *p)
 
 /* ---------------- func_0006A934 (src/pilot/func_0006A934.c) ---------------- */
 /* cop/pursuit controller update (per-frame) */
-static inline unsigned char AddTarget(OBJ *car, int a1, int a2, int a3)
+static inline unsigned char AddTarget(MISSION *car, int a1, int a2, int a3)
 {
-    ENT *e;
+    MS_TARGET *e;
     F *f = (F *)car->tgt;
-    Q4 *s;
+    MS_Q4 *s;
 
-    for (e = car->ent; e < (ENT *)car->tgt; e++, f++) {
+    for (e = car->ent; e < (MS_TARGET *)car->tgt; e++, f++) {
         if (!(e->d & 1)) {
             f->a = a2;
             f->c = a3;
@@ -1502,7 +1415,7 @@ static inline unsigned char AddTarget(OBJ *car, int a1, int a2, int a3)
     }
     return 0;
 }
-void func_0006A934(OBJ *car)
+void func_0006A934(MISSION *car)
 {
     int *p;
     T29C *t;
