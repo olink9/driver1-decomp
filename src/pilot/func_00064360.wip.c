@@ -1,3 +1,6 @@
+/* run4: not re-attacked (three independent causes: cz/cx global-alloc race, mult issue order, andi 0xffff).
+   Untested idea for the andi: combine forgets nonzero_bits for a pseudo that is live at the start of the function
+   or set through a SUBREG/partial store, so the original index may have come from such a value. */
 /* run3-r4 (r4-cell, no improvement; 97.07 kept). Measured with cc1 -dl -dg on the shared-cz form (95.49):
    cz = 21 refs / 75 insns, cx = 21 / 94; px/pz are block-12 locals that local-alloc puts in s1/s0 first, so the
    first global allocno takes s2 - cz wins it. Tried without a flip: cz/cx uses at the end via obj->cz /

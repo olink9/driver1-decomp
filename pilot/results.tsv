@@ -1580,3 +1580,6 @@ time	symbol	size	best	attempts	status
 2026-10-25T18:54:07Z	func_80101D60	40	100.0	1	matched	run4-nfmv (earlier proof)
 2026-10-25T18:54:07Z	func_80101D88	80	100.0	1	matched	run4-nfmv (earlier proof)
 2026-10-25T18:54:07Z	func_80101DD8	40	100.0	1	matched	run4-nfmv (earlier proof)
+2026-10-25T18:58:50Z	func_00062DB0	868	99.12	10	gave_up	run4
+2026-10-25T18:58:50Z	func_00020AE4	720	90.22	5	gave_up	run4
+2026-10-25T18:58:50Z	func_00064360	780	97.07	0	gave_up	run4

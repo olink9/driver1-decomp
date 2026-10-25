@@ -1,3 +1,9 @@
+/* run4 (no improvement; 99.12 kept). (b) sched1 analysis (-dS): x's quotient subu (334) sets the multi-set x, so it
+   gets no birthing boost and ties 348 at priority 13; luid sends 348 first, then the boosted z sra 345 lands after
+   334, so 248/255 never overlap and both get a0. Tried: all 20 interleavings of the six x/z statements, 106 x/z
+   merge forms x orders (x1/x2/x2b/x3 against z1/z2/z2b/z3), single-set quotient temps qx/qz (r1-r4), in-place
+   `x = pos[0] + K; x /= 750` forms, switch/idx expression orders: none above 99.12. A single-set x makes x win the
+   global race but then the x chain is boosted, the z mult is issued first and a0 conflicts with x (x pref a1). */
 /* run3 r4-11c: 98.41 -> 99.12, REAL pass loop (no goto) - this is now the long-term base.
    Fixes from the r4-11b real-loop form (94.10): (1) `dx = c * 180; pos[0] = px + FIX(ns * -900 - dx);` - the c*180
    product as its own statement (permuter find; 94.10 -> 97.17) fixes car->x load position and the a1/a2 product regs;

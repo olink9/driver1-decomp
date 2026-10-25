@@ -1,19 +1,10 @@
-/* FAKEMATCH (if it ever matches): `c = *p0; ... idx = *p0;` reads cos twice into two variables only to shift
- * local-alloc priorities. No do{}while(0) wrapper any more. */
-/* Driver 2: DisplaySun (SKY.C) - null FT3 + sun FT4 + rotating flare FT4. D2 debug locals: polys, null,
- * VECTOR output (stack), int width, height. cos = rcossin_tbl[(i*2)+1] is referenced FIRST (that is why the
- * target addresses D_0008EAAA and derives the sin address as base-2 by CSE).
- * r4-14b: 99.37 WITHOUT the wrapper (was 99.22 with it). Permuter found the reuse of `idx` as the cos value;
- * that alone puts the masks/9/base3/poly3 (t1/t3/t4/t2/t0) right - everything outside the rotation block now
- * matches. A clean no-steering form scores 99.22 (also wrapper-free):
- *     idx = *p0; sn = *p1; r.vx = ((idx - sn) * size.vx) >> 12; r.vy = ((*p1 + *p0) * size.vy) >> 12;
- * LEFT (rotation block only): target has -35 in a1, &cos in a3, sin value + r.vx in a2. With local-alloc
- * priority floor_log2(refs)*refs/life, the -35 qty (3 refs over >= 7 insns, 0.43) can never be allocated before
- * r.vx's sra (4 refs / 9 insns, 0.89) or poly3 (0.92), yet a1 must be busy for both -> the target's -35 has
- * >= 4 refs, or r.vx/poly3 are global (set twice). Tried without success: D2 literal form (camera_angle struct
- * .vy, (vy & 0x1ffe)+1 index -> andi-before-sll, wrong), S8/CA struct forms of D_00096C4A, mask addPrim,
- * 8-byte struct `current`, size.vx operand order, size chain assignment, static inline rot(&r,&size,ang),
- * one variable spanning sin value + r.vx (D2 `width` reuse), null reused as the third prim pointer. */
+/* FAKEMATCH: the empty `__asm__("" : "=r"(w) : "0"(w))` between the two products only gives the -35 multiplier
+ * pseudo a second set (5 refs instead of 3), so local-alloc ranks it above the sin value and r.vx and it lands in
+ * a1 (sin/r.vx a2, &cos a3), as in the target. No natural C found that keeps the second set: CSE deletes every
+ * re-assignment (w = size.vy / -35 / (short)w / via SVECTOR *), inline params and width/height copies fold too.
+ * The real original probably got that copy from somewhere CSE could not see through.
+ * Driver 2: DisplaySun (SKY.C) - null FT3 + sun FT4 + rotating flare FT4. run4: 99.37 -> 100 (the earlier `idx`
+ * reuse steering is gone; the second product reads sin into its own local first, then cos + sin). */
 
 typedef struct { short vx, vy, vz, pad; } SVECTOR;
 typedef struct { short vx, vy; } DVECTOR;
@@ -124,10 +115,10 @@ void DisplaySun(DVECTOR *pos, int a1, int a2, int intensity)
     size.vx = -35;
     size.vy = -35;
     idx = (angle >> 1) & 0xFFF;
-    { short *p0 = &D_0008EAAA[idx * 2]; short *p1 = &D_0008EAAA[idx * 2 - 1]; int c, sn;
-    c = *p0; sn = *p1; idx = *p0;
-    r.vx = ((c - sn) * size.vx) >> 12;
-    r.vy = ((idx + *p1) * size.vy) >> 12; }
+    { short *p0 = &D_0008EAAA[idx * 2]; short *p1 = &D_0008EAAA[idx * 2 - 1]; int sn, w = size.vx;
+    r.vx = ((*p0 - *p1) * w) >> 12;
+    __asm__("" : "=r"(w) : "0"(w));
+    sn = *p1; r.vy = ((*p0 + sn) * w) >> 12; }
 
     poly->x0 = pos->vx + ((r.vx * 3) >> 1);
     poly->y0 = pos->vy + r.vy;
