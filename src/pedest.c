@@ -3,6 +3,12 @@
  * func_0005EF08/func_0005EFD0/func_0005F06C (D2 InitPedestrians/DestroyPedestrians/DestroyPedestrian, the TU
  * plan's civ_draw.c tail) are this file's head: they reach D_000976B8/C0/C8/CC through $gp like the rest of it.
  * TYPE VIEW added with them: D_000976CC__L (SEATED_L, func_0005EF08) - kept, see below.
+ * Step 4: the file defines its own data, in address order: .data 0x8B9E8-0x8BA0C (D_0008B9E8/D_0008B9F8, the
+ * position-pointer tables mission.c/players.c index, and the D_0008BA08 handler table - unsized, so it stays in
+ * .data instead of .sdata) and .sbss 0x976B8-0x976DC (D_000976D0/D4/D8 are unreferenced gap fillers before
+ * pathfind.c's D_000976DC). No .sdata of its own. The .bss records (D_000BFA7C pedestrian slots, D_000C015C..)
+ * stay extern (.comm, linker order). maspsx abs= names the other files' small globals the original reached with
+ * %hi/%lo (the pilot's `extern long long`).
  */
 /* Conflicts from mktu (16) resolved by hand, one spelling per type and extern:
  *  - D_000BFA7C (the 20 pedestrian slots, 0x58 each): PED[] (func_0005F3F8's shape); func_0005F0EC (ENT) and
@@ -30,6 +36,7 @@
  *    View KEPT: D_000976CC__L (SEATED_L, func_0005EF08) - walking SEATED[] through rotation/index directly
  *    reallocates the loop's registers (same size). B (D_000C017C, not a pedestrian), R, POS, SEATED stay local.
  */
+/* maspsx: abs=D_00096FD8,D_00097080,D_000C0160,CameraCnt,pauseflag,D_00096834 */
 #include "structs.h"
 
 /* ---- types ---- */
@@ -43,8 +50,7 @@ typedef struct {
 } SEATED;
 
 /* ---- externs ---- */
-extern long long D_00096FD8;
-extern int D_000976C0;
+extern int D_00096FD8;
 extern POS D_00099720[];
 extern PEDESTRIAN D_000BFA7C[];
 extern int D_000C0340[];
@@ -55,31 +61,24 @@ extern void ROADS_GetRouteData(int, int, short *);
 extern int func_0004FFE8(unsigned char);
 extern CAR_DATA car_data[];
 extern short rcossin_tbl[];
-extern int D_000976BC;
-extern unsigned char D_000976C8;
-extern SEATED *D_000976CC;
-extern long long D_00097080;
-extern long long D_000C0160;
-extern char D_000C017C[];
+extern int D_00097080;
+extern int D_000C0160;
 extern char D_000988C8[];
 extern unsigned char D_000C6F01[];
 extern void func_000650E4();
 extern int ratan2();
 extern int D_0009E714[];
-extern void(*D_0008BA08[])(PEDESTRIAN *);
 extern void func_0005D974();
-extern long long CameraCnt;
-extern int D_000976C4;
+extern int CameraCnt;
 extern CIV_SLOT D_00098950[];
 extern CAR_DATA *D_000C0250[];
 extern R D_000C0280[];
-extern long long pauseflag;
+extern int pauseflag;
 extern int D_000C015C[];
 extern int D_000C0164[];
 extern int MapHeight();
 extern void func_00061408();
-extern int D_000976B8;
-extern long long D_00096834;
+extern int D_00096834;
 
 /* ---- functions defined in this file ---- */
 void func_0005EF08();
@@ -108,6 +107,25 @@ void func_00060C9C();
 SEATED *FindSeated();
 void func_00060F54();
 void func_000610A4();
+
+/* ---- .data 0x8B9E8-0x8BA0C: pedest.c's own initialised data, in address order ---- */
+extern VECTOR D_000A7AAC;
+extern char D_000C017C[];
+/* position pointers (mission.c, players.c index them): D_000A7AAC and pedestrian slots 19, 18, 17 */
+int D_0008B9E8[4] = { (int)&D_000A7AAC, (int)&D_000BFA7C[19], (int)&D_000BFA7C[18], (int)&D_000BFA7C[17] };
+int D_0008B9F8[4] = { (int)(D_000C017C + 0x00), (int)(D_000C017C + 0x18), (int)(D_000C017C + 0x38), (int)(D_000C017C + 0x50) };
+void (*D_0008BA08[])(PEDESTRIAN *) = { func_0005FFB0 };
+
+/* ---- .sbss 0x976B8-0x976DC: pedest.c's own uninitialised globals, in address order ---- */
+int D_000976B8;
+int D_000976BC;
+int D_000976C0;
+int D_000976C4;
+unsigned char D_000976C8;
+SEATED *D_000976CC;
+int D_000976D0;     /* unreferenced: fills the gap up to pathfind.c's D_000976DC */
+int D_000976D4;
+int D_000976D8;
 
 /* ---------------- func_0005EF08 (src/pilot/func_0005EF08.c) ---------------- */
 /* D2 InitPedestrians: clear the 20 slots, refill the free list, reset the seated peds */
