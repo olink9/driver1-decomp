@@ -11,8 +11,12 @@
  *  - D_00096E7C: H8; D_00096AA8/AA9, tracking_car: B8 (8 bytes, absolute like long long).
  *  - D_000C6F04: S6F04; func_0002360C passes &D_000C6F04.
  *  - VSync, func_00079AF0: int ().
+ *  - Step 3: CAR_DATA and VECTOR come from include/structs.h (CAR.speed at 0xC = where.m[1][1], f17C =
+ *    totalDamage, V16 pos = VECTOR pos, D_000A1AF0 is a VECTOR); CARI stays as func_00022168's int view.
  *  - func_00022344 and func_000244B8 take the extra args their callers pass (unused).
  */
+
+#include "structs.h"
 
 /* ---- types ---- */
 typedef struct { int a[99]; } CARI;
@@ -32,16 +36,6 @@ typedef struct {
     char pad8[0x10];
     int f18;
 } SE9E0;
-typedef struct { int v[4]; } V16;
-typedef struct {
-    char pad0[0xC];
-    short speed;            /* 0x0C */
-    char padE[0xC8 - 0xE];
-    V16 pos;                /* 0xC8 */
-    char padD8[0x17C - 0xD8];
-    short f17C;             /* 0x17C */
-    char pad17E[396 - 0x17E];
-} CAR;
 typedef struct { signed char a; unsigned char b; } PADV;
 typedef struct { unsigned short v; char pad[6]; } H8;
 typedef struct { int w[4]; } Q16;
@@ -260,7 +254,7 @@ extern int D_00096884;
 extern long long D_00096F80;
 extern int D_00097084;
 extern int D_0009711C;
-extern V16 D_000A1AF0;
+extern VECTOR D_000A1AF0;
 extern void func_00042BD0();
 extern void animate_garage_door();
 extern void func_00032088();
@@ -443,7 +437,7 @@ void func_00022168(void)
     }
 }
 
-extern CAR car_data[];
+extern CAR_DATA car_data[];
 
 /* ---------------- func_00022344 (src/pilot/func_00022344.c) ---------------- */
 /* Driver 2: ProcessLumps */
@@ -913,9 +907,9 @@ void func_000230B0(void)
     func_00079AF0(D_00097064);
 
     CameraCnt++;
-    if (car_data[0].speed < 100) {
+    if (car_data[0].where.m[1][1] < 100) {
         if (++D_00096920 > 180)
-            car_data[0].f17C = D_00096E7C.v + 100;
+            car_data[0].totalDamage = D_00096E7C.v + 100;
     } else {
         D_00096920 = 0;
     }
