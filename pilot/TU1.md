@@ -171,3 +171,8 @@ Step 4 (move definitions into the owning file) - the recipe that worked:
   shared draw/flip/pad helpers in femain/fecore are called by every screen) - zero-crossing gaps need span <= 25.
 - Same traps as before: libgpu typedef clash in a TU whose one section includes common.h (cut it out of the
   file or delete the local copies with the same layout), static inline copy of a function the TU defines (_inl).
+## Lessons (Step 3 B: handling.c, debris.c onto structs.h - byte-identical)
+- Interior symbols into car_data (`sym = car_data + K`): `CARS_AT(sym, K)[i].field` - gcc folds -K+offset and keeps the original reloc symbol. Don't rewrite them as car_data[i].field (changes the hi/lo immediates).
+- A walk advancing a record pointer by a SUB-stride (`car + j*16`) must stay a byte-offset record pointer; a real array index changes allocation.
+- Per-function compare of a TU against its pre-change object: pilot/scripts/cmpfn.sh FILE.c BASE.o (~5 s; cmpall.sh no longer works once the pilots are gone).
+- car_data has at least 25 slots (handling.c loops 25, uses slot 23 as D_0009D438) - the header comment's "20" is wrong.
