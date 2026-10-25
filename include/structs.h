@@ -33,6 +33,9 @@ typedef struct { unsigned char r, g, b, cd; } CVECTOR;
 #endif
 typedef struct { int vx, vy, vz; } VECTOR_NOPAD;    /* D2 VECTOR_NOPAD */
 typedef struct { short x, y; } SXY;
+/* D2 MATRIX2: CompoundMatrix[] (draw.c, tile.c) - a MATRIX with a frame stamp in its padding, 0x20 bytes */
+typedef struct { short m[3][3]; short computed; int t[3]; } MATRIX2;
+SIZE_ASSERT(MATRIX2, 0x20);
 
 /* ---- car_data[] (0x9B0A4): one car, 0x18C bytes. D_0009B230 = car_data[1]; 20 slots. ----
  * D1's record is not D2's _CAR_DATA (0x29C): the physics state (D2 st/hd) sits at 0x04-0x77 and the
