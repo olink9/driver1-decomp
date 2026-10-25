@@ -135,3 +135,18 @@ Step 4 (move definitions into the owning file) - the recipe that worked:
   callers needing a narrower return type (nfmv func_801019C8 -> short), differing static inline copies (mcard
   check_card x3, later ones renamed).
 - tools/progress.py still reads src/pilot/<t>/ only; it does not count functions that moved into TUs (main too).
+## Lessons (Step 3 part 1: include/structs.h; 17 TUs switched - byte-identical)
+- One header, include/structs.h: CAR_DATA, CIV_SLOT, PURSUER (0x7A8), MODEL (D2 int offsets), CELL_OBJECT, DB,
+  PLAYBACKCAMERA, TEXINF/TEXTURE_DETAILS(UV coords), MENU_ITEM, WHEEL, SXY, VECTOR_NOPAD and the gte base types
+  (skipped when common.h is included first). OFS_ASSERT/SIZE_ASSERT = negative-array typedefs (works in cc1 2.7).
+- cc1 2.7.2 has NO anonymous unions/structs in C: one field name per offset. Other spellings are renames in the
+  bodies (pos.vx for x, where.t[k] for px/where[k], damage[k] for f114..) or a cast at the use.
+- Free (same bytes, every case tried): renaming fields; scalar `extern T car_data;` -> `car_data[0].f`; int MODEL
+  offsets cast at the use `(SVECTOR *)m->vertices`; char[]/int[] __asm__ views of a struct array -> `(char *)SYM`
+  casts (felony); a FAKEMATCH's REGION view -> CAR_DATA where.t[] (objcoll); ushort -> short for values that are
+  masked (camera angle); struct copy V16 -> VECTOR; 16-bit reads of byte pairs `*(unsigned short *)&t.coords.u0`.
+- NOT free: glaunch func_00025C68's CARX view (a short read of the int at 0xF8, char mat[]) grew 12 bytes on field
+  access - kept, documented. Workflow per TU: drop the local typedefs, sed the renames, compile errors find the
+  rest, linkcheck --tu decides; on a size diff revert only that function's spelling to a local view.
+- Field renames must be scoped by variable type (same field names on different records): rename by the object
+  expression (`cp->`, `car_data[..].`) or by line range, never globally.
