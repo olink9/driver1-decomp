@@ -4,8 +4,8 @@
  *   table, icon lists, steering tables), .rodata 0x10D04-0x10EF4 (the icon names - gcc emits an initialiser's literals
  *   in reverse order - then the code's literals and jump tables), .sdata 0x96DA0-0x96E30 (variables, the short icon
  *   names, more variables, ControlReplay's "delete\n", D_00096E28), .sbss 0x97604-0x97684 (D_00097640..44 are
- *   main.c's only). D_0008B698..D_0008B6C0 (4-8 byte icon lists) are one 0x30-byte block D_0008B698_lists - alone
- *   they would be .sdata - and the code reaches them by their labels (extern, placed by the link).
+ *   main.c's only). D_0008B698..D_0008B6C0 (4-8 byte icon lists) stay in .data because each is declared
+ *   `extern char X[];` before its size-less definition (cc1 decides "small" at the first declaration).
  *   maspsx: abs= D_00097654 (its own byte array, reached with %hi/%lo) and the other files' small globals (the
  *   old `extern long long`); D_00096E28 keeps an incomplete declaration first (not small to cc1, as matched).
  *   .bss stays extern (.comm).
@@ -146,13 +146,22 @@ REPLAY_ICON D_0008B528[23] = {
     { 240, 122, &D_000B9028, "Move Camera Start", 280, 142 },
     { 240, 178, &D_000B736C, "Accept", 280, 198 }
 };
-/* D_0008B698..D_0008B6C0: 0xFF-terminated icon lists for ShowIcons (0x30 bytes). As separate objects of 4-8 bytes
- * they would go to .sdata, so they are one block here; the code reaches them by their own labels (extern below,
- * placed by the link at their original addresses inside this block). */
-struct { unsigned char l0[4], l1[12], l2[8], l3[4], l4[4], l5[8], l6[8]; } D_0008B698_lists = {
-    0, 0xFF, 0, 0, 1, 8, 2, 3, 0x14, 4, 5, 7, 9, 0xFF, 0, 0, 0xA, 0xB, 0xC, 0xD, 0xFF, 0, 0, 0, 0xE, 0xFF, 0,
-    0, 0x13, 0xFF, 0, 0, 0xF, 0x10, 0x11, 0x12, 0xFF, 0, 0, 0, 0xA, 0xB, 0xC, 0x15, 6, 0x16, 0xFF, 0
-};
+/* D_0008B698..D_0008B6C0: 0xFF-terminated icon lists for ShowIcons. 4-8 bytes each but in .data: declared without
+ * a size first (as a header would), which keeps cc1 from treating them as small data. */
+extern char D_0008B698[];
+char D_0008B698[] = { 0, 0xFF, 0, 0 };
+extern char D_0008B69C[];
+char D_0008B69C[] = { 1, 8, 2, 3, 0x14, 4, 5, 7, 9, 0xFF, 0, 0 };
+extern char D_0008B6A8[];
+char D_0008B6A8[] = { 0xA, 0xB, 0xC, 0xD, 0xFF, 0, 0, 0 };
+extern char D_0008B6B0[];
+char D_0008B6B0[] = { 0xE, 0xFF, 0, 0 };
+extern char D_0008B6B4[];
+char D_0008B6B4[] = { 0x13, 0xFF, 0, 0 };
+extern char D_0008B6B8[];
+char D_0008B6B8[] = { 0xF, 0x10, 0x11, 0x12, 0xFF, 0, 0, 0 };
+extern char D_0008B6C0[];
+char D_0008B6C0[] = { 0xA, 0xB, 0xC, 0x15, 6, 0x16, 0xFF, 0 };
 unsigned char D_0008B6C8[16] = {
     0, 0xCD, 0xC1, 0xB5, 0xA9, 0x9D, 0x91, 0x85, 0, 0x33, 0x3F, 0x4B, 0x57, 0x63, 0x6F, 0x7B
 };
@@ -240,13 +249,6 @@ extern int D_00096F1C;
 extern int OK_To_Zoom();
 extern void SetTextColour();
 extern void PrintString();
-extern char D_0008B698[];
-extern char D_0008B69C[];
-extern char D_0008B6A8[];
-extern char D_0008B6B0[];
-extern char D_0008B6B4[];
-extern char D_0008B6B8[];
-extern char D_0008B6C0[];
 extern void func_0004DF28();
 extern void func_0004E08C();
 extern int AttractMode;
