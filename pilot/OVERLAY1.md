@@ -75,3 +75,4 @@ Final reply: `<batch>: matched N / wip M / gave up K`, one line per wip/give-up 
   common.h (libapi/libetc/libgpu/libcd): do not redeclare them; declare only BIOS stubs such as `ChangeClearPad`.
 - `main` must be written as `main` (gcc 2.7 inserts the `jal __main` itself). Linkcheck: `tools/linkcheck.py --target
   nfmv -o pilot/linkcheck-nfmv.tsv`.
+- (run4-ov) A value cse folds into its base: assign it on BOTH paths into the join (cse forgets at the label, cross-jumping re-merges). MulMatrix0 takes 3 args - a "mystery" register near a call can be a missing argument. Check global declaration types against sibling callbacks before chasing scheduling (func_001C62CC 83 -> 100 on declarations alone). `asm volatile("" : : "r"(x))` adds one ref with no code - a quick way to TEST a priority theory (FAKEMATCH if kept).

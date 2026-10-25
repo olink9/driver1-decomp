@@ -1,3 +1,7 @@
+/* (run4-ov) Tried: shade = 0x30; shade -= ty / -(ty-0x30) / 0x30 + -ty / ty = y; ty -= 0x80 (dead addiu never kept);
+   x1/x3 as x + 0x50 (addiu from t3), chained x1 = x3 = 0x1AE, literal before x0 (94.51). With a literal the single-set
+   0x1AE pseudo gets sched1's birthing boost (li + both stores hoisted next to y2/y3); the target's late li with the stores
+   in source order suggests a value that is NOT single-set/birthing. */
 /* wip 97.07: logic complete. Left: (1) target keeps a dead 'addiu v0,s1,-0x80' before the 0xB0-y shade calc (combine leftover; tried 0x30-(y-0x80), ty temp, clamp inline, separate ifs - none keep it), (2) 0x1AE (x1/x3) is a late v1 constant in the target; as a join-point local r it gets t4 early, as a literal the x1/x3 stores schedule too early (94.5). x/c/r locals at the if-join reproduce the t2/t3 constants (reorg copies the join insn into the bne delay slot). */
 /* Credits: draw face picture n at height y (copy of the template POLY_FT4 D_001E2790[n]) */
 typedef struct { unsigned addr:24; unsigned len:8; } P_TAG;

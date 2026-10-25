@@ -1,9 +1,5 @@
-/* WIP 99.84 (fnscore): only diff left is in the case-4 verify (after the 0x110600 read-back): the target keeps
-   `q = buf + 0x200` in a2, reads the header with `lw 0(a2)` and steps `addiu a2,a2,8`; here cse1 knows
-   q == buf+0x200 and folds both (lw 0x200(s2), q = s2+0x208). Tried: q = buf; q += 0x200 / &buf[0x200] /
-   int* header pointer / (S40 *)q + 1 / static inline header test / unconditional q += 8 / E7F5C as a static
-   inline (frame grows to 0x50; fold stays). Everything else matches, including the goto-built compare loop
-   (`for` gives bnez-back instead of the target's beqz-out + j-top). */
+/* func_000E806C - write save file and verify. q = buf + 0x200 is set on both paths into the join (inlined
+   E7F5C success / failure); a single set after the join lets cse fold the header read into lw 0x200(s2). */
 typedef struct { char name[0x18]; char title[0x24]; int size; unsigned char idx; unsigned char n; unsigned char f42; unsigned char f43; } E;
 typedef struct { unsigned short s; unsigned char c2; char c3; void *p4; E e[15]; } H;
 typedef struct {
@@ -211,12 +207,14 @@ ok1:
                 if (ret)
                     break;
             } while (--n != -1);
-            if (ret == 1)
+            if (ret == 1) {
+                q = buf + 0x200;
                 goto ok2;
+            }
         }
         func_000EAE3C(D_000E676C, 2);
-ok2:
         q = buf + 0x200;
+ok2:
         if ((*(int *)q & 0x3FFFFFF) == (*(int *)&D_00097640 & 0x3FFFFFF)) {
             q += 8;
             i = 0;

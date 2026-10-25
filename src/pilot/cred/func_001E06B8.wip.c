@@ -1,3 +1,5 @@
+/* (run4-ov) Tried: `char *name = D_001E06A8;` as the very first statement (decl init and plain assignment) - no
+   change; cse/sched1 still put the name next to the call (single-set pseudo -> birthing boost). */
 /* wip 94.16: all stores/loop match; left: target sched1 puts the Loadfile name arg (lui/addiu a0, D_001E06A8) at the very top, so the prim constants get a1/a2 instead of a0/a1, and pos=0x80 lands right after DecDCTvlcBuild. Statement-order sweeps (prim fields, alloc block, name local, prototypes) don't move it. */
 /* CRED entry point: set up the two face sprites, allocate buffers, load GFX\FACES.TEX, init credits state */
 typedef struct {

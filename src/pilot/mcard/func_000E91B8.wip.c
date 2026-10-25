@@ -1,3 +1,6 @@
+/* (run4-ov) Tried: block-local `char *p` (87.14 / 89.93), E *e pointer, static inline nm(s, x) wrapping the call
+   (92.60 but the address folds to (c*257+f*17)*4 + base+0x20; constants still first). The then-arm constants-last order
+   is not a luid tie: even with the address computed in an earlier statement sched1 puts the constants first. */
 /* WIP 89.93 (was 87.14): the then-arm now addresses the name as `(E *)((char *)D[c].e + f*0x44)` so the two
    func_0005D164 arms stay separate (target keeps two copies). Left: SCHEDULE of the then-arm - target computes the whole
    address first (F' into a2, then C', then +8/+F'/+0x18) and sets a2/a3/stack args last; here both arms set the

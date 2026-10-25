@@ -6,6 +6,7 @@ func_000E7350	pass	src/pilot/mcard/func_000E7350.c: 0x000E7350 size 0x48; exe id
 func_000E7398	pass	src/pilot/mcard/func_000E7398.c: 0x000E7398 size 0x170; exe identical
 func_000E7B2C	pass	src/pilot/mcard/func_000E7B2C.c: 0x000E7B2C size 0x430; exe identical
 func_000E7F5C	pass	src/pilot/mcard/func_000E7F5C.c: 0x000E7F5C size 0x110; exe identical
+func_000E806C	pass	src/pilot/mcard/func_000E806C.c: 0x000E806C size 0xB14; exe identical
 func_000E8B80	pass	src/pilot/mcard/func_000E8B80.c: 0x000E8B80 size 0x13C; exe identical
 func_000E8CBC	pass	src/pilot/mcard/func_000E8CBC.c: 0x000E8CBC size 0x118; exe identical
 func_000E8DD4	pass	src/pilot/mcard/func_000E8DD4.c: 0x000E8DD4 size 0xB0, .rodata at 0xE685C; exe identical
@@ -30,4 +31,4 @@ func_000EC508	pass	src/pilot/mcard/func_000EC508.c: 0x000EC508 size 0x48; exe id
 func_000EC550	pass	src/pilot/mcard/func_000EC550.c: 0x000EC550 size 0x16C; exe identical
 func_000EC6BC	pass	src/pilot/mcard/func_000EC6BC.c: 0x000EC6BC size 0x1E0; exe identical
 func_000EC89C	pass	src/pilot/mcard/func_000EC89C.c: 0x000EC89C size 0xC90; exe identical
-(combined)	pass	31 passing functions linked together: sha1 d25d51e8bf2226168551f46da83b238f7a62754b
+(combined)	pass	32 passing functions linked together: sha1 d25d51e8bf2226168551f46da83b238f7a62754b

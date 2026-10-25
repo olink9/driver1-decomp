@@ -1,3 +1,5 @@
+/* (run4-ov) Tried: port set on both clamp paths (`if (sz<size){size=sz; port=D;} else port=D;`, 95.56 - b's address
+   is then recomputed). Still needed: dst 9 refs at >=271 live insns, or 8 refs (any form found so far keeps 9). */
 /* WIP 99.76: control flow, calls, schedule all match; only s4/s5 are swapped (inlined func_000E7F5C `port` copy vs the
    `dst` param). global-alloc priority: dst 9 refs/267 insns = 1011, port 2 refs/20 = 1000 -> dst picks s4 first. Target
    needs port in (1011, 1176) (c = D_000ED86C copy is 1176) or dst <= 1000. Tried: all 24 helper param orders (port after
