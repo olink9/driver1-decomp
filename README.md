@@ -50,7 +50,8 @@ verified* below).
 | MCARD.BIN | 31 / 35 (88.6%) | 19,796 / 26,568 (74.5%) |
 | CRED.BIN | 11 / 13 (84.6%) | 4,208 / 5,116 (82.3%) |
 | IVIEW.BIN | 23 / 23 (100.0%) | 12,488 / 12,488 (100.0%) |
-| **Total** | **1217 / 1232** (98.8%) | **482,232 / 496,152** (97.2%) |
+| NFMV.EXE | 6 / 27 (22.2%) | 336 / 5,268 (6.4%) |
+| **Total** | **1223 / 1259** (97.1%) | **482,568 / 501,420** (96.2%) |
 
 Overlay matches include `FAKEMATCH` files: FRONTEND 15, MCARD 3, CRED 1, IVIEW 4 (none hand-written asm).
 <!-- /progress -->
@@ -58,8 +59,9 @@ Overlay matches include `FAKEMATCH` files: FRONTEND 15, MCARD 3, CRED 1, IVIEW 4
 **What these numbers cover:**
 - The first two tables cover the game code in the main executable; the third adds the overlays. The PsyQ (Sony SDK) library functions come after
   `__main` (0x738F0). They are identified from signatures but not decompiled, since the PC port replaces them.
-- The code overlays FRONTEND.BIN, MCARD.BIN, CRED.BIN and IVIEW.BIN are split and matched (third table); the FMV
-  player NFMV.EXE is not split yet.
+- The code overlays FRONTEND.BIN, MCARD.BIN, CRED.BIN and IVIEW.BIN are split and matched (third table). The FMV
+  player NFMV.EXE is a separate executable with its own copy of the PsyQ libraries: only its 27 game functions
+  (`main` 0x80100B14 up to the libraries at 0x80101FA8) are counted; crt0 and the libraries are identified, not decompiled.
 - **Near-misses** are complete C files that differ from the original only in small ways, almost always a
   different register choice by the compiler. They already behave like the original. They just aren't proven
   byte-exact yet.
@@ -148,8 +150,19 @@ make overlays                                   # build/FRONTEND.BIN: OK ... bui
 .venv/bin/python tools/fnscore.py func_001C0CEC src/pilot/frontend/func_001C0CEC.c   # target found from the symbol
 .venv/bin/python tools/linkcheck.py --target frontend -o pilot/linkcheck-frontend.tsv
 ```
-`tools/targets.py` lists the binaries; `--target main|frontend|mcard|cred|iview` works in fnscore, linkcheck,
+`tools/targets.py` lists the binaries; `--target main|frontend|mcard|cred|iview|nfmv` works in fnscore, linkcheck,
 permsetup, mkqueue, nextbatch and progress.
+
+NFMV.EXE (the FMV player that main `Exec()`s, `\DRIVER\NFMV\NFMV.EXE` -> `orig/NFMV.EXE`) is its own PS-X EXE at
+0x80100000 with its own gp (0x80126748) and PsyQ libraries; it does not link against main and is built `-G8` like main:
+```sh
+.venv/bin/python -m splat split nfmv.yaml && .venv/bin/python -m splat split fn_nfmv.yaml
+make nfmv                                       # build/NFMV.EXE: OK (also part of `make overlays`)
+.venv/bin/python tools/psyqsig.py --target nfmv --apply 430 420 440 410 450 460 470   # library names
+.venv/bin/python tools/linkcheck.py --target nfmv -o pilot/linkcheck-nfmv.tsv
+```
+It shares names with main (`main`, `__main`, the libraries): pass `--target nfmv` to permsetup/fnasm; fnscore takes the
+target from a C file under `src/pilot/nfmv/`.
 
 `objdiff-cli` is expected at `~/.local/opt/decomp/objdiff-cli`; set `OBJDIFF` to override. The Driver 2
 hints in `fnasm.py` need two optional checkouts, each with its own environment variable:
@@ -161,14 +174,14 @@ hints in `fnasm.py` need two optional checkouts, each with its own environment v
 | Path | |
 |---|---|
 | `src/pilot/*.c` | matched functions, one file each; `.wip.c` = best attempt so far |
-| `src/pilot/frontend/`, `mcard/`, `cred/`, `iview/` | the same for the FRONTEND.BIN / MCARD.BIN / CRED.BIN / IVIEW.BIN overlays |
+| `src/pilot/frontend/`, `mcard/`, `cred/`, `iview/`, `nfmv/` | the same for the FRONTEND.BIN / MCARD.BIN / CRED.BIN / IVIEW.BIN overlays and NFMV.EXE |
 | `include/` | PsyQ types and macros (PsyCross headers, configured for real PSX layouts), `gte.h` |
 | `slus_008.42.yaml`, `fn.yaml` | splat configs: baseline build, and one asm file per function |
-| `frontend.yaml`, `mcard.yaml`, `cred.yaml`, `iview.yaml`, `fn_*.yaml` | the same for the overlays; `symbol_addrs.<overlay>.txt` are their symbols |
+| `frontend.yaml`, `mcard.yaml`, `cred.yaml`, `iview.yaml`, `nfmv.yaml`, `fn_*.yaml` | the same for the overlays and NFMV.EXE; `symbol_addrs.<overlay>.txt` are their symbols |
 | `symbol_addrs.txt` | named symbols (PsyQ library, confirmed names) |
 | `pilot/AGENT.md` | the matching guide: toolchain, rules, ~80 compiler patterns learned so far |
 | `pilot/queue.tsv` | all 799 game functions, smallest first |
-| `pilot/queue-<overlay>.tsv` | the overlays' 362 + 35 + 13 + 23 functions |
+| `pilot/queue-<overlay>.tsv` | the overlays' 362 + 35 + 13 + 23 functions, NFMV.EXE's 27 |
 | `pilot/results.tsv`, `pilot/linkcheck.tsv` | every attempt, and the link-check verdicts |
 | `pilot/d2map.tsv` | Driver 1 ↔ Driver 2 function pairs (code similarity) |
 | `pilot/names-proposed.tsv` | names proposed by the workers (raw); `names-applied.tsv` / `names-rejected.tsv` are the reviewed split |

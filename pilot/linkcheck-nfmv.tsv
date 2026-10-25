@@ -1,0 +1,8 @@
+symbol	result	detail
+func_80100E4C	pass	src/pilot/nfmv/func_80100E4C.c: 0x80100E4C size 0x5C; exe identical
+func_80101D0C	pass	src/pilot/nfmv/func_80101D0C.c: 0x80101D0C size 0x34; exe identical
+func_80101D40	pass	src/pilot/nfmv/func_80101D40.c: 0x80101D40 size 0x20; exe identical
+func_80101D60	pass	src/pilot/nfmv/func_80101D60.c: 0x80101D60 size 0x28; exe identical
+func_80101D88	pass	src/pilot/nfmv/func_80101D88.c: 0x80101D88 size 0x50; exe identical
+func_80101DD8	pass	src/pilot/nfmv/func_80101DD8.c: 0x80101DD8 size 0x28; exe identical
+(combined)	pass	6 passing functions linked together: sha1 45592283155ef3bcf04d64d68aa5b54d7dc87834

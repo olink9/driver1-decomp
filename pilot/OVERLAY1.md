@@ -60,3 +60,18 @@ Final reply: `<batch>: matched N / wip M / gave up K`, one line per wip/give-up 
 - (ov2 workers) A uchar-narrowed arg in one branch only: write the whole call per arm (`if (c) SetTextColour(x<<3,..); else SetTextColour(127,..);`), cross-jumping merges. `k = t; if (t >= 16) k = 32 - t;` coalesces t/k: use a fresh block-local with a real if/else. `if (c) f(2); else f(8);` for two jals (a `?:` gives a temp + move).
 - (ov2 workers) Struct copies need the real alignment: char-only struct = lwl/lwr movstr with the `or/andi 3` check, an int member = plain lw/sw countdown. `-(w/2) + 0x181` gives negu/addiu; `0x181 - w/2` gives li/subu. A form sweep with pilot/scripts/fs.py (~2 s/variant) finds access-form mixes fast.
 - (ov2 workers) CRED: D_001E2790 = POLY_FT4[2] face templates (struct-assigned); D_001E1ADC = credits script `{u16 type; u8 a, b; u8 *str}` ending at type 10; D_001F3850 image info. IVIEW: D_001E3758 = 40-entry path ring of 0x38-byte records (count D_001E3750, full flag D_001E35B0); car_data + 0x2394 = car 23. OPEN: func_001E06B8 - sched1 puts the Loadfile name arg (a0) at the very top; every statement-order form ties (priorities 1-3).
+
+## NFMV.EXE (FMV player; separate PS-X EXE, NOT an overlay)
+- Own executable at 0x80100000 with its own PsyQ libraries and gp (0x80126748); it never links against main. Queue
+  `pilot/queue-nfmv.tsv` = the 27 game functions `main` 0x80100B14 .. 0x80101FA8; crt0 (`__SN_ENTRY_POINT`), the empty
+  `__main` stub before `main` and everything from 0x80101FA8 (libapi/libgpu/libetc/libcd/libpress/libspu/libsnd + BIOS
+  stubs, named in `symbol_addrs.nfmv.txt`) are identified, not decompiled. C goes in `src/pilot/nfmv/`.
+- **-G8 / MASPSX_EXTERN_G=4 like main, NOT -G0 like the overlays** (its game code uses $gp: sdata 0x80126748..67, sbss
+  above). So main's three global forms apply: `%gp_rel` = `extern int/short D_x;`, lui+%lo = `extern long long D_x;`
+  + `*(T *)&D_x`, lui+addiu kept = `extern T D_x[];`. Proven by func_80100E4C, func_80101D0C/D40/D60/D88/DD8 (all
+  link-verified; func_80101D60 scores 88% at -G0).
+- Names collide with main (`main`, `__main`, VSync, ResetGraph ...): `fnscore.py` takes the target from the C file's
+  directory (src/pilot/nfmv/), but pass `--target nfmv` to `fnasm.py` and `permsetup.py`. Library prototypes come from
+  common.h (libapi/libetc/libgpu/libcd): do not redeclare them; declare only BIOS stubs such as `ChangeClearPad`.
+- `main` must be written as `main` (gcc 2.7 inserts the `jal __main` itself). Linkcheck: `tools/linkcheck.py --target
+  nfmv -o pilot/linkcheck-nfmv.tsv`.
