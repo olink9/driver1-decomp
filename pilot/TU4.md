@@ -83,3 +83,36 @@ then lessons (append them to this file under "## Lessons" with your batch name, 
 - Helpers (untracked): build/tu4-tools/own.py (labels of a range with users and $gp/abs per TU), gen.py/enc.py (C
   initialisers from asm/data, enc.py by member widths incl. .asciz), apply.py (insert definitions, drop the externs
   they replace, `extern long long` -> int + abs=).
+### Batch 2 (pedest players pathfind felony job_fx misc_636 mission+overlay handlers pause fmvplay flyby scores ladder xaplay xmplay - all byte-identical, combined link of the 15 TUs OK)
+- mission.c + overlay.c are ONE object, merged (91ad0d3): overlay's sprintf format (0x110C8) sits between mission's code
+  strings and mission's jump tables (one object = all strings, then all jump tables), and overlay's D_0008C228 points at
+  "Checkpoint" inside mission's data-string run. Merge needed only: TIMER renamed away, overlay's GS view of D_000C6F04 ->
+  MISSION (t.f[2/6/7/8] = st.f0/f10/f14/f18), D_0008BD58 read through (MSG *), func_0004FFE8 K&R. .rodata one block.
+- The .bss TAIL is laid out file by file (pathfind 0xC039C, felony 0xC4690 PURSUER[5], job_fx 0xC6CD8, mission
+  0xC6EA8 + MISSION, flyby 0xC71EC, xaplay 0xC782C, xmplay 0xC7888-0xC7A10, then the library): plain tentative
+  definitions in address order place as ".bss one block" - risk 5 does not apply there. Interior names other files use
+  (D_000C4E38 = [1], D_000C241C in the cell map, D_000C7034 in MISSION) just stay extern. Tiny objects at the edge of a
+  .bss block (D_000C6F00/01/02) must be the tail of the previous array: as chars they go to .sbss.
+- A size-less definition alone (`void (*D_0008BA08[])(..) = {f};`) keeps a 4-byte initialised array in .data; the
+  incomplete extern first only matters for how the code addresses it.
+- Literal order, measured: one initialiser's literals come out in reverse element order (overlay's label tables,
+  xaplay's MV1..MV5); each init-declarator's literals are emitted BEFORE its variable. So pause's `char *D_00096F20 =
+  "Restart", *D_00096F24 = "Try It"` (pointers first, strings after them in .sdata) cannot be literals: pause's menu
+  strings are named const arrays (<= 8 bytes land in .sdata, longer in .rodata, definition order = address order).
+- A literal that precedes the first function's literals in .sdata although only a late function uses it ("+%d sec")
+  comes from an inline function defined at the top: gcc expands an inline body - and outputs its constants - at its
+  definition (overlay's ShowNum moved up, byte-identical).
+- Incomplete-extern-first is NOT free for small arrays the code fills (pause D_000977B4/B8 char[4]): cc1 then keeps the
+  address in an s-register (+0x28 bytes). Keep the complete type and put the name in abs=.
+- A 1-byte variable at the end of a .sdata label block (flyby D_00096F8C, xmplay D_00096FA8) leaves the label's padding
+  uncovered ("resumes at unaligned"); fill it with scalar chars - a char[3] is word-aligned and overruns the next file.
+- linkcheck cannot place a .sdata block no code relocates against (pedest's candidate words 0x96E4C-0x96E5B): left in asm.
+- mission's five message strings 0x10FAC-0x1100F stay an extern label: as literals they come out in the right order, but
+  the object's .rodata then starts at 0x10FAC (4 mod 8) and the `.align 3` jump tables land 4 bytes early; the original
+  has a zero word at 0x110D4 there - unexplained.
+- Left extern (.bss, no clean per-file block): pedest's 0xBFA7C-0xC039C (the pedestrian array is cleared here but
+  civ_draw.c reads D_000C0168 alone in the middle), players/handlers/pause/ladder/misc_636 (shared .comm only), scores.c's
+  tables (0x868EC.., in main.c's early .data run).
+- Helpers (untracked): build/tu4b/{own.py (labels + users + gp/abs per range), dat.py (C initialiser from the exe), gen.py
+  (spec -> definitions, drops replaced externs), ll.py (extern long long -> int + abs=), lit.py (string label -> literal),
+  cmpfn.sh (per-function compare that ignores relocation-form diffs)}.
