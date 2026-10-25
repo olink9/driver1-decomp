@@ -5,6 +5,12 @@
  * TYPE VIEWS (scaffolding for the shared headers, remove in Step 3):
  *   current__cur (CUR, func_00027E08), D_000A1BC8__I (CLIPPT_I, func_00028FA4),
  *   D_00097130__I / D_00097134__I (I4, func_00028FA4: a plain unsigned long reschedules the gp loads).
+ * Step 3 (include/structs.h): CELL_OBJECT, MODEL, DB, SVECTOR, MATRIX2 (CompoundMatrix, was MAT32) come from the
+ *   header. SV -> SVECTOR (x/y/z -> vx/vy/vz); MODEL vertices/polys -> (SVECTOR *)vertices/(int *)poly_block; the
+ *   word at 0x24 that func_000287A4 reads (pilot `modes`, past the header's 0x24-byte MODEL) is
+ *   ((unsigned int *)model)[9]. The local UV pair is UVPAIR (structs.h owns UV). Views KEPT (declaration width,
+ *   not record shape - Step 3 part 2): current__cur (`(*(DB **)&current)` changes func_00027E08's code),
+ *   D_00097130__I/D_00097134__I, D_000A1BC8__I. FT3/FT4/DV/DVECTOR/CLIPPT/B8/P4 stay local (libgpu-like shapes).
  * Boundary: 140-149 share one .sdata (0x96938-0x96950) and .sbss (0x97130-0x9715C) run; the asm
  * helpers 118-139 before it are HANDWRITTEN; shadow.c's func_000298B0/func_000298BC reach
  * D_00097138..D_00097150 through $gp too, but as externs (data stays in asm here).
@@ -71,34 +77,16 @@
  * call func_00028FA4: func_00027E08 passes 2 argument(s), the definition takes 1 (call before the definition)
  */
 
+#include "structs.h"
+
 /* ---- types ---- */
-typedef struct {
-    int x, y, z;            /* 0x00 */
-    unsigned char pad;      /* 0x0C */
-    unsigned char yang;     /* 0x0D */
-    unsigned short type;    /* 0x0E */
-} CELL_OBJECT;
-typedef struct { short x, y, z, pad; } SV;
-typedef struct {
-    unsigned short shape_flags; /* 0x00 */
-    unsigned short flags2;      /* 0x02 */
-    char pad4[0xE - 0x4];
-    unsigned short num_polys;   /* 0x0E */
-    SV *vertices;               /* 0x10 */
-    int *polys;                 /* 0x14 */
-    char pad18[0x24 - 0x18];
-    unsigned int modes;         /* 0x24 */
-} MODEL;
-typedef struct { int m[8]; } MAT32;
-typedef struct { char *primptr; unsigned long *ot; int pad; int id; } DB;
 typedef struct { unsigned char v; char pad[7]; } B8;
 typedef struct { DB *p; int pad; } CUR;
-typedef struct { unsigned char u, v; } UV;
+typedef struct { unsigned char u, v; } UVPAIR;
 typedef struct { unsigned long tag, rgbc; unsigned long xy0, uv0, xy1, uv1, xy2, uv2, xy3, uv3; } FT4;
 typedef struct { unsigned short vx, vy; } DV;
 typedef struct { short vx, vy; } DVECTOR;
-typedef struct { short vx, vy, vz, pad; } SVECTOR;
-typedef struct { DVECTOR xy; UV uv; short pad; } CLIPPT;
+typedef struct { DVECTOR xy; UVPAIR uv; short pad; } CLIPPT;
 typedef struct { int xy; unsigned short uv; short pad; } CLIPPT_I; /* func_00028FA4's view of D_000A1BC8 */
 typedef struct { unsigned int tag, rgbc; int xy0, uv0, xy1, uv1, xy2, uv2; } FT3;
 typedef struct { unsigned int *v; } P4;
@@ -120,14 +108,14 @@ extern int D_00097144;
 extern int D_00097148;
 extern CELL_OBJECT * *D_0009715C;
 extern MODEL *modelpointers[];
-extern MAT32 CompoundMatrix[];
+extern MATRIX2 CompoundMatrix[];
 extern int func_00026794();
 extern int func_0002680C();
 extern void func_000268FC();
 extern char *func_000269D4();
 extern char *func_00026FF0();
 extern char *func_00027098();
-extern SV D_000A1B00[];
+extern SVECTOR D_000A1B00[];
 extern unsigned int D_00089044[];
 extern int *D_0009693C;
 extern unsigned short *D_00096944;
@@ -139,7 +127,7 @@ extern unsigned short texture_pages[];
 extern unsigned short texture_cluts[][32];
 extern DVECTOR *D_00096938;
 extern DVECTOR *D_00096948;
-extern UV *D_0009694C;
+extern UVPAIR *D_0009694C;
 extern unsigned long *D_00096950;
 extern unsigned long D_00097130;
 extern unsigned long D_00097134;
@@ -263,7 +251,7 @@ void func_000270D4(int num)
             if (!(model->shape_flags & 0x20)) {
                 current->primptr = func_00026FF0(model, current->primptr);
             } else {
-                func_000268FC(model->vertices, model->polys, current->primptr, 0);
+                func_000268FC(model->vertices, model->poly_block, current->primptr, 0);
                 current->primptr += 0x28;
             }
         } else {
@@ -297,7 +285,7 @@ void func_000270D4(int num)
 #define B35_STSZ(p) __asm__ volatile ( \
     "swc2 $17, 0(%0);" "swc2 $18, 4(%0);" "swc2 $19, 8(%0)" : : "r"(p) : "memory")
 #define B35_ST1(p) __asm__ volatile ("swc2 $14, 0(%0)" : : "r"(p) : "memory")
-void func_00027620(unsigned int a0, SV *a1)
+void func_00027620(unsigned int a0, SVECTOR *a1)
 {
     short step[3];
     char pad[8];
@@ -306,26 +294,26 @@ void func_00027620(unsigned int a0, SV *a1)
     int bits;
     short x;
     unsigned short y, z;
-    SV *s;
-    SV *e;
-    SV *p;
+    SVECTOR *s;
+    SVECTOR *e;
+    SVECTOR *p;
 
     for (i = 0; i < 2; i++) {
-        s = (SV *)((a0 & 0xFF) * 8 + (int)a1);
-        e = (SV *)((a0 >> 5 & 0x7F8) + (int)a1);
+        s = (SVECTOR *)((a0 & 0xFF) * 8 + (int)a1);
+        e = (SVECTOR *)((a0 >> 5 & 0x7F8) + (int)a1);
         bits = D_00089044[i];
-        x = s->x;
-        y = s->y;
-        z = s->z;
-        step[0] = (e->x - x) >> 2;
-        step[1] = (e->y - (short)y) >> 2;
-        step[2] = (e->z - (short)z) >> 2;
+        x = s->vx;
+        y = s->vy;
+        z = s->vz;
+        step[0] = (e->vx - x) >> 2;
+        step[1] = (e->vy - (short)y) >> 2;
+        step[2] = (e->vz - (short)z) >> 2;
         for (j = 0; j < 5; j++) {
             p = &D_000A1B00[bits & 0x1F];
             bits >>= 5;
-            p->x = x;
-            p->y = y;
-            p->z = z;
+            p->vx = x;
+            p->vy = y;
+            p->vz = z;
             x += step[0];
             y += step[1];
             z += step[2];
@@ -362,7 +350,7 @@ void func_00027620(unsigned int a0, SV *a1)
     "swc2 $17, 0(%0);" "swc2 $18, 4(%0);" "swc2 $19, 8(%0)" : : "r"(p) : "memory")
 #define B57_ST1(p) __asm__ volatile ("swc2 $14, 0(%0)" : : "r"(p) : "memory")
 #define B57_STSZ1(p) __asm__ volatile ("swc2 $19, 0(%0)" : : "r"(p) : "memory")
-void func_000277D4(unsigned int verts, unsigned int uv, unsigned int uv2, SV *v)
+void func_000277D4(unsigned int verts, unsigned int uv, unsigned int uv2, SVECTOR *v)
 {
     short step[3];
     char pad[2];
@@ -375,25 +363,25 @@ void func_000277D4(unsigned int verts, unsigned int uv, unsigned int uv2, SV *v)
     short ey, ez;
     int ex, sx;
     unsigned int u, w;
-    SV *s;
-    SV *e;
-    SV *p;
-    SV *q;
+    SVECTOR *s;
+    SVECTOR *e;
+    SVECTOR *p;
+    SVECTOR *q;
 
     for (i = 0; i < 2; i++) {
         u = (uv & 0xFF) << 4;
         w = (uv & 0xFF00) >> 4;
-        s = (SV *)(((verts & 0xFF) << 3) + (int)v);
-        e = (SV *)(((verts >> 8 & 0xFF) << 3) + (int)v);
+        s = (SVECTOR *)(((verts & 0xFF) << 3) + (int)v);
+        e = (SVECTOR *)(((verts >> 8 & 0xFF) << 3) + (int)v);
         du = ((((uv >> 16) & 0xFF) << 4) - u) >> 2;
         dv = ((((uv >> 16) & 0xFF00) >> 4) - w) >> 2;
         bits = D_00089044[i];
-        y = s->y;
-        z = s->z;
-        ey = e->y;
-        ez = e->z;
-        ex = e->x;
-        x = sx = s->x;
+        y = s->vy;
+        z = s->vz;
+        ey = e->vy;
+        ez = e->vz;
+        ex = e->vx;
+        x = sx = s->vx;
         duv[0] = du;
         duv[1] = dv;
         step[0] = (ex - sx) >> 2;
@@ -402,9 +390,9 @@ void func_000277D4(unsigned int verts, unsigned int uv, unsigned int uv2, SV *v)
         for (j = 0; j < 5; j++) {
             n = bits & 0x1F;
             p = &D_000A1B00[n];
-            p->x = x;
-            p->y = y;
-            p->z = z;
+            p->vx = x;
+            p->vy = y;
+            p->vz = z;
             bits >>= 5;
             D_00096940[n * 2] = u >> 4;
             D_00096940[n * 2 + 1] = w >> 4;
@@ -450,7 +438,7 @@ void func_000277D4(unsigned int verts, unsigned int uv, unsigned int uv2, SV *v)
     "swc2 $17, 0(%0);" "swc2 $18, 4(%0);" "swc2 $19, 8(%0)" : : "r"(p) : "memory")
 #define B76_ST1(p) __asm__ volatile ("swc2 $14, 0(%0)" : : "r"(p) : "memory")
 #define B76_STSZ1(p) __asm__ volatile ("swc2 $19, 0(%0)" : : "r"(p) : "memory")
-void func_00027A4C(unsigned int verts, unsigned int uv, unsigned int uv2, SV *v)
+void func_00027A4C(unsigned int verts, unsigned int uv, unsigned int uv2, SVECTOR *v)
 {
     short step[4];
     short estep[4];
@@ -464,28 +452,28 @@ void func_00027A4C(unsigned int verts, unsigned int uv, unsigned int uv2, SV *v)
     unsigned short x, y, z;
     unsigned short rx, ry, rz;
     unsigned int *bp;
-    SV *s, *c, *e, *p, *q;
+    SVECTOR *s, *c, *e, *p, *q;
 
     u = (uv & 0xFF) << 4;
     w = (uv & 0xFF00) >> 4;
     i = 0;
-    s = (SV *)(((verts & 0xFF) << 3) + (int)v);
-    x = s->x;
-    y = s->y;
-    z = s->z;
+    s = (SVECTOR *)(((verts & 0xFF) << 3) + (int)v);
+    x = s->vx;
+    y = s->vy;
+    z = s->vz;
     duv[0] = (((uv >> 16 & 0xFF) << 4) - u) >> 2;
     duv[1] = (((uv >> 16 & 0xFF00) >> 4) - w) >> 2;
     uv2 >>= 16;
     duv[2] = (((uv2 & 0xFF) << 4) - u) >> 2;
     duv[3] = (((uv2 & 0xFF00) >> 4) - w) >> 2;
-    c = (SV *)(((verts >> 8 & 0xFF) << 3) + (int)v);
-    e = (SV *)(((verts >> 24) << 3) + (int)v);
-    step[0] = (c->x - (short)x) >> 2;
-    step[1] = (c->y - (short)y) >> 2;
-    step[2] = (c->z - (short)z) >> 2;
-    estep[0] = (e->x - (short)x) >> 2;
-    estep[1] = (e->y - (short)y) >> 2;
-    estep[2] = (e->z - (short)z) >> 2;
+    c = (SVECTOR *)(((verts >> 8 & 0xFF) << 3) + (int)v);
+    e = (SVECTOR *)(((verts >> 24) << 3) + (int)v);
+    step[0] = (c->vx - (short)x) >> 2;
+    step[1] = (c->vy - (short)y) >> 2;
+    step[2] = (c->vz - (short)z) >> 2;
+    estep[0] = (e->vx - (short)x) >> 2;
+    estep[1] = (e->vy - (short)y) >> 2;
+    estep[2] = (e->vz - (short)z) >> 2;
     for (k = 0; i < 5; i++) {
         rx = x;
         ry = y;
@@ -496,9 +484,9 @@ void func_00027A4C(unsigned int verts, unsigned int uv, unsigned int uv2, SV *v)
         for (j = 0; j < 5; j++) {
             int n = bits & 0x1F;
             p = &D_000A1B00[n];
-            p->x = rx;
-            p->y = ry;
-            p->z = rz;
+            p->vx = rx;
+            p->vy = ry;
+            p->vz = rz;
             bits = (int)bits >> 5;
             D_00096940[n * 2] = ru >> 4;
             D_00096940[n * 2 + 1] = rw >> 4;
@@ -594,10 +582,10 @@ void func_00027E08(int tex, int unused, int n, unsigned long *ot)
             D_00096948[2].vy >= 256 && D_00096948[3].vy >= 256)
             continue;
 
-        D_0009694C[0] = ((UV *)D_00096940)[v[0]];
-        D_0009694C[1] = ((UV *)D_00096940)[v[1]];
-        D_0009694C[3] = ((UV *)D_00096940)[v[2]];
-        D_0009694C[2] = ((UV *)D_00096940)[v[3]];
+        D_0009694C[0] = ((UVPAIR *)D_00096940)[v[0]];
+        D_0009694C[1] = ((UVPAIR *)D_00096940)[v[1]];
+        D_0009694C[3] = ((UVPAIR *)D_00096940)[v[2]];
+        D_0009694C[2] = ((UVPAIR *)D_00096940)[v[3]];
 
         if (D_00096948[0].vx < -128 || D_00096948[1].vx < -128 ||
             D_00096948[2].vx < -128 || D_00096948[3].vx < -128 ||
@@ -607,11 +595,11 @@ void func_00027E08(int tex, int unused, int n, unsigned long *ot)
             continue;
         }
 
-        D_0009694C[0] = ((UV *)D_00096940)[v[0]];
-        D_0009694C[1] = ((UV *)D_00096940)[v[1]];
-        D_0009694C[3] = ((UV *)D_00096940)[v[2]];
+        D_0009694C[0] = ((UVPAIR *)D_00096940)[v[0]];
+        D_0009694C[1] = ((UVPAIR *)D_00096940)[v[1]];
+        D_0009694C[3] = ((UVPAIR *)D_00096940)[v[2]];
         db = current;
-        D_0009694C[2] = ((UV *)D_00096940)[v[3]];
+        D_0009694C[2] = ((UVPAIR *)D_00096940)[v[3]];
 
         p = prim = (unsigned long *)db->primptr;
         *p++ = *ot | 0x9000000;
@@ -710,7 +698,7 @@ void func_000287A4(MODEL *model)
     int opz;
     int *clut;
     int *poly;
-    SV *verts;
+    SVECTOR *verts;
     int uv0;
     int uv1;
     int tpage;
@@ -725,10 +713,10 @@ void func_000287A4(MODEL *model)
     mode = uv1;
     i = 0;
     scratch = (int *)0x1F800000;
-    modes = model->modes;
+    modes = ((unsigned int *)model)[9];
     modes >>= 2;
-    poly = model->polys;
-    verts = model->vertices;
+    poly = (int *)model->poly_block;
+    verts = (SVECTOR *)model->vertices;
     for (i = 0; i < model->num_polys; i++) {
         if (mode != 2) {
             uv0 = poly[2];
@@ -992,7 +980,7 @@ void func_00028FA4(unsigned int *ot)
 #define B85_ST3(p) __asm__ volatile ( \
     "swc2 $12, 0(%0);" "swc2 $13, 4(%0);" "swc2 $14, 8(%0)" : : "r"(p) : "memory")
 #define B85_ST1(p) __asm__ volatile ("swc2 $14, 0(%0)" : : "r"(p) : "memory")
-void func_00029448(unsigned int verts, unsigned int uv, unsigned int uv2, SV *v)
+void func_00029448(unsigned int verts, unsigned int uv, unsigned int uv2, SVECTOR *v)
 {
     short step[4];
     short estep[4];
@@ -1007,35 +995,35 @@ void func_00029448(unsigned int verts, unsigned int uv, unsigned int uv2, SV *v)
     unsigned short ru, rw;
     unsigned short x, y, z;
     unsigned short rx, ry, rz;
-    SV *s, *c, *e, *f, *g;
-    SV *pp;
+    SVECTOR *s, *c, *e, *f, *g;
+    SVECTOR *pp;
     unsigned int *bp;
 
-    s = (SV *)(((verts & 0xFF) << 3) + (int)v);
+    s = (SVECTOR *)(((verts & 0xFF) << 3) + (int)v);
     u = (uv & 0xFF) << 4;
-    x = s->x;
-    y = s->y;
-    z = s->z;
-    e = (SV *)(((verts >> 24) << 3) + (int)v);
+    x = s->vx;
+    y = s->vy;
+    z = s->vz;
+    e = (SVECTOR *)(((verts >> 24) << 3) + (int)v);
     duv[0] = (((uv >> 16 & 0xFF) << 4) - u) >> 2;
     w = (uv & 0xFF00) >> 4;
     duv[1] = (((uv >> 16 & 0xFF00) >> 4) - w) >> 2;
-    c = (SV *)(((verts >> 8 & 0xFF) << 3) + (int)v);
+    c = (SVECTOR *)(((verts >> 8 & 0xFF) << 3) + (int)v);
     duv[2] = (((uv2 >> 16 & 0xFF) << 4) - u) >> 2;
     duv[3] = (((uv2 >> 16 & 0xFF00) >> 4) - w) >> 2;
     duv2[0] = (((uv2 & 0xFF) << 4) - ((uv2 >> 16 & 0xFF) << 4)) >> 2;
     duv2[1] = (((uv2 & 0xFF00) >> 4) - ((uv2 >> 16 & 0xFF00) >> 4)) >> 2;
-    step[0] = (c->x - (short)x) >> 2;
-    step[1] = (c->y - (short)y) >> 2;
-    step[2] = (c->z - (short)z) >> 2;
-    estep[0] = (e->x - (short)x) >> 2;
-    estep[1] = (e->y - (short)y) >> 2;
-    estep[2] = (e->z - (short)z) >> 2;
-    f = (SV *)(((verts >> 16 & 0xFF) << 3) + (int)v);
-    g = (SV *)(((verts >> 24 & 0xFF) << 3) + (int)v);
-    cstep[0] = (f->x - g->x) >> 2;
-    cstep[1] = (f->y - g->y) >> 2;
-    cstep[2] = (f->z - g->z) >> 2;
+    step[0] = (c->vx - (short)x) >> 2;
+    step[1] = (c->vy - (short)y) >> 2;
+    step[2] = (c->vz - (short)z) >> 2;
+    estep[0] = (e->vx - (short)x) >> 2;
+    estep[1] = (e->vy - (short)y) >> 2;
+    estep[2] = (e->vz - (short)z) >> 2;
+    f = (SVECTOR *)(((verts >> 16 & 0xFF) << 3) + (int)v);
+    g = (SVECTOR *)(((verts >> 24 & 0xFF) << 3) + (int)v);
+    cstep[0] = (f->vx - g->vx) >> 2;
+    cstep[1] = (f->vy - g->vy) >> 2;
+    cstep[2] = (f->vz - g->vz) >> 2;
     dstep[0] = (cstep[0] - step[0]) >> 2;
     dstep[1] = (cstep[1] - step[1]) >> 2;
     dstep[2] = (cstep[2] - step[2]) >> 2;
@@ -1051,10 +1039,10 @@ void func_00029448(unsigned int verts, unsigned int uv, unsigned int uv2, SV *v)
         bits = D_00089030[i];
         for (j = 0; j < 5; j++) {
             int n = bits & 0x1F;
-            SV *p = &D_000A1B00[n];
-            p->x = rx;
-            p->y = ry;
-            p->z = rz;
+            SVECTOR *p = &D_000A1B00[n];
+            p->vx = rx;
+            p->vy = ry;
+            p->vz = rz;
             bits = (int)bits >> 5;
             D_00096940[n * 2] = ru >> 4;
             D_00096940[n * 2 + 1] = rw >> 4;
