@@ -8,6 +8,7 @@
  * Step 4: defines its own data in address order: .data 0x8BA0C-0x8BB6C (D_0008BA0C cost table, D_0008BB4C
  * neighbour offsets) and .sbss 0x976DC-0x976F8 (D_000976F0 is an unreferenced gap filler; D_000976E0 is declared
  * incomplete first - the original takes its address with lui/addiu). maspsx abs=D_00097374 (was extern long long).
+ * .bss 0xC039C-0xC4690 is defined here too (cell map, felony.c's list D_000C439C, the heap D_000C43B4[183]).
  */
 /* MKTU CONFLICTS (first spelling active, others commented at their place below):
  * decl D_000C039C:
@@ -70,11 +71,16 @@ int D_000976EC;
 int D_000976F0;                     /* unreferenced: fills the gap */
 int D_000976F4;
 
+/* ---- .bss 0xC039C-0xC4690: pathfind.c's own (the .bss tail is per file; felony.c's pursuers follow) ----
+ * D_000C241C/D_000C241F/D_000C429B are names the original gives inside the cell map; D_000C439C is the list felony.c
+ * fills with this file's counter D_000976DC */
+struct T D_000C039C[64][64];
+unsigned char D_000C439C[0x18];
+N *D_000C43B4[183];
+
 /* ---- externs ---- */
-extern N *D_000C43B4[];
 extern int D_00097374;
 extern int *D_0009D8F4[];
-extern struct T D_000C039C[64][64];
 extern char D_000C429B[];
 extern void func_00062DB0();
 extern NODE D_000C4B8C[];
