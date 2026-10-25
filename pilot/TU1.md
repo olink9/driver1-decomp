@@ -105,3 +105,9 @@ Step 4 (move definitions into the owning file) - the recipe that worked:
 - A wip inside a range ends the TU there (linkcheck --tu allows no holes) - say so in the header. pathfind.c stops before func_00062DB0, felony.c before func_00064360; both can be extended once those match.
 - D2 functions in file + line order: ~/dev/driver1-work/tu-plan/scripts/d2funcs.json (identified PATHFIND via popNode).
 - New files found: pathfind.c, flyby.c (FB fly-by camera paths, took fmvplay.c's tail), scores.c, quad.c (163-164). felony + cop control are one D1 file.
+## Lessons (batch G: clearmem civ_ai ai - byte-identical)
+- .sbss starts at 0x96FBC (not 0x97000): the plan's first .sbss slice is shifted.
+- In this region a gp-relative access marks OWNERSHIP (non-owners use %hi/%lo); ordering each file's first-use addresses proves a range can't be cut.
+- Neighbouring arrays are often one array: check addr - stride (D_00098950 = D_00098900[1], D_0009B230 = car_data[1], D_000C4E38 = D_000C4690[1]).
+- Big low-agreement TU recipe: per-section `#define NAME NAME__<func>` + `extern T sym__<func> __asm__("sym");` views build first try; then a canonical record from the majority field per offset absorbs most views (generator: build/tu-civ_ai/nsgen2.py + cfg2.py).
+- The plan's ai.c is civ_ai.c (1-58, D2 CIV_AI) + ai.c (59-62, D2 AI StoreGameFlags...); cop logic lives in felony.c.
