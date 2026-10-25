@@ -72,7 +72,7 @@ typedef struct {
     int f110;                       /* 0x110 */
     int damage[6];                  /* 0x114 per-zone damage (denting) */
     short f12C;                     /* 0x12C */
-    unsigned char f12E;             /* 0x12E */
+    unsigned char hndType;          /* 0x12E D2 name; 1 = handling type 1 */
     unsigned char hit;              /* 0x12F collision flag */
     unsigned char f130;             /* 0x130 */
     unsigned char f131;             /* 0x131 */

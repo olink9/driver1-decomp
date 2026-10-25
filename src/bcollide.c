@@ -5,10 +5,14 @@
  *  - CDATA2D: one shape; VECTOR (bcollided2d, func_0003FC98) is the same 16-byte layout as VECTOR and is spelled VECTOR;
  *    the last word is avel (bcollided2d's spelling called it pad and never touched it).
  *  - CRET2D: hit/surfNormal/penetration/neverfree (CarBuildingCollision's full shape).
+ *  - Step 3: CAR_DATA (also for func_0003FAE8's CP: dmg = damage, mode = hndType, total = totalDamage; the scalar
+ *    `extern CP car_data` is car_data[]), CIV_SLOT (INFO), CELL_OBJECT, MODEL and VECTOR come from
+ *    include/structs.h; controlType (0x0) = id, where[3] (0x18) = where.t[].
  */
 
+#include "structs.h"
+
 /* ---- types ---- */
-typedef struct { int vx, vy, vz, pad; } VECTOR;
 typedef struct {
     VECTOR x;          /* 0x00 */
     VECTOR axis[2];    /* 0x10 */
@@ -25,28 +29,7 @@ typedef struct {
     int penetration;   /* 0x20 */
     int neverfree;     /* 0x24 */
 } CRET2D;
-typedef struct { char pad0[0x114]; int dmg[6]; char pad1[0x12E - 0x12C]; unsigned char mode; char pad2[0x17C - 0x12F]; short total; } CP;
 typedef struct { unsigned char type; char pad[3]; short m[3][3]; } OBJ;
-typedef struct { char pad[5]; unsigned char f5; char pad2[74]; } INFO;
-typedef struct {
-    unsigned char controlType;  /* 0x00 */
-    char pad0[0x17];
-    int where[3];               /* 0x18 */
-    char pad1[0x40 - 0x24];
-    int linearVelocity[3];      /* 0x40 */
-    int angularVelocity[3];     /* 0x4C */
-    char pad2[0x68 - 0x58];
-    int aacc[3];                /* 0x68 */
-    char pad3[0xF8 - 0x74];
-    int direction;              /* 0xF8 */
-    char pad4[0x104 - 0xFC];
-    int wheel_speed;            /* 0x104 */
-    int speed;                  /* 0x108 */
-    char pad5[0x114 - 0x10C];
-    int damage[6];              /* 0x114 */
-    char pad6[0x12E - 0x12C];
-    unsigned char hndType;      /* 0x12E */
-} CAR_DATA;
 typedef struct {
     int vx, vy, vz;
     int pad;
@@ -54,15 +37,6 @@ typedef struct {
     int theta;
     int height;
 } BUILDING_BOX;
-typedef struct {
-    int vx, vy, vz;
-    unsigned short pad;
-    unsigned short type;
-} CELL_OBJECT;
-typedef struct {
-    unsigned short shape_flags;
-    unsigned short flags2;
-} MODEL;
 typedef struct {
     MODEL *model;
     char *name;
@@ -74,11 +48,11 @@ typedef struct {
 /* ---- externs ---- */
 extern short rcossin_tbl[];
 extern long long D_000974AC;
-extern CP car_data;
+extern CAR_DATA car_data[];
 extern long long D_000977B0;
 extern long long D_00096870;
 extern char D_000C6F00[];
-extern INFO D_00098950[];
+extern CIV_SLOT D_00098950[];
 extern MODEL *modelpointers[];
 extern CDATA2D D_000B70C4[2];
 extern CRET2D D_000B7184;
@@ -108,7 +82,7 @@ extern void memset();
 int bcollided2d();
 void bFindCollisionPoint();
 int bFindCollisionTime();
-void func_0003FAE8(CP *cp, signed char zone, int damage, unsigned char flag);
+void func_0003FAE8(CAR_DATA *cp, signed char zone, int damage, unsigned char flag);
 int func_0003FC98();
 int CarBuildingCollision();
 
@@ -338,16 +312,16 @@ int bFindCollisionTime(CDATA2D *cd, CRET2D *collisionResult)
 }
 
 /* ---------------- func_0003FAE8 (src/pilot/func_0003FAE8.c) ---------------- */
-void func_0003FAE8(CP *cp, signed char zone, int damage, unsigned char flag)
+void func_0003FAE8(CAR_DATA *cp, signed char zone, int damage, unsigned char flag)
 {
     int *dp;
 
-    dp = &cp->dmg[zone];
-    if (cp == &car_data) {
+    dp = &cp->damage[zone];
+    if (cp == car_data) {
         D_000C6F00[0] = 1;
         damage = (damage * *(int *)&D_000977B0 + 0x800) >> 12;
     }
-    if (cp->mode == 1) {
+    if (cp->hndType == 1) {
         switch (*(int *)&D_00096870) {
         case 1:
             damage = damage * 12 / 16;
@@ -358,7 +332,7 @@ void func_0003FAE8(CP *cp, signed char zone, int damage, unsigned char flag)
         }
     }
     if (flag == 0)
-        cp->total += damage;
+        cp->totalDamage += damage;
     *dp += damage;
     if (*dp >= 0x1000)
         *dp = 0xFFF;
@@ -371,16 +345,16 @@ void func_0003FAE8(CP *cp, signed char zone, int damage, unsigned char flag)
     default: zone = -1; break;
     }
     if (zone != -1) {
-        dp = &cp->dmg[zone];
+        dp = &cp->damage[zone];
         damage >>= 1;
         if (*dp < damage) {
             if (flag == 0)
-                cp->total += damage - *(unsigned short *)dp;
+                cp->totalDamage += damage - *(unsigned short *)dp;
             *dp = damage;
         }
     }
-    if (cp->total < 0)
-        cp->total = 0x7FFF;
+    if (cp->totalDamage < 0)
+        cp->totalDamage = 0x7FFF;
 }
 
 /* ---------------- func_0003FC98 (src/pilot/func_0003FC98.c) ---------------- */
@@ -452,7 +426,7 @@ static inline void DamageCar(CAR_DATA *cp, CDATA2D *cd, CRET2D *collisionResult,
     VECTOR d;
     int nose, door, region, value;
 
-    if (strikeVel < 0 || cp->controlType == 0x17 || cp->speed < 10)
+    if (strikeVel < 0 || cp->id == 0x17 || cp->speed < 10)
         return;
     d.vx = collisionResult->hit.vx - cd->x.vx;
     d.vz = collisionResult->hit.vz - cd->x.vz;
@@ -482,7 +456,7 @@ static inline void DamageCar(CAR_DATA *cp, CDATA2D *cd, CRET2D *collisionResult,
     if (strikeVel > 0x800)
         strikeVel = 0x800;
 
-    func_0003FAE8(cp, region, strikeVel - (strikeVel * cp->damage[region] >> 13), cp->controlType == 0x17);
+    func_0003FAE8(cp, region, strikeVel - (strikeVel * cp->damage[region] >> 13), cp->id == 0x17);
 }
 int CarBuildingCollision(CAR_DATA *cp, BUILDING_BOX *building, CELL_OBJECT *cop)
 {
@@ -502,23 +476,23 @@ int CarBuildingCollision(CAR_DATA *cp, BUILDING_BOX *building, CELL_OBJECT *cop)
 
     model = modelpointers[cop->type];
 
-    boxDiffY = abs(cp->where[1] + building->vy);
+    boxDiffY = abs(cp->where.t[1] + building->vy);
 
     if (building->height / 2 < boxDiffY)
         return 0;
-    if (cop->vx == 0xFD46FEC0)
+    if (cop->pos.vx == 0xFD46FEC0)
         return 0;
     if (model->shape_flags & 0x10)
         return 0;
 
-    tempwhere.vx = cp->where[0];
-    tempwhere.vz = cp->where[2];
+    tempwhere.vx = cp->where.t[0];
+    tempwhere.vz = cp->where.t[2];
 
-    D_000B70C4[0].x.vx = cp->where[0];
-    D_000B70C4[0].x.vz = cp->where[2];
+    D_000B70C4[0].x.vx = cp->where.t[0];
+    D_000B70C4[0].x.vz = cp->where.t[2];
     D_000B70C4[0].theta = cp->direction;
 
-    if (cp->controlType == 0x19) {
+    if (cp->id == 0x19) {
         D_000B70C4[0].vel.vx = 0;
         D_000B70C4[0].vel.vz = 0;
         D_000B70C4[0].length[1] = -1;
@@ -527,8 +501,8 @@ int CarBuildingCollision(CAR_DATA *cp, BUILDING_BOX *building, CELL_OBJECT *cop)
         do {
             D_000B70C4[0].vel.vx = FIXEDH(cp->linearVelocity[0]);
             D_000B70C4[0].vel.vz = FIXEDH(cp->linearVelocity[2]);
-            cp->where[0] += D_000B70C4[0].vel.vx;
-            cp->where[2] += D_000B70C4[0].vel.vz;
+            cp->where.t[0] += D_000B70C4[0].vel.vx;
+            cp->where.t[2] += D_000B70C4[0].vel.vz;
         } while (0);
         D_000B70C4[0].length[0] = 0x208;
         D_000B70C4[0].length[1] = (cp->hndType == 1) ? 0x8A : 0xA9;
@@ -547,7 +521,7 @@ int CarBuildingCollision(CAR_DATA *cp, BUILDING_BOX *building, CELL_OBJECT *cop)
 
     collided = bcollided2d(D_000B70C4);
 
-    if (cp->controlType == 0x19)
+    if (cp->id == 0x19)
         return collided != 0;
 
     if (collided) {
@@ -556,16 +530,16 @@ int CarBuildingCollision(CAR_DATA *cp, BUILDING_BOX *building, CELL_OBJECT *cop)
 
         *(int *)&D_000B7184.surfNormal = -*(int *)&D_000B7184.surfNormal;
         D_000B7184.surfNormal.vy = 0;
-        D_000B7184.hit.vy = cp->where[1] + 60;
+        D_000B7184.hit.vy = cp->where.t[1] + 60;
         D_000B7184.surfNormal.vy = 0;
         D_000B7184.surfNormal.vz = -D_000B7184.surfNormal.vz;
 
-        cp->where[0] += FIXEDH(D_000B7184.penetration * *(int *)&D_000B7184.surfNormal);
-        cp->where[2] += FIXEDH(D_000B7184.penetration * D_000B7184.surfNormal.vz);
-        lever[0] = *(int *)&D_000B7184 - cp->where[0];
+        cp->where.t[0] += FIXEDH(D_000B7184.penetration * *(int *)&D_000B7184.surfNormal);
+        cp->where.t[2] += FIXEDH(D_000B7184.penetration * D_000B7184.surfNormal.vz);
+        lever[0] = *(int *)&D_000B7184 - cp->where.t[0];
 
-        lever[1] = D_000B7184.hit.vy - cp->where[1];
-        lever[2] = D_000B7184.hit.vz - cp->where[2];
+        lever[1] = D_000B7184.hit.vy - cp->where.t[1];
+        lever[2] = D_000B7184.hit.vz - cp->where.t[2];
 
         pointVel[0] = FIXEDH(cp->angularVelocity[1] * lever[2] - cp->angularVelocity[2] * lever[1]);
         pointVel[1] = FIXEDH(cp->angularVelocity[2] * lever[0] - cp->angularVelocity[0] * lever[2]);
@@ -579,7 +553,7 @@ int CarBuildingCollision(CAR_DATA *cp, BUILDING_BOX *building, CELL_OBJECT *cop)
                       (pointVel[2] / 256) * (D_000B7184.surfNormal.vz / 16));
 
         if (strikeVel > 0) {
-            if (cp->controlType == 0) {
+            if (cp->id == 0) {
                 short scale;
 
                 if (strikeVel < 32)
@@ -623,8 +597,8 @@ int CarBuildingCollision(CAR_DATA *cp, BUILDING_BOX *building, CELL_OBJECT *cop)
                                   match->volume, match->pitch);
                 }
 
-                cp->where[0] = tempwhere.vx;
-                cp->where[2] = tempwhere.vz;
+                cp->where.t[0] = tempwhere.vx;
+                cp->where.t[2] = tempwhere.vz;
 
                 D_000B7184.hit.vy += 30;
 
@@ -632,7 +606,7 @@ int CarBuildingCollision(CAR_DATA *cp, BUILDING_BOX *building, CELL_OBJECT *cop)
                 Setup_Debris(&D_000B7184, &velocity, 5, 0);
                 Setup_Debris(&D_000B7184, &velocity, 5, 0x10000);
 
-                if (cp->controlType == 0)
+                if (cp->id == 0)
                     func_00035B50(3);
 
                 return 0;
@@ -676,9 +650,9 @@ int CarBuildingCollision(CAR_DATA *cp, BUILDING_BOX *building, CELL_OBJECT *cop)
                 }
 
                 if (strikeVel > 0x28000) {
-                    Setup_Debris(&D_000B7184, &velocity, 6, (cp->controlType + 1) << 16);
+                    Setup_Debris(&D_000B7184, &velocity, 6, (cp->id + 1) << 16);
 
-                    if (cp->controlType == 0)
+                    if (cp->id == 0)
                         func_00035B50(1);
                 }
 
@@ -715,8 +689,8 @@ int CarBuildingCollision(CAR_DATA *cp, BUILDING_BOX *building, CELL_OBJECT *cop)
         ret = 0;
     }
 
-    cp->where[0] -= FIXEDH(cp->linearVelocity[0]);
-    cp->where[2] -= FIXEDH(cp->linearVelocity[2]);
+    cp->where.t[0] -= FIXEDH(cp->linearVelocity[0]);
+    cp->where.t[2] -= FIXEDH(cp->linearVelocity[2]);
 
     return ret;
 }

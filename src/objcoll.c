@@ -6,46 +6,17 @@
  *  - MODEL: the D2 shape; func_0004A9F4's radius (0x8) is bounding_sphere, solid (0x20) collision_block.
  *  - D_000974A4: unsigned int * (func_0004AC88 merges the lists as unsigned ints); func_0004AD94
  *    casts the CELL_OBJECT pointers it stores and reads.
- *  - car_data: CAR_DATA[]; func_0004BD48 (FAKEMATCH) reads it through (REGION *) casts.
+ *  - car_data: CAR_DATA[]; func_0004BD48 (FAKEMATCH) reads where.t[] (its REGION view is gone, same bytes).
+ *  - Step 3: CAR_DATA, CELL_OBJECT (vx/vy/vz = pos.vx/...), MODEL and the gte base types come from
+ *    include/structs.h; controlType (0x0) = id, where[3] (0x18) = where.t[].
  */
 #include "gte.h"
+#include "structs.h"
 /* ---- types ---- */
-typedef struct {
-    int vx, vy, vz;
-    unsigned char pad;
-    unsigned char yang;
-    unsigned short type;
-} CELL_OBJECT;
 typedef struct {
     unsigned short num;
     unsigned short next;
 } PACKED_CELL;
-typedef struct {
-    unsigned short shape_flags;
-    unsigned short flags2;
-    short instance_number;
-    unsigned char tri_verts, zBias;
-    short bounding_sphere;
-    unsigned short num_point_normals;
-    unsigned short num_vertices;
-    unsigned short num_polys;
-    int vertices, poly_block, normals, point_normals;
-    int collision_block;
-} MODEL;
-typedef struct { int vx, vy, vz, pad; } VECTOR;
-typedef struct { short m[3][3]; int t[3]; } MATRIX;
-typedef struct {
-    unsigned char controlType;  /* 0x00 */
-    char pad0[0x17];
-    int where[3];               /* 0x18 */
-    char pad1[0xF8 - 0x24];
-    int direction;              /* 0xF8 */
-    char pad4[0x108 - 0xFC];
-    int speed;                  /* 0x108 */
-    char pad5[0x12F - 0x10C];
-    unsigned char hit;          /* 0x12F */
-    char pad6[396 - 0x130];
-} CAR_DATA;
 typedef struct {
     VECTOR pos;
     int xsize, zsize;
@@ -62,11 +33,6 @@ typedef struct {
     int flags;
     int h;
 } BOX;
-typedef struct {
-    char pad[0x18];
-    int x, y, z;
-    char pad2[396 - 0x24];
-} REGION;
 
 /* ---- externs ---- */
 extern long long D_00097398;
@@ -164,8 +130,8 @@ int func_0004A9F4(int *pos)
             co = &(*(CELL_OBJECT **)&D_00097108)[pc->num];
             m = modelpointers[co->type];
             if (m->collision_block != 0) {
-                dx = co->vx - pos[0];
-                dz = co->vz - pos[2];
+                dx = co->pos.vx - pos[0];
+                dz = co->pos.vz - pos[2];
                 r = m->bounding_sphere + 0x244;
                 r = r * r;
                 if (dx * dx + dz * dz < r)
@@ -242,8 +208,8 @@ void func_0004AD94(int car)
     MATRIX *mat;
     int extra, distx, distz;
 
-    x0 = car_data[0].where[0];
-    z0 = car_data[0].where[2];
+    x0 = car_data[0].where.t[0];
+    z0 = car_data[0].where.t[2];
     if (*(unsigned char *)&D_00096880 || (car == 0 && *(int *)&D_00096798))
         return;
 
@@ -254,9 +220,9 @@ void func_0004AD94(int car)
         b0->xsize = 0;
 
     num = 0;
-    player_pos.vx = cp->where[0];
-    player_pos.vy = cp->where[1];
-    player_pos.vz = cp->where[2];
+    player_pos.vx = cp->where.t[0];
+    player_pos.vy = cp->where.t[1];
+    player_pos.vz = cp->where.t[2];
     lst = D_000BC798;
     cellx = (player_pos.vx + *(int *)&D_00097398 - 1500) / 3000;
     for (i = 0; i < 2; i++, cellx++) {
@@ -305,13 +271,13 @@ void func_0004AD94(int car)
             if (car == 0x19 && (model->flags2 & 0x100)) {
                 int m = *(int *)&D_00096834;
                 if (m == 3 || (m == 5 && *(int *)&D_0008A8F8 > -445000) ||
-                    (m == 1 && cp->where[2] > 238000)) {
+                    (m == 1 && cp->where.t[2] > 238000)) {
                     player_pos.vy = MapHeight(&player_pos) + 500;
-                    cp->where[1] = player_pos.vy;
+                    cp->where.t[1] = player_pos.vy;
                 }
             }
-            dx = cop->vx - player_pos.vx;
-            dz = cop->vz - player_pos.vz;
+            dx = cop->pos.vx - player_pos.vx;
+            dz = cop->pos.vz - player_pos.vz;
             distx = dx * dx;
             distz = dz * dz;
             extra = cp->speed + 580;
@@ -326,9 +292,9 @@ void func_0004AD94(int car)
                         mat = &matrixtable[-cop->yang & 0x3f];
                         offset.vx = (collide->xpos * mat->m[0][0] + collide->zpos * mat->m[2][0]) / 4096;
                         offset.vz = (collide->xpos * mat->m[0][2] + collide->zpos * mat->m[2][2]) / 4096;
-                        bbox.pos.vx = cop->vx + offset.vx;
-                        bbox.pos.vy = cop->vy + collide->ypos;
-                        bbox.pos.vz = cop->vz + offset.vz;
+                        bbox.pos.vx = cop->pos.vx + offset.vx;
+                        bbox.pos.vy = cop->pos.vy + collide->ypos;
+                        bbox.pos.vz = cop->pos.vz + offset.vz;
                         bbox.xsize = collide->zsize / 2;
                         bbox.zsize = collide->xsize / 2;
                         bbox.theta = (cop->yang + collide->yang) * 64 & 0xfff;
@@ -341,9 +307,9 @@ void func_0004AD94(int car)
                         offset.vz = collide->zpos;
                         gte_SetRotMatrix(&matrixtable[-cop->yang & 0x3f]);
                         func_0004EAC0(&offset);
-                        bbox.pos.vx = cop->vx + offset.vx;
-                        bbox.pos.vy = cop->vy + offset.vy;
-                        bbox.pos.vz = cop->vz + offset.vz;
+                        bbox.pos.vx = cop->pos.vx + offset.vx;
+                        bbox.pos.vy = cop->pos.vy + offset.vy;
+                        bbox.pos.vz = cop->pos.vz + offset.vz;
                         bbox.xsize = collide->xsize / 2;
                         bbox.zsize = collide->xsize / 2;
                         bbox.theta = cop->yang * 64 & 0xfff;
@@ -368,8 +334,8 @@ void func_0004AD94(int car)
                                     cam_dist -= D_000974AC;
                                     if (cam_dist < 0x104)
                                         cam_dist = 0x104;
-                                    cp->where[0] = x0 + ((cam_dist * rcossin_tbl[(cp->direction & 0xfff) * 2] / 2 + 0x800) >> 12);
-                                    cp->where[2] = z0 + ((cam_dist * rcossin_tbl[(cp->direction & 0xfff) * 2 + 1] / 2 + 0x800) >> 12);
+                                    cp->where.t[0] = x0 + ((cam_dist * rcossin_tbl[(cp->direction & 0xfff) * 2] / 2 + 0x800) >> 12);
+                                    cp->where.t[2] = z0 + ((cam_dist * rcossin_tbl[(cp->direction & 0xfff) * 2 + 1] / 2 + 0x800) >> 12);
                                     count--;
                                     if (cam_dist < 0x104)
                                         goto next;
@@ -413,8 +379,8 @@ void func_0004AD94(int car)
                     cam_dist -= D_000974AC;
                     if (cam_dist < 0x104)
                         cam_dist = 0x104;
-                    cp->where[0] = x0 + ((cam_dist * rcossin_tbl[(cp->direction & 0xfff) * 2] / 2 + 0x800) >> 12);
-                    cp->where[2] = z0 + ((cam_dist * D_0008EAAA[(cp->direction & 0xfff) * 2] / 2 + 0x800) >> 12);
+                    cp->where.t[0] = x0 + ((cam_dist * rcossin_tbl[(cp->direction & 0xfff) * 2] / 2 + 0x800) >> 12);
+                    cp->where.t[2] = z0 + ((cam_dist * D_0008EAAA[(cp->direction & 0xfff) * 2] / 2 + 0x800) >> 12);
                     count--;
                     if (cam_dist < 0x104)
                         break;
@@ -423,24 +389,24 @@ void func_0004AD94(int car)
         }
         if (D_000974AC == -1 && cam_dist < *(int *)&D_00096A64 &&
             (!*(int *)&pauseflag || !*(unsigned char *)&D_00096899)) {
-            int ox = cp->where[0];
-            int oz = cp->where[2];
+            int ox = cp->where.t[0];
+            int oz = cp->where.t[2];
             step = 10;
             if (abs(D_0009B1AC[0]) >= 10 && cam_dist + 30 <= *(int *)&D_00096A64)
                 step = 20;
             cam_dist += step;
             if (cam_dist > *(int *)&D_00096A64)
                 cam_dist = *(int *)&D_00096A64;
-            cp->where[0] = car_data[0].where[0] + ((cam_dist * rcossin_tbl[(cp->direction & 0xfff) * 2] / 2 + 0x800) >> 12);
-            cp->where[2] = car_data[0].where[2] + ((cam_dist * rcossin_tbl[(cp->direction & 0xfff) * 2 + 1] / 2 + 0x800) >> 12);
+            cp->where.t[0] = car_data[0].where.t[0] + ((cam_dist * rcossin_tbl[(cp->direction & 0xfff) * 2] / 2 + 0x800) >> 12);
+            cp->where.t[2] = car_data[0].where.t[2] + ((cam_dist * rcossin_tbl[(cp->direction & 0xfff) * 2 + 1] / 2 + 0x800) >> 12);
             bb = D_000BC004;
             for (pi = 0; pi < D_000974B0; pi++, bb++) {
                 if (bb->xsize && CarBuildingCollision(cp, bb, D_000BBF14[pi])) {
                     cam_dist -= step;
                     if (cam_dist < 0x104)
                         cam_dist = 0x104;
-                    cp->where[0] = ox;
-                    cp->where[2] = oz;
+                    cp->where.t[0] = ox;
+                    cp->where.t[2] = oz;
                     return;
                 }
             }
@@ -474,16 +440,16 @@ int func_0004BD48(BOX *boxes, int i, int j, int r) {
     int sa, sb;
     int t;
     int tmp;
-    REGION *rg;
-    REGION *base;
+    CAR_DATA *rg;
+    CAR_DATA *base;
 
     if (a->flags & 0x3ff) return 0;
     if (b->flags & 0x3ff) return 0;
 
-    base = (REGION *)car_data;
+    base = car_data;
     rg = base + r;
-    if (abs(rg->y + a->y) <= a->h / 2) {
-        if (abs(rg->y + b->y) > b->h / 2) return 0;
+    if (abs(rg->where.t[1] + a->y) <= a->h / 2) {
+        if (abs(rg->where.t[1] + b->y) > b->h / 2) return 0;
         rg = 0; /* FAKEMATCH: dead store, see header */
         if (!(a->flags & 0x400)) {
             tmp = a->w;
@@ -505,7 +471,7 @@ int func_0004BD48(BOX *boxes, int i, int j, int r) {
         minz = MIN(a->z - a->d, b->z - b->d);
         miny = MIN(a->y - a->h / 2, b->y - b->h / 2);
 
-        t = ((REGION *)car_data)[r].x;
+        t = car_data[r].where.t[0];
         sa = (t - a->x > 0) ? 1 : -1;
         sb = (t - b->x > 0) ? 1 : -1;
         if (sa == sb) {
@@ -522,7 +488,7 @@ int func_0004BD48(BOX *boxes, int i, int j, int r) {
                 return 1;
             }
         }
-        t = ((REGION *)car_data)[r].z;
+        t = car_data[r].where.t[2];
         sa = (t - a->z > 0) ? 1 : -1;
         sb = (t - b->z > 0) ? 1 : -1;
         if (sa == sb) {

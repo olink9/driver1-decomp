@@ -12,7 +12,7 @@
  *    with (unsigned short) on the returned values (the pilot declared the return unsigned short).
  * Step 3: CAR_DATA and CIV_SLOT (D_00098950) come from include/structs.h. Renamed: type = id, b7c/b84 =
  *    wheel[1]/[3].susCompression, pos[]/vel[] = VECTOR pos/vel, acc = fF0, i100 = wheelspin, ws = wheel_speed,
- *    i108 = speed, b185 = f185.
+ *    i108 = speed, b185 = f185, f12E = hndType.
  * Boundary: the .sbss order 0x974B0 (objcoll) | 0x974B8 (func_0004C1C8) 0x974BC/0x974C4 (func_0004D208)
  * 0x974C0 (func_0004C438, func_0004CF50) 0x974C8 (func_0004C438) ties 386-388 to the rest of this file.
  */
@@ -396,7 +396,7 @@ void func_0004CA5C(void)
         if (c < 25) {
             cp = &car_data[c];
             pos = (int *)&cp->pos;
-            if (cp->f12E == 1) {
+            if (cp->hndType == 1) {
                 if (left5 && D_00098950[c - 1].f10 == 1 && (t = D_00098950[c - 1].fD) < 80) {
                     left5--;
                     ch = left5 + 5;
@@ -404,7 +404,7 @@ void func_0004CA5C(void)
                     func_0004DDA8(ch, pos, &cp->vel, -2000 - t * 30, sub(c * 4, t * 48 - 4096));
                 }
             }
-            if (cp->f12E == 1 || cp->f3 == 1) {
+            if (cp->hndType == 1 || cp->f3 == 1) {
                 if (left3) {
                     left3--;
                     ch = left3 + 7;
@@ -420,7 +420,7 @@ void func_0004CA5C(void)
         if (c < 25) {
             cp = &car_data[c];
             pos = (int *)&cp->pos;
-            if (cp->f12E != 1 && cp->f3 != 1 && left3) {
+            if (cp->hndType != 1 && cp->f3 != 1 && left3) {
                 left3--;
                 D_000BD498[left3 + 7].f42 = 50;
                 func_0004DDA8(left3 + 7, pos, &cp->vel, -6000, 0x830);
