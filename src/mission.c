@@ -16,52 +16,23 @@
  * Step 3 (include/structs.h): car_data and the player's car are CAR_DATA (pilot CAR and func_000682C0's struct A:
  *    c8/cc/d0 -> pos, f8/fF8 -> direction, w/f114 -> damage, f12f -> hit, s17c/f17C -> totalDamage, f0 -> id);
  *    D_00098900 is CIV_SLOT[] (M80, ENT_6A318: b1 -> f1); VEC -> VECTOR, V3/POS -> VECTOR_NOPAD.
- *    Kept local: the mission record D_000C6F04 (OBJ) and its per-function shapes (struct C, MS, OBJ_68384,
- *    PLR_6A178/6A318/6A934, E_*, CP*) - one file's record, not shared; H (D_000BE9C4/E0, the percentage bars,
- *    seen differently by glaunch.c/main.c - a candidate for a shared record later); script/sound shapes.
+ *    The mission record D_000C6F04 is ONE type, OBJ (still file-local; pause.c's PL and draw.c's int[] see it
+ *    too): its pads got names (f108/f10C/f110, x/y/z at 0x2A4, f2BC/f2C8/f2CC/f2D8, f2DC, f2DE..f2E3), and the
+ *    per-function views are gone - struct C (cur.h/cur.i/f2A0), MS (CP_68928 saved/cur -> CP, x/y/z, f12C,
+ *    f2DE..f2E0), OBJ_68384 (S44 a/b -> CP cur/saved, S32 d -> (S32 *)obj->d, S16 c / dc -> st.f18.. / st.fC,
+ *    flags -> f11C), S1 (fD0 -> st.f0), PLR_6A178, PLR_6A318, PLR_6A934 and B (f/cnt -> tgt/f298, b2E* -> f2E*,
+ *    f2B4/f2B8 -> end/pc, T29C by cast). The target slot views S0, TH, E_6A318, E_6A60C, E_6A934 (+SUB) and
+ *    ENT_68384 are ENT (f0..f10 -> a..e with (VECTOR *) casts where they stored an F *, f14 -> f, f18 -> g,
+ *    f1C..f28 / sub -> q.h..k); func_000682C0's struct B is CP (h28 -> s17C, the short walk at 0x1C -> s).
+ *    Kept local: H (D_000BE9C4/E0, the percentage bars, seen differently by glaunch.c/main.c), S16/S32 (the raw
+ *    copies func_00068384 makes), script/sound shapes (SND, SNDENT, SNDOBJ, T17C, T38, R20, X15, ST, E, F).
  */
 #include "structs.h"
 
 /* ---- types ---- */
-struct B { int a, b, c, d, e; short h[10]; unsigned short h28; };
-struct C { char pad[0x98]; int f98, f9c; char pad2[0x2A0-0xA0]; int f2a0; };
-typedef struct { int w[11]; } S44;
 typedef struct { int w[4]; } S16;
 typedef struct { int w[8]; } S32;
-typedef struct {
-    char pad0[0x58];
-    S44 b;          /* 0x58 */
-    S44 a;          /* 0x84 */
-    S32 d[1];       /* 0xB0 */
-    char padD0[0xDC - 0xD0];
-    int dc;         /* 0xDC */
-    char padE0[0xE8 - 0xE0];
-    S16 c;          /* 0xE8 */
-    char padF8[0x11C - 0xF8];
-    int flags;      /* 0x11C */
-    char pad120[0x2E4 - 0x120];
-    char f2e4;      /* 0x2E4 */
-} OBJ_68384;
-typedef struct {
-    int a, b, c, d, e;
-    short f;
-    int g, h, i, j, k;
-} ENT_68384;
 typedef struct { short a, b; } E_686BC;
-typedef struct { int w[11]; } CP_68928;
-typedef struct {
-    char pad0[0x58];
-    CP_68928 saved;
-    CP_68928 cur;
-    char padB0[0x12C - 0xB0];
-    int f12C;
-    char pad130[0x2A4 - 0x130];
-    int x, y, z;
-    char pad2B0[0x2DE - 0x2B0];
-    unsigned char f2DE;
-    unsigned char f2DF;
-    unsigned char f2E0;
-} MS;
 typedef struct { char pad[0xE]; short h; } H;
 typedef struct {
     int *ptr;
@@ -108,32 +79,6 @@ typedef struct {
     int *f10;
     unsigned char f14;
 } X15;
-typedef struct {
-    char pad0[0xD0];
-    int fD0;
-    char pad1[0x104 - 0xD4];
-    int f104;
-    char pad2[0x114 - 0x108];
-    int f114;
-    char pad3[0x11C - 0x118];
-    int f11C;
-    int f120;
-    char pad4[0x298 - 0x124];
-    int f298;
-    char pad5[0x2A0 - 0x29C];
-    int f2A0;
-    char pad6[0x2CC - 0x2A4];
-    int f2CC;
-    int f2D0;
-} S1;
-typedef struct {
-    unsigned int f0;
-    unsigned int f4;
-    int f8;
-    int fC;
-    VECTOR *f10;
-} S0;
-typedef struct { unsigned lo, hi; int pad[2]; VECTOR_NOPAD *pos; } TH;
 typedef struct { int a, b, c, d; } F;
 typedef struct { char pad[0xC]; short fC, fE; char pad2[8]; int f18; } ST;
 typedef struct {
@@ -154,7 +99,6 @@ typedef struct {
     int *list;              /* 0x50 */
     int flags;              /* 0x54 */
 } SNDOBJ;
-typedef struct { int a, b, c, d; } SUB;
 typedef struct { int flags; int val; } T29C;
 
 typedef struct {
@@ -183,17 +127,6 @@ typedef struct E {
     int *w2;
     int w3;
 } E;
-typedef struct { int f0, f4, f8, f0C; F *f10; short f14; short pad; int f18, f1C, f20, f24, f28; } E_6A318;
-typedef struct { int f0, f4, f8, f0C, f10; short f14; short pad; int f18, f1C, f20, f24, f28; } E_6A60C;
-typedef struct {
-    int f0, f4, f8, f0C;
-    F *f10;
-    short f14;
-    short pad;
-    int f18;
-    SUB sub;
-} E_6A934;
-typedef struct { char pad[0x130]; E_6A60C e[6]; F f[6]; int cnt; } B;
 typedef struct {
     int *label[5];
     SND snd[3];         /* 0x14 */
@@ -208,7 +141,9 @@ typedef struct {
     int *fFC;           /* 0xFC */
     int f100;
     int f104;
-    char pad108[0x114 - 0x108];
+    int f108;
+    int f10C;
+    int f110;
     int f114;
     int f118;
     int f11C;
@@ -221,65 +156,22 @@ typedef struct {
     int f298;
     int f29C;
     int f2A0;
-    char pad2A4[0x2B4 - 0x2A4];
+    int x, y, z;        /* 0x2A4 */
+    int f2B0;
     int *end;           /* 0x2B4 */
     int *pc;            /* 0x2B8 */
-    char pad2BC[0x2C0 - 0x2BC];
+    int f2BC;
     int f2C0;           /* 0x2C0 */
     int f2C4;           /* 0x2C4 */
-    char pad2C8[0x2D0 - 0x2C8];
+    int f2C8;
+    int f2CC;
     int f2D0;
     int f2D4;
-    char pad2D8[0x2E4 - 0x2D8];
-    unsigned char f2E4;
+    int f2D8;
+    short f2DC;         /* 0x2DC */
+    unsigned char f2DE, f2DF, f2E0, f2E1, f2E2, f2E3;
+    unsigned char f2E4; /* 0x2E4 */
 } OBJ;
-typedef struct {
-    char p0[0x104];
-    int f104;
-    int pad108;
-    int f10c;
-    char p1[0x29C - 0x110];
-    int s29c, s2a0;
-    char p2[0x2E3 - 0x2A4];
-    unsigned char b2e3;
-} PLR_6A178;
-typedef struct {
-    char p0[0xF8];
-    unsigned char *fF8;
-    char p1[0x104 - 0xFC];
-    int f104;
-    int f108;
-    int f10C;
-    char p2[0x130 - 0x110];
-    E_6A318 e[6];
-    char p3[0x2DC - 0x238];
-    short s2DC;
-} PLR_6A318;
-typedef struct {
-    char p0[0x104];
-    int f104;
-    int f108;
-    int f10C;
-    int f110;
-    int f114;
-    int f118;
-    int f11C;
-    char p1[0x130 - 0x120];
-    E_6A934 e[6];
-    F f[6];
-    int f298;
-    T29C f29C;
-    char p2[0x2B4 - 0x2A4];
-    int *f2B4;
-    int *f2B8;
-    char p3[0x2D0 - 0x2BC];
-    int f2D0;
-    char p4[0x2E1 - 0x2D4];
-    unsigned char b2E1;
-    unsigned char b2E2;
-    unsigned char b2E3;
-    unsigned char b2E4;
-} PLR_6A934;
 /* ---- externs ---- */
 extern long long D_00097708;
 extern long long D_00097118;
@@ -360,7 +252,7 @@ extern long long D_0009D5B4;
 extern long long D_00097088;
 extern short func_0006B9D8(char *, int *, short);
 extern int D_000C4C8C[];
-extern E_6A318 *D_000977AC;
+extern ENT *D_000977AC;
 extern F D_000BE9B4;
 extern int D_00097790;
 extern ST D_000BE774;
@@ -391,21 +283,21 @@ void func_0006A6C8();
 void func_0006A934();
 
 /* ---------------- func_000682C0 (src/pilot/func_000682C0.c) ---------------- */
-void func_000682C0(CAR_DATA *a, struct B *b)
+void func_000682C0(CAR_DATA *a, CP *b)
 {
     int *p;
     short *q;
     unsigned short t;
-    a->pos.vx = b->a; a->pos.vy = b->b; a->pos.vz = b->c; a->direction = b->d;
+    a->pos.vx = b->x; a->pos.vy = b->y; a->pos.vz = b->z; a->direction = b->dir;
     p = &a->damage[0];
-    q = (short *)((char *)b + 0x1C);
+    q = b->s;
     while (p < &a->damage[6]) { *p = *q; p++; q++; }
-    t = b->h28;
+    t = b->s17C;
     a->hit = 1;
     a->totalDamage = t;
-    if ((char *)a == (char *)car_data) *(int *)&D_00097708 = b->e;
-    *(int *)&D_00097118 = ((struct C *)&D_000C6F04)->f98;
-    ((struct C *)&D_000C6F04)->f2a0 = ((struct C *)&D_000C6F04)->f9c;
+    if ((char *)a == (char *)car_data) *(int *)&D_00097708 = b->g;
+    *(int *)&D_00097118 = D_000C6F04.cur.h;
+    D_000C6F04.f2A0 = D_000C6F04.cur.i;
 }
 
 /* ---------------- func_00068360 (src/pilot/func_00068360.c) ---------------- */
@@ -418,27 +310,27 @@ void func_00068360(void)
 /* ---------------- func_00068384 (src/pilot/func_00068384.c) ---------------- */
 /* func_00068384: reset of an object, preserving some fields (Driver 2 name unknown) */
 /* NOTE: the 0xB0 block copy loops step the source by two elements (src += 2) - that is what the original does. */
-void func_00068384(OBJ_68384 *obj)
+void func_00068384(OBJ *obj)
 {
-    S44 a;
-    S44 b;
+    CP a;
+    CP b;
     S16 c;
     S32 d[1];
-    ENT_68384 *p;
+    ENT *p;
     S32 *src;
     S32 *dst;
 
-    a = obj->a;
-    b = obj->b;
-    c = obj->c;
-    for (src = obj->d, dst = d; src < obj->d + 1; src += 2, dst++)
+    a = obj->cur;
+    b = obj->saved;
+    c = *(S16 *)&obj->st.f18;
+    for (src = (S32 *)obj->d, dst = d; src < (S32 *)obj->d + 1; src += 2, dst++)
         *dst = *src;
     memset(obj, 0, 0x2E8);
-    for (src = d, dst = obj->d; src < d + 1; src += 2, dst++)
+    for (src = d, dst = (S32 *)obj->d; src < d + 1; src += 2, dst++)
         *dst = *src;
-    obj->b = b;
-    obj->a = a;
-    obj->c = c;
+    obj->saved = b;
+    obj->cur = a;
+    *(S16 *)&obj->st.f18 = c;
     *(int *)&D_0009683C = 0;
     *(int *)&D_000970EC = 0;
     for (p = D_000C7034; p < D_000C7034 + 6; p++) {
@@ -449,18 +341,18 @@ void func_00068384(OBJ_68384 *obj)
         p->e = 0;
         p->f = 10;
         p->g = 0;
-        p->h = 1000;
-        p->i = 0;
-        p->j = 0;
-        p->k = 0;
+        p->q.h = 1000;
+        p->q.i = 0;
+        p->q.j = 0;
+        p->q.k = 0;
     }
     func_00068B88();
     func_0006B97C(D_000C6EA8);
     D_000BE78C[0] = 0;
-    obj->dc = 0x7FFFFFFF;
-    obj->c.w[1] = 0x7FFFFFFF;
-    obj->f2e4 = 1;
-    obj->flags |= 4;
+    obj->st.fC = 0x7FFFFFFF;
+    obj->st.f1C = 0x7FFFFFFF;
+    obj->f2E4 = 1;
+    obj->f11C |= 4;
 }
 
 /* ---------------- func_000686BC (src/pilot/func_000686BC.c) ---------------- */
@@ -538,12 +430,12 @@ void func_00068928(int *pp, int *end)
     while (p < end) {
         switch (*p) {
         case 19:
-            ((MS *)&D_000C6F04)->f2DE = 1;
-            ((MS *)&D_000C6F04)->x = p[1];
-            ((MS *)&D_000C6F04)->z = p[2];
+            D_000C6F04.f2DE = 1;
+            D_000C6F04.x = p[1];
+            D_000C6F04.z = p[2];
             break;
         case 52:
-            ((MS *)&D_000C6F04)->f12C = p[1];
+            D_000C6F04.f12C = p[1];
             break;
         case 40:
             D_000977A8 = 1;
@@ -575,17 +467,17 @@ void func_00068928(int *pp, int *end)
             *(char *)&D_000967BF = p[1];
             break;
         case 84:
-            ((MS *)&D_000C6F04)->f2DF = p[1];
+            D_000C6F04.f2DF = p[1];
             break;
         case 89:
             if (((char *)&D_00096898)[1] == 0)
-                ((MS *)&D_000C6F04)->cur = ((MS *)&D_000C6F04)->saved;
-            ((MS *)&D_000C6F04)->f2DE = 1;
-            ((MS *)&D_000C6F04)->f2E0 = 1;
-            ((MS *)&D_000C6F04)->x = ((MS *)&D_000C6F04)->cur.w[0];
-            ((MS *)&D_000C6F04)->y = ((MS *)&D_000C6F04)->cur.w[1];
-            ((MS *)&D_000C6F04)->z = ((MS *)&D_000C6F04)->cur.w[2];
-            ((MS *)&D_000C6F04)->f12C = ((MS *)&D_000C6F04)->cur.w[3];
+                D_000C6F04.cur = D_000C6F04.saved;
+            D_000C6F04.f2DE = 1;
+            D_000C6F04.f2E0 = 1;
+            D_000C6F04.x = D_000C6F04.cur.x;
+            D_000C6F04.y = D_000C6F04.cur.y;
+            D_000C6F04.z = D_000C6F04.cur.z;
+            D_000C6F04.f12C = D_000C6F04.cur.dir;
             break;
         case 105:
             {
@@ -1266,7 +1158,7 @@ void func_00068C6C(OBJ *obj)
 
 /* ---------------- func_00069D08 (src/pilot/func_00069D08.c) ---------------- */
 /* func_00069D08 - no Driver 2 counterpart (cop/target proximity check) */
-int func_00069D08(S1 *a, S0 *b)
+int func_00069D08(OBJ *a, ENT *b)
 {
     int dist;
     VECTOR d;
@@ -1277,19 +1169,19 @@ int func_00069D08(S1 *a, S0 *b)
     int angle;
 
     dist = 0x7fffffff;
-    if (b->fC & 1) {
+    if (b->d & 1) {
 
     if (a->f2CC) {
-        if (b->f8) {
-            b->f8--;
+        if (b->c) {
+            b->c--;
         } else {
             a->f104 = 7;
             a->f298--;
-            b->fC = 0;
+            b->d = 0;
         }
     }
 
-    p = b->f10;
+    p = b->e;
     dx = D_0009B16C[0] - p->vx;
     if (dx < 0)
         dx = p->vx - D_0009B16C[0];
@@ -1321,18 +1213,18 @@ int func_00069D08(S1 *a, S0 *b)
     if (a->f104 != 2)
         return dist;
 
-    if (dist < b->f4) {
+    if (dist < b->b) {
         if (D_00097794 && *(int *)&D_0009770C > 0 && *(int *)&D_00097708 > 0x292) {
-            if (!(b->fC & 4))
+            if (!(b->d & 4))
                 a->f114 = 300;
-            b->fC |= 4;
+            b->d |= 4;
         } else {
-            b->fC &= ~4;
+            b->d &= ~4;
             if ((a->f11C & 1) && a->f2A0 > a->f120) {
-                if (!(b->fC & 2))
+                if (!(b->d & 2))
                     a->f114 = 300;
-                b->fC |= 2;
-                if (dist < b->f0) {
+                b->d |= 2;
+                if (dist < b->a) {
                     *(int *)&D_00097708 += 0x22;
                     *(int *)&D_00097738 = car_data[0].pos.vx;
                     *(int *)&D_0009773C = car_data[0].pos.vz;
@@ -1340,21 +1232,21 @@ int func_00069D08(S1 *a, S0 *b)
                         *(int *)&D_00097708 = 0x1000;
                 }
             } else {
-                b->fC &= ~2;
+                b->d &= ~2;
                 if (D_000C6F04.f2C0 && D_0009B1AC[0] > D_000C6F04.f2C4) {
-                    if (!(b->fC & 8))
+                    if (!(b->d & 8))
                         a->f114 = 300;
-                    b->fC |= 8;
+                    b->d |= 8;
                 } else {
-                    b->fC &= ~8;
-                    if (dist < b->f0) {
+                    b->d &= ~8;
+                    if (dist < b->a) {
                         a->f298--;
                         if (a->f2D0 == 2) {
-                            a->fD0++;
+                            a->st.f0++;
                             a->f2A0 += 0x4000;
                         }
                         a->f104 = 0x7fff;
-                        b->fC = 0;
+                        b->d = 0;
                         *(int *)&D_000975DC = 0;
                         dist = 0x7fffffff;
                     }
@@ -1363,76 +1255,76 @@ int func_00069D08(S1 *a, S0 *b)
         }
     } else {
         if (!D_00097794 || *(int *)&D_0009770C <= 0)
-            b->fC &= ~4;
+            b->d &= ~4;
         if (!(a->f11C & 1) || a->f2A0 <= a->f120)
-            b->fC &= ~2;
+            b->d &= ~2;
         if (!D_000C6F04.f2C0 || D_0009B1AC[0] <= D_000C6F04.f2C4)
-            b->fC &= ~8;
+            b->d &= ~8;
     }
     }
     return dist;
 }
 
 /* ---------------- func_0006A178 (src/pilot/func_0006A178.c) ---------------- */
-void func_0006A178(PLR_6A178 *car, TH *th)
+void func_0006A178(OBJ *car, ENT *th)
 {
     VECTOR_NOPAD v;
     unsigned d;
     int t;
     int *q;
-    VECTOR_NOPAD *pp = th->pos;
+    VECTOR *pp = th->e;
     v.vx = car_data[0].pos.vx - pp->vx;
     v.vz = car_data[0].pos.vz - pp->vz;
     d = v.vx * v.vx + v.vz * v.vz;
     if (D_0009686C != 0) {
         D_000BE9DC[0] = 1;
-        if (car->b2e3 != 0)
-            car->b2e3--;
+        if (car->f2E3 != 0)
+            car->f2E3--;
         if (*(unsigned char *)&D_00096898 == 3) {
             t = ((**(int **)&ReplayParameterPtr - *(int *)&CameraCnt) << 14) / 30;
-            q = &car->s29c;
+            q = &car->f29C;
             if (t < 0)
                 t = 0;
             q[1] = t;
-            car->s29c = 4;
+            car->f29C = 4;
         }
         if (*(short *)&D_0009D5B4 >= D_00096E78) {
             *(int *)&D_00097088 = 1;
             car->f104 = 0x7FFF;
-            if (car->b2e3 != 0)
-                car->f10c = 5;
+            if (car->f2E3 != 0)
+                car->f10C = 5;
             else
-                car->f10c = 6;
+                car->f10C = 6;
         } else if (**(int **)&ReplayParameterPtr < *(int *)&CameraCnt) {
-            if (d < th->lo) {
+            if (d < th->a) {
                 car->f104 = 0x7FFF;
             } else {
                 car->f104 = 0xFF0;
-                car->f10c = 3;
+                car->f10C = 3;
             }
         }
     }
-    if (th->hi < d) {
+    if (th->b < d) {
         car->f104 = 0xFF0;
-        car->f10c = 3;
+        car->f10C = 3;
     }
 }
 
 /* ---------------- func_0006A318 (src/pilot/func_0006A318.c) ---------------- */
-void func_0006A318(PLR_6A318 *car)
+void func_0006A318(OBJ *car)
 {
-    E_6A318 *e;
+    ENT *e;
     int d;
     int best = 0x7FFFFFFF;
     int second = 0x7FFFFFFF;
-    E_6A318 *bestp = 0;
+    ENT *bestp = 0;
     unsigned char *p;
     CIV_SLOT *q;
     ST *st;
     int lim;
     int n;
 
-    for (e = car->e; e < &car->e[6]; e++) {
+    for (e = car->ent; e < &car->ent[6]; e++) {
         d = func_00069D08(car, e);
         if (d < best) {
             second = best;
@@ -1445,25 +1337,25 @@ void func_0006A318(PLR_6A318 *car)
     if (second - best > 400 || (*(int *)&D_000975DC == 0 && best < 0x7FFFFFFF)) {
         *(int *)&D_000975DC = 1;
         D_000977AC = bestp;
-        D_000BE9B4 = *bestp->f10;
+        D_000BE9B4 = *(F *)bestp->e;
     }
     switch (car->f104) {
     case 2:
         if (car->f108 == 0)
             break;
     case 5:
-        func_0006A178(car, car->e);
+        func_0006A178(car, car->ent);
         break;
     case 6:
-        p = car->fF8;
+        p = (unsigned char *)car->fF8;
         q = &((CIV_SLOT *)D_00098900)[*p];
         if (p == 0)
             break;
         if (q->f1 == 0) {
-            E_6A318 *e2;
-            for (e2 = car->e; e2 < &car->e[6]; e2++) {
-                if (e2->f10 == (F *)(p + 0xC8))
-                    e2->f0C &= ~1;
+            ENT *e2;
+            for (e2 = car->ent; e2 < &car->ent[6]; e2++) {
+                if (e2->e == (VECTOR *)(p + 0xC8))
+                    e2->d &= ~1;
             }
             car->f10C = 3;
             car->fF8 = 0;
@@ -1489,36 +1381,36 @@ void func_0006A318(PLR_6A318 *car)
         lim = D_00097790;
         st->f18 = 1;
         st->fE = lim;
-        st->fC = car->s2DC = func_0006B9D8(D_000C6EA8, (int *)car_data, car->s2DC);
-        if (car->s2DC >= lim)
+        st->fC = car->f2DC = func_0006B9D8(D_000C6EA8, (int *)car_data, car->f2DC);
+        if (car->f2DC >= lim)
             car->f104 = 0x7FFF;
         break;
     }
 }
 
 /* ---------------- func_0006A60C (src/pilot/func_0006A60C.c) ---------------- */
-int func_0006A60C(B *b, int a1, int a2, int a3) {
-    E_6A60C *e;
-    F *f = b->f;
-    for (e = b->e; e < (E_6A60C *)b->f; e++, f++) {
-        if (!(e->f0C & 1)) {
+int func_0006A60C(OBJ *b, int a1, int a2, int a3) {
+    ENT *e;
+    F *f = (F *)b->tgt;
+    for (e = b->ent; e < (ENT *)b->tgt; e++, f++) {
+        if (!(e->d & 1)) {
             f->a = a2;
             f->c = a3;
-            e->f0 = 0x2EE;
-            e->f4 = 0x5DC0;
-            e->f8 = 0x1C2;
-            e->f0C = 0;
-            e->f10 = 0;
-            e->f14 = 10;
-            e->f18 = 0;
-            e->f1C = 0x3E8;
-            e->f20 = 0;
-            e->f24 = 0;
-            e->f28 = 0;
-            e->f0 = a1;
-            e->f10 = (int)f;
-            e->f0C = 1;
-            b->cnt++;
+            e->a = 0x2EE;
+            e->b = 0x5DC0;
+            e->c = 0x1C2;
+            e->d = 0;
+            e->e = 0;
+            e->f = 10;
+            e->g = 0;
+            e->q.h = 0x3E8;
+            e->q.i = 0;
+            e->q.j = 0;
+            e->q.k = 0;
+            e->a = a1;
+            e->e = (VECTOR *)f;
+            e->d = 1;
+            b->f298++;
             return 1;
         }
     }
@@ -1579,53 +1471,53 @@ void func_0006A6C8(SNDOBJ *p)
 
 /* ---------------- func_0006A934 (src/pilot/func_0006A934.c) ---------------- */
 /* cop/pursuit controller update (per-frame) */
-static inline unsigned char AddTarget(PLR_6A934 *car, int a1, int a2, int a3)
+static inline unsigned char AddTarget(OBJ *car, int a1, int a2, int a3)
 {
-    E_6A934 *e;
-    F *f = car->f;
-    SUB *s;
+    ENT *e;
+    F *f = (F *)car->tgt;
+    Q4 *s;
 
-    for (e = car->e; e < (E_6A934 *)car->f; e++, f++) {
-        if (!(e->f0C & 1)) {
+    for (e = car->ent; e < (ENT *)car->tgt; e++, f++) {
+        if (!(e->d & 1)) {
             f->a = a2;
             f->c = a3;
-            e->f0 = 0x2EE;
-            e->f4 = 0x5DC0;
-            e->f8 = 0x1C2;
-            e->f14 = 10;
-            e->sub.a = 1000;
-            e->f0C = 0;
-            e->f10 = 0;
-            e->f18 = 0;
-            s = &e->sub;
-            s->b = 0;
-            s->c = 0;
-            s->d = 0;
-            e->f0 = a1;
-            e->f10 = f;
-            e->f0C = 1;
+            e->a = 0x2EE;
+            e->b = 0x5DC0;
+            e->c = 0x1C2;
+            e->f = 10;
+            e->q.h = 1000;
+            e->d = 0;
+            e->e = 0;
+            e->g = 0;
+            s = &e->q;
+            s->i = 0;
+            s->j = 0;
+            s->k = 0;
+            e->a = a1;
+            e->e = (VECTOR *)f;
+            e->d = 1;
             car->f298++;
             return 1;
         }
     }
     return 0;
 }
-void func_0006A934(PLR_6A934 *car)
+void func_0006A934(OBJ *car)
 {
     int *p;
     T29C *t;
 
-    if (((PLR_6A934 *)&D_000C6F04)->f2B8 == 0 || ((PLR_6A934 *)&D_000C6F04)->f2B4 == 0 || *(int *)&pauseflag != 0)
+    if (D_000C6F04.pc == 0 || D_000C6F04.end == 0 || *(int *)&pauseflag != 0)
         return;
 
     func_0006A6C8(car);
 
-    if (car->b2E2)
-        car->b2E2--;
+    if (car->f2E2)
+        car->f2E2--;
     else
-        car->b2E1 = 0;
+        car->f2E1 = 0;
 
-    if (car->f2B8 < car->f2B4) {
+    if (car->pc < car->end) {
         if (car->f104 == 0xFF0)
             goto end;
         switch (car->f2D0) {
@@ -1633,11 +1525,11 @@ void func_0006A934(PLR_6A934 *car)
             func_00068C6C(car);
             break;
         case 1:
-            car->f2B8++;
+            car->pc++;
             car->f2D0 = 2;
             break;
         case 2:
-            p = car->f2B8;
+            p = car->pc;
             if (car->f298 < 6) {
                 car->f104 = 2;
                 { int *q; if (p[0] == 0x7FFFFFFF) q = p; else if (AddTarget(car, 0x2EE, p[0], p[1])) q = p + 2; else q = p; p = q; }
@@ -1646,7 +1538,7 @@ void func_0006A934(PLR_6A934 *car)
                 car->f2D0 = 0;
                 p++;
             }
-            car->f2B8 = p;
+            car->pc = p;
             break;
         }
     }
@@ -1654,15 +1546,15 @@ void func_0006A934(PLR_6A934 *car)
     if (car->f104 == 0xFF0)
         goto end;
 
-    if (*(int *)&D_00096F80 == 5 && ((t = &car->f29C)->flags & 8)) {
+    if (*(int *)&D_00096F80 == 5 && ((t = (T29C *)&car->f29C)->flags & 8)) {
         if (t->flags & 0x80) {
             t->val += 0x222;
             if (t->val > 0x3840000)
                 t->val = 0x3840000;
         } else if (t->val == 0) {
-            ((PLR_6A934 *)&D_000C6F04)->f104 = 0xFF0;
-            ((PLR_6A934 *)&D_000C6F04)->f10C = 1;
-            car->f29C.flags &= ~8;
+            D_000C6F04.f104 = 0xFF0;
+            D_000C6F04.f10C = 1;
+            car->f29C &= ~8;
         } else {
             t->val -= 0x222;
             if (t->val < 0)
@@ -1691,7 +1583,7 @@ end:
         car->f110 = 0x3C;
     } else if (--car->f110 == 0) {
         *(int *)&D_0009709C = 1;
-        car->b2E4 = 0;
+        car->f2E4 = 0;
     }
     *(int *)&D_00096878 = 1;
 }
