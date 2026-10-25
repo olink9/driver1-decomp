@@ -145,6 +145,7 @@ func_001C6258	pass	src/pilot/frontend/func_001C6258.c: 0x001C6258 size 0x20; exe
 func_001C6278	pass	src/pilot/frontend/func_001C6278.c: 0x001C6278 size 0x1C; exe identical
 func_001C6294	pass	src/pilot/frontend/func_001C6294.c: 0x001C6294 size 0x18; exe identical
 func_001C62AC	pass	src/pilot/frontend/func_001C62AC.c: 0x001C62AC size 0x20; exe identical
+func_001C62CC	pass	src/pilot/frontend/func_001C62CC.c: 0x001C62CC size 0xA4; exe identical
 func_001C6370	pass	src/pilot/frontend/func_001C6370.c: 0x001C6370 size 0x34; exe identical
 func_001C63A4	pass	src/pilot/frontend/func_001C63A4.c: 0x001C63A4 size 0x30; exe identical
 func_001C63D4	pass	src/pilot/frontend/func_001C63D4.c: 0x001C63D4 size 0x34; exe identical
@@ -173,6 +174,7 @@ func_001C694C	pass	src/pilot/frontend/func_001C694C.c: 0x001C694C size 0x8; exe 
 func_001C6954	pass	src/pilot/frontend/func_001C6954.c: 0x001C6954 size 0x1C; exe identical
 func_001C6970	pass	src/pilot/frontend/func_001C6970.c: 0x001C6970 size 0x18; exe identical
 func_001C6988	pass	src/pilot/frontend/func_001C6988.c: 0x001C6988 size 0x8; exe identical
+func_001C6990	pass	src/pilot/frontend/func_001C6990.c: 0x001C6990 size 0x2AC; exe identical
 func_001C6C3C	pass	src/pilot/frontend/func_001C6C3C.c: 0x001C6C3C size 0x6C; exe identical
 func_001C6CA8	pass	src/pilot/frontend/func_001C6CA8.c: 0x001C6CA8 size 0x78; exe identical
 func_001C6D20	pass	src/pilot/frontend/func_001C6D20.c: 0x001C6D20 size 0x58; exe identical
@@ -266,6 +268,7 @@ func_001CB14C	pass	src/pilot/frontend/func_001CB14C.c: 0x001CB14C size 0x20; exe
 func_001CB16C	pass	src/pilot/frontend/func_001CB16C.c: 0x001CB16C size 0x24, +0x4 zero padding; exe identical
 func_001CB190	pass	src/pilot/frontend/func_001CB190.c: 0x001CB190 size 0x100; exe identical
 func_001CB290	pass	src/pilot/frontend/func_001CB290.c: 0x001CB290 size 0xF0; exe identical
+func_001CB380	pass	src/pilot/frontend/func_001CB380.c: 0x001CB380 size 0x120; exe identical
 func_001CB4A0	pass	src/pilot/frontend/func_001CB4A0.c: 0x001CB4A0 size 0x2F0; exe identical
 func_001CB790	pass	src/pilot/frontend/func_001CB790.c: 0x001CB790 size 0x1CC; exe identical
 func_001CB95C	pass	src/pilot/frontend/func_001CB95C.c: 0x001CB95C size 0xBC; exe identical
@@ -356,4 +359,4 @@ func_001CDB98	pass	src/pilot/frontend/func_001CDB98.c: 0x001CDB98 size 0x38; exe
 func_001CDBD0	pass	src/pilot/frontend/func_001CDBD0.c: 0x001CDBD0 size 0x3C; exe identical
 func_001CDC0C	pass	src/pilot/frontend/func_001CDC0C.c: 0x001CDC0C size 0x38; exe identical
 func_001CDC44	pass	src/pilot/frontend/func_001CDC44.c: 0x001CDC44 size 0x3C; exe identical
-(combined)	pass	357 passing functions linked together: sha1 62f9e054eccd83f0aa688b6e1b5aad5693f35849
+(combined)	pass	360 passing functions linked together: sha1 62f9e054eccd83f0aa688b6e1b5aad5693f35849

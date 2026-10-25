@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Everything an agent needs to start on one function.
 
-    tools/fnasm.py SYMBOL [--no-d2]
+    tools/fnasm.py SYMBOL [--no-d2] [--target T]
 
 Prints the target asm, the symbols it references, and - when pilot/d2map.tsv
 pairs it with a Driver 2 function - that function's debug-symbol prototype
@@ -58,6 +58,8 @@ def r2_source(name):
 def main():
     sym = sys.argv[1]
     p = os.path.join(FN, sym + ".s")
+    if "--target" in sys.argv:                  # NFMV shares names with main (main, __main, libs)
+        p = os.path.join(targets.path(targets.get(sys.argv[sys.argv.index("--target") + 1]), "fn"), sym + ".s")
     if not os.path.exists(p):
         p = os.path.join(targets.path(targets.get(targets.of_symbol(sym)), "fn"), sym + ".s")
     if not os.path.exists(p):

@@ -1,0 +1,28 @@
+symbol	result	detail
+func_80100C80	pass	src/pilot/nfmv/func_80100C80.c: 0x80100C80 size 0x178; exe identical
+func_80100DF8	pass	src/pilot/nfmv/func_80100DF8.c: 0x80100DF8 size 0x54; exe identical
+func_80100E4C	pass	src/pilot/nfmv/func_80100E4C.c: 0x80100E4C size 0x5C; exe identical
+func_80100EA8	pass	src/pilot/nfmv/func_80100EA8.c: 0x80100EA8 size 0x110; exe identical
+func_80100FB8	pass	src/pilot/nfmv/func_80100FB8.c: 0x80100FB8 size 0xFC; exe identical
+func_801010B4	pass	src/pilot/nfmv/func_801010B4.c: 0x801010B4 size 0xAC; exe identical
+func_80101160	pass	src/pilot/nfmv/func_80101160.c: 0x80101160 size 0x64; exe identical
+func_801011C4	pass	src/pilot/nfmv/func_801011C4.c: 0x801011C4 size 0xB8; exe identical
+func_8010127C	pass	src/pilot/nfmv/func_8010127C.c: 0x8010127C size 0x244; exe identical
+func_801014C0	pass	src/pilot/nfmv/func_801014C0.c: 0x801014C0 size 0x10C; exe identical
+func_801015CC	pass	src/pilot/nfmv/func_801015CC.c: 0x801015CC size 0x338; exe identical
+func_80101904	pass	src/pilot/nfmv/func_80101904.c: 0x80101904 size 0x54; exe identical
+func_80101958	pass	src/pilot/nfmv/func_80101958.c: 0x80101958 size 0x70; exe identical
+func_801019C8	pass	src/pilot/nfmv/func_801019C8.c: 0x801019C8 size 0xB4; exe identical
+func_80101A7C	pass	src/pilot/nfmv/func_80101A7C.c: 0x80101A7C size 0xCC; exe identical
+func_80101B48	pass	src/pilot/nfmv/func_80101B48.c: 0x80101B48 size 0x68; exe identical
+func_80101BB0	pass	src/pilot/nfmv/func_80101BB0.c: 0x80101BB0 size 0x8C; exe identical
+func_80101C3C	pass	src/pilot/nfmv/func_80101C3C.c: 0x80101C3C size 0x64; exe identical
+func_80101CA0	pass	src/pilot/nfmv/func_80101CA0.c: 0x80101CA0 size 0x6C; exe identical
+func_80101D0C	pass	src/pilot/nfmv/func_80101D0C.c: 0x80101D0C size 0x34; exe identical
+func_80101D40	pass	src/pilot/nfmv/func_80101D40.c: 0x80101D40 size 0x20; exe identical
+func_80101D60	pass	src/pilot/nfmv/func_80101D60.c: 0x80101D60 size 0x28; exe identical
+func_80101D88	pass	src/pilot/nfmv/func_80101D88.c: 0x80101D88 size 0x50; exe identical
+func_80101DD8	pass	src/pilot/nfmv/func_80101DD8.c: 0x80101DD8 size 0x28; exe identical
+func_80101E00	pass	src/pilot/nfmv/func_80101E00.c: 0x80101E00 size 0x154; exe identical
+func_80101F54	pass	src/pilot/nfmv/func_80101F54.c: 0x80101F54 size 0x54; exe identical
+(combined)	pass	26 passing functions linked together: sha1 45592283155ef3bcf04d64d68aa5b54d7dc87834

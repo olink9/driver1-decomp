@@ -3,7 +3,7 @@
 skipping ones already in src/pilot or logged in pilot/results.tsv and ones
 that are hand-written GTE assembly.
 
-    tools/nextbatch.py N [--sample LO HI] [--seeded] [--target main|frontend|mcard|cred|iview]
+    tools/nextbatch.py N [--sample LO HI] [--seeded] [--target main|frontend|mcard|cred|iview|nfmv]
 
 --sample LO HI picks evenly from sizes LO..HI; --seeded keeps only functions
 with a Driver 2 counterpart (pilot/d2map.tsv score >= 0.4); --target reads that
@@ -23,7 +23,11 @@ def main():
     done = {f.split(".")[0] for f in os.listdir(targets.path(T, "src"))} if os.path.isdir(targets.path(T, "src")) else set()
     res = os.path.join(ROOT, "pilot/results.tsv")
     if os.path.exists(res):
-        done |= {l.split("\t")[1] for l in open(res).read().splitlines()[1:] if "\t" in l}
+        logged = {l.split("\t")[1] for l in open(res).read().splitlines()[1:] if "\t" in l}
+        if T["name"] != "main":       # results.tsv has no target column: NFMV's `main` is not main's
+            mfn = targets.path(targets.get("main"), "fn")
+            logged = {s for s in logged if not os.path.exists(os.path.join(mfn, s + ".s"))}
+        done |= logged
     rows = []
     for l in open(targets.path(T, "queue")).read().splitlines()[1:]:
         c = l.split("\t")

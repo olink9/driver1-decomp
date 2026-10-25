@@ -54,6 +54,24 @@ How it works (all output under build/linkcheck/, nothing else is written):
     original size and the final exe's bytes over the function's range (and over any
     data the C object placed) equal orig/SLUS_008.42. Then one combined link with every
     passing function at once, compared by sha1.
+
+Translation units (real multi-function files, src/<file>.c, made by tools/mktu.py):
+    tools/linkcheck.py --tu src/spool.c [...]          # check these TUs only
+    tools/linkcheck.py --all --tu src/spool.c          # plus every pilot function outside them
+    tools/linkcheck.py --link build/slus_008.42.elf --tu src/*.c src/*.s   # what `make` runs
+  * A .s TU is an original assembler module (the HANDWRITTEN ASM runs): assembled as it is
+    (mips-linux-gnu-as, macro.inc via .include), then mapped and checked exactly like a C TU.
+  * A TU object's .text symbols (functions, static ones included, in .text order) must
+    be the names of consecutive asm blocks, each at the same offset from the first as in
+    the original: the TU replaces that whole block range (a "span"), so a mismatch names
+    the first function whose size differs. Its .rodata/.sdata/.data/.bss/.sbss are placed
+    exactly as for one function, by pairing relocations against the span (all blocks
+    concatenated): each section lands as ONE block when all its relocations agree on one
+    base, otherwise it is cut at its labels as above (the report says which).
+  * With --all, pilot functions inside a TU's span are skipped: the TU supersedes them.
+  * --link ELF links the given TUs (nothing else from src/pilot) into ELF (map next to
+    it) with no per-unit checks; the caller compares sha1 (`make` does). --workdir keeps
+    such a link out of build/linkcheck (other runs may be using it).
 Run inside distrobox `build`.
 """
 import argparse, concurrent.futures as cf, glob, hashlib, os, re, struct, subprocess, sys, threading, types
@@ -75,19 +93,20 @@ OBJCOPY = "mips-linux-gnu-objcopy"
 VRAM, FILEOFF = 0x10000, 0x800
 # asm file -> build/asm object name used in slus_008.42.ld
 ASMFILES = {"asm/2C8C.s": "build/asm/2C8C.o", "asm/data/800.rodata.s": "build/asm/data/800.rodata.o",
-            "asm/data/75B14.data.s": "build/asm/data/75B14.data.o", "asm/data/87800.bss.s": "build/asm/data/87800.bss.o",
+            "asm/data/75B14.data.s": "build/asm/data/75B14.data.o", "asm/data/877BC.bss.s": "build/asm/data/877BC.bss.o",
             "asm/header.s": "build/asm/header.o"}
 TARGET = "main"
 TEXT_ASM = "asm/2C8C.s"
 G, EXTERN_G = "8", "4"
 SRCDIR = os.path.join(ROOT, "src", "pilot")
 BSS_LO = "main_BSS_START"
+PAD_TO = 0x87800         # main: file size (objcopy --pad-to; .sbss starts before the 2 KB padding ends)
 
 
 def configure(name):
     """Point every module setting at target `name` (tools/targets.py)."""
     global TARGET, LC, BASE, ORIG, LDSCRIPT, SHA1, VRAM, FILEOFF, ASMFILES, TEXT_ASM, UNDEF, G, EXTERN_G
-    global SRCDIR, BSS_LO, RAM_END
+    global SRCDIR, BSS_LO, RAM_END, PAD_TO
     t = targets.get(name)
     TARGET = name
     if name != "main":
@@ -98,6 +117,7 @@ def configure(name):
     ASMFILES, TEXT_ASM, UNDEF = dict(t["asmfiles"]), t["text_asm"], list(t["undef"])
     G, EXTERN_G = t["G"], t["extern_g"]
     SRCDIR, BSS_LO, RAM_END = targets.path(t, "src"), t["bss_lo"], t["bss_hi"]
+    PAD_TO = t.get("pad_to")
     fnscore.set_target(name)
 
 
@@ -125,6 +145,16 @@ class Block:
         self.o = self.s[:-2] + ".o"
         self.size = 0
         self.syms = []
+
+
+class Span:
+    """Consecutive .text blocks replaced together by one multi-function C object (--tu).
+    Quacks like a Block for pair_bases/place_c/split_c."""
+    def __init__(self, blocks):
+        self.blocks = blocks
+        self.name, self.addr, self.src = blocks[0].name, blocks[0].addr, blocks[0].src
+        self.size = sum(b.size for b in blocks)
+        self.names = [b.name for b in blocks]
 
 
 def split_file(src):
@@ -206,7 +236,7 @@ def prepare(jobs):
         files[src] = (secname, blocks)
         for b in blocks:
             b.header = header
-            if src == "asm/header.s" or len(blocks) == 1 and b.name == "all":
+            if os.path.basename(src) == "header.s" or len(blocks) == 1 and b.name == "all":
                 write_if_changed(b.s, "\n".join(b.lines) + "\n")
             else:
                 write_if_changed(b.s, header + "\n".join(b.lines) + "\n")
@@ -254,8 +284,8 @@ def data_layout(files, pieces):
     layout, dups, touched = {}, [], set()
     placed = []                                              # (addr, end, bytes)
     for src, (secname, blocks) in files.items():
-        if src == TEXT_ASM or blocks[0].addr is None:
-            continue
+        if src == TEXT_ASM or blocks[0].addr is None or secname in BSSSECS:
+            continue                                         # bss asm: see gen_script
         lo, hi = blocks[0].addr, blocks[-1].addr + blocks[-1].size
         mine = sorted(p for p in pieces if lo <= p[0] < hi)
         cuts = []
@@ -328,12 +358,15 @@ def bss_pieces(pieces):
 
 
 def gen_script(files, repl, pieces, provides, tag, pads=None):
-    """repl: {text block name: C object}; pieces: [(addr, size, obj, section, bytes or
+    """repl: {text block name: C object, or None for the other blocks of a TU span}; pieces: [(addr, size, obj, section, bytes or
     None for bss)]; provides: {sym: addr}; pads: {text block name: zero bytes after the
     C .text}. Returns (path of the generated linker script, symbol scripts to link with)."""
     layout, dups, _ = data_layout(files, pieces)
     bss = bss_pieces(pieces)
     pads = pads or {}
+    # a global the C object defines in bss replaces the symbol script's `sym = addr;`
+    # (an assignment there would silently win over the C definition) and the asm bss label
+    drop = {n for _, _, o, sec, _ in bss for _, n, g in bss_labels(o).get(sec, []) if g}
     out = []
     for line in open(LDSCRIPT).read().split("\n"):
         m = re.match(r"(\s*)(build/\S+\.o)\((\.\w+)\);$", line)
@@ -357,10 +390,20 @@ def gen_script(files, repl, pieces, provides, tag, pads=None):
         if src == TEXT_ASM:
             for b in blocks:
                 if b.name in repl:
+                    if repl[b.name] is None:
+                        continue                       # inside a TU span (its first block holds the TU)
                     out.append(f"{ind}{repl[b.name]}(.text);")
                     if pads.get(b.name):
                         out.append(f"{ind}. += 0x{pads[b.name]:X};")
                 else:
+                    out.append(f"{ind}{b.o}({sec});")
+            continue
+        if sec in BSSSECS and blocks[0].addr is not None:
+            # main's .sbss head 0x96FBC-0x96FFF (splat labels, inside the file's zero padding):
+            # each label at its address, minus the ones a C object now defines (.lcbss<k>)
+            for b in blocks:
+                if not set(b.syms) & drop:
+                    out.append(f"{ind}. = 0x{b.addr - VRAM:X};")
                     out.append(f"{ind}{b.o}({sec});")
             continue
         if src not in layout:
@@ -376,9 +419,6 @@ def gen_script(files, repl, pieces, provides, tag, pads=None):
     path = os.path.join(LC, "ld", tag + ".ld")
     os.makedirs(os.path.dirname(path), exist_ok=True)
     open(path, "w").write(text)
-    # a global the C object defines in bss replaces the symbol script's `sym = addr;`
-    # (an assignment there would silently win over the C definition)
-    drop = {n for _, _, o, sec, _ in bss for _, n, g in bss_labels(o).get(sec, []) if g}
     undef = []
     for u in UNDEF:
         if not drop:
@@ -412,7 +452,7 @@ def link(gen, tag, pieces=()):
             x = e.get_section_by_name(f".lcbss{k}")
             if x is None or x["sh_addr"] != a or x["sh_size"] != n:
                 raise LinkErr(f"C {sec} did not land at 0x{a:X} (0x{n:X} bytes)")
-    r = sh([OBJCOPY, "-O", "binary", elf, exe])
+    r = sh([OBJCOPY, "-O", "binary"] + ([f"--pad-to=0x{PAD_TO:X}"] if PAD_TO else []) + [elf, exe])
     if r.returncode:
         raise LinkErr("objcopy: " + r.stderr[-300:])
     return elf, exe
@@ -443,6 +483,19 @@ def text_relocs(path):
     return out, text
 
 
+def block_relocs(block):
+    """text_relocs of an asm block, or of a Span: its blocks' relocations at their offsets
+    from the span start, and their .text bytes concatenated."""
+    if not isinstance(block, Span):
+        return text_relocs(block.o)
+    out, text = {}, b""
+    for b in block.blocks:
+        r, t = text_relocs(b.o)
+        out.update({len(text) + k: v for k, v in r.items()})
+        text += t
+    return out, text
+
+
 def imm16(text, off):
     v = struct.unpack_from("<I", text, off)[0] & 0xFFFF
     return v - 0x10000 if v & 0x8000 else v
@@ -456,7 +509,7 @@ def pair_bases(cobj, block, addrs, names):
     object's %lo/%gp_rel relocations against `names` with the asm block's at the same
     instruction."""
     cr, ct = text_relocs(cobj)
-    tr, tt = text_relocs(block.o)
+    tr, tt = block_relocs(block)
     bases = {s: set() for s in names}
     for off, (typ, name, issec) in cr.items():
         if not issec or name not in bases or typ not in (6, 7):     # R_MIPS_LO16, R_MIPS_GPREL16
@@ -476,9 +529,10 @@ def is_bss(name):
     return name in BSSSECS or name.startswith((".bss.lc", ".sbss.lc"))
 
 
-def bss_labels(cobj):
+def bss_labels(cobj, want=is_bss):
     """{bss section: [(offset, symbol, is_global)]} for the C object's .bss/.sbss
-    (and .bss.lc<k>/.sbss.lc<k> pieces made by split_bss)."""
+    (and .bss.lc<k>/.sbss.lc<k> pieces made by split_bss); with `want`, for the
+    sections it accepts instead."""
     out = {}
     with open(cobj, "rb") as f:
         e = ELFFile(f)
@@ -487,7 +541,7 @@ def bss_labels(cobj):
             if not x.name or not isinstance(x["st_shndx"], int) or x["st_info"]["type"] == "STT_SECTION":
                 continue
             sec = e.get_section(x["st_shndx"]).name
-            if is_bss(sec):
+            if want(sec):
                 out.setdefault(sec, []).append((x["st_value"], x.name, x["st_info"]["bind"] == "STB_GLOBAL"))
     return out
 
@@ -508,15 +562,20 @@ def place_c(cobj, block, addrs):
     if not need and not bss:
         return []
     bases = pair_bases(cobj, block, addrs, need)
+    # named data a TU defines (its initialised globals) also places by its labels
+    for sec, ls in bss_labels(cobj, lambda n: n in need).items():
+        bases[sec] |= {addrs[n] - off for off, n, _ in ls if n in addrs}
     out = []
     labels = bss_labels(cobj) if bss else {}
     for s in bss:
         if not labels.get(s):
             raise LinkErr(f"cannot place C {s} ({secs[s]} bytes): no label in it")
-        miss = [n for _, n, _ in labels[s] if n not in addrs]
-        if miss:
-            raise LinkErr(f"cannot place C {s} ({secs[s]} bytes): no original address for {miss[0]}")
-        b = {addrs[n] - off for off, n, _ in labels[s]}
+        # labels the original has no symbol for (a TU's unreferenced variables between
+        # known ones) ride along: the known labels must exist and agree on one base
+        known = [(off, n) for off, n, _ in labels[s] if n in addrs]
+        if not known:
+            raise LinkErr(f"cannot place C {s} ({secs[s]} bytes): no original address for {labels[s][0][1]}")
+        b = {addrs[n] - off for off, n in known}
         if len(b) != 1:
             raise LinkErr(f"cannot place C {s} ({secs[s]} bytes): inconsistent bases " +
                           ",".join(f"0x{x:X}" for x in sorted(b)))
@@ -598,6 +657,7 @@ def maspsx_text(cpath, cobj):
     mx = [sys.executable, os.path.join(ROOT, "tools/maspsx/maspsx.py"), "--aspsx-version=2.79", "--expand-div", f"-G{G}"]
     env = dict(os.environ, MASPSX_EXTERN_G=os.environ.get("MASPSX_EXTERN_G", EXTERN_G),
                MASPSX_GP_ALLOW_OFFSET=os.environ.get("MASPSX_GP_ALLOW_OFFSET", "0"))
+    env.update(fnscore.file_maspsx_env(cpath))
     r = subprocess.run(mx, stdin=open(o_keep[:-2] + ".cc1.s"), cwd=ROOT, capture_output=True, text=True, env=env)
     if r.returncode:
         raise LinkErr("split: maspsx: " + r.stderr[-300:])
@@ -612,9 +672,11 @@ def maspsx_text(cpath, cobj):
 BSS_RE = re.compile(r"(?:\.section\s+)?(\.s?bss)(?=[\s,]|$)")
 
 
-def split_bss(ms):
+def split_bss(ms, known=None):
     """maspsx output with every .bss/.sbss chunk cut at its labels: label i (with the
-    .align lines just before it) goes in its own section <.bss|.sbss>.lc<i>."""
+    .align lines just before it) goes in its own section <.bss|.sbss>.lc<i>. With `known`
+    (original symbol addresses), a label the original has no symbol for (an unreferenced
+    filler variable) stays in the piece of the label before it."""
     out, n, inb = [], 0, None
     for l in ms.split("\n"):
         st = l.strip()
@@ -632,7 +694,7 @@ def split_bss(ms):
         if st.startswith((".align", "#", ".globl", ".global")) or not st:
             pend.append(l)
             continue
-        if LABEL_RE.match(l):
+        if LABEL_RE.match(l) and (known is None or not started or l.strip()[:-1] in known):
             out.append(f'.section {inb}.lc{n},"aw",@nobits')
             n += 1
             started = True
@@ -663,6 +725,13 @@ def split_rodata(ms, cobj, block, addrs):
             raise LinkErr(f"cannot place C .rodata: unit {i} ({usec[u][0]} bytes) has inconsistent bases " +
                           ",".join(f"0x{b:X}" for b in sorted(ub[u])))
     ubase = {u: min(b) for u, b in ub.items() if b}
+    # units no code points at (strings only the TU's own .data points at) sit back to back
+    # with the following placed unit, as cc1 emitted them
+    for i in range(len(units) - 2, -1, -1):
+        u, nxt = units[i], units[i + 1]
+        if u not in ubase and nxt in ubase and usec[u][0]:
+            al = max(usec[nxt][1], 1)
+            ubase[u] = ubase[nxt] - (usec[u][0] + al - 1) // al * al
     # 2) group units that sit back to back (with C's alignment) in the original
     groups, k, prev_end = [], -1, None
     for i, u in enumerate(units):
@@ -701,7 +770,7 @@ def split_c(cpath, cobj, block, addrs, rodata, bss):
     The .text must keep its size; every piece must pair to exactly one base."""
     ms = maspsx_text(cpath, cobj)
     while True:
-        text = split_bss(ms) if bss else ms
+        text = split_bss(ms, addrs) if bss else ms
         if rodata:
             text = split_rodata(text, cobj, block, addrs)
         so = cobj[:-2] + ".split.o"
@@ -718,13 +787,59 @@ def split_c(cpath, cobj, block, addrs, rodata, bss):
             raise
 
 
-def compile_one(sym, path):
-    o = os.path.join(LC, "obj", os.path.basename(path)[:-2] + ".o")
+def compile_one(sym, path, o=None):
+    o = o or os.path.join(LC, "obj", os.path.basename(path)[:-2] + ".o")
     os.makedirs(os.path.dirname(o), exist_ok=True)
     a = types.SimpleNamespace(cc="2.7.2-cdk", opt="-O2", G=G, aspsx="2.79", extra="", keep_s=False, target=TARGET)
     os.makedirs(fnscore.B, exist_ok=True)
     err = fnscore.compile_c(path, o, a)
     return o, err
+
+
+def text_symbols(cobj):
+    """[(offset, name)] of the symbols in the C object's .text (functions, static ones
+    included; no .L/$ labels), in address order."""
+    with open(cobj, "rb") as f:
+        e = ELFFile(f)
+        ti = next(i for i, x in enumerate(e.iter_sections()) if x.name == ".text")
+        st = e.get_section_by_name(".symtab")
+        out = {(x["st_value"], x.name) for x in st.iter_symbols()
+               if x.name and x["st_shndx"] == ti and x["st_info"]["type"] != "STT_SECTION"
+               and not x.name.startswith((".L", "$", "gcc2_compiled", "__gnu_compiled"))
+               and not x.name.endswith(".NON_MATCHING")}           # INCLUDE_ASM'd wip (macro.inc)
+    return sorted(out)
+
+
+def tu_span(cobj, textblocks):
+    """The Span of consecutive asm blocks a TU object's functions map onto, checked
+    function by function against the original layout. Returns (span, C .text size)."""
+    syms = text_symbols(cobj)
+    if not syms:
+        raise LinkErr("TU has no functions in .text")
+    secs, _ = elf_info(cobj)
+    n = secs.get(".text", 0)
+    index = {b.name: i for i, b in enumerate(textblocks)}
+    miss = [s for _, s in syms if s not in index]
+    if miss:
+        raise LinkErr(f"no asm block named {', '.join(miss[:4])}{' ...' if len(miss) > 4 else ''} in {TEXT_ASM}")
+    if syms[0][0] != 0:
+        raise LinkErr(f".text starts with 0x{syms[0][0]:X} bytes before {syms[0][1]}")
+    first = index[syms[0][1]]
+    names = [s for _, s in syms]
+    last = first + len(syms) - 1
+    blocks = textblocks[first:last + 1]
+    if [b.name for b in blocks] != names:
+        k = next(i for i, (b, s) in enumerate(zip(blocks + [None] * len(names), names)) if b is None or b.name != s)
+        want = blocks[k].name if k < len(blocks) else "(end of file)"
+        raise LinkErr(f"function {k} is {names[k]}, but the next asm block after "
+                      f"{names[k - 1] if k else '(start)'} is {want}: a TU must cover a consecutive block range")
+    for k, (off, s) in enumerate(syms):
+        want = blocks[k].addr - blocks[0].addr
+        if off != want:
+            p = blocks[k - 1]
+            raise LinkErr(f"{p.name} is 0x{off - syms[k - 1][0]:X} bytes in C, 0x{p.size:X} in asm "
+                          f"({s} at +0x{off:X}, original +0x{want:X})")
+    return Span(blocks), n
 
 
 # ---------------------------------------------------------------- main
@@ -743,12 +858,21 @@ def main():
     ap.add_argument("-o", "--out", default=None, help="write a TSV (symbol, pass/fail, detail)")
     ap.add_argument("-j", "--jobs", type=int, default=8)
     ap.add_argument("--target", choices=targets.NAMES, default="main", help="binary to relink (default main)")
+    ap.add_argument("--tu", nargs="+", default=[], metavar="FILE", help="multi-function C files (src/<file>.c)")
+    ap.add_argument("--link", metavar="ELF", help="link the --tu files into ELF (no checks; see above)")
+    ap.add_argument("--workdir", help="work directory instead of build/linkcheck[-<target>]")
     a = ap.parse_args()
     configure(a.target)
+    global LC, BASE
+    if a.workdir:
+        LC = os.path.abspath(a.workdir)
+        BASE = os.path.join(LC, "base")
+    if a.link and not a.tu:
+        sys.exit("--link needs --tu FILE...")
 
     pilot = SRCDIR
     todo = []                                                   # (sym, path) - snapshot now
-    if a.all or (not a.symbols and not a.wip):
+    if a.all or (not a.symbols and not a.wip and not a.tu):
         for p in sorted(glob.glob(os.path.join(pilot, "*.c"))):
             if not p.endswith((".wip.c", ".best.c")):
                 todo.append((os.path.basename(p)[:-2], p))
@@ -768,8 +892,18 @@ def main():
             snap[s] = open(p).read()
         except OSError:
             snap[s] = None
+    tus = []                                                    # (name, path, source)
+    for p in a.tu:
+        try:
+            if not p.endswith((".c", ".s")):
+                sys.exit(f"--tu {p}: a TU is a .c file or an original assembler module (.s)")
+            tus.append((os.path.basename(p)[:-2], os.path.abspath(p), open(p).read()))
+        except OSError as e:
+            sys.exit(f"--tu {p}: {e}")
+    if len({t[0] for t in tus}) != len(tus):
+        sys.exit("--tu: two files with the same name")
     srcdir = os.path.join(LC, "src")
-    os.makedirs(srcdir, exist_ok=True)
+    os.makedirs(os.path.join(srcdir, "tu"), exist_ok=True)
 
     files = prepare(a.jobs)
     tblocks = {b.name: b for b in files[TEXT_ASM][1]}
@@ -787,6 +921,71 @@ def main():
             for s in b.syms:
                 owner.setdefault(s, b)
     print(f"baseline relink from {sum(len(b) for _, b in files.values())} blocks: sha1 OK", flush=True)
+    textblocks = files[TEXT_ASM][1]
+    tu_names = set()                                            # blocks inside TU spans
+
+    def provides_for(repl, pieces):
+        dropped = set(repl)
+        cut = data_layout(files, pieces)[2]
+        prov = {}
+        for s, b in owner.items():
+            if (b.src == TEXT_ASM and b.name in dropped) or (b.src, b.idx) in cut:
+                # a TU's functions may be static: keep the original address for any
+                # remaining asm reference (PROVIDE never overrides a real definition)
+                if s in addrs and (s not in repl or s in tu_names):
+                    prov[s] = addrs[s]
+        return prov
+
+
+    def prep_tu(t):
+        """(object, data pieces, pad, span) for TU t = (name, path, source)."""
+        name, path, src = t
+        ext = os.path.splitext(path)[1]                         # .c, or .s: an original asm module
+        cpath = os.path.join(srcdir, "tu", name + ext)          # compile the snapshot
+        write_if_changed(cpath, src)
+        if ext == ".s":
+            o = os.path.join(LC, "obj", "tu", name + ".o")
+            os.makedirs(os.path.dirname(o), exist_ok=True)
+            r = subprocess.run(AS + ["-o", o, cpath], cwd=ROOT, capture_output=True, text=True)
+            err = r.returncode and ("as: " + r.stderr)
+        else:
+            o, err = compile_one(name, cpath, os.path.join(LC, "obj", "tu", name + ".o"))
+        if err:
+            raise LinkErr("compile error: " + " ".join(err.split())[:300])
+        span, n = tu_span(o, textblocks)
+        pad = span.size - n
+        lo = span.addr - VRAM + FILEOFF
+        if pad < 0 or (pad and any(orig[lo + n:lo + span.size])):
+            raise LinkErr(f"TU .text is 0x{n:X} bytes, its asm blocks are 0x{span.size:X}")
+        try:
+            pieces = place_c(o, span, addrs)
+        except LinkErr as e:
+            r, bs = split_kind(e)
+            if not (r or bs):
+                raise
+            o, pieces = split_c(cpath, o, span, addrs, r, bs)
+        return o, pieces, pad, span
+
+    def tu_repl(o, span):
+        return {nm: (o if k == 0 else None) for k, nm in enumerate(span.names)}
+
+    if a.link:
+        repl, pieces, pads = {}, [], {}
+        try:
+            for t in tus:
+                o, pc, pad, span = prep_tu(t)
+                tu_names.update(span.names)
+                repl.update(tu_repl(o, span))
+                pieces += pc
+                pads[span.name] = pad
+                print(f"{t[0]}: {len(span.names)} functions 0x{span.addr:08X}-0x{span.addr + span.size:08X}", flush=True)
+            elf, _ = link(gen_script(files, repl, pieces, provides_for(repl, pieces), "tulink", pads), "tulink", pieces)
+        except LinkErr as e:
+            sys.exit(f"linkcheck --link: {e}")
+        import shutil
+        shutil.copyfile(elf, a.link)
+        shutil.copyfile(elf[:-4] + ".map", os.path.splitext(a.link)[0] + ".map")
+        sys.exit(0)
 
     def prep(item):
         sym, path = item
@@ -820,16 +1019,6 @@ def main():
             o, pieces = split_c(cpath, o, b, addrs, r, bs)
         return o, pieces, pad
 
-    def provides_for(repl, pieces):
-        dropped = set(repl)
-        cut = data_layout(files, pieces)[2]
-        prov = {}
-        for s, b in owner.items():
-            if (b.src == TEXT_ASM and b.name in dropped) or (b.src, b.idx) in cut:
-                if s in addrs and s not in repl:
-                    prov[s] = addrs[s]
-        return prov
-
     def check(item):
         sym, path = item
         rel = os.path.relpath(path, ROOT)
@@ -859,18 +1048,70 @@ def main():
                 return sym, "fail", f"{rel}: code identical but C {sec} at 0x{addr:X} differs at +0x{dd - p:X}; {tail}", None
         extra = "".join(f", {s} at 0x{x:X}" for x, _, _, s, _ in pieces)
         extra += f", +0x{pad:X} zero padding" if pad else ""
-        return sym, "pass", f"{rel}: 0x{b.addr:08X} size 0x{b.size:X}{extra}; {tail}", (o, pieces, pad)
+        return sym, "pass", f"{rel}: 0x{b.addr:08X} size 0x{b.size:X}{extra}; {tail}", ({sym: o}, pieces, {sym: pad})
+
+    def check_tu(t):
+        name, path, _ = t
+        rel = os.path.relpath(path, ROOT)
+        try:
+            o, pieces, pad, span = prep_tu(t)
+            tu_names.update(span.names)
+            repl = tu_repl(o, span)
+            script = gen_script(files, repl, pieces, provides_for(repl, pieces), "tu_" + name, {span.name: pad})
+            _, exe = link(script, "tu_" + name, pieces)
+        except LinkErr as e:
+            return name, "fail", f"{rel}: {e}", None
+        out = open(exe, "rb").read()
+        lo = span.addr - VRAM + FILEOFF
+        d = first_diff(orig, out, lo, lo + span.size)
+        exe_ok = out == orig
+        tail = "exe identical" if exe_ok else f"exe differs at file offset 0x{first_diff(orig, out, 0, max(len(orig), len(out))):X}"
+        head = (f"{rel}: {len(span.names)} functions {span.names[0]}..{span.names[-1]} "
+                f"0x{span.addr:08X}-0x{span.addr + span.size:08X}")
+        if d is not None:
+            va = d - FILEOFF + VRAM
+            fb = next(b for b in span.blocks if b.addr <= va < b.addr + b.size)
+            w = orig[d & ~3:(d & ~3) + 4][::-1].hex()
+            g = out[d & ~3:(d & ~3) + 4][::-1].hex()
+            return name, "fail", f"{head}: first diff in {fb.name} +0x{va - fb.addr:X} (0x{va:08X}) want {w} got {g}; {tail}", None
+        for addr, size, _, sec, data in pieces:
+            if data is None:
+                continue
+            p = addr - VRAM + FILEOFF
+            dd = first_diff(orig, out, p, p + size)
+            if dd is not None:
+                return name, "fail", f"{head}: code identical but C {sec} at 0x{addr:X} differs at +0x{dd - p:X}; {tail}", None
+        kinds = {}
+        for x, n_, _, sec, _ in pieces:
+            k = sec.split(".lc")[0]
+            kinds.setdefault(k, []).append((x, n_))
+        place = "; ".join(f"{k} " + ("one block" if len(v) == 1 else f"{len(v)} pieces") + " at " +
+                          ",".join(f"0x{x:X}+0x{n_:X}" for x, n_ in sorted(v)) for k, v in sorted(kinds.items()))
+        extra = f"; {place}" if place else "; no data of its own"
+        extra += f"; +0x{pad:X} zero padding" if pad else ""
+        return name, "pass", f"{head}{extra}; {tail}", (repl, pieces, {span.name: pad})
 
     results = []
+    if tus:
+        with cf.ThreadPoolExecutor(a.jobs) as ex:
+            for r in ex.map(check_tu, tus):
+                results.append(r)
+                print(f"{r[0]}\t{r[1]}\t{r[2]}", flush=True)
+        # a passing TU supersedes the pilot functions in its span
+        covered = {nm for r in results if r[1] == "pass" for nm in r[3][0]}
+        skipped = [s for s, _ in todo if s in covered]
+        todo = [x for x in todo if x[0] not in covered]
+        if skipped:
+            print(f"(skipping {len(skipped)} pilot functions inside passing TUs)", flush=True)
     with cf.ThreadPoolExecutor(a.jobs) as ex:
         for i, r in enumerate(ex.map(check, todo)):
             results.append(r)
             print(f"{r[0]}\t{r[1]}\t{r[2]}", flush=True)
 
     passing = [(r[0], r[3]) for r in results if r[1] == "pass"]
-    repl = {s: x[0] for s, x in passing}
+    repl = {s: o for _, x in passing for s, o in x[0].items()}
     pieces = [p for _, x in passing for p in x[1]]
-    pads = {s: x[2] for s, x in passing}
+    pads = {s: v for _, x in passing for s, v in x[2].items()}
     try:
         script = gen_script(files, repl, pieces, provides_for(repl, pieces), "combined", pads)
         _, exe = link(script, "combined", pieces)
@@ -878,7 +1119,7 @@ def main():
         h = hashlib.sha1(out).hexdigest()
         ok = h == SHA1
         comb = ("pass" if ok else "fail",
-                f"{len(passing)} passing functions linked together: sha1 {h}" +
+                f"{len(passing)} passing {'units' if tus else 'functions'} linked together: sha1 {h}" +
                 ("" if ok else f" (first diff at file offset 0x{first_diff(orig, out, 0, max(len(orig), len(out))):X})"))
     except LinkErr as e:
         comb = ("fail", f"combined link failed: {e}")

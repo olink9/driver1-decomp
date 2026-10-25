@@ -1,0 +1,51 @@
+name: NFMV.EXE
+sha1: 45592283155ef3bcf04d64d68aa5b54d7dc87834
+options:
+  basename: nfmv
+  target_path: orig/NFMV.EXE
+  elf_path: build/nfmv.elf
+  base_path: .
+  platform: psx
+  compiler: PSYQ
+  asm_path: asm/nfmv
+  src_path: src/nfmv
+  build_path: build/nfmv
+  ld_script_path: nfmv.ld
+  ld_dependencies: True
+  find_file_boundaries: False
+  # NFMV.EXE is its own PS-X EXE (the FMV player main Exec()s): it does not link against
+  # main, has its own PsyQ libraries and its own gp (set by its crt0 at 0x80100AD8).
+  gp_value: 0x80126748
+  o_as_suffix: True
+  use_legacy_include_asm: False
+  section_order: [".rodata", ".text", ".data", ".bss"]
+  symbol_addrs_path:
+    - symbol_addrs.nfmv.txt
+  reloc_addrs_path:
+    - reloc_addrs.nfmv.txt
+  undefined_funcs_auto_path: undefined_funcs_auto.nfmv.txt
+  undefined_syms_auto_path: undefined_syms_auto.nfmv.txt
+  subalign: 2
+  ld_align_section_vram_end: False
+  ld_align_segment_vram_end: False
+  string_encoding: ASCII
+  data_string_encoding: ASCII
+  rodata_string_guesser_level: 2
+  data_string_guesser_level: 2
+segments:
+  - name: header
+    type: header
+    start: 0x0
+
+  - name: nfmv
+    type: code
+    start: 0x800
+    vram: 0x80100000
+    bss_size: 0x97B0    # 0x80126800 (file end) .. 0x8012FFB0 (crt0 clears bss from 0x80126768)
+    subsegments:
+      - [0x800, rodata, nfmv_rodata]
+      - [0x12D8, asm, nfmv]                # crt0 __SN_ENTRY_POINT 0x80100AD8 .. 0x80112868
+      - [0x13068, data, nfmv_data]          # .data + .sdata ($gp 0x80126748)
+      - [0x26F68, data, nfmv_tail]          # zero tail (start of bss carried in the file); data for exact bytes
+      - { start: 0x27000, type: bss, name: nfmv_bss, vram: 0x80126800 }
+  - [0x27000]

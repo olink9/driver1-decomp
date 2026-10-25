@@ -16,7 +16,7 @@ undefined_syms_auto.txt
 .splache
 __pycache__/
 perm/
-# overlays: splat output, regenerated from frontend.yaml / mcard.yaml (+ fn_*.yaml)
+# overlays + NFMV.EXE: splat output, regenerated from frontend.yaml / ... / nfmv.yaml (+ fn_*.yaml)
 frontend.ld
 mcard.ld
 frontend.d
@@ -27,3 +27,5 @@ cred.d
 iview.d
 undefined_funcs_auto.*.txt
 undefined_syms_auto.*.txt
+nfmv.ld
+nfmv.d

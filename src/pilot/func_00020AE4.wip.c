@@ -1,3 +1,7 @@
+/* run4 (no improvement; 90.22 kept). One shared CellPtr inline in the sibling 000143CC form ([z][x] 2D) gives 75.42
+   whatever the statement order inside it (z mult first: qz is reassigned by `qz = D - qz`, so the quotient insn and
+   the reassignment get no birthing boost and their chain is placed early). A separate single-set zc (h1, 84.50)
+   puts the x mult first as in the target, but the z mfhi then comes after the x remainder and the t-regs shift. */
 /* run3-r4 (r4-cell, no improvement; 90.22 kept). One shared pointer-returning inline for both lookups
    (sibling forms, separate remainder locals, all 20 valid statement orders, flat and 2D index) scores 75-85:
    with params substituted, sched1 always issues the z divide first (its chain D - zq -> &1 -> <<1 is longer)

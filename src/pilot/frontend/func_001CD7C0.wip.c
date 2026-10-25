@@ -1,3 +1,7 @@
+/* (run4-ov) Tried: q = p in the outer-then with the outer-else / final block NOT using p (so q would outlive p and become
+   cse's canonical reg), q reused for the final block, plain p[8] in all arms (98.55). cse1 still rewrites q to p in BOTH inner
+   arms (follow-jumps puts them in the copy's extended block). The copy must come from a set cse cannot see (a join between
+   the copy and the arms, cf. func_000E806C's fix), or not be a copy of p at all. */
 /* WIP 99.13: only the inner arm of the (D_000A801D & 4) branch differs: target copies the table base into v1 (addu v1,a0,zero) and stores sw 0x88(v1); here the inline helper gives addiu v1,a0,0x80 / sw 0x8(v1). Plain C (p[8].s = ...) gives 98.55 with no copy at all. The copy looks like an inline-param copy whose argument is not a bare pseudo; sel(p,...) and sel(p,8,...) get substituted away. */
 /* Diagnosis (ov1-wip pass): the target's `addu v1,a0` is a pointer COPY that survives as its own global pseudo (used in both
    inner arms); every form tried here dies in cse1 (dump -ds: the copy's uses are rewritten to the older reg/v 80) or is

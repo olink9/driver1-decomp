@@ -62,5 +62,5 @@ segments:
       - [0x800, rodata, 800]
       - [0x2C8C, asm, 2C8C] # estimated
       - [0x75B14, data, 75B14] # estimated
-      - { start: 0x87800, type: bss, vram: 0x97000 }
+      - { start: 0x877BC, type: bss, vram: 0x96FBC }   # .sbss starts at 0x96FBC; 0x877BC-0x877FF is the file's 2 KB padding (objcopy --pad-to)
   - [0x87800]

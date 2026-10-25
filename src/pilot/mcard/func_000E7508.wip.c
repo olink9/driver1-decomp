@@ -1,3 +1,7 @@
+/* (run4-ov) Confirmed the priority theory: one extra (loop-weighted) msg ref via `__asm__ volatile("" : : "r"(msg))`
+   (FAKEMATCH, 9 refs -> .088) gives msg s6 / done s7 and the prologue matches (96.76, 401 instrs - the asm costs one
+   insn somewhere); next diff is h (7/252) vs HIGH (7/250): target h = `addu s8, s0` copy of the pre-loop D_000EE930 base
+   that lives in s0 across the calls, so that base pseudo must also win a reg. Not kept. */
 /* WIP 96.93: control flow, calls, jump table (mode 4 and 6 both checksum the save via func_000EC4DC) and statement
  * order all match; the ONLY diff left is one register choice. The target keeps the "CHECKING" string (D_000E66AC,
  * `msg`) in s6 for the whole function and spills loop.c's hoisted %hi(D_000EFC00) (rematerialised as `lui t0` at

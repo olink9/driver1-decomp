@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Compile one candidate C file and score one function against the original.
 
-    tools/fnscore.py SYMBOL FILE.c [--target main|frontend|mcard|cred|iview] [--cc 2.7.2] [--opt -O2] [-G 8] [--aspsx 2.79] [--asm]
+    tools/fnscore.py SYMBOL FILE.c [--target main|frontend|mcard|cred|iview|nfmv] [--cc 2.7.2] [--opt -O2] [-G 8] [--aspsx 2.79] [--asm]
 
 Prints `MATCH <percent>`; 100.0 only when objdiff marks no instruction as
 different (never rounded). The target is the function's split asm
@@ -13,8 +13,8 @@ original's D_/jtbl_ label counts as equal when the bytes at the original
 address match (jump tables: same entry count). --asm prints both listings.
 --target picks the binary (tools/targets.py): its asm_fn/nonmatchings/<target>/ dir,
 original file, address -> file offset mapping and -G / MASPSX_EXTERN_G defaults (main
--G8 / 4, the overlays -G0 / 0). Without it, the target whose asm dir has SYMBOL.s
-(main first).
+-G8 / 4, the overlays -G0 / 0, NFMV.EXE -G8 / 4). Without it, the directory of FILE.c when
+it is src/pilot/<target>/, else the target whose asm dir has SYMBOL.s (main first).
 Run inside distrobox `build`.
 """
 import argparse, json, os, re, struct, subprocess, sys, tempfile
@@ -72,6 +72,7 @@ def compile_c(path, out, a):
             r = subprocess.run(cmd, cwd=ROOT, capture_output=True, text=True)
             if r.returncode:
                 return (r.stdout + r.stderr)[-3000:]
+        place_include_asm(s)
         mx = [sys.executable, os.path.join(ROOT, "tools/maspsx/maspsx.py"), f"--aspsx-version={a.aspsx}",
               "--expand-div", f"-G{a.G}"] + (["--dont-force-G0"] if False else [])
         # empirical (2026-10-14): externs of <= 4 bytes are $gp-relative, 8-byte ones are not
@@ -79,6 +80,7 @@ def compile_c(path, out, a):
         # all 778 matches unchanged, and func_0002A5CC / func_00051ADC need it
         env = dict(os.environ, MASPSX_EXTERN_G=os.environ.get("MASPSX_EXTERN_G", extern_g(a)),
                    MASPSX_GP_ALLOW_OFFSET=os.environ.get("MASPSX_GP_ALLOW_OFFSET", "0"))
+        env.update(file_maspsx_env(path))
         r = subprocess.run(mx, stdin=open(s), cwd=ROOT, capture_output=True, text=True, env=env)
         if r.returncode:
             return "maspsx: " + r.stderr[-2000:]
@@ -89,6 +91,60 @@ def compile_c(path, out, a):
         if a.keep_s:
             open(out[:-2] + ".cc1.s", "w").write(open(s).read())
     return None
+
+
+APP_BLOCK = re.compile(r"^ #APP\n(?:(?! #NO_APP\n).*\n)*? #NO_APP\n", re.M)
+
+
+def place_include_asm(s):
+    """Put INCLUDE_ASM'd wips back where the C file has them. With -G8 (-mgpopt) cc1 writes
+    function bodies to a side file and copies it to the end, while a top-level asm() goes
+    out at once - so a wip in the middle of a TU would land before the TU's first function.
+    The `.globl` lines cc1 prints at each definition keep source order: an #APP block that
+    includes asm_fn/ and sits before the first `.ent` moves to just before the `.ent` of the
+    next global function after it (or to the end). Nothing else is touched (-G0 overlays
+    keep their order already)."""
+    text = open(s).read()
+    first = text.find("\t.ent\t")
+    if first < 0:
+        return
+    moves, head, pos = [], text[:first], 0
+    for m in APP_BLOCK.finditer(head):
+        if '.include "asm_fn/' not in m.group(0):
+            continue
+        g = re.search(r"^\t\.globl\t(\w+)\n", head[m.end():], re.M)
+        moves.append((m.start(), m.end(), g.group(1) if g else None))
+    if not moves:
+        return
+    body = text[first:]
+    for a, b, fn in moves:
+        blk = text[a:b]
+        k = body.find(f"\t.ent\t{fn}\n") if fn else -1
+        while fn and k >= 0 and body[k:].split("\n", 1)[1].split(":", 1)[0] != fn:
+            k = body.find(f"\t.ent\t{fn}\n", k + 1)
+        body = body + blk if k < 0 else body[:k] + blk + body[k:]
+    for a, b, _ in reversed(moves):
+        head = head[:a] + head[b:]
+    open(s, "w").write(head + body)
+
+
+MASPSX_LINE = re.compile(r"^\s*/\*\s*maspsx:\s*(.*?)\s*\*/\s*$")
+
+
+def file_maspsx_env(path):
+    """Per-file maspsx settings from `/* maspsx: key=value ... */` lines of the C file
+    (translation units, TU-PLAN.md section 3): abs=SYM,SYM (MASPSX_ABS: never $gp; several lines add up)
+    and gp_allow_offset=0|1 (MASPSX_GP_ALLOW_OFFSET: sym+offset of a .comm symbol
+    may be $gp-relative - the real aspsx 2.79 behaviour for data the file defines)."""
+    env = {}
+    for line in open(path, errors="replace"):
+        m = MASPSX_LINE.match(line)
+        if m:
+            for kv in m.group(1).split():
+                k, _, v = kv.partition("=")
+                k = "MASPSX_" + k.upper()
+                env[k] = env[k] + "," + v if k == "MASPSX_ABS" and env.get(k) else v   # abs= lines add up
+    return env
 
 
 def extern_g(a):
@@ -230,6 +286,10 @@ def main():
     ap.add_argument("--diff", action="store_true", help="print only the rows that differ")
     ap.add_argument("--quiet", action="store_true", help="print only the MATCH line")
     a = ap.parse_args()
+    if a.target is None:                     # a C file under src/pilot/<target>/ names its target
+        d = os.path.basename(os.path.dirname(os.path.abspath(a.file)))
+        if d in targets.NAMES and d != "main" and os.path.exists(os.path.join(targets.path(targets.get(d), "fn"), a.symbol + ".s")):
+            a.target = d
     a.target = a.target or targets.of_symbol(a.symbol)
     set_target(a.target)
     if a.G is None:
