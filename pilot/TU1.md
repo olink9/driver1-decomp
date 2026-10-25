@@ -99,3 +99,9 @@ Step 4 (move definitions into the owning file) - the recipe that worked:
 - A 4-byte record type on a global the original reaches absolutely makes maspsx use $gp: list it in `/* maspsx: abs=... */`.
 - K&R definition settles "a later call passes fewer args" at no byte cost.
 - Boundaries: roadbits.c starts at 0x20DB4 (func_00020AE4, 90.22 wip, belongs on top of it once matched). convert.c + sky.c look like ONE D1 file (D2 split it) - kept as two TUs for now.
+## Lessons (batch I: players handlers misc_636 flyby scores ladder pathfind felony quad + extensions - byte-identical)
+- An edge function that initialises/reads a neighbour's .sbss through $gp belongs to that neighbour.
+- Who owns a handler in a pointer table: grep asm/data for `.word func_X` and see whose table it sits in.
+- A wip inside a range ends the TU there (linkcheck --tu allows no holes) - say so in the header. pathfind.c stops before func_00062DB0, felony.c before func_00064360; both can be extended once those match.
+- D2 functions in file + line order: ~/dev/driver1-work/tu-plan/scripts/d2funcs.json (identified PATHFIND via popNode).
+- New files found: pathfind.c, flyby.c (FB fly-by camera paths, took fmvplay.c's tail), scores.c, quad.c (163-164). felony + cop control are one D1 file.
