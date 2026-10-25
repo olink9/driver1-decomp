@@ -725,6 +725,13 @@ def split_rodata(ms, cobj, block, addrs):
             raise LinkErr(f"cannot place C .rodata: unit {i} ({usec[u][0]} bytes) has inconsistent bases " +
                           ",".join(f"0x{b:X}" for b in sorted(ub[u])))
     ubase = {u: min(b) for u, b in ub.items() if b}
+    # units no code points at (strings only the TU's own .data points at) sit back to back
+    # with the following placed unit, as cc1 emitted them
+    for i in range(len(units) - 2, -1, -1):
+        u, nxt = units[i], units[i + 1]
+        if u not in ubase and nxt in ubase and usec[u][0]:
+            al = max(usec[nxt][1], 1)
+            ubase[u] = ubase[nxt] - (usec[u][0] + al - 1) // al * al
     # 2) group units that sit back to back (with C's alignment) in the original
     groups, k, prev_end = [], -1, None
     for i, u in enumerate(units):
