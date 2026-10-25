@@ -6,35 +6,18 @@
 /* Conflicts from mktu (4) resolved by hand, one spelling per type and extern:
  *  - MATRIX: the PsyQ layout (explicit short pad before t[3]); same offsets as the padless pilot spelling.
  *  - globemesh: SVECTOR[] (the pilot SVEC was the same shape).
- *  - car_data: CAR_DATA[]; func_000669B8's CAR view (x/y/z at 0xC8) is car_data[0].px/py/pz.
+ *  - car_data: CAR_DATA[]; func_000669B8's CAR view (x/y/z at 0xC8) is car_data[0].pos.
+ *  - Step 3: CAR_DATA, MATRIX/VECTOR/SVECTOR, DB and TEXTURE_DETAILS come from include/structs.h. Renamed: x/z
+ *    (0x40/0x48) = linearVelocity[0]/[2], px/py/pz = pos, dir = direction, smoke = speed, dmg = damage, flag12f =
+ *    hit, f17c = totalDamage; D_000B91B0's 16-bit u0..u3 reads are *(unsigned short *)&.u0 (UV pairs).
  *  - D_0008BC34: int[]; func_000669B8 reads it through an (OBJ *) cast.
  */
 
 #include "gte.h"
 
+#include "structs.h"
+
 /* ---- types ---- */
-typedef struct { int vx, vy, vz, pad; } VECTOR;
-typedef struct {
-    char pad0[0x40];
-    int x;
-    int pad44;
-    int z;
-    char pad4c[0xC8 - 0x4C];
-    int px, py, pz;
-    char padd4[0xF8 - 0xD4];
-    int dir;
-    char padfc[0x108 - 0xFC];
-    int smoke;
-    char pad10c[0x114 - 0x10C];
-    int dmg[6];
-    char pad12c[3];
-    unsigned char flag12f;
-    char pad130[0x17C - 0x130];
-    unsigned short f17c;
-    char pad17e[396 - 0x17E];
-} CAR_DATA;
-typedef struct { short m[3][3]; short pad; int t[3]; } MATRIX;
-typedef struct { char *primptr; unsigned int *ot; } DB;
 typedef struct {
     char pad0[0x10];
     int f10;
@@ -49,11 +32,6 @@ typedef struct {
     int f34;
     int f38;
 } OBJ;
-typedef struct { short vx, vy, vz, pad; } SVECTOR;
-typedef struct {
-    unsigned short u0, u1, u2, u3;
-    unsigned short tpageid, clutid;
-} TEXTURE_DETAILS;
 typedef struct {
     unsigned int tag;
     unsigned char r0, g0, b0, code;
@@ -132,8 +110,8 @@ void func_000661A8(void) {
     D_0009776C = 0;
     D_0008BC34[4] = (D_0008BC34[9] - D_0008BC34[11]) / 2;
     D_0008BC34[6] = (D_0008BC34[10] - D_0008BC34[12]) / 2;
-    D_00097770 = car_data[0].px;
-    D_00097774 = car_data[0].pz;
+    D_00097770 = car_data[0].pos.vx;
+    D_00097774 = car_data[0].pos.vz;
 }
 
 /* ---------------- func_00066224 (src/pilot/func_00066224.c) ---------------- */
@@ -162,13 +140,13 @@ void func_00066224(void)
         D_0009776C = 0;
 
     if (D_00097768 < 100) {
-        ang = -car_data[0].dir & 0xfff;
+        ang = -car_data[0].direction & 0xfff;
         cs = D_0008EAAA[ang * 2];
         sn = D_0008EAAA[ang * 2 - 1];
-        dx = (D_00097780 - car_data[0].x) >> 4;
-        dz = (D_0009777C - car_data[0].z) >> 4;
-        D_00097780 = car_data[0].x;
-        D_0009777C = car_data[0].z;
+        dx = (D_00097780 - car_data[0].linearVelocity[0]) >> 4;
+        dz = (D_0009777C - car_data[0].linearVelocity[2]) >> 4;
+        D_00097780 = car_data[0].linearVelocity[0];
+        D_0009777C = car_data[0].linearVelocity[2];
 
         D_0008BC34[0] += (dx * cs + dz * sn + 0x800) >> 12;
         aa = abs(D_0008BC34[0]);
@@ -245,21 +223,21 @@ void func_00066224(void)
     } else {
         if (D_00097778 == 0) {
             func_0004D8B0(2, 0, 0, D_000C6CD8.vx, D_000C6CD8.vy, D_000C6CD8.vz);
-            car_data[0].dmg[0] = 0xfff;
-            car_data[0].dmg[1] = 0xfff;
-            car_data[0].dmg[2] = 0xfff;
-            car_data[0].dmg[3] = 0xfff;
-            car_data[0].dmg[4] = 0xfff;
-            car_data[0].dmg[5] = 0xfff;
-            car_data[0].flag12f = 1;
-            car_data[0].f17c = *(unsigned short *)&D_00096E7C + 2;
+            car_data[0].damage[0] = 0xfff;
+            car_data[0].damage[1] = 0xfff;
+            car_data[0].damage[2] = 0xfff;
+            car_data[0].damage[3] = 0xfff;
+            car_data[0].damage[4] = 0xfff;
+            car_data[0].damage[5] = 0xfff;
+            car_data[0].hit = 1;
+            car_data[0].totalDamage = *(unsigned short *)&D_00096E7C + 2;
         }
-        pos.vx = car_data[0].px + func_000776E4() % 400 - 200;
-        pos.vy = func_000776E4() % 400 - car_data[0].py - 200;
-        pos.vz = car_data[0].pz + func_000776E4() % 400 - 200;
+        pos.vx = car_data[0].pos.vx + func_000776E4() % 400 - 200;
+        pos.vy = func_000776E4() % 400 - car_data[0].pos.vy - 200;
+        pos.vz = car_data[0].pos.vz + func_000776E4() % 400 - 200;
 
         if (!(*(int *)&CameraCnt & 1))
-            Setup_Smoke(&pos, 100, 500, 1, car_data[0].smoke, D_0008BC70, 0);
+            Setup_Smoke(&pos, 100, 500, 1, car_data[0].speed, D_0008BC70, 0);
         else
             Setup_Smoke(&D_000C6CD8, 50, 200, 4, 10, D_0008BC70, 0);
 
@@ -297,9 +275,9 @@ void func_000669B8(void)
     pos.vz = ((OBJ *)D_0008BC34)->f34 + ((OBJ *)D_0008BC34)->f18;
     SetRotMatrix(&D_000AF6A0);
     func_0004EAC0(&pos);
-    pos.vx += car_data[0].px;
-    pos.vy -= car_data[0].py;
-    pos.vz += car_data[0].pz;
+    pos.vx += car_data[0].pos.vx;
+    pos.vy -= car_data[0].pos.vy;
+    pos.vz += car_data[0].pos.vz;
     D_000C6CD8 = pos;
     D_000C6CD8.vy -= ((OBJ *)D_0008BC34)->f2C / 2;
 
@@ -393,10 +371,10 @@ void DrawExplosion(int time)
     int sf, sf1, sf2;
     unsigned int u0, u1, u2, u3;
 
-    u0 = D_000B91B0.u0;
-    u1 = D_000B91B0.u1;
-    u2 = D_000B91B0.u2 - 0x800;
-    u3 = D_000B91B0.u3 - 0x800;
+    u0 = *(unsigned short *)&D_000B91B0.u0;
+    u1 = *(unsigned short *)&D_000B91B0.u1;
+    u2 = *(unsigned short *)&D_000B91B0.u2 - 0x800;
+    u3 = *(unsigned short *)&D_000B91B0.u3 - 0x800;
 
     if (D_00096E74 == 0) {
         func_00066CCC();
