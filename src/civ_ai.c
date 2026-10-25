@@ -17,15 +17,111 @@
  *    counterpart of D2 CIV_AI.C. D2 COP_AI-like code is not identified here (cop logic seems to live
  *    in the felony area; D_0008539C also points at func_00065424 there).
  *
- * Conflicts (mktu listed 47) are NOT unified yet. Scaffolding for Step 3 (shared headers): a declaration
- * identical in every pilot is shared at the top; every other typedef, extern and helper stays inside its
- * function's section under a per-section name (`#define NAME NAME__<func>` ... `#undef NAME`), and an
- * extern there is a view of the real symbol (`extern T sym__<func> __asm__("sym");`). Function bodies are
- * unchanged. The record types to unify in Step 3: D_00098950 (civ slot, 0x50, 25 shapes), D_0009B230 and
- * car_data (CAR_DATA, 0x18C), D_00099120, D_000C4690 (0x1960), D_0009E744 (junctions), D_0009B2F8,
- * D_00099180/D_00099B08 (cell objects), plus long long vs int spellings of CameraCnt/D_00096898 and
- * prototypes of the functions defined here. #include "common.h" (func_000148C4) is dropped: unused.
+ * Conflicts (mktu listed 47), resolved by build/tu-civ_ai/nsgen2.py + cfg2.py (rerunnable from the pilots):
+ *  - Records: CIV_SLOT (D_00098900/D_00098950, 0x50; D_00098950 is D_00098900[1]), CAR_DATA (car_data and
+ *    D_0009B230 = car_data[1], 0x18C), REC_C4690 (D_000C4690/D_000C4E38, 0x7A8), ROAD_INFO (D_0009E744,
+ *    0x14) and CELL_OBJ (D_00099180, 0xC) are built from the fields the pilots touch (fXX = offset). A
+ *    function whose pilot shape fits was rewritten onto them (type name, field names; char signedness was
+ *    allowed to differ - the build confirms the bytes); scalar `car_data.x` users became `car_data[0].x`.
+ *  - Functions: one unprototyped `RET f();` where every caller agreed on the return type (void callers
+ *    of an int function allowed) and no prototype had a char/short parameter.
+ *  - CameraCnt is volatile everywhere, D_00096FC4 unsigned char; D_00096898, D_00099120, rcossin_tbl,
+ *    func_00021558, func_00021820 use the majority spelling at the top.
+ *  - Remaining scaffolding for Step 3 (shared headers): what still differs stays in its function's
+ *    section under a per-section name (`#define NAME NAME__<func>` ... `#undef NAME`), an extern there
+ *    being a view of the real symbol (`extern T sym__<func> __asm__("sym");`). About 50 views remain:
+ *    shapes that do not fit the records above (byte-array views of ROAD_INFO, CAR_DATA through int[] or
+ *    with an int t[3] at 0xC8, two civ-slot users whose field names clash with another local type),
+ *    functions whose callers expected uchar/ushort/short results (func_0001262C, func_00017A50,
+ *    func_000192D0, func_00021558, func_00021820...) or pass args unprototyped to a char parameter
+ *    (func_00014FC4, func_00017780, func_000154A8), and D_00099B08/D_0009B2F8/D_000988C8/camera_position.
+ *  - The static inline ClearMem copies (5 functions) and other inline helpers keep per-section names.
+ *  - #include "common.h" (func_000148C4) is dropped: nothing from it was used.
  */
+/* ---- canonical records (fields this file touches) ---- */
+typedef struct {
+    unsigned char id; /* 0x0 */
+    unsigned char f1; /* 0x1 */
+    unsigned char f2; /* 0x2 */
+    unsigned char f3; /* 0x3 */
+    char pad4[0x5 - 0x4];
+    unsigned char f5; /* 0x5 */
+    char pad6[0x7 - 0x6];
+    unsigned char f7; /* 0x7 */
+    unsigned char f8; /* 0x8 */
+    unsigned char f9; /* 0x9 */
+    unsigned char fA; /* 0xA */
+    unsigned char fB; /* 0xB */
+    char padC[0x10 - 0xC];
+    unsigned char f10; /* 0x10 */
+    unsigned char f11; /* 0x11 */
+    short f12; /* 0x12 */
+    unsigned char f14; /* 0x14 */
+    unsigned char f15; /* 0x15 */
+    char pad16[0x17 - 0x16];
+    unsigned char f17; /* 0x17 */
+    int f18; /* 0x18 */
+    int f1C; /* 0x1C */
+    int f20; /* 0x20 */
+    int f24; /* 0x24 */
+    int f28; /* 0x28 */
+    int f2C; /* 0x2C */
+    int f30; /* 0x30 */
+    int f34; /* 0x34 */
+    int f38; /* 0x38 */
+    int f3C; /* 0x3C */
+    int f40; /* 0x40 */
+    int f44; /* 0x44 */
+    int x; /* 0x48 */
+    int z; /* 0x4C */
+} CIV_SLOT;
+typedef struct {
+    unsigned char id; /* 0x0 */
+    char pad1[0x2 - 0x1];
+    unsigned char f2; /* 0x2 */
+    char pad3[0x18 - 0x3];
+    int f18; /* 0x18 */
+    char pad1C[0x20 - 0x1C];
+    int f20; /* 0x20 */
+    char pad24[0xC8 - 0x24];
+    int x; /* 0xC8 */
+    int y; /* 0xCC */
+    int z; /* 0xD0 */
+    char padD4[0xEA - 0xD4];
+    short fEA; /* 0xEA */
+    char padEC[0xF4 - 0xEC];
+    int fF4; /* 0xF4 */
+    int fF8; /* 0xF8 */
+    int fFC; /* 0xFC */
+    char pad100[0x104 - 0x100];
+    int f104; /* 0x104 */
+    int f108; /* 0x108 */
+    char pad10C[0x12C - 0x10C];
+    short f12C; /* 0x12C */
+    char pad12E[0x17C - 0x12E];
+    short f17C; /* 0x17C */
+    char pad17E[0x18C - 0x17E];
+} CAR_DATA;
+typedef struct {
+    char pad0[0x7A8 - 0x0];
+} REC_C4690;
+typedef struct {
+    char pad0[0x4 - 0x0];
+    short f4; /* 0x4 */
+    char pad6[0xA - 0x6];
+    short fA; /* 0xA */
+    short fC; /* 0xC */
+    char padE[0x12 - 0xE];
+    short f12; /* 0x12 */
+} ROAD_INFO;
+typedef struct {
+    short f0; /* 0x0 */
+    char f2; /* 0x2 */
+    char pad3[0x4 - 0x3];
+    int f4; /* 0x4 */
+    int f8; /* 0x8 */
+} CELL_OBJ;
+
 /* ---- shared declarations (identical in every pilot) ---- */
 extern short D_000978B0[];
 typedef struct { int nx, ny, nz, d; } PLANE;
@@ -369,10 +465,59 @@ typedef struct {
     short s0; short a; short b; char pad[10];
 } RD;
 extern long long D_00097058;
+extern CIV_SLOT D_00098950[];
+extern CIV_SLOT D_00098900[];
+extern CAR_DATA D_0009B230[];
+extern CAR_DATA car_data[];
+extern REC_C4690 D_000C4690[];
+extern REC_C4690 D_000C4E38[];
+extern ROAD_INFO D_0009E744[];
+extern CELL_OBJ D_00099180[];
+extern volatile long long CameraCnt;
+extern unsigned char D_00096FC4;
+extern long long D_00096898;   /* majority spelling; other pilots keep a view */
+extern char D_00099120[];   /* majority spelling; other pilots keep a view */
+extern int func_00021558();   /* majority spelling; other pilots keep a view */
+extern void func_00021820();   /* majority spelling; other pilots keep a view */
+extern short rcossin_tbl[];   /* majority spelling; other pilots keep a view */
+
+/* ---- functions (unprototyped: callers were compiled against several spellings) ---- */
+void func_0001250C();
+int func_00012E98();
+int func_000130D4();
+int func_000138A0();
+int func_00013A90();
+int func_00013D88();
+int func_000142CC();
+void func_000143CC();
+unsigned char func_00015338();
+int func_00016760();
+void func_00016B24();
+int func_00016F0C();
+int func_00017A64();
+void func_00017C50();
+int func_00018100();
+void func_00018618();
+void func_00018900();
+void func_00018C74();
+int func_00018F44();
+void func_0001943C();
+int func_00019AF4();
+int func_00019DAC();
+int func_00019E88();
+void func_0001A008();
+void func_0001A024();
+int func_0001A1BC();
+int func_0001AC18();
+extern void func_0001B4A4();
+extern void func_0001B720();
+extern void func_0001D608();
+extern void func_00020A64();
+extern void func_0003EB0C();
+extern int func_0004FFE8();
+extern void memset();
 
 /* ---------------- func_0001250C (src/pilot/func_0001250C.c) ---------------- */
-#define rcossin_tbl rcossin_tbl__func_0001250C
-extern short rcossin_tbl[] __asm__("rcossin_tbl");
 void func_0001250C(void)
 {
 	short *out = D_000978B0;
@@ -396,42 +541,10 @@ int s = tab[((i * 4) & 0xFFF) * 2]; int c = tab[((i * 4 + 0x400) & 0xFFF) * 2];
 		out += 2;
 	} while (i < 256);
 }
-#undef rcossin_tbl
 
 /* ---------------- func_0001262C (src/pilot/func_0001262C.c) ---------------- */
-#define CAR CAR__func_0001262C
-#define CIV CIV__func_0001262C
-#define CameraCnt CameraCnt__func_0001262C
-#define D_00096898 D_00096898__func_0001262C
-#define D_00098900 D_00098900__func_0001262C
-#define D_0009B230 D_0009B230__func_0001262C
-#define car_data car_data__func_0001262C
-#define rcossin_tbl rcossin_tbl__func_0001262C
 /* func_0001262C: does any other car (or the player) overlap the 4-plane box ahead of civ car cp; result cached in D_000988B0 (no Driver 2 counterpart) */
-typedef struct {
-    unsigned char id;       /* 0x00 */
-    unsigned char type;     /* 0x01 */
-    char pad2[0x34 - 2];
-    int f34;
-    int f38;
-    char pad3C[0x50 - 0x3C];
-} CIV;
-typedef struct {
-    char pad0[0xC8];
-    int x;                  /* 0xC8 */
-    int y;                  /* 0xCC */
-    int z;                  /* 0xD0 */
-    char padD4[0xF8 - 0xD4];
-    int dir;                /* 0xF8 */
-    char padFC[396 - 0xFC];
-} CAR;
-extern short rcossin_tbl[] __asm__("rcossin_tbl");
-extern long long D_00096898 __asm__("D_00096898");
-extern long long CameraCnt __asm__("CameraCnt");
-extern CIV D_00098900[] __asm__("D_00098900");
-extern CAR car_data __asm__("car_data");
-extern CAR D_0009B230[] __asm__("D_0009B230");
-int func_0001262C(CIV *cp)
+int func_0001262C(CIV_SLOT *cp)
 {
     PLANE pl[4];
     int id;
@@ -458,7 +571,7 @@ int func_0001262C(CIV *cp)
     if ((*(int *)&CameraCnt ^ slot) & 1)
         return D_000988B0[slot];
 
-    if (cp->type == 3 && cp->f34 != 0) {
+    if (cp->f1 == 3 && cp->f34 != 0) {
         range = 0xB4;
         dist = cp->f38 + 400;
     } else {
@@ -476,7 +589,7 @@ int func_0001262C(CIV *cp)
             if (gm == 3 || gm == 6 || (unsigned char)(gm - 1) < 2)
                 continue;
         }
-        if (cp->type == 0 && i != 0)
+        if (cp->f1 == 0 && i != 0)
             continue;
         other = cp->id;
         if (other == id && i != 0)
@@ -485,8 +598,8 @@ int func_0001262C(CIV *cp)
             x = D_0009B230[other].x;
             z = D_0009B230[other].z;
         } else {
-            x = car_data.x;
-            z = car_data.z;
+            x = car_data[0].x;
+            z = car_data[0].z;
         }
         if (x - px >= 0) {
             if (x - px < dist) ; else continue;
@@ -498,7 +611,7 @@ int func_0001262C(CIV *cp)
             continue;
 
         if (!done) {
-            ang = -D_0009B230[id].dir & 0xFFF;
+            ang = -D_0009B230[id].fF8 & 0xFFF;
             c = rcossin_tbl[ang * 2 + 1];
             s = rcossin_tbl[ang * 2];
             ox = (-range * c) >> 12;
@@ -524,7 +637,7 @@ int func_0001262C(CIV *cp)
             done = 1;
         }
 
-        ang = (i != 0 ? -D_0009B230[other].dir : -car_data.dir) & 0xFFF;
+        ang = (i != 0 ? -D_0009B230[other].fF8 : -car_data[0].fF8) & 0xFFF;
         box = &D_000978B0[((ang & 0x3FF) / 4) * 8];
 
         switch (ang & 0xC00) {
@@ -592,14 +705,6 @@ int func_0001262C(CIV *cp)
     D_000988B0[slot] = 0;
     return 0;
 }
-#undef CAR
-#undef CIV
-#undef CameraCnt
-#undef D_00096898
-#undef D_00098900
-#undef D_0009B230
-#undef car_data
-#undef rcossin_tbl
 
 /* ---------------- func_00012E98 (src/pilot/func_00012E98.c) ---------------- */
 #define D_00098950 D_00098950__func_00012E98
@@ -679,34 +784,11 @@ int func_00012E98(Actor *a, int mode)
 #undef check3
 
 /* ---------------- func_000130D4 (src/pilot/func_000130D4.c) ---------------- */
-#define D_00098950 D_00098950__func_000130D4
-#define ENT ENT__func_000130D4
 #define collect collect__func_000130D4
-#define func_00012E98 func_00012E98__func_000130D4
 /* func_000130D4 - no Driver 2 counterpart (car AI: junction clear check) */
-typedef struct {
-    unsigned char id;
-    char p1[2];
-    unsigned char f3;
-    char p4[4];
-    unsigned char f8;
-    char p9[0x0F];
-    int f18;
-    char p1c[4];
-    int f20;
-    int f24;
-    int f28;
-    int f2C;
-    int f30;
-    int f34;
-    int f38;
-    char p3c[0x50 - 0x3C];
-} ENT;
-extern ENT D_00098950[] __asm__("D_00098950");
-extern int func_00012E98() __asm__("func_00012E98");
-static inline int collect(ENT *c, FOUND *f, int road, int lane, int jn)
+static inline int collect(CIV_SLOT *c, FOUND *f, int road, int lane, int jn)
 {
-    ENT *e;
+    CIV_SLOT *e;
     int n = 0;
     int id = c->id;
 
@@ -729,7 +811,7 @@ static inline int collect(ENT *c, FOUND *f, int road, int lane, int jn)
     }
     return n;
 }
-int func_000130D4(ENT *c)
+int func_000130D4(CIV_SLOT *c)
 {
     FOUND l1[22];
     FOUND l2[22];
@@ -851,45 +933,20 @@ int func_000130D4(ENT *c)
 ret1:
     return 1;
 }
-#undef D_00098950
-#undef ENT
 #undef collect
-#undef func_00012E98
 
 /* ---------------- func_000138A0 (src/pilot/func_000138A0.c) ---------------- */
 #define CAR CAR__func_000138A0
-#define D_00098950 D_00098950__func_000138A0
-#define ENT ENT__func_000138A0
-#define func_00012E98 func_00012E98__func_000138A0
-typedef struct {
-    unsigned char id;
-    char p1[2];
-    char f3;
-    char p4[4];
-    char f8;
-    char p9[0x0F];
-    int f18;
-    char p1c[4];
-    int f20;
-    int f24;
-    int f28;
-    char p2c[4];
-    int f30;
-    int f34;
-    char p38[0x50 - 0x38];
-} ENT;
 typedef struct {
     unsigned char id;
     char p1[0x1F];
     int f20;
     int f24;
 } CAR;
-extern ENT D_00098950[] __asm__("D_00098950");
-extern int func_00012E98() __asm__("func_00012E98");
 int func_000138A0(CAR *c)
 {
     FOUND list[22];
-    ENT *e;
+    CIV_SLOT *e;
     FOUND *f;
     FOUND *end;
     FOUND *g;
@@ -951,58 +1008,39 @@ int func_000138A0(CAR *c)
     return func_00012E98(c, 1) == 0;
 }
 #undef CAR
-#undef D_00098950
-#undef ENT
-#undef func_00012E98
 
 /* ---------------- func_00013A90 (src/pilot/func_00013A90.c) ---------------- */
-#define D_00098950 D_00098950__func_00013A90
-#define ENT ENT__func_00013A90
-typedef struct {
-    char pad0;
-    char used;
-    char pad2[0x26];
-    int id;
-    char pad[0x50 - 0x2C];
-} ENT;
-extern ENT D_00098950[] __asm__("D_00098950");
 int func_00013A90(int a, int b, int c, int d)
 {
     int i;
-    ENT *e;
+    CIV_SLOT *e;
     D_00099AE0[3] = 0;
     D_00099AE0[2] = 0;
     D_00099AE0[1] = 0;
     D_00099AE0[0] = 0;
     e = D_00098950;
     for (i = 0; i < 22; i++, e++) {
-        if (e->used) {
-            if (e->id == a)
+        if (e->f1) {
+            if (e->f28 == a)
                 D_00099AE0[0]++;
-            else if (e->id == b)
+            else if (e->f28 == b)
                 D_00099AE0[1]++;
-            else if (e->id == c)
+            else if (e->f28 == c)
                 D_00099AE0[2]++;
-            else if (e->id == d)
+            else if (e->f28 == d)
                 D_00099AE0[3]++;
         }
     }
     return D_00099AE0[0] + D_00099AE0[1] + D_00099AE0[2] + D_00099AE0[3];
 }
-#undef D_00098950
-#undef ENT
 
 /* ---------------- func_00013B80 (src/pilot/func_00013B80.c) ---------------- */
-#define D_00096898 D_00096898__func_00013B80
 #define D_000988C8 D_000988C8__func_00013B80
-#define D_00098900 D_00098900__func_00013B80
-extern E80 D_00098900[] __asm__("D_00098900");
-extern long long D_00096898 __asm__("D_00096898");
 extern char D_000988C8[] __asm__("D_000988C8");
 void func_00013B80(int a, int b, int c)
 {
-    E80 *p = &D_00098900[a];
-    E80 *q = &D_00098900[b];
+    CIV_SLOT *p = &D_00098900[a];
+    CIV_SLOT *q = &D_00098900[b];
 
     if ((*(unsigned char *)&D_00096898) == 3 && ((a == 0 && b == 23) || (b == 0 && a == 23))) {
         D_000C71E7[0] = 15;
@@ -1031,30 +1069,14 @@ void func_00013B80(int a, int b, int c)
         if (q->f1 == 1) { q->f2 = 1; q->f8 = 0; }
     }
 }
-#undef D_00096898
 #undef D_000988C8
-#undef D_00098900
 
 /* ---------------- func_00013D88 (src/pilot/func_00013D88.c) ---------------- */
-#define CameraCnt CameraCnt__func_00013D88
 #define D_0009B2F8 D_0009B2F8__func_00013D88
 #define func_0001262C func_0001262C__func_00013D88
-#define func_00012E98 func_00012E98__func_00013D88
-#define func_000130D4 func_000130D4__func_00013D88
-#define func_000138A0 func_000138A0__func_00013D88
-#define func_000142CC func_000142CC__func_00013D88
-#define func_00016F0C func_00016F0C__func_00013D88
-#define func_00021820 func_00021820__func_00013D88
 #define reroute reroute__func_00013D88
 /* func_00013D88: car AI per-frame state update (no Driver 2 counterpart) */
 extern POS_b095 D_0009B2F8[20] __asm__("D_0009B2F8");
-extern long long CameraCnt __asm__("CameraCnt");
-extern int func_000142CC() __asm__("func_000142CC");
-extern void func_00021820() __asm__("func_00021820");
-extern void func_00016F0C() __asm__("func_00016F0C");
-extern int func_000130D4() __asm__("func_000130D4");
-extern int func_000138A0() __asm__("func_000138A0");
-extern int func_00012E98() __asm__("func_00012E98");
 extern unsigned char func_0001262C() __asm__("func_0001262C");
 static inline void reroute(OBJ_b095 *p)
 {
@@ -1188,22 +1210,13 @@ sw:
     }
     return 0;
 }
-#undef CameraCnt
 #undef D_0009B2F8
 #undef func_0001262C
-#undef func_00012E98
-#undef func_000130D4
-#undef func_000138A0
-#undef func_000142CC
-#undef func_00016F0C
-#undef func_00021820
 #undef reroute
 
 /* ---------------- func_000142CC (src/pilot/func_000142CC.c) ---------------- */
 #define O O__func_000142CC
-#define func_00018F44 func_00018F44__func_000142CC
 typedef struct { char p0[9]; unsigned char b9; char p1[0xD]; unsigned char f17; int i18; char p2[0x20]; int i3C; } O;
-extern int func_00018F44() __asm__("func_00018F44");
 int func_000142CC(O *o)
 {
     if (o->f17 & 8) {
@@ -1224,7 +1237,6 @@ tab:
     return D_000852FC[o->b9 & 3];
 }
 #undef O
-#undef func_00018F44
 
 /* ---------------- func_000143CC (src/pilot/func_000143CC.c) ---------------- */
 #define D_00099180 D_00099180__func_000143CC
@@ -1317,12 +1329,10 @@ void func_000143CC(void)
 /* ---------------- func_000147C4 (src/pilot/func_000147C4.c) ---------------- */
 #define A A__func_000147C4
 #define D_00099B08 D_00099B08__func_000147C4
-#define memset memset__func_000147C4
 #define rcossin_tbl rcossin_tbl__func_000147C4
 typedef struct { short x, y; } A;
 extern E rcossin_tbl[] __asm__("rcossin_tbl");
 extern A D_00099B08[] __asm__("D_00099B08");
-extern void memset() __asm__("memset");
 void func_000147C4(void)
 {
     A last, v;
@@ -1347,74 +1357,55 @@ void func_000147C4(void)
 }
 #undef A
 #undef D_00099B08
-#undef memset
 #undef rcossin_tbl
 
 /* ---------------- func_000148C4 (src/pilot/func_000148C4.c) ---------------- */
 #define camera_position camera_position__func_000148C4
-#define car_data car_data__func_000148C4
-#define func_0001B4A4 func_0001B4A4__func_000148C4
-#define func_0001B720 func_0001B720__func_000148C4
-#define func_00020A64 func_00020A64__func_000148C4
-#define memset memset__func_000148C4
-/* dropped: #include "common.h" */
-extern A_t car_data __asm__("car_data");
 #define G04 (*(int *)&D_00096804)
 #define G34 (*(int *)&D_00096834)
 extern V3s camera_position __asm__("camera_position");
-extern void memset() __asm__("memset");
-extern void func_00020A64() __asm__("func_00020A64");
-extern void func_0001B4A4() __asm__("func_0001B4A4");
-extern void func_0001B720() __asm__("func_0001B720");
 /* Driver 2 name: unknown */
 void func_000148C4(void)
 {
     char pad[16];
     V3s v;
-    A_t *p;
-    memset(&car_data, 0, 0x18C);
+    CAR_DATA *p;
+    memset(&car_data[0], 0, 0x18C);
     if (D_000C6F04.b2de != 0 && G04 == 0) {
         int a = D_000C6F04.a4, b = D_000C6F04.a8, c = D_000C6F04.ac;
-        car_data.b2 = 0;
-        car_data.c8 = a;
-        car_data.cc = b;
-        car_data.d0 = c;
-        func_00020A64(&car_data);
-        v.x = car_data.c8; v.y = car_data.cc; v.z = car_data.d0;
-        func_0001B4A4(&car_data, &v);
-        car_data.f8 = D_000C6F04.f12c;
-        func_0001B720(&car_data, 0);
+        car_data[0].f2 = 0;
+        car_data[0].x = a;
+        car_data[0].y = b;
+        car_data[0].z = c;
+        func_00020A64(&car_data[0]);
+        v.x = car_data[0].x; v.y = car_data[0].y; v.z = car_data[0].z;
+        func_0001B4A4(&car_data[0], &v);
+        car_data[0].fF8 = D_000C6F04.f12c;
+        func_0001B720(&car_data[0], 0);
     } else {
         v.x = D_0008531C[G34].x; v.y = D_0008531C[G34].y; v.z = D_0008531C[G34].z;
-        p = &car_data;
-        if (G34 == 2) p->f8 = 0; else p->f8 = 0x400;
-        p->c8 = D_0008531C[G34].x;
-        p->cc = D_0008531C[G34].y;
-        p->d0 = D_0008531C[G34].z;
-        p->cc = MapHeight(&p->c8) + 0xA4;
-        v.y = p->cc;
+        p = &car_data[0];
+        if (G34 == 2) p->fF8 = 0; else p->fF8 = 0x400;
+        p->x = D_0008531C[G34].x;
+        p->y = D_0008531C[G34].y;
+        p->z = D_0008531C[G34].z;
+        p->y = MapHeight(&p->x) + 0xA4;
+        v.y = p->y;
         func_0001B4A4(p, &v);
-        func_0001B720(&car_data, 0);
-        car_data.b2 = 0;
+        func_0001B720(&car_data[0], 0);
+        car_data[0].f2 = 0;
     }
-    camera_position.x = car_data.c8;
-    camera_position.y = -car_data.cc - 200;
-    camera_position.z = car_data.d0;
+    camera_position.x = car_data[0].x;
+    camera_position.y = -car_data[0].y - 200;
+    camera_position.z = car_data[0].z;
 }
 #undef G04
 #undef G34
 #undef camera_position
-#undef car_data
-#undef func_0001B4A4
-#undef func_0001B720
-#undef func_00020A64
-#undef memset
 
 /* ---------------- func_00014A8C (src/pilot/func_00014A8C.c) ---------------- */
 #define CAR CAR__func_00014A8C
-#define D_00098950 D_00098950__func_00014A8C
 #define D_0009B230 D_0009B230__func_00014A8C
-#define ENT ENT__func_00014A8C
 #define VECTOR VECTOR__func_00014A8C
 #define camera_position camera_position__func_00014A8C
 /* func_00014A8C - DrawAllTheCars-like (sort visible cars by distance, then draw)
@@ -1423,21 +1414,6 @@ void func_000148C4(void)
  * (lesson r4-02), and `c = D_0009B230;` written before `e = D_00098950;` fixes the prologue order.
  * Earlier: car loop biv c++ with call arg D_0009B230[i].t, ENT biv e++, separate draw counter m.
  */
-typedef struct {
-    unsigned char f0, f1, f2, f3, f4, f5;
-    char pad6[0x10 - 6];
-    unsigned char f10, f11, f12, f13, f14, f15, f16, f17;
-    int f18;
-    char pad1c[0x24 - 0x1c];
-    int f24;
-    int f28;
-    char pad2c[0x34 - 0x2c];
-    int f34;
-    char pad38[0x40 - 0x38];
-    int f40;
-    int f44;
-    char pad48[0x50 - 0x48];
-} ENT;
 typedef struct { int vx, vy, vz; } VECTOR;
 typedef struct {
     char pad0[0x18];
@@ -1448,7 +1424,6 @@ typedef struct {
     int t[3];
     char padD4[0x18C - 0xD4];
 } CAR;
-extern ENT D_00098950[] __asm__("D_00098950");
 extern CAR D_0009B230[] __asm__("D_0009B230");
 extern int camera_position[] __asm__("camera_position");
 #define current (*(DB **)&current)
@@ -1462,7 +1437,7 @@ void func_00014A8C(void)
     int t;
     unsigned char o;
     int idx;
-    ENT *e;
+    CIV_SLOT *e;
     int *cur;
     char *p;
     CAR *c;
@@ -1519,7 +1494,7 @@ void func_00014A8C(void)
         if (e->f10 == 1 && ((e->f5 != 0 && e->f1 == 4) || e->f1 == 9))
             func_00046000(idx);
         if (e->f17 & 1) {
-            c = &D_0009B230[e->f0];
+            c = &D_0009B230[e->id];
             a1 = e->f24;
             if (a1 & 1) {
                 if (e->f44 != 0x7FFFFFFF) {
@@ -1558,37 +1533,30 @@ void func_00014A8C(void)
 }
 #undef current
 #undef CAR
-#undef D_00098950
 #undef D_0009B230
-#undef ENT
 #undef VECTOR
 #undef camera_position
 
 /* ---------------- func_00014F28 (src/pilot/func_00014F28.c) ---------------- */
-#define D_00098950 D_00098950__func_00014F28
-extern T D_00098950[] __asm__("D_00098950");
 void func_00014F28(void) {
     int i;
-    T *p = D_00098950;
+    CIV_SLOT *p = D_00098950;
     for (i = 0; i < 22; i++, p++) {
-        if (p->b != 0) {
-            if (p->c == 1 || p->f != 0)
-                func_0004AD94(p->a + 1);
+        if (p->f1 != 0) {
+            if (p->f2 == 1 || p->f5 != 0)
+                func_0004AD94(p->id + 1);
         }
     }
 }
-#undef D_00098950
 
 /* ---------------- func_00014FC4 (src/pilot/func_00014FC4.c) ---------------- */
 #define D_0009E744 D_0009E744__func_00014FC4
 #define JUNC JUNC__func_00014FC4
-#define func_0004FFE8 func_0004FFE8__func_00014FC4
 typedef struct {
     unsigned char lanes[4];
     short pos[4][2];
 } JUNC;
 extern JUNC D_0009E744[] __asm__("D_0009E744");
-extern int func_0004FFE8() __asm__("func_0004FFE8");
 void func_00014FC4(int j, int dir, int flip, int mode, unsigned char lane, int *out)
 {
     int n;
@@ -1662,42 +1630,32 @@ void func_00014FC4(int j, int dir, int flip, int mode, unsigned char lane, int *
 }
 #undef D_0009E744
 #undef JUNC
-#undef func_0004FFE8
 
 /* ---------------- func_00015338 (src/pilot/func_00015338.c) ---------------- */
-#define Car Car__func_00015338
-#define D_0009B230 D_0009B230__func_00015338
-#define D_0009E744 D_0009E744__func_00015338
 #define P P__func_00015338
 typedef struct { unsigned char idx; char p0[0x23]; int dir; int w28; } P;
-typedef struct { char p0[0xC8]; int x; char p1[4]; int z; char p2[0xB8]; } Car;
-extern Car D_0009B230[] __asm__("D_0009B230");
-extern Rd D_0009E744[] __asm__("D_0009E744");
 unsigned char func_00015338(P *p)
 {
-    Car *c = &D_0009B230[p->idx];
+    CAR_DATA *c = &D_0009B230[p->idx];
     int w = p->w28;
-    Rd *r;
+    ROAD_INFO *r;
     int d, a3, q;
     unsigned char t0;
 
     a3 = 0;
     if (w & 0xC000) return 0;
-    { Rd *b = D_0009E744; r = &b[w]; }
+    { ROAD_INFO *b = D_0009E744; r = &b[w]; }
     d = p->dir;
     t0 = ((unsigned char *)r)[d];
     if (t0 == 1) return 0;
     switch (d) {
-    case 0: q = (c->x + 750) / 1500; a3 = q - r->s4; break;
-    case 1: q = (c->z - 750) / 1500; a3 = r->sA - q; break;
-    case 2: q = (c->x - 750) / 1500; a3 = r->sC - q; break;
-    case 3: q = (c->z + 750) / 1500; a3 = q - r->s12; break;
+    case 0: q = (c->x + 750) / 1500; a3 = q - r->f4; break;
+    case 1: q = (c->z - 750) / 1500; a3 = r->fA - q; break;
+    case 2: q = (c->x - 750) / 1500; a3 = r->fC - q; break;
+    case 3: q = (c->z + 750) / 1500; a3 = q - r->f12; break;
     }
     return t0 - a3 - 1;
 }
-#undef Car
-#undef D_0009B230
-#undef D_0009E744
 #undef P
 
 /* ---------------- func_0001548C (src/pilot/func_0001548C.c) ---------------- */
@@ -1711,25 +1669,15 @@ void func_0001548C(int a, char *p)
 }
 
 /* ---------------- func_000154A8 (src/pilot/func_000154A8.c) ---------------- */
-#define CAR CAR__func_000154A8
 #define CIV CIV__func_000154A8
-#define CameraCnt CameraCnt__func_000154A8
 #define ClearMem ClearMem__func_000154A8
 #define D_00096898 D_00096898__func_000154A8
 #define D_00096FC0 D_00096FC0__func_000154A8
 #define D_00098950 D_00098950__func_000154A8
-#define D_0009B230 D_0009B230__func_000154A8
 #define Nearest Nearest__func_000154A8
 #define ROAD ROAD__func_000154A8
 #define func_00014FC4 func_00014FC4__func_000154A8
-#define func_00015338 func_00015338__func_000154A8
-#define func_00016F0C func_00016F0C__func_000154A8
-#define func_00017C50 func_00017C50__func_000154A8
-#define func_0001B720 func_0001B720__func_000154A8
-#define func_00020A64 func_00020A64__func_000154A8
 #define func_00021820 func_00021820__func_000154A8
-#define func_0003EB0C func_0003EB0C__func_000154A8
-#define func_0004FFE8 func_0004FFE8__func_000154A8
 #define func_00063B74 func_00063B74__func_000154A8
 /* no Driver 2 counterpart (civ car creation) */
 typedef struct {
@@ -1765,18 +1713,6 @@ typedef struct {
     int x4C;
 } CIV;
 typedef struct {
-    unsigned char id;
-    char p1;
-    unsigned char x2;
-    char p3[0xC8 - 3];
-    int xC8;
-    int padCC;
-    int xD0;
-    char padD4[0xF8 - 0xD4];
-    int xF8;
-    char padFC[0x18C - 0xFC];
-} CAR;
-typedef struct {
     int x0;
     int x4;
     int p8, pC;
@@ -1784,22 +1720,13 @@ typedef struct {
     char p11[3];
 } ROAD;
 extern CIV D_00098950[] __asm__("D_00098950");
-extern CAR D_0009B230[] __asm__("D_0009B230");
 #define roads (*(ROAD **)&D_0009704C)
 #define roads2 (*(ROAD2 **)&D_00097044)
 extern B8 D_00096898 __asm__("D_00096898");
-extern volatile long long CameraCnt __asm__("CameraCnt");
-extern CAR *D_00096FC0 __asm__("D_00096FC0");
-extern int func_0004FFE8() __asm__("func_0004FFE8");
+extern CAR_DATA *D_00096FC0 __asm__("D_00096FC0");
 extern void func_00014FC4() __asm__("func_00014FC4");
 extern int func_00021820() __asm__("func_00021820");
-extern int func_00016F0C() __asm__("func_00016F0C");
-extern void func_00017C50() __asm__("func_00017C50");
-extern void func_00020A64() __asm__("func_00020A64");
-extern void func_0003EB0C() __asm__("func_0003EB0C");
-extern void func_0001B720() __asm__("func_0001B720");
 extern int func_00063B74() __asm__("func_00063B74");
-extern unsigned char func_00015338() __asm__("func_00015338");
 static inline void ClearMem(unsigned char *p, int n)
 {
     unsigned char *end = p + n;
@@ -1843,7 +1770,7 @@ static inline int Nearest(int x, int z)
 int func_000154A8(int id, int road, unsigned char flag, int x, int z)
 {
     CIV *cp;
-    CAR *car;
+    CAR_DATA *car;
     int ty, mode;
     int dir, odir;
     int pos[2];
@@ -1974,8 +1901,8 @@ int func_000154A8(int id, int road, unsigned char flag, int x, int z)
         cp->f1 = 1;
         cp->fA = 0;
         cp->fB = 0xFF;
-        cp->x48 = D_0009B230[cp->id].xC8 / 1500;
-        cp->x4C = D_0009B230[cp->id].xD0 / 1500;
+        cp->x48 = D_0009B230[cp->id].x / 1500;
+        cp->x4C = D_0009B230[cp->id].z / 1500;
     } else {
         cp->f1 = 2;
         cp->f8 = 1;
@@ -2020,13 +1947,13 @@ int func_000154A8(int id, int road, unsigned char flag, int x, int z)
         cp->x12 = info.s10;
     }
 
-    car->xC8 = x;
-    car->xD0 = z;
+    car->x = x;
+    car->z = z;
     func_00020A64(car);
     if (road != -1)
-        car->xF8 = cp->x24 << 10;
+        car->fF8 = cp->x24 << 10;
     else
-        car->xF8 = flag << 10;
+        car->fF8 = flag << 10;
     cp->x40 = cp->x44 = 0x7FFFFFFF;
     cp->x38 = 0;
     cp->x3C = 0x82;
@@ -2058,11 +1985,11 @@ int func_000154A8(int id, int road, unsigned char flag, int x, int z)
             cp->x11 = one;
         }
     }
-    car->x2 = cp->x10;
+    car->f2 = cp->x10;
     func_0003EB0C(id + 1, cp->x10);
     func_0001B720(car, 1);
-    cp->x48 = D_0009B230[cp->id].xC8 / 1500;
-    cp->x4C = D_0009B230[cp->id].xD0 / 1500;
+    cp->x48 = D_0009B230[cp->id].x / 1500;
+    cp->x4C = D_0009B230[cp->id].z / 1500;
     cp->f9 = func_00015338(cp);
     cp->x17 = 2;
     if (*(int *)&gLightsOn)
@@ -2071,70 +1998,21 @@ int func_000154A8(int id, int road, unsigned char flag, int x, int z)
 }
 #undef roads
 #undef roads2
-#undef CAR
 #undef CIV
-#undef CameraCnt
 #undef ClearMem
 #undef D_00096898
 #undef D_00096FC0
 #undef D_00098950
-#undef D_0009B230
 #undef Nearest
 #undef ROAD
 #undef func_00014FC4
-#undef func_00015338
-#undef func_00016F0C
-#undef func_00017C50
-#undef func_0001B720
-#undef func_00020A64
 #undef func_00021820
-#undef func_0003EB0C
-#undef func_0004FFE8
 #undef func_00063B74
 
 /* ---------------- func_00016094 (src/pilot/func_00016094.c) ---------------- */
-#define CAR CAR__func_00016094
 #define ClearMem ClearMem__func_00016094
-#define D_00098950 D_00098950__func_00016094
-#define D_0009B230 D_0009B230__func_00016094
-#define ENT ENT__func_00016094
 #define VECTOR VECTOR__func_00016094
-#define func_00017A64 func_00017A64__func_00016094
-#define func_0001B4A4 func_0001B4A4__func_00016094
-#define func_0001B720 func_0001B720__func_00016094
-#define func_00020A64 func_00020A64__func_00016094
-#define func_0003EB0C func_0003EB0C__func_00016094
-#define memset memset__func_00016094
 typedef struct { int vx, vy, vz, pad; } VECTOR;
-typedef struct {
-    unsigned char id;
-    char pad1;
-    unsigned char model;
-    char pad3[0xC8 - 3];
-    int x, y, z;
-    char padD4[0xF8 - 0xD4];
-    int fF8;
-    char padFC[0x18C - 0xFC];
-} CAR;
-typedef struct {
-    unsigned char id, f1, f2, pad3, pad4, f5, pad6, f7, f8;
-    char pad9[0x10 - 9];
-    unsigned char f10, f11;
-    char pad12[0x17 - 0x12];
-    unsigned char f17;
-    char pad18[0x28 - 0x18];
-    int f28;
-    char pad2C[0x38 - 0x2C];
-    int f38, f3C, f40, f44, f48, f4C;
-} ENT;
-extern CAR D_0009B230[] __asm__("D_0009B230");
-extern ENT D_00098950[] __asm__("D_00098950");
-extern int func_00017A64(void) __asm__("func_00017A64");
-extern void func_00020A64(CAR *) __asm__("func_00020A64");
-extern void memset(void *, int, int) __asm__("memset");
-extern void func_0001B4A4(CAR *, VECTOR *) __asm__("func_0001B4A4");
-extern void func_0003EB0C(int, unsigned int) __asm__("func_0003EB0C");
-extern void func_0001B720(CAR *, int) __asm__("func_0001B720");
 static inline void ClearMem(unsigned char *p, int n)
 {
     unsigned char *end = p + n;
@@ -2148,20 +2026,20 @@ static inline void ClearMem(unsigned char *p, int n)
     while (p < end)
         *p++ = 0;
 }
-CAR *func_00016094(int model, int a1, int a2, int x, int z)
+CAR_DATA *func_00016094(int model, int a1, int a2, int x, int z)
 {
     VECTOR v2;
     VECTOR v;
     int slot;
-    ENT *e;
-    CAR *cp = 0;
+    CIV_SLOT *e;
+    CAR_DATA *cp = 0;
 
     slot = func_00017A64();
     if (slot != -1) {
         cp = &D_0009B230[slot];
         e = &D_00098950[slot];
-        ClearMem((unsigned char *)cp, sizeof(CAR));
-        ClearMem((unsigned char *)e, sizeof(ENT));
+        ClearMem((unsigned char *)cp, sizeof(CAR_DATA));
+        ClearMem((unsigned char *)e, sizeof(CIV_SLOT));
         e->id = slot;
         cp->id = slot + 1;
         e->f1 = 1;
@@ -2180,7 +2058,7 @@ CAR *func_00016094(int model, int a1, int a2, int x, int z)
         v2 = v;
         func_0001B4A4(cp, &v2);
         cp->fF8 = a2;
-        cp->model = model;
+        cp->f2 = model;
         e->f10 = model;
         e->f44 = 0x7FFFFFFF;
         e->f40 = 0x7FFFFFFF;
@@ -2190,88 +2068,35 @@ CAR *func_00016094(int model, int a1, int a2, int x, int z)
         e->f5 = 0;
         func_0003EB0C(slot + 1, e->f10);
         func_0001B720(cp, 1);
-        e->f48 = D_0009B230[e->id].x / 1500;
-        e->f4C = D_0009B230[e->id].z / 1500;
+        e->x = D_0009B230[e->id].x / 1500;
+        e->z = D_0009B230[e->id].z / 1500;
         e->f17 = 0;
     }
     return cp;
 }
-#undef CAR
 #undef ClearMem
-#undef D_00098950
-#undef D_0009B230
-#undef ENT
 #undef VECTOR
-#undef func_00017A64
-#undef func_0001B4A4
-#undef func_0001B720
-#undef func_00020A64
-#undef func_0003EB0C
-#undef memset
 
 /* ---------------- func_0001638C (src/pilot/func_0001638C.c) ---------------- */
-#define CAR CAR__func_0001638C
 #define ClearMem ClearMem__func_0001638C
-#define D_00098950 D_00098950__func_0001638C
-#define D_0009B230 D_0009B230__func_0001638C
 #define D_000C4E38 D_000C4E38__func_0001638C
-#define ENT ENT__func_0001638C
 #define PED PED__func_0001638C
 #define SEG SEG__func_0001638C
-#define func_00015338 func_00015338__func_0001638C
-#define func_00016F0C func_00016F0C__func_0001638C
 #define func_00017A50 func_00017A50__func_0001638C
-#define func_00017A64 func_00017A64__func_0001638C
-#define func_0001B720 func_0001B720__func_0001638C
-#define func_00020A64 func_00020A64__func_0001638C
-#define func_00021820 func_00021820__func_0001638C
-#define func_0003EB0C func_0003EB0C__func_0001638C
-#define func_0004FFE8 func_0004FFE8__func_0001638C
 /* func_0001638C - no Driver 2 counterpart: spawn a car */
-typedef struct {
-    unsigned char id;
-    char pad1;
-    unsigned char f2;
-    char pad3[0xC8 - 3];
-    int x, y, z;
-    char padD4[0xF8 - 0xD4];
-    int fF8;
-    char padFC[0x18C - 0xFC];
-} CAR;
-typedef struct {
-    unsigned char id, f1, f2, pad3, pad4, f5, pad6, f7, f8, f9;
-    char padA[0x10 - 0xA];
-    unsigned char f10, f11;
-    char pad12[0x17 - 0x12];
-    unsigned char f17;
-    char pad18[0x28 - 0x18];
-    int f28;
-    char pad2C[0x38 - 0x2C];
-    int f38, f3C, f40, f44, f48, f4C;
-} ENT;
 typedef struct {
     char pad0[0x40];
     int f40;
     char pad44[0x78C - 0x44];
     int f78C, f790, f794;
     char pad798[0x7A4 - 0x798];
-    CAR *f7A4;
+    CAR_DATA *f7A4;
 } PED;
 typedef struct {
     int a[6];
 } SEG;
-extern CAR D_0009B230[] __asm__("D_0009B230");
-extern ENT D_00098950[] __asm__("D_00098950");
 extern PED D_000C4E38[] __asm__("D_000C4E38");
 extern unsigned char func_00017A50() __asm__("func_00017A50");
-extern int func_00017A64() __asm__("func_00017A64");
-extern void func_00021820() __asm__("func_00021820");
-extern void func_00016F0C() __asm__("func_00016F0C");
-extern void func_00020A64() __asm__("func_00020A64");
-extern int func_0004FFE8() __asm__("func_0004FFE8");
-extern void func_0003EB0C() __asm__("func_0003EB0C");
-extern void func_0001B720() __asm__("func_0001B720");
-extern unsigned char func_00015338() __asm__("func_00015338");
 static inline void ClearMem(unsigned char *p, int n)
 {
     unsigned char *end = p + n;
@@ -2285,11 +2110,11 @@ static inline void ClearMem(unsigned char *p, int n)
     while (p < end)
         *p++ = 0;
 }
-CAR *func_0001638C(int dir, int x, int z)
+CAR_DATA *func_0001638C(int dir, int x, int z)
 {
     SEG seg;
-    CAR *cp = 0;
-    ENT *e;
+    CAR_DATA *cp = 0;
+    CIV_SLOT *e;
     PED *pd;
     int slot;
     int r;
@@ -2301,8 +2126,8 @@ CAR *func_0001638C(int dir, int x, int z)
     slot = func_00017A64();
     cp = &D_0009B230[slot];
     e = &D_00098950[slot];
-    ClearMem((unsigned char *)cp, sizeof(CAR));
-    ClearMem((unsigned char *)e, sizeof(ENT));
+    ClearMem((unsigned char *)cp, sizeof(CAR_DATA));
+    ClearMem((unsigned char *)e, sizeof(CIV_SLOT));
     e->id = slot;
     cp->id = slot + 1;
     e->f7 = 0;
@@ -2342,8 +2167,8 @@ CAR *func_0001638C(int dir, int x, int z)
     cp->f2 = e->f10;
     func_0003EB0C(slot + 1, e->f10);
     func_0001B720(cp, 1);
-    e->f48 = D_0009B230[e->id].x / 1500;
-    e->f4C = D_0009B230[e->id].z / 1500;
+    e->x = D_0009B230[e->id].x / 1500;
+    e->z = D_0009B230[e->id].z / 1500;
     e->f9 = func_00015338(e);
     e->f17 = 2;
     if (*(int *)&gLightsOn != 0)
@@ -2351,67 +2176,15 @@ CAR *func_0001638C(int dir, int x, int z)
 end:
     return cp;
 }
-#undef CAR
 #undef ClearMem
-#undef D_00098950
-#undef D_0009B230
 #undef D_000C4E38
-#undef ENT
 #undef PED
 #undef SEG
-#undef func_00015338
-#undef func_00016F0C
 #undef func_00017A50
-#undef func_00017A64
-#undef func_0001B720
-#undef func_00020A64
-#undef func_00021820
-#undef func_0003EB0C
-#undef func_0004FFE8
 
 /* ---------------- func_00016760 (src/pilot/func_00016760.c) ---------------- */
-#define CAR CAR__func_00016760
 #define ClearMem ClearMem__func_00016760
-#define D_00098950 D_00098950__func_00016760
-#define D_0009B230 D_0009B230__func_00016760
-#define ENT ENT__func_00016760
-#define func_00017A64 func_00017A64__func_00016760
-#define func_0001B4A4 func_0001B4A4__func_00016760
-#define func_0001B720 func_0001B720__func_00016760
-#define func_00020A64 func_00020A64__func_00016760
-#define func_0003EB0C func_0003EB0C__func_00016760
-#define func_0004FFE8 func_0004FFE8__func_00016760
-#define memset memset__func_00016760
 /* func_00016760 - no Driver 2 counterpart: create a car at a position (sibling of func_0001638C) */
-typedef struct {
-    unsigned char id;
-    char pad1;
-    unsigned char f2;
-    char pad3[0xC8 - 3];
-    int x, y, z;
-    char padD4[0xF8 - 0xD4];
-    int fF8;
-    int fFC;
-    char pad100[0x18C - 0x100];
-} CAR;
-typedef struct {
-    unsigned char id, f1, f2, pad3, pad4, f5, pad6, f7, f8, f9, fA, fB;
-    char padC[0x10 - 0xC];
-    unsigned char f10, f11;
-    char pad12[0x28 - 0x12];
-    int f28;
-    char pad2C[0x38 - 0x2C];
-    int f38, f3C, f40, f44, f48, f4C;
-} ENT;
-extern CAR D_0009B230[] __asm__("D_0009B230");
-extern ENT D_00098950[] __asm__("D_00098950");
-extern void memset() __asm__("memset");
-extern int func_00017A64() __asm__("func_00017A64");
-extern void func_00020A64() __asm__("func_00020A64");
-extern int func_0004FFE8() __asm__("func_0004FFE8");
-extern void func_0003EB0C() __asm__("func_0003EB0C");
-extern void func_0001B4A4() __asm__("func_0001B4A4");
-extern void func_0001B720() __asm__("func_0001B720");
 static inline void ClearMem(unsigned char *p, int n)
 {
     unsigned char *end = p + n;
@@ -2428,8 +2201,8 @@ static inline void ClearMem(unsigned char *p, int n)
 int func_00016760(int x, int y, int z, int dir, int flag)
 {
     VEC v;
-    CAR *cp;
-    ENT *e;
+    CAR_DATA *cp;
+    CIV_SLOT *e;
     int slot;
     int r;
 
@@ -2442,8 +2215,8 @@ int func_00016760(int x, int y, int z, int dir, int flag)
         return slot;
     e = &D_00098950[slot];
     cp = &D_0009B230[slot];
-    ClearMem((unsigned char *)e, sizeof(ENT));
-    ClearMem((unsigned char *)cp, sizeof(CAR));
+    ClearMem((unsigned char *)e, sizeof(CIV_SLOT));
+    ClearMem((unsigned char *)cp, sizeof(CAR_DATA));
     cp->id = slot + 1;
     e->id = slot;
     e->f7 = 0;
@@ -2488,46 +2261,21 @@ int func_00016760(int x, int y, int z, int dir, int flag)
     func_0003EB0C(slot + 1, e->f10);
     func_0001B4A4(cp, &v);
     func_0001B720(cp, 0);
-    e->f48 = D_0009B230[e->id].x / 1500;
-    e->f4C = D_0009B230[e->id].z / 1500;
+    e->x = D_0009B230[e->id].x / 1500;
+    e->z = D_0009B230[e->id].z / 1500;
     return slot;
 }
-#undef CAR
 #undef ClearMem
-#undef D_00098950
-#undef D_0009B230
-#undef ENT
-#undef func_00017A64
-#undef func_0001B4A4
-#undef func_0001B720
-#undef func_00020A64
-#undef func_0003EB0C
-#undef func_0004FFE8
-#undef memset
 
 /* ---------------- func_00016B24 (src/pilot/func_00016B24.c) ---------------- */
-#define D_00098950 D_00098950__func_00016B24
-#define D_00099120 D_00099120__func_00016B24
-#define D_00099180 D_00099180__func_00016B24
-#define ENT ENT__func_00016B24
 #define func_000154A8 func_000154A8__func_00016B24
-#define func_00017A64 func_00017A64__func_00016B24
-#define func_0001943C func_0001943C__func_00016B24
-#define func_0004FFE8 func_0004FFE8__func_00016B24
-typedef struct { short s0; unsigned char c2; char pad3; int i4; int i8; } ENT;
-extern char D_00099120[] __asm__("D_00099120");
-extern SLOT D_00098950[] __asm__("D_00098950");
-extern ENT D_00099180[] __asm__("D_00099180");
-extern void func_0001943C() __asm__("func_0001943C");
-extern int func_00017A64() __asm__("func_00017A64");
-extern int func_0004FFE8() __asm__("func_0004FFE8");
 extern int func_000154A8() __asm__("func_000154A8");
 /* Driver 2 name: unknown */
 void func_00016B24(void)
 {
     int local;
     unsigned char idx;
-    ENT *e;
+    CELL_OBJ *e;
     int a0;
 
     if (D_00096FD4 == 0)
@@ -2544,56 +2292,33 @@ void func_00016B24(void)
         if (idx == 0xFF)
             return;
         if (idx == 0xFE) {
-            SLOT *sl = &D_00098950[local];
-            sl->c1 = 0;
-            sl->c8 = 0;
+            CIV_SLOT *sl = &D_00098950[local];
+            sl->f1 = 0;
+            sl->f8 = 0;
             return;
         }
     }
     e = &D_00099180[idx];
     a0 = 0;
     if (*(int *)&D_00096834 != 2 && *(int *)&D_00096834 != 6) {
-        if (e->s0 != -1)
-            a0 = func_000154A8(local, e->s0, func_0004FFE8(local) & 1, e->i4, e->i8);
+        if (e->f0 != -1)
+            a0 = func_000154A8(local, e->f0, func_0004FFE8(local) & 1, e->f4, e->f8);
         else
-            a0 = func_000154A8(local, -1, e->c2 & 3, e->i4, e->i8);
+            a0 = func_000154A8(local, -1, e->f2 & 3, e->f4, e->f8);
     }
     if (D_0009677C && a0)
         func_000589B4(idx, (unsigned char)local);
 }
-#undef D_00098950
-#undef D_00099120
-#undef D_00099180
-#undef ENT
 #undef func_000154A8
-#undef func_00017A64
-#undef func_0001943C
-#undef func_0004FFE8
 
 /* ---------------- func_00016CE4 (src/pilot/func_00016CE4.c) ---------------- */
 #define ClearMem ClearMem__func_00016CE4
 #define ClearMemInline ClearMemInline__func_00016CE4
-#define D_00096FC4 D_00096FC4__func_00016CE4
-#define D_00098950 D_00098950__func_00016CE4
 #define D_00099120 D_00099120__func_00016CE4
 #define D_000C4E38 D_000C4E38__func_00016CE4
-#define ENT ENT__func_00016CE4
-#define func_0001250C func_0001250C__func_00016CE4
-typedef struct {
-    unsigned char id;   /* 0x00 */
-    unsigned char f1;   /* 0x01 */
-    char pad2[3];
-    unsigned char f5;   /* 0x05 */
-    char pad6[2];
-    unsigned char f8;   /* 0x08 */
-    char pad9[0x50 - 9];
-} ENT;
-extern ENT D_00098950[] __asm__("D_00098950");
 extern char D_000C4E38[] __asm__("D_000C4E38");
 extern B048_S D_00099120 __asm__("D_00099120");
-extern char D_00096FC4 __asm__("D_00096FC4");
 extern void ClearMem() __asm__("ClearMem");
-extern void func_0001250C() __asm__("func_0001250C");
 static inline void ClearMemInline(unsigned char *p, int n)
 {
     unsigned char *end = p + n;
@@ -2611,7 +2336,7 @@ void func_00016CE4(void)
 {
     int i;
     B048_S *b;
-    ENT *e;
+    CIV_SLOT *e;
     unsigned char *q;
 
     ClearMemInline((unsigned char *)D_00098950, 2000);
@@ -2650,20 +2375,14 @@ void func_00016CE4(void)
 }
 #undef ClearMem
 #undef ClearMemInline
-#undef D_00096FC4
-#undef D_00098950
 #undef D_00099120
 #undef D_000C4E38
-#undef ENT
-#undef func_0001250C
 
 /* ---------------- func_00016F0C (src/pilot/func_00016F0C.c) ---------------- */
 #define CAR CAR__func_00016F0C
 #define D_0009E744 D_0009E744__func_00016F0C
 #define JUNC JUNC__func_00016F0C
 #define NODE NODE__func_00016F0C
-#define func_00013A90 func_00013A90__func_00016F0C
-#define func_0004FFE8 func_0004FFE8__func_00016F0C
 /* func_00016F0C - cop/civ car: choose exit at a junction (no Driver 2 match) */
 typedef struct {
     char pad0[3];
@@ -2697,8 +2416,6 @@ typedef struct {
 extern RINFO D_0009E744[] __asm__("D_0009E744");
 #define junctions (*(JUNC **)&D_00097040)
 #define roads16 (*(ROAD16 **)&D_00097044)
-extern void func_00013A90() __asm__("func_00013A90");
-extern int func_0004FFE8() __asm__("func_0004FFE8");
 #define SETEXIT() \
     c = choices[r]; \
     car->exit = c; \
@@ -2907,24 +2624,9 @@ int func_00016F0C(CAR *car, NODE *node)
 #undef D_0009E744
 #undef JUNC
 #undef NODE
-#undef func_00013A90
-#undef func_0004FFE8
 
 /* ---------------- func_00017780 (src/pilot/func_00017780.c) ---------------- */
-#define D_0009B230 D_0009B230__func_00017780
-#define ENTRY ENTRY__func_00017780
 #define OBJ OBJ__func_00017780
-typedef struct {
-    char pad0[0x18];
-    int x18;
-    int pad1c;
-    int x20;
-    char pad24[0xEA - 0x24];
-    short xEA;
-    char padEC[0xF4 - 0xEC];
-    int xF4;
-    char padF8[0x18C - 0xF8];
-} ENTRY;
 typedef struct {
     unsigned char id;
     char pad1[0x16];
@@ -2937,25 +2639,24 @@ typedef struct {
     int x40;
     int x44;
 } OBJ;
-extern ENTRY D_0009B230[] __asm__("D_0009B230");
 unsigned char func_00017780(OBJ *p, int a1, int a2, unsigned char mode)
 {
     unsigned char res = 1;
-    ENTRY *e = &D_0009B230[p->id];
+    CAR_DATA *e = &D_0009B230[p->id];
     int d;
 
     if (p->x40 != 0x7FFFFFFF && p->x38 != 0 && (mode == 0 || mode == 2))
     {
-        d = p->x40 - e->x18;
+        d = p->x40 - e->f18;
         if (abs(d) <= 32)
         {
             if (p->flags & 1)
             {
-                e->x18 = p->x40;
+                e->f18 = p->x40;
                 p->x40 = 0x7FFFFFFF;
                 p->flags &= 0xDE;
-                e->xF4 = 0;
-                e->xEA = 0;
+                e->fF4 = 0;
+                e->fEA = 0;
                 if (p->flags & 0x10)
                     p->flags = (p->flags & 0xEF) | 8;
             }
@@ -2967,16 +2668,16 @@ unsigned char func_00017780(OBJ *p, int a1, int a2, unsigned char mode)
                 if (p->x24 == 2)
                 {
                     if (p->flags & 0x30)
-                        e->xF4 = -(d / 8);
+                        e->fF4 = -(d / 8);
                     else
-                        e->xF4 = -(d / 32);
+                        e->fF4 = -(d / 32);
                 }
                 else
                 {
                     if (p->flags & 0x30)
-                        e->xF4 = d / 8;
+                        e->fF4 = d / 8;
                     else
-                        e->xF4 = d / 32;
+                        e->fF4 = d / 32;
                 }
             }
             res = 0;
@@ -2985,16 +2686,16 @@ unsigned char func_00017780(OBJ *p, int a1, int a2, unsigned char mode)
 
     if (p->x44 != 0x7FFFFFFF && p->x38 != 0 && (mode == 1 || mode == 3))
     {
-        d = p->x44 - e->x20;
+        d = p->x44 - e->f20;
         if (abs(d) <= 32)
         {
             if (p->flags & 1)
             {
-                e->x20 = p->x44;
+                e->f20 = p->x44;
                 p->x44 = 0x7FFFFFFF;
                 p->flags &= 0xDE;
-                e->xF4 = 0;
-                e->xEA = 0;
+                e->fF4 = 0;
+                e->fEA = 0;
                 if (p->flags & 0x10)
                     p->flags = (p->flags & 0xEF) | 8;
             }
@@ -3006,16 +2707,16 @@ unsigned char func_00017780(OBJ *p, int a1, int a2, unsigned char mode)
                 if (p->x24 == 1)
                 {
                     if (p->flags & 0x30)
-                        e->xF4 = -(d / 8);
+                        e->fF4 = -(d / 8);
                     else
-                        e->xF4 = -(d / 32);
+                        e->fF4 = -(d / 32);
                 }
                 else
                 {
                     if (p->flags & 0x30)
-                        e->xF4 = d / 8;
+                        e->fF4 = d / 8;
                     else
-                        e->xF4 = d / 32;
+                        e->fF4 = d / 32;
                 }
             }
             res = 0;
@@ -3029,22 +2730,15 @@ unsigned char func_00017780(OBJ *p, int a1, int a2, unsigned char mode)
     }
     return res;
 }
-#undef D_0009B230
-#undef ENTRY
 #undef OBJ
 
 /* ---------------- func_00017A50 (src/pilot/func_00017A50.c) ---------------- */
-#define D_00096FC4 D_00096FC4__func_00017A50
-extern unsigned char D_00096FC4 __asm__("D_00096FC4");
 int func_00017A50(void)
 {
     return D_00096FC4 != 0x16;
 }
-#undef D_00096FC4
 
 /* ---------------- func_00017A64 (src/pilot/func_00017A64.c) ---------------- */
-#define D_00096FC4 D_00096FC4__func_00017A64
-extern unsigned char D_00096FC4 __asm__("D_00096FC4");
 int func_00017A64(void) {
     unsigned char i = D_00096FC4;
     if (i == 0x16)
@@ -3052,31 +2746,18 @@ int func_00017A64(void) {
     D_00096FC4 = i + 1;
     return D_00099AF0[i];
 }
-#undef D_00096FC4
 
 /* ---------------- func_00017AA0 (src/pilot/func_00017AA0.c) ---------------- */
-#define CAR CAR__func_00017AA0
-#define D_00098950 D_00098950__func_00017AA0
-#define D_00099120 D_00099120__func_00017AA0
-#define ENT ENT__func_00017AA0
-#define car_data car_data__func_00017AA0
-#define func_00017C50 func_00017C50__func_00017AA0
 #define func_000192D0 func_000192D0__func_00017AA0
-typedef struct { char pad[0x18C]; } CAR;
-typedef struct { unsigned char c0, c1, p[3], c5; char pad[0x4A]; } ENT;
-extern CAR car_data[] __asm__("car_data");
-extern ENT D_00098950[] __asm__("D_00098950");
-extern char D_00099120[] __asm__("D_00099120");
 extern unsigned char func_000192D0() __asm__("func_000192D0");
-extern void func_00017C50() __asm__("func_00017C50");
 int func_00017AA0(unsigned char type)
 {
     int best = -1;
     int bestidx = -1;
-    CAR *base;
-    CAR *car;
-    CAR *cur;
-    ENT *e;
+    CAR_DATA *base;
+    CAR_DATA *car;
+    CAR_DATA *cur;
+    CIV_SLOT *e;
     int i;
     unsigned char ok;
     int r;
@@ -3093,17 +2774,17 @@ int func_00017AA0(unsigned char type)
             ok = 1;
             break;
         case 1:
-            if (e->c5 != 0)
+            if (e->f5 != 0)
                 ok = 1;
             break;
         case 2:
-            if (e->c5 == 0)
+            if (e->f5 == 0)
                 ok = 1;
             break;
         }
         if (ok) {
-            if (e->c1 == 0) {
-                if (func_000192D0(D_00099120, e->c0) == 0)
+            if (e->f1 == 0) {
+                if (func_000192D0(D_00099120, e->id) == 0)
                     return 1;
             } else {
                 r = func_000612FC((char *)car + 0xC8, (char *)cur + 0xC8);
@@ -3119,32 +2800,12 @@ int func_00017AA0(unsigned char type)
     func_00017C50(bestidx);
     return 1;
 }
-#undef CAR
-#undef D_00098950
-#undef D_00099120
-#undef ENT
-#undef car_data
-#undef func_00017C50
 #undef func_000192D0
 
 /* ---------------- func_00017C50 (src/pilot/func_00017C50.c) ---------------- */
-#define CameraCnt CameraCnt__func_00017C50
-#define D_00096FC4 D_00096FC4__func_00017C50
-#define D_00098950 D_00098950__func_00017C50
-#define D_00099120 D_00099120__func_00017C50
-#define D_000C4690 D_000C4690__func_00017C50
-#define S1960 S1960__func_00017C50
-#define func_0001A008 func_0001A008__func_00017C50
-typedef struct { char pad[1960]; } S1960;
-extern S50 D_00098950[] __asm__("D_00098950");
-extern S1960 D_000C4690[] __asm__("D_000C4690");
-extern volatile long long CameraCnt __asm__("CameraCnt");
-extern unsigned char D_00096FC4 __asm__("D_00096FC4");
-extern char D_00099120[] __asm__("D_00099120");
-extern void func_0001A008() __asm__("func_0001A008");
 void func_00017C50(int a)
 {
-    S50 *p = &D_00098950[a];
+    CIV_SLOT *p = &D_00098950[a];
     unsigned char x = p->f5;
 
     if (p->f1 != 0 && D_0009677C != 0) {
@@ -3163,13 +2824,6 @@ void func_00017C50(int a)
     p->f8 = 0;
     D_00099AF0[--D_00096FC4] = a;
 }
-#undef CameraCnt
-#undef D_00096FC4
-#undef D_00098950
-#undef D_00099120
-#undef D_000C4690
-#undef S1960
-#undef func_0001A008
 
 /* ---------------- func_00017D6C (src/pilot/func_00017D6C.c) ---------------- */
 void func_00017D6C(void)
@@ -3177,10 +2831,6 @@ void func_00017D6C(void)
 }
 
 /* ---------------- func_00017D74 (src/pilot/func_00017D74.c) ---------------- */
-#define func_00018900 func_00018900__func_00017D74
-#define func_0004FFE8 func_0004FFE8__func_00017D74
-extern int func_0004FFE8(int) __asm__("func_0004FFE8");
-extern void func_00018900(struct O *) __asm__("func_00018900");
 void func_00017D74(struct O *o) {
     o->c8 = 0;
     if (o->cB != 0) {
@@ -3189,8 +2839,6 @@ void func_00017D74(struct O *o) {
         if ((func_0004FFE8(o->a) & 0x1F) == o->a) func_00018900(o);
     }
 }
-#undef func_00018900
-#undef func_0004FFE8
 
 /* ---------------- func_00017DE8 (src/pilot/func_00017DE8.c) ---------------- */
 #define CAR CAR__func_00017DE8
@@ -3198,10 +2846,7 @@ void func_00017D74(struct O *o) {
 #define SEG SEG__func_00017DE8
 #define car_data car_data__func_00017DE8
 #define func_00014FC4 func_00014FC4__func_00017DE8
-#define func_00015338 func_00015338__func_00017DE8
 #define func_00017780 func_00017780__func_00017DE8
-#define func_00018100 func_00018100__func_00017DE8
-#define func_0001A1BC func_0001A1BC__func_00017DE8
 #define func_00021820 func_00021820__func_00017DE8
 /* func_00017DE8 - no Driver 2 counterpart */
 typedef struct {
@@ -3252,11 +2897,8 @@ typedef struct {
 } SEG;
 extern CAR car_data[] __asm__("car_data");
 extern int func_00021820() __asm__("func_00021820");
-extern int func_00018100() __asm__("func_00018100");
 extern int func_00017780(OBJ *p, XZ *a1, int *a2, unsigned char mode) __asm__("func_00017780");
 extern void func_00014FC4() __asm__("func_00014FC4");
-extern unsigned char func_00015338() __asm__("func_00015338");
-extern int func_0001A1BC() __asm__("func_0001A1BC");
 void func_00017DE8(OBJ *c)
 {
     SEG s1;
@@ -3330,44 +2972,32 @@ void func_00017DE8(OBJ *c)
 #undef SEG
 #undef car_data
 #undef func_00014FC4
-#undef func_00015338
 #undef func_00017780
-#undef func_00018100
-#undef func_0001A1BC
 #undef func_00021820
 
 /* ---------------- func_00018100 (src/pilot/func_00018100.c) ---------------- */
-#define D_0009B230 D_0009B230__func_00018100
-extern struct X D_0009B230[] __asm__("D_0009B230");
 int func_00018100(unsigned char *p, int target) {
     int cur, diff, a3;
     a3 = 0;
-    cur = D_0009B230[*p].ang & 0xFFF;
+    cur = D_0009B230[*p].fF8 & 0xFFF;
     diff = ((target - cur + 0x800) & 0xFFF) - 0x800;
     if (cur != target) {
         if (abs(diff) < 0x80) a3 = diff / 2;
         else if (diff >= 0) a3 = 0x200;
         else a3 = -0x200;
     }
-    D_0009B230[*p].out = a3;
+    D_0009B230[*p].fF4 = a3;
     return abs(diff);
 }
-#undef D_0009B230
 
 /* ---------------- func_000181B4 (src/pilot/func_000181B4.c) ---------------- */
-#define D_0009B230 D_0009B230__func_000181B4
 #define D_0009B2F8 D_0009B2F8__func_000181B4
 #define func_00014FC4 func_00014FC4__func_000181B4
-#define func_00016F0C func_00016F0C__func_000181B4
 #define func_00017780 func_00017780__func_000181B4
 #define func_00021558 func_00021558__func_000181B4
-#define func_00021820 func_00021820__func_000181B4
 /* func_000181B4: car AI - turn toward the target heading, then pick the next road segment */
 extern POS_b062 D_0009B2F8[] __asm__("D_0009B2F8");
-extern CAR2_b062 D_0009B230[] __asm__("D_0009B230");
 extern short func_00021558() __asm__("func_00021558");
-extern void func_00021820() __asm__("func_00021820");
-extern int func_00016F0C() __asm__("func_00016F0C");
 extern void func_00014FC4() __asm__("func_00014FC4");
 extern void func_00017780(OBJ_b062 *, POS_b062 *, int *, unsigned char) __asm__("func_00017780");
 #define ABSDIFF(a, b) (((a) - (b)) < 0 ? (b) - (a) : (a) - (b))
@@ -3409,7 +3039,7 @@ void func_000181B4(OBJ_b062 *p)
 
     steer = 0;
     ang = p->x30 << 10;
-    dir = D_0009B230[p->id].xF8 & 0xFFF;
+    dir = D_0009B230[p->id].fF8 & 0xFFF;
     d = ((ang - dir + 0x800) & 0xFFF) - 0x800;
     if (dir != ang) {
         if (abs(d) < 128)
@@ -3419,7 +3049,7 @@ void func_000181B4(OBJ_b062 *p)
         else
             steer = -512;
     }
-    D_0009B230[p->id].xF4 = steer;
+    D_0009B230[p->id].fF4 = steer;
 
     if (abs(d) < 64) {
         if (!(r & 0x4000)) {
@@ -3442,45 +3072,36 @@ void func_000181B4(OBJ_b062 *p)
     }
 }
 #undef ABSDIFF
-#undef D_0009B230
 #undef D_0009B2F8
 #undef func_00014FC4
-#undef func_00016F0C
 #undef func_00017780
 #undef func_00021558
-#undef func_00021820
 
 /* ---------------- func_00018478 (src/pilot/func_00018478.c) ---------------- */
-#define D_0009B230 D_0009B230__func_00018478
-extern S18C D_0009B230[] __asm__("D_0009B230");
 void func_00018478(unsigned char *p)
 {
-    S18C *s = &D_0009B230[p[0]];
+    CAR_DATA *s = &D_0009B230[p[0]];
     if (p[0xB] != 0) {
-        s->f = -0x23F;
+        s->fF4 = -0x23F;
         p[0xB]--;
     } else {
         p[1] = 2;
         p[2] = 1;
     }
 }
-#undef D_0009B230
 
 /* ---------------- func_000184DC (src/pilot/func_000184DC.c) ---------------- */
-#define D_0009B230 D_0009B230__func_000184DC
-extern S18C D_0009B230[] __asm__("D_0009B230");
 void func_000184DC(unsigned char *p)
 {
-    S18C *s = &D_0009B230[p[0]];
+    CAR_DATA *s = &D_0009B230[p[0]];
     if (p[0xB] != 0) {
-        s->f = 0x23F;
+        s->fF4 = 0x23F;
         p[0xB]--;
     } else {
         p[1] = 2;
         p[2] = 1;
     }
 }
-#undef D_0009B230
 
 /* ---------------- func_00018540 (src/pilot/func_00018540.c) ---------------- */
 void func_00018540(void)
@@ -3495,17 +3116,7 @@ void func_00018548(void)
 /* ---------------- func_00018550 (src/pilot/func_00018550.c) ---------------- */
 #define A A__func_00018550
 #define D_00099120 D_00099120__func_00018550
-#define D_0009B230 D_0009B230__func_00018550
-#define S S__func_00018550
-#define func_0001A008 func_0001A008__func_00018550
 #define func_00063B74 func_00063B74__func_00018550
-typedef struct {
-    char pad0[0xFC];
-    int f_FC;
-    char pad1[0x17C - 0x100];
-    short f_17C;
-    char pad2[396 - 0x17E];
-} S;
 typedef struct {
     char c0;
     char c1;
@@ -3516,18 +3127,16 @@ typedef struct {
     int f38;
     int f3C;
 } A;
-extern S D_0009B230[] __asm__("D_0009B230");
 extern C D_00099120 __asm__("D_00099120");
 extern B *func_00063B74() __asm__("func_00063B74");
-extern void func_0001A008() __asm__("func_0001A008");
 void func_00018550(A *a)
 {
     C *c;
-    S *s;
+    CAR_DATA *s;
     B *b;
 
     s = &D_0009B230[*(unsigned char *)a];
-    if (s->f_17C == 0) {
+    if (s->f17C == 0) {
         a->f3C = 0;
         a->f38 = 0;
         a->c15 = 1;
@@ -3537,7 +3146,7 @@ void func_00018550(A *a)
         if (b != 0) {
             a->c1 = 2;
             c = &D_00099120;
-            s->f_FC = 0;
+            s->fFC = 0;
             b->f794 = 0;
             c->c26--;
             if (c->c26 == 0)
@@ -3547,81 +3156,55 @@ void func_00018550(A *a)
 }
 #undef A
 #undef D_00099120
-#undef D_0009B230
-#undef S
-#undef func_0001A008
 #undef func_00063B74
 
 /* ---------------- func_00018618 (src/pilot/func_00018618.c) ---------------- */
-#define CIV CIV__func_00018618
-#define D_00098950 D_00098950__func_00018618
 #define ROAD ROAD__func_00018618
 #define func_00014FC4 func_00014FC4__func_00018618
-#define func_0004FFE8 func_0004FFE8__func_00018618
 /* civ car: try to start a parked car / pick spawn spot (unnamed) */
-typedef struct {
-    unsigned char id;
-    unsigned char active;
-    char pad2[7];
-    unsigned char c9;
-    char padA[0x17 - 0xA];
-    unsigned char flags;
-    int f18;
-    int f1C;
-    char pad20[4];
-    int dir;
-    int road;
-    char pad2C[0x40 - 0x2C];
-    int f40;
-    int f44;
-    int x;
-    int z;
-} CIV;
 typedef struct { char pad[0xA]; unsigned char cA; char padB[5]; } ROAD;
-extern CIV D_00098950[] __asm__("D_00098950");
-extern int func_0004FFE8() __asm__("func_0004FFE8");
 extern void func_00014FC4() __asm__("func_00014FC4");
 #define DIFF(a, b) ((a) >= (b) ? ABS((a) - (b)) : ABS((b) - (a)))
 #define ABS(x) ((x) < 0 ? -(x) : (x))
-void func_00018618(CIV *cp)
+void func_00018618(CIV_SLOT *cp)
 {
-    CIV *c;
+    CIV_SLOT *c;
     POS2 pos;
     int i;
     int cx, cz;
 
     c = D_00098950;
-    if (cp->flags & 9)
+    if (cp->f17 & 9)
         return;
     if ((func_0004FFE8(cp->id) & 0x1F) != cp->id)
         return;
-    if ((*(ROAD **)&D_00097044)[cp->road].cA == 0)
+    if ((*(ROAD **)&D_00097044)[cp->f28].cA == 0)
         return;
-    if (cp->c9 != 0)
+    if (cp->f9 != 0)
         return;
     if (cp->f18 < 0x4650)
         return;
     if (cp->f1C < 0xBB8)
         return;
-    func_00014FC4(cp->road, cp->dir, 0, 1, 0, &pos);
+    func_00014FC4(cp->f28, cp->f24, 0, 1, 0, &pos);
     cx = pos.x / 1500;
     cz = pos.z / 1500;
-    if (cp->dir & 1) {
+    if (cp->f24 & 1) {
         for (i = 0; i < 22; i++, c++) {
-            if (c->active && cp->id != c->id && c->z == cz) {
+            if (c->f1 && cp->id != c->id && c->z == cz) {
                 if (DIFF(c->x, cp->x) < 8)
                     return;
             }
         }
     } else {
         for (i = 0; i < 22; i++, c++) {
-            if (c->active && cp->id != c->id && c->x == cx) {
+            if (c->f1 && cp->id != c->id && c->x == cx) {
                 if (DIFF(c->z, cp->z) < 8)
                     return;
             }
         }
     }
-    switch (cp->dir) {
+    switch (cp->f24) {
     case 0:
         cp->f40 = pos.x + 0x1EE;
         break;
@@ -3635,75 +3218,45 @@ void func_00018618(CIV *cp)
         cp->f44 = pos.z + 0x1BE;
         break;
     }
-    cp->flags |= 0x11;
+    cp->f17 |= 0x11;
 }
 #undef DIFF
 #undef ABS
-#undef CIV
-#undef D_00098950
 #undef ROAD
 #undef func_00014FC4
-#undef func_0004FFE8
 
 /* ---------------- func_00018900 (src/pilot/func_00018900.c) ---------------- */
-#define CIV CIV__func_00018900
-#define D_00098950 D_00098950__func_00018900
-#define D_0009B230 D_0009B230__func_00018900
 #define func_00014FC4 func_00014FC4__func_00018900
-#define func_00016F0C func_00016F0C__func_00018900
-#define func_00021820 func_00021820__func_00018900
 /* func_00018900 - matched run3-r4.
  * The mfhi t0 vs v0 leftover (spilled HI retried into the first free GPR) was fixed by declaring the
  * tail callee with its real return type: func_00016F0C returns int (tested in func_000181B4/000154A8).
  * The value-returning call_value form changes v0's liveness, so reload no longer picks v0 for HI. */
-typedef struct {
-    unsigned char id;      /* 0x00 */
-    unsigned char active;  /* 0x01 */
-    char pad02[6];
-    unsigned char f08;     /* 0x08 */
-    char pad09[14];
-    unsigned char f17;     /* 0x17 */
-    int f18;               /* 0x18 */
-    char pad1C[8];
-    int dir;               /* 0x24 */
-    int junc;              /* 0x28 */
-    char pad2C[16];
-    int f3C;               /* 0x3C */
-    int f40;               /* 0x40 */
-    int f44;               /* 0x44 */
-    int x;                 /* 0x48 */
-    int z;                 /* 0x4C */
-} CIV;
 #define ABSD(a, b) ((a) - (b) < 0 ? (b) - (a) : (a) - (b))
-extern CIV D_00098950[] __asm__("D_00098950");
-extern PLAYER D_0009B230[] __asm__("D_0009B230");
 extern void func_00014FC4() __asm__("func_00014FC4");
-extern void func_00021820() __asm__("func_00021820");
-extern int func_00016F0C() __asm__("func_00016F0C");
-void func_00018900(CIV *cp)
+void func_00018900(CIV_SLOT *cp)
 {
     int pos[2];
     int tmp[6];
     int i;
     int px;
-    CIV *c;
+    CIV_SLOT *c;
 
     c = D_00098950;
 
-    func_00014FC4(cp->junc, cp->dir, 0, 2, 0xfe, pos);
+    func_00014FC4(cp->f28, cp->f24, 0, 2, 0xfe, pos);
     cp->x = D_0009B230[cp->id].x / 1500;
     px = pos[0] / 1500;
     cp->z = D_0009B230[cp->id].z / 1500;
 
-    if (cp->dir & 1) {
+    if (cp->f24 & 1) {
         for (i = 0; i < 22; i++, c++) {
-            if (cp->id != c->id && c->active) {
-                if (cp->dir == 1) {
-                    if (cp->junc == c->junc && c->z == cp->z
+            if (cp->id != c->id && c->f1) {
+                if (cp->f24 == 1) {
+                    if (cp->f28 == c->f28 && c->z == cp->z
                         && c->x >= cp->x && ABSD(c->x, cp->x) < 5)
                         return;
                 } else {
-                    if (cp->junc == c->junc && c->z == cp->z
+                    if (cp->f28 == c->f28 && c->z == cp->z
                         && cp->x >= c->x && ABSD(cp->x, c->x) < 5)
                         return;
                 }
@@ -3711,13 +3264,13 @@ void func_00018900(CIV *cp)
         }
     } else {
         for (i = 0; i < 22; i++, c++) {
-            if (cp->id != c->id && c->active) {
-                if (cp->dir == 0) {
-                    if (cp->junc == c->junc && c->x == px
+            if (cp->id != c->id && c->f1) {
+                if (cp->f24 == 0) {
+                    if (cp->f28 == c->f28 && c->x == px
                         && c->z >= cp->z && ABSD(c->z, cp->z) < 5)
                         return;
                 } else {
-                    if (cp->junc == c->junc && c->x == px
+                    if (cp->f28 == c->f28 && c->x == px
                         && cp->z >= c->z && ABSD(cp->z, c->z) < 5)
                         return;
                 }
@@ -3725,7 +3278,7 @@ void func_00018900(CIV *cp)
         }
     }
 
-    if (cp->dir & 1) {
+    if (cp->f24 & 1) {
         cp->f40 = pos[0];
         cp->f44 = 0x7fffffff;
     } else {
@@ -3733,141 +3286,82 @@ void func_00018900(CIV *cp)
         cp->f44 = pos[1];
     }
     cp->f17 = 0x23;
-    cp->active = 2;
-    cp->f08 = 1;
+    cp->f1 = 2;
+    cp->f8 = 1;
     cp->f3C = 0x82;
-    func_00021820(D_0009B230[cp->id].x, D_0009B230[cp->id].z, cp->dir, tmp);
+    func_00021820(D_0009B230[cp->id].x, D_0009B230[cp->id].z, cp->f24, tmp);
     cp->f18 = tmp[0];
     func_00016F0C(cp, tmp);
 }
 #undef ABSD
-#undef CIV
-#undef D_00098950
-#undef D_0009B230
 #undef func_00014FC4
-#undef func_00016F0C
-#undef func_00021820
 
 /* ---------------- func_00018C74 (src/pilot/func_00018C74.c) ---------------- */
-#define D_00098950 D_00098950__func_00018C74
-#define D_0009B230 D_0009B230__func_00018C74
-#define ENTRY ENTRY__func_00018C74
-#define OBJ OBJ__func_00018C74
 #define func_00014FC4 func_00014FC4__func_00018C74
-#define func_0004FFE8 func_0004FFE8__func_00018C74
-typedef struct {
-    char pad0[0xC8];
-    int xC8;
-    int padCC;
-    int xD0;
-    char padD4[0x18C - 0xD4];
-} ENTRY;
-typedef struct {
-    unsigned char id;
-    char pad1[0x16];
-    unsigned char flags;
-    char pad18[0x24 - 0x18];
-    int x24;
-    int x28;
-    char pad2c[0x38 - 0x2C];
-    int x38;
-    int pad3c;
-    int x40;
-    int x44;
-    int x48;
-    int x4C;
-} OBJ;
-extern ENTRY D_0009B230[] __asm__("D_0009B230");
-extern OBJ D_00098950[] __asm__("D_00098950");
-extern int func_0004FFE8() __asm__("func_0004FFE8");
 extern void func_00014FC4() __asm__("func_00014FC4");
-void func_00018C74(OBJ *p)
+void func_00018C74(CIV_SLOT *p)
 {
-    OBJ *o = D_00098950;
+    CIV_SLOT *o = D_00098950;
     int pos[2];
     int i, d, tx, tz;
 
-    if (p->flags & 9)
+    if (p->f17 & 9)
         return;
     if ((func_0004FFE8(p->id) - p->id) & 7)
         return;
 
-    func_00014FC4(p->x28, p->x24, 0, 2, 0xFF, pos);
+    func_00014FC4(p->f28, p->f24, 0, 2, 0xFF, pos);
     tx = pos[0] / 1500;
     tz = pos[1] / 1500;
-    p->x48 = D_0009B230[p->id].xC8 / 1500;
-    p->x4C = D_0009B230[p->id].xD0 / 1500;
+    p->x = D_0009B230[p->id].x / 1500;
+    p->z = D_0009B230[p->id].z / 1500;
 
-    if (p->x24 & 1)
+    if (p->f24 & 1)
     {
-        d = p->x4C - tz;
+        d = p->z - tz;
         if (d >= 0)
         {
             if (d != 1)
                 return;
         }
-        else if (p->x4C != tz - 1)
+        else if (p->z != tz - 1)
             return;
 
         for (i = 0; i < 22; i++, o++)
         {
-            if (p->id != o->id && p->x28 == o->x28 && o->x4C == tz && (p->x48 - o->x48 >= 0 ? p->x48 - o->x48 : o->x48 - p->x48) < 5)
+            if (p->id != o->id && p->f28 == o->f28 && o->z == tz && (p->x - o->x >= 0 ? p->x - o->x : o->x - p->x) < 5)
                 return;
         }
-        p->flags |= 1;
-        p->x44 = pos[1];
+        p->f17 |= 1;
+        p->f44 = pos[1];
     }
     else
     {
-        d = p->x48 - tx;
+        d = p->x - tx;
         if (d >= 0)
         {
             if (d != 1)
                 return;
         }
-        else if (p->x48 != tx - 1)
+        else if (p->x != tx - 1)
             return;
 
         for (i = 0; i < 22; i++, o++)
         {
-            if (p->id != o->id && p->x28 == o->x28 && o->x48 == tx && (p->x4C - o->x4C >= 0 ? p->x4C - o->x4C : o->x4C - p->x4C) < 5)
+            if (p->id != o->id && p->f28 == o->f28 && o->x == tx && (p->z - o->z >= 0 ? p->z - o->z : o->z - p->z) < 5)
                 return;
         }
-        p->flags |= 1;
-        p->x40 = pos[0];
+        p->f17 |= 1;
+        p->f40 = pos[0];
     }
 }
-#undef D_00098950
-#undef D_0009B230
-#undef ENTRY
-#undef OBJ
 #undef func_00014FC4
-#undef func_0004FFE8
 
 /* ---------------- func_00018F44 (src/pilot/func_00018F44.c) ---------------- */
-#define CAR CAR__func_00018F44
-#define D_00098950 D_00098950__func_00018F44
-#define D_0009B230 D_0009B230__func_00018F44
 /* find the car ahead on the same road/lane within maxdist */
-typedef struct {
-    unsigned char id;
-    unsigned char active;
-    unsigned char pad2[7];
-    unsigned char f9;
-    unsigned char padA[10];
-    unsigned char f14;
-    unsigned char pad15[15];
-    int dir;
-    int road;
-    unsigned char pad2C[28];
-    int x;
-    int z;
-} CAR;
-extern CAR D_00098950[] __asm__("D_00098950");
-extern CARDATA D_0009B230[] __asm__("D_0009B230");
-int func_00018F44(CAR *cp, int maxdist, int mode)
+int func_00018F44(CIV_SLOT *cp, int maxdist, int mode)
 {
-    CAR *c;
+    CIV_SLOT *c;
     int dist;
     int i;
 
@@ -3879,8 +3373,8 @@ int func_00018F44(CAR *cp, int maxdist, int mode)
     cp->z = D_0009B230[cp->id].z / 1500;
     if (mode) {
         for (i = 0; i < 22; i++, c++) {
-            if (cp->id != c->id && c->active != 0 && cp->road == c->road && cp->dir == c->dir && cp->f9 == c->f9) {
-                switch (cp->dir) {
+            if (cp->id != c->id && c->f1 != 0 && cp->f28 == c->f28 && cp->f24 == c->f24 && cp->f9 == c->f9) {
+                switch (cp->f24) {
                 case 0:
                     if (cp->z > c->z)
                         dist = cp->z - c->z;
@@ -3905,10 +3399,10 @@ int func_00018F44(CAR *cp, int maxdist, int mode)
         return -1;
     }
     for (i = 0; i < 22; i++, c++) {
-        if (cp->id != c->id && c->active != 1 && c->active != 0 && cp->road == c->road && cp->dir == c->dir && cp->f9 == c->f9) {
+        if (cp->id != c->id && c->f1 != 1 && c->f1 != 0 && cp->f28 == c->f28 && cp->f24 == c->f24 && cp->f9 == c->f9) {
             c->x = D_0009B230[c->id].x / 1500;
             c->z = D_0009B230[c->id].z / 1500;
-            switch (cp->dir) {
+            switch (cp->f24) {
             case 0:
                 if (c->z > cp->z)
                     dist = c->z - cp->z;
@@ -3932,9 +3426,6 @@ int func_00018F44(CAR *cp, int maxdist, int mode)
     }
     return -1;
 }
-#undef CAR
-#undef D_00098950
-#undef D_0009B230
 
 /* ---------------- func_000192D0 (src/pilot/func_000192D0.c) ---------------- */
 int func_000192D0(unsigned char *p, int c) {
@@ -3951,7 +3442,6 @@ int func_000192D0(unsigned char *p, int c) {
 #define D_0009E744 D_0009E744__func_00019314
 #define OBJ OBJ__func_00019314
 #define car_data car_data__func_00019314
-#define func_00021558 func_00021558__func_00019314
 /* func_00019314 */
 typedef struct {
 	char p0[0x1A]; short h1A; char p1[2]; short h1E; char p2[4];
@@ -3959,7 +3449,6 @@ typedef struct {
 } OBJ;
 extern int car_data[] __asm__("car_data");
 extern unsigned char D_0009E744[] __asm__("D_0009E744");
-extern int func_00021558() __asm__("func_00021558");
 int func_00019314(OBJ *p, int dir)
 {
 	int r, idx;
@@ -3990,22 +3479,12 @@ int func_00019314(OBJ *p, int dir)
 #undef D_0009E744
 #undef OBJ
 #undef car_data
-#undef func_00021558
 
 /* ---------------- func_0001943C (src/pilot/func_0001943C.c) ---------------- */
-#define CAR CAR__func_0001943C
-#define CameraCnt CameraCnt__func_0001943C
-#define D_00096FC4 D_00096FC4__func_0001943C
-#define D_00098950 D_00098950__func_0001943C
-#define D_00099120 D_00099120__func_0001943C
 #define D_0009E744 D_0009E744__func_0001943C
-#define D_000C4690 D_000C4690__func_0001943C
 #define JN JN__func_0001943C
 #define NODE NODE__func_0001943C
 #define P P__func_0001943C
-#define func_00019AF4 func_00019AF4__func_0001943C
-#define func_0001A008 func_0001A008__func_0001943C
-#define func_0001A024 func_0001A024__func_0001943C
 typedef struct {
     int x;
     int pad4;
@@ -4026,24 +3505,7 @@ typedef struct {
 } P;
 typedef struct { int a; int b; int c; int d; int e; } NODE;
 typedef struct { unsigned char b[20]; } JN;
-typedef struct {
-    unsigned char id;
-    unsigned char active;
-    unsigned char pad2[3];
-    unsigned char f5;
-    unsigned char pad6[2];
-    unsigned char f8;
-    unsigned char pad9[80 - 9];
-} CAR;
-extern volatile long long CameraCnt __asm__("CameraCnt");
-extern unsigned char D_00096FC4 __asm__("D_00096FC4");
 extern JN D_0009E744[] __asm__("D_0009E744");
-extern CAR D_00098950[] __asm__("D_00098950");
-extern SND D_000C4690[] __asm__("D_000C4690");
-extern char D_00099120[] __asm__("D_00099120");
-extern int func_00019AF4() __asm__("func_00019AF4");
-extern void func_0001A024() __asm__("func_0001A024");
-extern void func_0001A008() __asm__("func_0001A008");
 void func_0001943C(P *p)
 {
     int dir;
@@ -4053,7 +3515,7 @@ void func_0001943C(P *p)
     int r;
     int id;
     unsigned char c;
-    CAR *cp;
+    CIV_SLOT *cp;
     int s;
     int f5;
 
@@ -4104,7 +3566,7 @@ void func_0001943C(P *p)
             s = p->list[--p->f26];
             cp = &D_00098950[s];
             f5 = cp->f5;
-            if (cp->active && D_0009677C) {
+            if (cp->f1 && D_0009677C) {
                 if (*(volatile int *)&CameraCnt != D_00096FD0 || s != D_00096FF0) {
                     D_00096FF0 = s;
                     D_00096FD0 = *(volatile int *)&CameraCnt;
@@ -4112,9 +3574,9 @@ void func_0001943C(P *p)
             }
             if (f5)
                 func_00063AB4(&D_000C4690[cp->f5]);
-            if (cp->active == 9)
+            if (cp->f1 == 9)
                 func_0001A008(D_00099120);
-            cp->active = 0;
+            cp->f1 = 0;
             cp->f8 = 0;
             D_00099AF0[--D_00096FC4] = s;
         } while (n < p->f26);
@@ -4124,35 +3586,14 @@ void func_0001943C(P *p)
             func_0001A024(p);
     }
 }
-#undef CAR
-#undef CameraCnt
-#undef D_00096FC4
-#undef D_00098950
-#undef D_00099120
 #undef D_0009E744
-#undef D_000C4690
 #undef JN
 #undef NODE
 #undef P
-#undef func_00019AF4
-#undef func_0001A008
-#undef func_0001A024
 
 /* ---------------- func_000197E0 (src/pilot/func_000197E0.c) ---------------- */
-#define D_00098950 D_00098950__func_000197E0
-#define ENT ENT__func_000197E0
 #define PlaceOne PlaceOne__func_000197E0
-#define func_00016760 func_00016760__func_000197E0
-#define func_0004FFE8 func_0004FFE8__func_000197E0
 /* func_000197E0 - no Driver 2 counterpart */
-typedef struct {
-    char pad0[0x28];
-    int f28;
-    char pad2C[0x50 - 0x2C];
-} ENT;
-extern ENT D_00098950[] __asm__("D_00098950");
-extern int func_00016760() __asm__("func_00016760");
-extern int func_0004FFE8() __asm__("func_0004FFE8");
 static inline void PlaceOne(int x, int z, int dir, int seed, int val)
 {
     int r;
@@ -4217,24 +3658,13 @@ void func_000197E0(POS pos, int val, int dir, int count, unsigned char flag)
         *p[1] += 0x80 - (func_0004FFE8(i) & 0xFF);
     }
 }
-#undef D_00098950
-#undef ENT
 #undef PlaceOne
-#undef func_00016760
-#undef func_0004FFE8
 
 /* ---------------- func_00019AF4 (src/pilot/func_00019AF4.c) ---------------- */
-#define CameraCnt CameraCnt__func_00019AF4
-#define D_00096FC4 D_00096FC4__func_00019AF4
-#define D_00098950 D_00098950__func_00019AF4
 #define D_00099120 D_00099120__func_00019AF4
-#define D_000C4690 D_000C4690__func_00019AF4
-#define ENT ENT__func_00019AF4
 #define NODE NODE__func_00019AF4
 #define OBJ OBJ__func_00019AF4
 #define func_000197E0 func_000197E0__func_00019AF4
-#define func_00019DAC func_00019DAC__func_00019AF4
-#define func_0001A008 func_0001A008__func_00019AF4
 typedef struct {
     int x;
     int y;
@@ -4253,24 +3683,9 @@ typedef struct {
     unsigned char f28;
     unsigned char ids[1];
 } OBJ;
-typedef struct {
-    char f0;
-    unsigned char f1;
-    char pad2[3];
-    unsigned char f5;
-    char pad6[2];
-    unsigned char f8;
-    char pad9[80 - 9];
-} ENT;
 typedef struct { int a; int b; int c; int d; int e; } NODE;
-extern ENT D_00098950[] __asm__("D_00098950");
-extern SND D_000C4690[] __asm__("D_000C4690");
 extern int D_00099120[] __asm__("D_00099120");
-extern unsigned char D_00096FC4 __asm__("D_00096FC4");
-extern volatile long long CameraCnt __asm__("CameraCnt");
-extern int func_00019DAC() __asm__("func_00019DAC");
 extern void func_000197E0() __asm__("func_000197E0");
-extern void func_0001A008() __asm__("func_0001A008");
 int func_00019AF4(OBJ *p)
 {
     int x;
@@ -4280,7 +3695,7 @@ int func_00019AF4(OBJ *p)
     unsigned char *ptr;
     unsigned char *end;
     int id;
-    ENT *e;
+    CIV_SLOT *e;
     int snd;
     NODE *n;
 
@@ -4330,21 +3745,13 @@ int func_00019AF4(OBJ *p)
     }
     return 1;
 }
-#undef CameraCnt
-#undef D_00096FC4
-#undef D_00098950
 #undef D_00099120
-#undef D_000C4690
-#undef ENT
 #undef NODE
 #undef OBJ
 #undef func_000197E0
-#undef func_00019DAC
-#undef func_0001A008
 
 /* ---------------- func_00019DAC (src/pilot/func_00019DAC.c) ---------------- */
 #define O O__func_00019DAC
-#define func_00019E88 func_00019E88__func_00019DAC
 typedef struct {
     char pad0[0x10];
     short s10, s12, s14, s16;
@@ -4352,7 +3759,6 @@ typedef struct {
     char pad;
     short s1A, s1C;
 } O;
-extern int func_00019E88() __asm__("func_00019E88");
 int func_00019DAC(O *o, int x, int y)
 {
     int pt[4];
@@ -4372,20 +3778,15 @@ int func_00019DAC(O *o, int x, int y)
     return func_00019E88(o, x + o->s10, y + o->s12, o->s1C) != 0;
 }
 #undef O
-#undef func_00019E88
 
 /* ---------------- func_00019E88 (src/pilot/func_00019E88.c) ---------------- */
-#define D_00098950 D_00098950__func_00019E88
-#define S S__func_00019E88
 #define func_00021820 func_00021820__func_00019E88
-typedef struct { char pad[0x28]; int id; char pad2[0x1C]; int x; int z; } S;
-extern S D_00098950[] __asm__("D_00098950");
 extern unsigned short func_00021820() __asm__("func_00021820");
 int func_00019E88(char *p, int x, int z, int id)
 {
     int pos[6];
     int i;
-    S *e = D_00098950;
+    CIV_SLOT *e = D_00098950;
     int ix, iz;
 
     if (func_00021820(x, z, *(unsigned char *)(p + 0x27), pos) != 0) return 0;
@@ -4394,7 +3795,7 @@ int func_00019E88(char *p, int x, int z, int id)
     ix = x / 1500;
     iz = z / 1500;
     for (i = 0; i < 22; i++, e++) {
-        if (e->id == id) {
+        if (e->f28 == id) {
             if (*(unsigned char *)(p + 0x27) & 1) {
                 if ((ix - e->x < 0 ? e->x - ix : ix - e->x) >= 3) continue;
                 return 0;
@@ -4405,8 +3806,6 @@ int func_00019E88(char *p, int x, int z, int id)
     }
     return 1;
 }
-#undef D_00098950
-#undef S
 #undef func_00021820
 
 /* ---------------- func_00019FEC (src/pilot/func_00019FEC.c) ---------------- */
@@ -4427,24 +3826,8 @@ void func_0001A008(char *p)
 }
 
 /* ---------------- func_0001A024 (src/pilot/func_0001A024.c) ---------------- */
-#define CameraCnt CameraCnt__func_0001A024
-#define D_00096FC4 D_00096FC4__func_0001A024
-#define D_00098950 D_00098950__func_0001A024
-#define D_00099120 D_00099120__func_0001A024
-#define D_000C4690 D_000C4690__func_0001A024
 #define P P__func_0001A024
-#define S1960 S1960__func_0001A024
-#define S80 S80__func_0001A024
-#define func_0001A008 func_0001A008__func_0001A024
-typedef struct { char p0; unsigned char t; char p2[3]; unsigned char id; char p6[2]; unsigned char f8; char p9[71]; } S80;
-typedef struct { char p[1960]; } S1960;
 typedef struct { char p0[0x1A]; short f1a; char p1c[2]; short f1e; char p20[4]; unsigned char f24, f25, f26, p27, f28; unsigned char list[1]; } P;
-extern S80 D_00098950[] __asm__("D_00098950");
-extern S1960 D_000C4690[] __asm__("D_000C4690");
-extern char D_00099120[] __asm__("D_00099120");
-extern long long CameraCnt __asm__("CameraCnt");
-extern unsigned char D_00096FC4 __asm__("D_00096FC4");
-extern void func_0001A008() __asm__("func_0001A008");
 void func_0001A024(P *p)
 {
     unsigned char *q;
@@ -4452,19 +3835,19 @@ void func_0001A024(P *p)
     for (q = p->list; q < end;) {
         int i = *q;
         int t;
-        S80 *s = &D_00098950[i];
-        int a = s->id;
-        if (s->t != 0 && D_0009677C != 0) {
+        CIV_SLOT *s = &D_00098950[i];
+        int a = s->f5;
+        if (s->f1 != 0 && D_0009677C != 0) {
             if (*(int *)&CameraCnt != D_00096FD0 || i != D_00096FF0) {
                 D_00096FF0 = i;
                 D_00096FD0 = *(volatile int *)&CameraCnt;
             }
         }
         if (a != 0)
-            func_00063AB4(&D_000C4690[s->id]);
-        if (s->t == 9)
+            func_00063AB4(&D_000C4690[s->f5]);
+        if (s->f1 == 9)
             func_0001A008(D_00099120);
-        s->t = 0;
+        s->f1 = 0;
         s->f8 = 0;
         t = D_00096FC4 - 1;
         D_00096FC4 = t;
@@ -4478,24 +3861,14 @@ void func_0001A024(P *p)
     p->f25 = 0;
     p->f26 = 0;
 }
-#undef CameraCnt
-#undef D_00096FC4
-#undef D_00098950
-#undef D_00099120
-#undef D_000C4690
 #undef P
-#undef S1960
-#undef S80
-#undef func_0001A008
 
 /* ---------------- func_0001A1BC (src/pilot/func_0001A1BC.c) ---------------- */
 #define S S__func_0001A1BC
 #define car_data car_data__func_0001A1BC
-#define rcossin_tbl rcossin_tbl__func_0001A1BC
 /* func_0001A1BC */
 typedef struct { char pad0[0xC8]; int x; char pad1[4]; int z; char pad2[0x24]; int rot; } S;
 extern S car_data __asm__("car_data");
-extern short rcossin_tbl[] __asm__("rcossin_tbl");
 int func_0001A1BC(S *p)
 {
     int dx, dz, r, c, s, a, b;
@@ -4518,26 +3891,8 @@ int func_0001A1BC(S *p)
 }
 #undef S
 #undef car_data
-#undef rcossin_tbl
 
 /* ---------------- func_0001A30C (src/pilot/func_0001A30C.c) ---------------- */
-#define CAR CAR__func_0001A30C
-#define CameraCnt CameraCnt__func_0001A30C
-#define D_00096FC4 D_00096FC4__func_0001A30C
-#define D_00098950 D_00098950__func_0001A30C
-#define D_00099120 D_00099120__func_0001A30C
-#define D_0009B230 D_0009B230__func_0001A30C
-#define D_000C4690 D_000C4690__func_0001A30C
-#define S1960 S1960__func_0001A30C
-#define S80 S80__func_0001A30C
-#define func_00013D88 func_00013D88__func_0001A30C
-#define func_000143CC func_000143CC__func_0001A30C
-#define func_00016B24 func_00016B24__func_0001A30C
-#define func_00018618 func_00018618__func_0001A30C
-#define func_00018C74 func_00018C74__func_0001A30C
-#define func_0001A008 func_0001A008__func_0001A30C
-#define func_0001D608 func_0001D608__func_0001A30C
-#define rcossin_tbl rcossin_tbl__func_0001A30C
 #define remove_civ remove_civ__func_0001A30C
 #define step_car step_car__func_0001A30C
 /* MATCHED run3 (coordinator, 2026-10-22): func_00013D88 really returns int - declaring it void left v0 free after the call, so reload retried the spilled LO into v0. Old notes: (run2-r3): 'civ->t != 1' swap fixed by moving the rcossin step into static inline step_car().
@@ -4546,60 +3901,11 @@ int func_0001A1BC(S *p)
  * LO instead. Tried: operand/statement order, sq() inline, dist2() inline, in-place *=, 730 <= ..., !(<).
  * Plus reloc rcossin_tbl+2 vs D_0008EAAA (same bytes). */
 /* Driver 2 name: unknown (per-frame civ car update / cull loop) */
-typedef struct {
-    unsigned char id;     /* 0x00 */
-    unsigned char t;      /* 0x01 */
-    unsigned char c2;     /* 0x02 */
-    char p3[2];
-    unsigned char f5;     /* 0x05 */
-    char p6[2];
-    unsigned char f8;     /* 0x08 */
-    char p9;
-    unsigned char fA;     /* 0x0A */
-    char pB[0x18 - 0xB];
-    int f18;              /* 0x18 */
-    char p1C[0x38 - 0x1C];
-    int f38;              /* 0x38 */
-    char p3C[4];
-    int f40;              /* 0x40 */
-    int f44;              /* 0x44 */
-    int x;                /* 0x48 */
-    int z;                /* 0x4C */
-} S80;
-typedef struct {
-    char p0[0xC8];
-    int xC8;              /* 0xC8 */
-    int pCC;
-    int xD0;              /* 0xD0 */
-    char pD4[0xF8 - 0xD4];
-    int fF8;              /* 0xF8 */
-    char pFC[0x104 - 0xFC];
-    int f104;             /* 0x104 */
-    int f108;             /* 0x108 */
-    char p10C[0x12C - 0x10C];
-    short f12C;           /* 0x12C */
-    char p12E[0x18C - 0x12E];
-} CAR;
-typedef struct { char p[1960]; } S1960;
-extern S80 D_00098950[] __asm__("D_00098950");
-extern CAR D_0009B230[] __asm__("D_0009B230");
-extern S1960 D_000C4690[] __asm__("D_000C4690");
-extern char D_00099120[] __asm__("D_00099120");
-extern short rcossin_tbl[] __asm__("rcossin_tbl");
-extern long long CameraCnt __asm__("CameraCnt");
-extern unsigned char D_00096FC4 __asm__("D_00096FC4");
-extern void func_0001A008() __asm__("func_0001A008");
-extern void func_000143CC() __asm__("func_000143CC");
-extern int func_00013D88() __asm__("func_00013D88");
-extern void func_0001D608() __asm__("func_0001D608");
-extern void func_00018C74() __asm__("func_00018C74");
-extern void func_00018618() __asm__("func_00018618");
-extern void func_00016B24() __asm__("func_00016B24");
 static inline void remove_civ(int i)
 {
-    S80 *s = &D_00098950[i];
+    CIV_SLOT *s = &D_00098950[i];
     int a = s->f5;
-    if (s->t != 0 && D_0009677C != 0) {
+    if (s->f1 != 0 && D_0009677C != 0) {
         if (*(int *)&CameraCnt != D_00096FD0 || i != D_00096FF0) {
             D_00096FF0 = i;
             D_00096FD0 = *(volatile int *)&CameraCnt;
@@ -4607,9 +3913,9 @@ static inline void remove_civ(int i)
     }
     if (a != 0)
         func_00063AB4(&D_000C4690[s->f5]);
-    if (s->t == 9)
+    if (s->f1 == 9)
         func_0001A008(D_00099120);
-    s->t = 0;
+    s->f1 = 0;
     s->f8 = 0;
     {
         int t = D_00096FC4 - 1;
@@ -4617,11 +3923,11 @@ static inline void remove_civ(int i)
         D_00099AF0[(unsigned char)t] = i;
     }
 }
-static inline void step_car(CAR *car, int idx)
+static inline void step_car(CAR_DATA *car, int idx)
 {
     idx &= 0xFFF;
-    car->xC8 += (rcossin_tbl[idx * 2] * 500 + 0x800) >> 12;
-    car->xD0 += (rcossin_tbl[idx * 2 + 1] * 500 + 0x800) >> 12;
+    car->x += (rcossin_tbl[idx * 2] * 500 + 0x800) >> 12;
+    car->z += (rcossin_tbl[idx * 2 + 1] * 500 + 0x800) >> 12;
 }
 void func_0001A30C(void)
 {
@@ -4630,19 +3936,19 @@ void func_0001A30C(void)
     int count;
     int px, pz;
     int i;
-    CAR *car = D_0009B230;
-    S80 *civ = D_00098950;
+    CAR_DATA *car = D_0009B230;
+    CIV_SLOT *civ = D_00098950;
     int limit;
     int n;
 
     if (D_0009677C || D_00096780) {
-        CAR *base = D_0009B230 - 1;
-        px = base[23].xC8;
-        pz = base[23].xD0;
+        CAR_DATA *base = D_0009B230 - 1;
+        px = base[23].x;
+        pz = base[23].z;
     } else {
-        CAR *base = D_0009B230 - 1;
-        px = base[0].xC8;
-        pz = base[0].xD0;
+        CAR_DATA *base = D_0009B230 - 1;
+        px = base[0].x;
+        pz = base[0].z;
     }
     cell.x = px + 750;
     cell.z = pz - 750;
@@ -4657,17 +3963,17 @@ void func_0001A30C(void)
 
     for (i = 0; i < count; i++, civ++, car++) {
         int idx = car->fF8;
-        if (civ->t != 1)
+        if (civ->f1 != 1)
             step_car(car, idx);
-        D_0008539C[civ->t](civ);
-        if (civ->t != 0) {
+        D_0008539C[civ->f1](civ);
+        if (civ->f1 != 0) {
             int dx, dz;
-            dx = D_0009B230[i].xC8 - px;
+            dx = D_0009B230[i].x - px;
             if (dx < 0)
-                dx = px - D_0009B230[i].xC8;
-            dz = D_0009B230[i].xD0 - pz;
+                dx = px - D_0009B230[i].x;
+            dz = D_0009B230[i].z - pz;
             if (dz < 0)
-                dz = pz - D_0009B230[i].xD0;
+                dz = pz - D_0009B230[i].z;
             dx /= 1500;
             dz /= 1500;
             if (dx * dx + dz * dz >= 730) {
@@ -4675,14 +3981,14 @@ void func_0001A30C(void)
                     remove_civ(i);
                 continue;
             }
-            civ->x = D_0009B230[civ->id].xC8 / 1500;
-            civ->z = D_0009B230[civ->id].xD0 / 1500;
+            civ->x = D_0009B230[civ->id].x / 1500;
+            civ->z = D_0009B230[civ->id].z / 1500;
             if ((*(int *)civ & 0xFFFF00) == 0x100 && car->f12C == 0) {
                 if (civ->fA >= 20)
                     continue;
                 civ->fA++;
             }
-            if (civ->t != 4) {
+            if (civ->f1 != 4) {
                 if (car->f104 > 0)
                     civ->f38 = car->f108;
                 else
@@ -4691,7 +3997,7 @@ void func_0001A30C(void)
                     func_00013D88(civ, car);
                     func_0001D608(car, 0);
                 }
-                if (civ->t == 2 && (*(int *)&CameraCnt & 1)) {
+                if (civ->f1 == 2 && (*(int *)&CameraCnt & 1)) {
                     if (civ->f18 > 0x4650 && civ->f40 == 0x7FFFFFFF && civ->f44 == 0x7FFFFFFF)
                         func_00018C74(civ);
                     else
@@ -4707,7 +4013,7 @@ void func_0001A30C(void)
 
     D_00096FCC = 0;
     for (civ = D_00098950, i = 0; i < 22; i++, civ++) {
-        if (!civ->t)
+        if (!civ->f1)
             D_00096FCC++;
     }
     D_00096FEC = 22 - D_00096FCC;
@@ -4724,51 +4030,23 @@ void func_0001A30C(void)
             func_00016B24();
     }
 }
-#undef CAR
-#undef CameraCnt
-#undef D_00096FC4
-#undef D_00098950
-#undef D_00099120
-#undef D_0009B230
-#undef D_000C4690
-#undef S1960
-#undef S80
-#undef func_00013D88
-#undef func_000143CC
-#undef func_00016B24
-#undef func_00018618
-#undef func_00018C74
-#undef func_0001A008
-#undef func_0001D608
-#undef rcossin_tbl
 #undef remove_civ
 #undef step_car
 
 /* ---------------- func_0001A94C (src/pilot/func_0001A94C.c) ---------------- */
-#define D_00098950 D_00098950__func_0001A94C
-#define D_0009B230 D_0009B230__func_0001A94C
-#define func_0001D608 func_0001D608__func_0001A94C
-extern struct S98950 D_00098950[] __asm__("D_00098950");
-extern struct S9B230 D_0009B230[] __asm__("D_0009B230");
-extern void func_0001D608(void *, int) __asm__("func_0001D608");
 void func_0001A94C(void) {
     int i;
-    struct S9B230 *q = D_0009B230;
-    struct S98950 *p = D_00098950;
+    CAR_DATA *q = D_0009B230;
+    CIV_SLOT *p = D_00098950;
     for (i = 0; i < 22; i++, q++, p++) {
-        if (p->b != 0) func_0001D608(q, 0);
+        if (p->f1 != 0) func_0001D608(q, 0);
     }
 }
-#undef D_00098950
-#undef D_0009B230
-#undef func_0001D608
 
 /* ---------------- func_0001A9BC (src/pilot/func_0001A9BC.c) ---------------- */
 #define Car Car__func_0001A9BC
 #define D_000988C8 D_000988C8__func_0001A9BC
 #define car_data car_data__func_0001A9BC
-#define func_0001AC18 func_0001AC18__func_0001A9BC
-#define func_00021558 func_00021558__func_0001A9BC
 /* per-frame bonus/score condition checks (no Driver 2 counterpart) */
 typedef struct {
     char pad0[0xC8];
@@ -4788,8 +4066,6 @@ typedef struct {
 } Car;
 extern Car car_data[] __asm__("car_data");
 extern short D_000988C8[] __asm__("D_000988C8");
-extern int func_00021558() __asm__("func_00021558");
-extern int func_0001AC18() __asm__("func_0001AC18");
 void func_0001A9BC(void)
 {
     char buf[80];
@@ -4841,8 +4117,6 @@ void func_0001A9BC(void)
 #undef Car
 #undef D_000988C8
 #undef car_data
-#undef func_0001AC18
-#undef func_00021558
 
 /* ---------------- func_0001AC18 (src/pilot/func_0001AC18.c) ---------------- */
 #define JN JN__func_0001AC18
