@@ -23,8 +23,8 @@
  *   `char inv_camera_matrix[]` became MATRIX (ScaleCamera passes &inv_camera_matrix: same bytes); convert's
  *   K&R libgte externs moved into the prelude. maspsx: sbss_align8=0 (D_000974E0, an 8-byte RECT, sits
  *   4 bytes into an .sbss that starts at 0x974DC: no .align 3), abs= D_000974E0 (its own, reached with %hi/%lo) and the other files'
- *   small globals (the old `extern long long`). .bss stays extern (.comm). The four unreferenced strings at
- *   0x108C8 ("MISSIONS\\MISSION.BLK", "DATA\\FONT2.BIN", "DATA\\SKY.BIN", "SOUND\\MUSIC.BIN") stay asm.
+ *   small globals (the old `extern long long`). .bss stays extern (.comm). The four strings at 0x108C8
+ *   ("MISSIONS\\MISSION.BLK", ...) are system.c's (its .data D_0008AAFC points at them).
  */
 /* MKTU CONFLICTS (first spelling active, others commented at their place below):
  * decl D_0008AA58:
