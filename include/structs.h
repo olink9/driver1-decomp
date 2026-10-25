@@ -286,4 +286,45 @@ typedef struct {
 } MENU_ITEM;
 SIZE_ASSERT(MENU_ITEM, 16);
 
+/* ---- D_000BFA7C[20]: one pedestrian, 0x58 bytes (civ_draw.c draws it, pedest.c moves it). D1's own record,
+ * not D2's PEDESTRIAN (0x94); the D2 name is kept for the type only. ---- */
+typedef struct {
+    VECTOR pos;                     /* 0x00 */
+    int f10;                        /* 0x10 */
+    int f14;                        /* 0x14 */
+    SVECTOR dir;                    /* 0x18 vy = heading */
+    SVECTOR vel;                    /* 0x20 */
+    int f28;                        /* 0x28 */
+    int f2C;                        /* 0x2C */
+    int f30;                        /* 0x30 */
+    int f34;                        /* 0x34 */
+    void *bones;                    /* 0x38 civ_draw BONE ** */
+    int flags;                      /* 0x3C */
+    short f40;                      /* 0x40 head yaw (DrawCiv) */
+    short f42;                      /* 0x42 */
+    short f44;                      /* 0x44 */
+    short f46;                      /* 0x46 */
+    unsigned char frame;            /* 0x48 */
+    unsigned char f49;
+    unsigned char f4A;
+    unsigned char f4B;
+    unsigned char *motion;          /* 0x4C civ_draw MOTION * */
+    unsigned char speed;            /* 0x50 */
+    signed char f51;                /* 0x51 */
+    signed char f52;                /* 0x52 */
+    unsigned char idx;              /* 0x53 */
+    unsigned char f54;              /* 0x54 */
+    unsigned char pal;              /* 0x55 */
+    unsigned char type;             /* 0x56 model/state */
+    unsigned char f57;
+} PEDESTRIAN;
+SIZE_ASSERT(PEDESTRIAN, 0x58);
+OFS_ASSERT(PEDESTRIAN, dir, 0x18);
+OFS_ASSERT(PEDESTRIAN, bones, 0x38);
+OFS_ASSERT(PEDESTRIAN, flags, 0x3C);
+OFS_ASSERT(PEDESTRIAN, frame, 0x48);
+OFS_ASSERT(PEDESTRIAN, motion, 0x4C);
+OFS_ASSERT(PEDESTRIAN, pal, 0x55);
+OFS_ASSERT(PEDESTRIAN, type, 0x56);
+
 #endif
