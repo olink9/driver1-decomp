@@ -134,7 +134,7 @@ Step 4 (move definitions into the owning file) - the recipe that worked:
 - Same traps as main: #undef of libgpu macros (cred), libgpu.h typedefs duplicated locally next to common.h (cred),
   callers needing a narrower return type (nfmv func_801019C8 -> short), differing static inline copies (mcard
   check_card x3, later ones renamed).
-- tools/progress.py still reads src/pilot/<t>/ only; it does not count functions that moved into TUs (main too).
+- tools/progress.py counts committed TUs now (see the FRONTEND section).
 ## Lessons (Step 3 part 1: include/structs.h; 17 TUs switched - byte-identical)
 - One header, include/structs.h: CAR_DATA, CIV_SLOT, PURSUER (0x7A8), MODEL (D2 int offsets), CELL_OBJECT, DB,
   PLAYBACKCAMERA, TEXINF/TEXTURE_DETAILS(UV coords), MENU_ITEM, WHEEL, SXY, VECTOR_NOPAD and the gte base types
@@ -150,3 +150,24 @@ Step 4 (move definitions into the owning file) - the recipe that worked:
   rest, linkcheck --tu decides; on a size diff revert only that function's spelling to a local view.
 - Field renames must be scoped by variable type (same field names on different records): rename by the object
   expression (`cp->`, `car_data[..].`) or by line range, never globally.
+## Lessons (FRONTEND: 23 files, 362 functions, all byte-identical; evidence in each file's head comment)
+- OBJECT PADDING is the strongest boundary signal in the overlays: every object's .text and .rodata start 8-aligned,
+  so a file that ends at 4 mod 8 leaves ONE zero word. .text: a nop after the final `jr ra` + delay slot (10 in
+  FRONTEND - every one was a cut, 3 of them inside ranges the call/data analysis had kept whole). .rodata: a zero
+  word no code or .data points at, not followed by a jtbl (jtbls are 8-aligned themselves). linkcheck --tu reports
+  the .text one as `+0x4 zero padding`. Main has no such padding (TU-PLAN finding 1), the overlays do: check MCARD/CRED.
+- Strings pointed at by INITIALISED .data come first in their file's .rodata (the data is defined at the top), so the
+  first .data-referenced string after a pad names the next file's data block (scan the raw .data words for rodata
+  and .text addresses - splat leaves most tables as .byte/.short, so `.word func_X` greps miss them).
+- Literal duplicates decide whole regions: "MCARD.BIN", DRFONTn, "On"/"Off", "Accept Changes", even "" (each file
+  that needs an empty string has its own). Unlabelled strings inside a splat block count too - list every .asciz.
+- Overlay pilots keep strings extern (D_ labels), so a TU has no rodata of its own and linkcheck says
+  "no data of its own" - the build test then proves only .text. Turning code-only string labels (not pointed at by
+  .data, block = one string + padding) into C literals makes it real: ladder.c = 3 literals + 2 jtbls as ONE
+  .rodata block at the original address. Script: build/tu-tools/lits.py (re.sub with a lambda - a plain
+  replacement string turns \P/\f/\n into control characters; linkcheck catches it as a .rodata diff).
+- Menu screens follow one pattern (screen function + handler table + 2-3 tiny handlers per item); each screen with
+  its table is its own object, called from the parent menu's handler. Calls between files are everywhere (the
+  shared draw/flip/pad helpers in femain/fecore are called by every screen) - zero-crossing gaps need span <= 25.
+- Same traps as before: libgpu typedef clash in a TU whose one section includes common.h (cut it out of the
+  file or delete the local copies with the same layout), static inline copy of a function the TU defines (_inl).
