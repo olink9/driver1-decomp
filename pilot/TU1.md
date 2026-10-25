@@ -69,3 +69,9 @@ Step 4 (move definitions into the owning file) - the recipe that worked:
 - maspsx emits .sbss variables as LOCAL labels (no .globl), so other files still reach them through
   undefined_syms_auto.txt. Fine for byte-matching; a real final link needs them global (later step).
 - tools/maspsx-abs-syms.patch adds MASPSX_ABS / MASPSX_SBSS_ALIGN8 (setup.sh applies it after the other two).
+## Lessons (batch D: main glaunch pad motion_c map objcoll gamesnd - byte-identical, ~15 min)
+- Type traps: a large pointer-sized extern (long long, B8) gives `la` (one register); an array type gives split %hi/%lo (other regs/slots). A `[]` global indexed by a constant keeps its base in a register; a struct field/cast folds into sym+off. When two functions in one TU need different spellings: a BLOCK-SCOPE extern in the earlier function, the file-scope declaration after it (gcc accepts that order).
+- Forward declarations: return `int` where callers were compiled against `extern int f()`, and cast returned values.
+- mktu bug: conflicting typedefs containing /* */ comments nest in the header comment - escape as `* /`.
+- Fast diff: pilot/scripts/fdiff.sh (objdump of build/tu-<f>/obj/tu/<f>.o vs asm/2C8C.s, mnemonic by mnemonic).
+- Boundaries moved by batch D: pad.c takes func_00035B50 (row 15); map.c extends to func_0003A270 (290, plan's map2.c); func_0003A45C (291) is probably the head of cars.c. main.c and glaunch.c are probably ONE file (shared string literals interleave in .rodata) - committed as two until Step 4 can prove it.
