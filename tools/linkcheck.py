@@ -672,9 +672,11 @@ def maspsx_text(cpath, cobj):
 BSS_RE = re.compile(r"(?:\.section\s+)?(\.s?bss)(?=[\s,]|$)")
 
 
-def split_bss(ms):
+def split_bss(ms, known=None):
     """maspsx output with every .bss/.sbss chunk cut at its labels: label i (with the
-    .align lines just before it) goes in its own section <.bss|.sbss>.lc<i>."""
+    .align lines just before it) goes in its own section <.bss|.sbss>.lc<i>. With `known`
+    (original symbol addresses), a label the original has no symbol for (an unreferenced
+    filler variable) stays in the piece of the label before it."""
     out, n, inb = [], 0, None
     for l in ms.split("\n"):
         st = l.strip()
@@ -692,7 +694,7 @@ def split_bss(ms):
         if st.startswith((".align", "#", ".globl", ".global")) or not st:
             pend.append(l)
             continue
-        if LABEL_RE.match(l):
+        if LABEL_RE.match(l) and (known is None or not started or l.strip()[:-1] in known):
             out.append(f'.section {inb}.lc{n},"aw",@nobits')
             n += 1
             started = True
@@ -761,7 +763,7 @@ def split_c(cpath, cobj, block, addrs, rodata, bss):
     The .text must keep its size; every piece must pair to exactly one base."""
     ms = maspsx_text(cpath, cobj)
     while True:
-        text = split_bss(ms) if bss else ms
+        text = split_bss(ms, addrs) if bss else ms
         if rodata:
             text = split_rodata(text, cobj, block, addrs)
         so = cobj[:-2] + ".split.o"
