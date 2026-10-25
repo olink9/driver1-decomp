@@ -8,7 +8,10 @@
  *   D_0008AE3C   AO *[] with the byte at 0xC (fC) that func_00053828 tests (was E4 there: a -> f4, c -> fC)
  *   modelpointers M *[] (the int[] users only pass the entry on)
  *   D_000BE744   int [3]
+ * Step 3: CAR_DATA comes from include/structs.h (the anonymous scalar car_data.x/z view = car_data[0].pos).
  */
+
+#include "structs.h"
 
 /* ---- types ---- */
 typedef struct {
@@ -69,7 +72,7 @@ extern V3 D_0008AE7C[];
 extern GARAGE_DOOR D_000BE754;
 extern long long D_00096808;
 extern long long D_00096878;
-extern struct { char a[0xC8]; int x, y, z; } car_data;
+extern CAR_DATA car_data[];
 extern int camera_position[];
 extern char inv_camera_matrix[];
 extern int func_000398B0();
@@ -300,8 +303,8 @@ void animate_garage_door(void)
         D_000BE754.cop = 0;
         return;
     }
-    dx = D_000BE754.old.x - car_data.x;
-    dz = D_000BE754.old.z - car_data.z;
+    dx = D_000BE754.old.x - car_data[0].pos.vx;
+    dz = D_000BE754.old.z - car_data[0].pos.vz;
     if (dx < 0) dx = -dx;
     if (dz < 0) dz = -dz;
     d = dx + dz;
