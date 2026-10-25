@@ -60,6 +60,17 @@ typedef struct {
     int z; /* 0x8 */
 } CELL_OBJ;
 
+typedef struct {
+    char pad0[0x10];
+    short f10, f12, f14, f16; /* 0x10 */
+    unsigned char f18; /* 0x18 */
+    char pad19;
+    short f1A, f1C, f1E; /* 0x1A */
+    char pad20[0x26 - 0x20];
+    unsigned char f26; /* 0x26 */
+    char pad27[0x38 - 0x27];
+} REC_99120;
+
 /* ---- shared declarations (identical in every pilot) ---- */
 extern short D_000978B0[];
 typedef struct { int nx, ny, nz, d; } PLANE;
@@ -179,11 +190,6 @@ typedef struct {
 } VEC;
 extern int func_00058A00();
 extern void func_000589B4();
-typedef struct {
-    char pad[0x1A];
-    short s1A, s1C, s1E;
-    char pad20[0x38 - 0x20];
-} B048_S;
 extern char D_00099158[];
 extern short D_00096FE8;
 extern int D_00096FD0;
@@ -266,10 +272,6 @@ typedef struct {
     int z;
 } XZ_b062;
 typedef struct {
-    char pad[0x794];
-    int f794;
-} B;
-typedef struct {
     char pad[0x26];
     unsigned char c26;
 } C;
@@ -310,7 +312,7 @@ extern CAR_DATA *D_00096FC0;
 extern volatile long long CameraCnt;
 extern unsigned char D_00096FC4;
 extern long long D_00096898;   /* majority spelling; other pilots keep a view */
-extern char D_00099120[];   /* majority spelling; other pilots keep a view */
+extern REC_99120 D_00099120;
 extern int func_00021558();   /* majority spelling; other pilots keep a view */
 extern int func_00021820();
 extern int func_00063B74();
@@ -1822,22 +1824,11 @@ CAR_DATA *func_00016094(int model, int a1, int a2, int x, int z)
 
 /* ---------------- func_0001638C (src/pilot/func_0001638C.c) ---------------- */
 #define ClearMem ClearMem__func_0001638C
-#define D_000C4E38 D_000C4E38__func_0001638C
-#define PED PED__func_0001638C
 #define SEG SEG__func_0001638C
 /* func_0001638C - no Driver 2 counterpart: spawn a car */
 typedef struct {
-    char pad0[0x40];
-    int f40;
-    char pad44[0x78C - 0x44];
-    int f78C, f790, f794;
-    char pad798[0x7A4 - 0x798];
-    CAR_DATA *f7A4;
-} PED;
-typedef struct {
     int a[6];
 } SEG;
-extern PED D_000C4E38[] __asm__("D_000C4E38");
 static inline void ClearMem(unsigned char *p, int n)
 {
     unsigned char *end = p + n;
@@ -1856,7 +1847,7 @@ CAR_DATA *func_0001638C(int dir, int x, int z)
     SEG seg;
     CAR_DATA *cp = 0;
     CIV_SLOT *e;
-    PED *pd;
+    PURSUER *pd;
     int slot;
     int r;
     int n;
@@ -1897,11 +1888,11 @@ CAR_DATA *func_0001638C(int dir, int x, int z)
     n = func_00063B14();
     e->f5 = n + 1;
     pd = &D_000C4E38[n];
-    pd->f78C = 1;
+    pd->active = 1;
     pd->f790 = 0;
     pd->f794 = 1;
     pd->f40 = 0;
-    pd->f7A4 = cp;
+    pd->car = cp;
     pd->f794 = 0;
     (*(int *)&D_00097764)++;
     e->f1 = 4;
@@ -1918,8 +1909,6 @@ end:
     return cp;
 }
 #undef ClearMem
-#undef D_000C4E38
-#undef PED
 #undef SEG
 
 /* ---------------- func_00016760 (src/pilot/func_00016760.c) ---------------- */
@@ -2019,7 +2008,7 @@ void func_00016B24(void)
     if (D_00096FD4 == 0)
         return;
     if (D_00096780 == 0) {
-        func_0001943C(D_00099120);
+        func_0001943C(&D_00099120);
         local = func_00017A64();
         if (local == -1)
             return;
@@ -2050,10 +2039,6 @@ void func_00016B24(void)
 
 /* ---------------- func_00016CE4 (src/pilot/func_00016CE4.c) ---------------- */
 #define ClearMemInline ClearMemInline__func_00016CE4
-#define D_00099120 D_00099120__func_00016CE4
-#define D_000C4E38 D_000C4E38__func_00016CE4
-extern char D_000C4E38[] __asm__("D_000C4E38");
-extern B048_S D_00099120 __asm__("D_00099120");
 static inline void ClearMemInline(unsigned char *p, int n)
 {
     unsigned char *end = p + n;
@@ -2070,7 +2055,7 @@ static inline void ClearMemInline(unsigned char *p, int n)
 void func_00016CE4(void)
 {
     int i;
-    B048_S *b;
+    REC_99120 *b;
     CIV_SLOT *e;
     unsigned char *q;
 
@@ -2080,9 +2065,9 @@ void func_00016CE4(void)
     if (*(int *)&D_00096834 != 2) {
         b = &D_00099120;
         ClearMemInline((unsigned char *)b, 0x38);
-        b->s1E = 450;
-        b->s1A = -1;
-        b->s1C = -1;
+        b->f1E = 450;
+        b->f1A = -1;
+        b->f1C = -1;
         D_00096FE8 = -1;
         D_00096FF4 = 0;
         func_00021DE8();
@@ -2109,8 +2094,6 @@ void func_00016CE4(void)
     D_00096FBC = 0;
 }
 #undef ClearMemInline
-#undef D_00099120
-#undef D_000C4E38
 
 /* ---------------- func_00016F0C (src/pilot/func_00016F0C.c) ---------------- */
 #define CAR CAR__func_00016F0C
@@ -2516,7 +2499,7 @@ int func_00017AA0(unsigned char type)
         }
         if (ok) {
             if (e->f1 == 0) {
-                if ((unsigned char)func_000192D0(D_00099120, e->id) == 0)
+                if ((unsigned char)func_000192D0(&D_00099120, e->id) == 0)
                     return 1;
             } else {
                 r = func_000612FC((char *)car + 0xC8, (char *)cur + 0xC8);
@@ -2549,7 +2532,7 @@ void func_00017C50(int a)
         func_00063AB4(&D_000C4690[p->f5]);
     }
     if (p->f1 == 9) {
-        func_0001A008(D_00099120);
+        func_0001A008(&D_00099120);
     }
     p->f1 = 0;
     p->f8 = 0;
@@ -2833,46 +2816,31 @@ void func_00018548(void)
 }
 
 /* ---------------- func_00018550 (src/pilot/func_00018550.c) ---------------- */
-#define A A__func_00018550
-#define D_00099120 D_00099120__func_00018550
-typedef struct {
-    char c0;
-    char c1;
-    char pad[0x13];
-    char c15;
-    char c16;
-    char pad2[0x38 - 0x17];
-    int f38;
-    int f3C;
-} A;
-extern C D_00099120 __asm__("D_00099120");
-void func_00018550(A *a)
+void func_00018550(CIV_SLOT *a)
 {
-    C *c;
+    REC_99120 *c;
     CAR_DATA *s;
-    B *b;
+    PURSUER *b;
 
-    s = &D_0009B230[*(unsigned char *)a];
+    s = &D_0009B230[a->id];
     if (s->totalDamage == 0) {
         a->f3C = 0;
         a->f38 = 0;
-        a->c15 = 1;
-        a->c16 = 1;
+        a->f15 = 1;
+        a->f16 = 1;
     } else {
-        b = (B *)func_00063B74(a, s);
+        b = (PURSUER *)func_00063B74(a, s);
         if (b != 0) {
-            a->c1 = 2;
+            a->f1 = 2;
             c = &D_00099120;
             s->fFC = 0;
             b->f794 = 0;
-            c->c26--;
-            if (c->c26 == 0)
+            c->f26--;
+            if (c->f26 == 0)
                 func_0001A008(c);
         }
     }
 }
-#undef A
-#undef D_00099120
 
 /* ---------------- func_00018618 (src/pilot/func_00018618.c) ---------------- */
 #define ROAD ROAD__func_00018618
@@ -3282,7 +3250,7 @@ void func_0001943C(P *p)
             if (f5)
                 func_00063AB4(&D_000C4690[cp->f5]);
             if (cp->f1 == 9)
-                func_0001A008(D_00099120);
+                func_0001A008(&D_00099120);
             cp->f1 = 0;
             cp->f8 = 0;
             D_00099AF0[--D_00096FC4] = s;
@@ -3368,7 +3336,6 @@ void func_000197E0(POS pos, int val, int dir, int count, unsigned char flag)
 #undef PlaceOne
 
 /* ---------------- func_00019AF4 (src/pilot/func_00019AF4.c) ---------------- */
-#define D_00099120 D_00099120__func_00019AF4
 #define NODE NODE__func_00019AF4
 #define OBJ OBJ__func_00019AF4
 #define func_000197E0 func_000197E0__func_00019AF4
@@ -3391,7 +3358,6 @@ typedef struct {
     unsigned char ids[1];
 } OBJ;
 typedef struct { int a; int b; int c; int d; int e; } NODE;
-extern int D_00099120[] __asm__("D_00099120");
 extern void func_000197E0() __asm__("func_000197E0");
 int func_00019AF4(OBJ *p)
 {
@@ -3427,7 +3393,7 @@ int func_00019AF4(OBJ *p)
         if (snd != 0)
             func_00063AB4(&D_000C4690[e->f5]);
         if (e->f1 == 9)
-            func_0001A008(D_00099120);
+            func_0001A008(&D_00099120);
         e->f1 = 0;
         e->f8 = 0;
         ptr++;
@@ -3452,7 +3418,6 @@ int func_00019AF4(OBJ *p)
     }
     return 1;
 }
-#undef D_00099120
 #undef NODE
 #undef OBJ
 #undef func_000197E0
@@ -3550,7 +3515,7 @@ void func_0001A024(P *p)
         if (a != 0)
             func_00063AB4(&D_000C4690[s->f5]);
         if (s->f1 == 9)
-            func_0001A008(D_00099120);
+            func_0001A008(&D_00099120);
         s->f1 = 0;
         s->f8 = 0;
         t = D_00096FC4 - 1;
@@ -3618,7 +3583,7 @@ static inline void remove_civ(int i)
     if (a != 0)
         func_00063AB4(&D_000C4690[s->f5]);
     if (s->f1 == 9)
-        func_0001A008(D_00099120);
+        func_0001A008(&D_00099120);
     s->f1 = 0;
     s->f8 = 0;
     {
