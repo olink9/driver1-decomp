@@ -4,6 +4,10 @@
  * copies are dropped for libgpu.h's
  * Step 3 (include/structs.h, after common.h): DB (current->id), VECTOR (VEC4), VECTOR_NOPAD (V3; x/y/z -> vx/vy/vz).
  *   No views; E16 (the fly-by path keys) stays local.
+ * Step 4: defines its own data, in address order: .data 0x8D0AC-0x8D0EC, .sdata 0x96F74-0x96F90 (D_00096F78/7C
+ * unreferenced; D_00096F8D[3] is padding only linkcheck needs - the asm label block of D_00096F8C is 4 bytes), .sbss
+ * 0x977D4-0x977E0 (D_000977DC unreferenced); "FB\\%d\\FB%d.FB" (.rodata 0x11640) is a C literal.
+ * extern long long -> int + maspsx abs= (5).
  */
 /* MKTU CONFLICTS (first spelling active, others commented at their place below):
  * decl cameraview:
@@ -45,20 +49,34 @@
  *     typedef struct { unsigned int w[13]; } POLY_GT4;    <- func_0006E040
  */
 
+/* maspsx: abs=tracking_car,D_0009B19C,D_00096A60,D_00096A58,current */
 #include "common.h"
 #include "structs.h"
 
 /* ---- types ---- */
 typedef struct { int a, b, c, d; } E16;
 
+/* ---- .data 0x8D0AC-0x8D0EC: flyby.c's own initialised data ---- */
+int D_0008D0AC[16] = { -1, 3, -3, 1, 2, -5, 4, -1, -1, 0, 1, 0, 0, 2, 0, 0 };
+
+/* ---- .sdata 0x96F74-0x96F90 (D_00096F78/7C: unreferenced words of the first label block) ---- */
+int D_00096F74 = 0x14;
+int D_00096F78 = 1;
+int D_00096F7C = 0;
+int D_00096F80 = 5;
+int D_00096F84 = 0;
+int D_00096F88 = 0xFF;
+unsigned char D_00096F8C = 0;
+char D_00096F8D[3] = { 0 };  /* padding to ladder.c's .sdata: linkcheck needs the label block covered to an aligned end */
+
+/* ---- .sbss 0x977D4-0x977E0 (D_000977DC: unreferenced gap filler) ---- */
+int D_000977D4;
+int D_000977D8;
+int D_000977DC;
+
+
 /* ---- externs ---- */
-extern int D_00096F74;
-extern int D_0008D0AC[16];
 extern short D_00097538[];
-extern int D_00096F80;
-extern int D_00096F84;
-extern int D_000977D4;
-extern int D_000977D8;
 extern char cameraview[8];
 extern E16 D_000C71EC[];
 extern E16 D_000C74CC[];
@@ -68,19 +86,16 @@ extern short D_00096C48[4];
 extern short D_00096C4A[4];
 extern short D_00096C4C[4];
 extern void func_0004E024();
-extern long long tracking_car;
-extern long long D_0009B19C;
-extern long long D_00096A60;
-extern long long D_00096A58;
-extern char D_00011640[];
+extern int tracking_car;
+extern int D_0009B19C;
+extern int D_00096A60;
+extern int D_00096A58;
 extern int sprintf();
 extern void Loadfile();
 extern POLY_GT4 D_000C775C[];
 extern POLY_G4 D_000C77E4[];
 extern POLY_F4 D_000C749C[];
 extern POLY_F4 D_000C746C[];
-extern int D_00096F88;
-extern unsigned char D_00096F8C;
 
 /* ---- functions defined in this file ---- */
 int func_0006D688();
@@ -174,7 +189,7 @@ void func_0006DD3C(int x)
 	D_000977D8 = 0;
 	*(char *)&tracking_car = 0;
 	*(char *)&cameraview = 5;
-	sprintf(buf, D_00011640, q, x);
+	sprintf(buf, "FB\\%d\\FB%d.FB", q, x);
 	p = (int *)0xD0204;
 	Loadfile(buf, 0xD0200);
 	D_00096F84 = *(unsigned char *)0xD0200;
@@ -220,7 +235,7 @@ void func_0006DEC0(void) {
 
 /* ---------------- func_0006E040 (src/pilot/func_0006E040.c) ---------------- */
 /* screen fade / letterbox bars */
-extern long long current;
+extern int current;
 #define current (*(DB **)&current)
 void func_0006E040(void)
 {
