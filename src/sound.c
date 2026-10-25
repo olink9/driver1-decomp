@@ -66,9 +66,8 @@ typedef struct {
 typedef struct { int mask; int mode; short l; short r; int delay; int feedback; } RA;
 
 /* ---- sound.c's own data (Step 4), in address order ---- */
-/* .data 0x8AA24-0x8AA38 (one word is the address of D_00010000, the start of .rodata) */
-extern char D_00010000[];
-int D_0008AA24[] = { 0x28000, 0x400, 0x19000, (int)D_00010000, 0x21800 };
+/* .data 0x8AA24-0x8AA38: sizes (splat shows the 0x10000 as `.word D_00010000`; it is a number, not a pointer) */
+int D_0008AA24[] = { 0x28000, 0x400, 0x19000, 0x10000, 0x21800 };
 
 /* .sdata 0x96C74-0x96CB0. D_00096C98/9C are unreferenced words; D_00096CA0/A8 are the bytes of two short strings
  * ("Pause\n", "%d") that no code references - the compiler's .sdata copies of debug strings whose printf calls
