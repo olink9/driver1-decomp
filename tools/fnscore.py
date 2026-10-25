@@ -72,6 +72,7 @@ def compile_c(path, out, a):
             r = subprocess.run(cmd, cwd=ROOT, capture_output=True, text=True)
             if r.returncode:
                 return (r.stdout + r.stderr)[-3000:]
+        place_include_asm(s)
         mx = [sys.executable, os.path.join(ROOT, "tools/maspsx/maspsx.py"), f"--aspsx-version={a.aspsx}",
               "--expand-div", f"-G{a.G}"] + (["--dont-force-G0"] if False else [])
         # empirical (2026-10-14): externs of <= 4 bytes are $gp-relative, 8-byte ones are not
@@ -90,6 +91,41 @@ def compile_c(path, out, a):
         if a.keep_s:
             open(out[:-2] + ".cc1.s", "w").write(open(s).read())
     return None
+
+
+APP_BLOCK = re.compile(r"^ #APP\n(?:(?! #NO_APP\n).*\n)*? #NO_APP\n", re.M)
+
+
+def place_include_asm(s):
+    """Put INCLUDE_ASM'd wips back where the C file has them. With -G8 (-mgpopt) cc1 writes
+    function bodies to a side file and copies it to the end, while a top-level asm() goes
+    out at once - so a wip in the middle of a TU would land before the TU's first function.
+    The `.globl` lines cc1 prints at each definition keep source order: an #APP block that
+    includes asm_fn/ and sits before the first `.ent` moves to just before the `.ent` of the
+    next global function after it (or to the end). Nothing else is touched (-G0 overlays
+    keep their order already)."""
+    text = open(s).read()
+    first = text.find("\t.ent\t")
+    if first < 0:
+        return
+    moves, head, pos = [], text[:first], 0
+    for m in APP_BLOCK.finditer(head):
+        if '.include "asm_fn/' not in m.group(0):
+            continue
+        g = re.search(r"^\t\.globl\t(\w+)\n", head[m.end():], re.M)
+        moves.append((m.start(), m.end(), g.group(1) if g else None))
+    if not moves:
+        return
+    body = text[first:]
+    for a, b, fn in moves:
+        blk = text[a:b]
+        k = body.find(f"\t.ent\t{fn}\n") if fn else -1
+        while fn and k >= 0 and body[k:].split("\n", 1)[1].split(":", 1)[0] != fn:
+            k = body.find(f"\t.ent\t{fn}\n", k + 1)
+        body = body + blk if k < 0 else body[:k] + blk + body[k:]
+    for a, b, _ in reversed(moves):
+        head = head[:a] + head[b:]
+    open(s, "w").write(head + body)
 
 
 MASPSX_LINE = re.compile(r"^\s*/\*\s*maspsx:\s*(.*?)\s*\*/\s*$")
