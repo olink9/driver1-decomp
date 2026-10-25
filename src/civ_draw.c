@@ -9,7 +9,12 @@
  *   PED, func_0005D974's OBJ (s18/s1c -> dir.vx/vz, s22 -> vel.vy, p38 -> bones, s40 -> f40, c48 -> frame, i4c ->
  *   motion, c50 -> speed, c55 -> pal, c56 -> type) and D_000BFA7C's struct Q (f -> flags). VECTOR/SVECTOR/CVECTOR/
  *   MATRIX/DB from the header. No views; TEX/BONE/MOTION/PFT4/P_TAG/S4 stay local.
+ * Step 4: the file defines its .data (0x8B70C-0x8B9E8: the body-part records - pres.c's D_0008B704 ends right before
+ *   them, and only these tables point at them - and the five part lists) and .sdata (0x96E44-0x96E4C) in address
+ *   order, each one block; no .sbss, no .rodata. abs= replaces the old `extern long long` spellings; .bss stays
+ *   extern (.comm). The .sdata words 0x96E4C-0x96E5B (0x14, 6, 0, 1; no code names them) are left out.
  */
+/* maspsx: abs=gNight,D_000970E4,D_00096A48,combointensity,D_00096C4A,D_000970B0,D_000970B4,D_000970B8,D_000970BC,D_000971C0,current */
 
 #include "gte.h"
 #include "structs.h"
@@ -48,38 +53,86 @@ typedef struct {
 } PFT4;
 typedef struct { unsigned addr:24; unsigned len:8; } P_TAG;
 
+/* ---- civ_draw.c's own data (Step 4), in address order ---- */
+/* .data 0x8B70C-0x8B9E8: 27 body-part records { packed bytes, parent?, texture, n } and the five 15-entry part lists
+ * DrawCiv hangs on o->bones (the records keep no labels of their own: &D_0008B70C[k]) */
+typedef struct { int a; void *b; void *c; int d; } CIVPART;
+extern int D_000970B4;
+extern TEXTURE_DETAILS D_000B9120, D_000B9150, D_000B91A0, D_000B9220, D_000B9250;
+CIVPART D_0008B70C[27] = {
+    { 0x44520B0A, &D_000970B4, &D_000B9120, 0 }, { 0x442A080B, 0, &D_000B9220, 0x17 },
+    { 0x41130E0F, 0, &D_000B9250, 0x18 }, { 0x44100D0E, 0, &D_000B91A0, 0 },
+    { 0xF4090C0D, 0, &D_000B91A0, 0 }, { 0x41131213, 0, &D_000B9250, 0x18 },
+    { 0x44101112, 0, &D_000B91A0, 0 }, { 0xF4091011, 0, &D_000B91A0, 0 },
+    { 0x441C0607, 0, &D_000B9150, 0x19 }, { 0xF4180506, 0, &D_000B9150, 0x19 },
+    { 0x3F0A0504, 0, &D_000B9250, 0 }, { 0x441C0203, 0, &D_000B9150, 0x19 },
+    { 0xF4180102, 0, &D_000B9150, 0x19 }, { 0x3F0A0100, 0, &D_000B9250, 0 },
+    { 0x4428080B, 0, &D_000B9220, 0x17 }, { 0x1428080B, 0, &D_000B9220, 0x17 },
+    { 0x4423080B, 0, &D_000B9220, 0x17 }, { 0x41121213, 0, &D_000B9250, 0x18 },
+    { 0x44121112, 0, &D_000B9250, 0x18 }, { 0x41120E0F, 0, &D_000B9250, 0x18 },
+    { 0x44120D0E, 0, &D_000B9250, 0x18 }, { 0x440E0E0F, 0, &D_000B91A0, 0 },
+    { 0x440E1213, 0, &D_000B91A0, 0 }, { 0xF4120506, 0, &D_000B91A0, 0 },
+    { 0xF4120102, 0, &D_000B91A0, 0 }, { 0x44920203, 0, &D_000B91A0, 0 },
+    { 0x44920607, 0, &D_000B91A0, 0 }
+};
+CIVPART *D_0008B8BC[15] = {
+    &D_0008B70C[13], &D_0008B70C[12], &D_0008B70C[11], &D_0008B70C[10], &D_0008B70C[9],
+    &D_0008B70C[8], &D_0008B70C[0], &D_0008B70C[1], &D_0008B70C[4], &D_0008B70C[3],
+    &D_0008B70C[2], &D_0008B70C[7], &D_0008B70C[6], &D_0008B70C[5], 0
+};
+CIVPART *D_0008B8F8[15] = {
+    &D_0008B70C[13], &D_0008B70C[12], &D_0008B70C[11], &D_0008B70C[10], &D_0008B70C[9],
+    &D_0008B70C[8], &D_0008B70C[0], &D_0008B70C[14], &D_0008B70C[4], &D_0008B70C[20],
+    &D_0008B70C[19], &D_0008B70C[7], &D_0008B70C[18], &D_0008B70C[17], 0
+};
+CIVPART *D_0008B934[15] = {
+    &D_0008B70C[13], &D_0008B70C[24], &D_0008B70C[11], &D_0008B70C[10], &D_0008B70C[23],
+    &D_0008B70C[8], &D_0008B70C[0], &D_0008B70C[16], &D_0008B70C[4], &D_0008B70C[3],
+    &D_0008B70C[21], &D_0008B70C[7], &D_0008B70C[6], &D_0008B70C[22], 0
+};
+CIVPART *D_0008B970[15] = {
+    &D_0008B70C[13], &D_0008B70C[24], &D_0008B70C[25], &D_0008B70C[10], &D_0008B70C[23],
+    &D_0008B70C[26], &D_0008B70C[0], &D_0008B70C[15], &D_0008B70C[4], &D_0008B70C[3],
+    &D_0008B70C[21], &D_0008B70C[7], &D_0008B70C[6], &D_0008B70C[22], 0
+};
+CIVPART *D_0008B9AC[15] = {
+    &D_0008B70C[13], &D_0008B70C[12], &D_0008B70C[11], &D_0008B70C[10], &D_0008B70C[9],
+    &D_0008B70C[8], &D_0008B70C[0], &D_0008B70C[1], &D_0008B70C[4], &D_0008B70C[3],
+    &D_0008B70C[2], &D_0008B70C[7], &D_0008B70C[6], &D_0008B70C[5], 0
+};
+
+/* .sdata 0x96E44-0x96E4C (both reached with %hi/%lo through an incomplete first declaration, as matched; the
+ * words 0x96E4C-0x96E5B after them are nobody's in this file - pedest.c/players.c, before felony.c's block) */
+extern S4 D_00096E44[];
+S4 D_00096E44[1] = { { 0x80, 0x80, 0x80, 0 } };
+extern CVECTOR D_00096E48[];
+CVECTOR D_00096E48[1] = { { 0x30, 0x30, 0x30, 0 } };
+
 /* ---- externs ---- */
 extern int D_000C015C[];
 extern int D_000C0164[];
 extern int D_000C0168[];
-extern char D_0008B8BC[];
-extern char D_0008B8F8[];
-extern char D_0008B934[];
-extern char D_0008B970[];
-extern char D_0008B9AC[];
 extern int func_0004FFE8();
 extern PEDESTRIAN D_000BFA7C[];
-extern S4 D_00096E44[];
 extern void func_0002DBB4();
 extern int func_000398B0();
 extern int func_0002C5F0();
 extern VECTOR camera_position;
 extern short D_0008EAAA[];
 extern short rcossin_tbl[];
-extern long long gNight;
-extern CVECTOR D_00096E48[];
+extern int gNight;
 extern MATRIX inv_camera_matrix;
 extern MATRIX matrixtable[];
-extern long long D_000970E4;
-extern long long D_00096A48;
-extern long long combointensity;
-extern long long D_00096C4A;
+extern int D_000970E4;
+extern int D_00096A48;
+extern int combointensity;
+extern int D_00096C4A;
 extern int D_000BE9FC[][30][5];
-extern long long D_000970B0;
-extern long long D_000970B4;
-extern long long D_000970B8;
-extern long long D_000970BC;
-extern long long D_000971C0;
+extern int D_000970B0;
+extern int D_000970B4;
+extern int D_000970B8;
+extern int D_000970BC;
+extern int D_000971C0;
 extern void ShowGroundLight();
 extern void func_0004EAC0();
 extern void MulMatrix0();
@@ -151,7 +204,7 @@ void func_0005DB30(void) {
 #define setaddr(_p, _addr) (((P_TAG *)(_p))->addr = (unsigned long)(_addr))
 #define getaddr(_p) (unsigned long)(((P_TAG *)(_p))->addr)
 #define addPrim(ot, p) setaddr(p, getaddr(ot)), setaddr(ot, p)
-extern long long current;
+extern int current;
 #define current (*(DB **)&current)
 #define gte_ldv3c(r0) __asm__ volatile ( \
     "lwc2  $0, 0( %0 );" "lwc2  $1, 4( %0 );" "lwc2  $2, 8( %0 );" \
