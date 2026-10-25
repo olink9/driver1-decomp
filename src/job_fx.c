@@ -9,7 +9,7 @@
  *  - car_data: CAR_DATA[]; func_000669B8's CAR view (x/y/z at 0xC8) is car_data[0].pos.
  *  - Step 3: CAR_DATA, MATRIX/VECTOR/SVECTOR, DB and TEXTURE_DETAILS come from include/structs.h. Renamed: x/z
  *    (0x40/0x48) = linearVelocity[0]/[2], px/py/pz = pos, dir = direction, smoke = speed, dmg = damage, flag12f =
- *    hit, f17c = totalDamage; D_000B91B0's 16-bit u0..u3 reads are *(unsigned short *)&.u0 (UV pairs).
+ *    hit, f17c = totalDamage; D_000B91B0's 16-bit u0..u3 reads are *(unsigned short *)&.coords.u0 (UV pairs).
  *  - D_0008BC34: int[]; func_000669B8 reads it through an (OBJ *) cast.
  */
 
@@ -371,10 +371,10 @@ void DrawExplosion(int time)
     int sf, sf1, sf2;
     unsigned int u0, u1, u2, u3;
 
-    u0 = *(unsigned short *)&D_000B91B0.u0;
-    u1 = *(unsigned short *)&D_000B91B0.u1;
-    u2 = *(unsigned short *)&D_000B91B0.u2 - 0x800;
-    u3 = *(unsigned short *)&D_000B91B0.u3 - 0x800;
+    u0 = *(unsigned short *)&D_000B91B0.coords.u0;
+    u1 = *(unsigned short *)&D_000B91B0.coords.u1;
+    u2 = *(unsigned short *)&D_000B91B0.coords.u2 - 0x800;
+    u3 = *(unsigned short *)&D_000B91B0.coords.u3 - 0x800;
 
     if (D_00096E74 == 0) {
         func_00066CCC();

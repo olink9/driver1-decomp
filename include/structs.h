@@ -259,8 +259,9 @@ typedef struct {
     unsigned char x, y, width, height; /* 0x4 */
 } TEXINF;
 SIZE_ASSERT(TEXINF, 8);
+typedef struct { unsigned char u0, v0, u1, v1, u2, v2, u3, v3; } UV;
 typedef struct {
-    unsigned char u0, v0, u1, v1, u2, v2, u3, v3; /* 0x0 D2 UV coords */
+    UV coords;                      /* 0x0 */
     unsigned short tpageid;         /* 0x8 */
     unsigned short clutid;          /* 0xA */
 } TEXTURE_DETAILS;
