@@ -23,3 +23,11 @@ If a boundary looks wrong (a function at the edge needs types that clearly belon
 won't link as one block), say so in your reply instead of forcing it; shrink the TU to the part that works.
 Rules: work ALONE (no sub-agents); nothing wider than -j2; `</dev/null` in shell loops around distrobox; no push.
 Final reply per file: functions merged, conflicts found / how resolved, boundary doubts, commit hash; then lessons.
+
+## Lessons (batch A: fmvplay, xaplay, pres, objanim, system, texture - all byte-identical, ~10 min)
+- mktu also writes the conflict list into the file's header comment: edit only below the header (a whole-file replace hits it twice).
+- Same global read with different widths across pilots: the target's load/store instructions decide the type; cast the odd access.
+- "Different" pilot structs are often one record seen through partial shapes: lay out the offsets; D2 names (GARAGE_DOOR, CELL_OBJECT) usually fit.
+- int[] -> char[]+cast can reschedule code at the same address: keep the type the scheduling-sensitive function used.
+- A file including common.h clashes with unprototyped PsyQ externs elsewhere: until shared headers exist, declare the few GPU types locally.
+- Commit with explicit paths (`git commit -- <paths>`) so another agent's staged files can't end up in your commit.
