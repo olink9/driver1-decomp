@@ -36,6 +36,7 @@
  *    DB_ShowLight1/DB_ShowLight (ot as unsigned long **), DB_DrawLensFlare (disp_y at 0x6E, beyond the header's
  *    DB); the remaining TYPE_<function> views are SMOKE/DEBRIS/LEAF/RAIN/MODEL-cosmetics shapes, not car records.
  */
+/* maspsx: abs=D_0009688C,D_0009717C,pauseflag,gNight,D_00096834,D_00096854,D_00096CD0,D_00096804,D_0009744E,D_00097450,D_0009746E,D_00097470,D_0009697C,D_000971C0,D_00097128,D_001E4038,D_001E40A0,D_000967F4,D_00096C48,D_00096C4A,gLightsOn,FastForward,CameraCnt,current,D_000971B4,D_00096980 */
 #include "gte.h"
 #include "structs.h"
 
@@ -412,14 +413,14 @@ typedef struct { short flags; unsigned short flags2; } MODEL_AddRainDrops;
 extern CAR_DATA car_data[];
 extern MATRIX D_000AF6A0[];
 extern B8 cameraview;
-extern long long D_0009688C;
+extern int D_0009688C;
 extern VECTOR camera_position;
 extern int D_0008A8F4[];
 extern int LightSortCorrect;
 extern short D_00097484;
 extern unsigned char D_00097458;
 extern unsigned char D_00097460;
-extern long long D_0009717C;
+extern char *D_0009717C;
 extern MATRIX inv_camera_matrix;
 extern VECTOR D_0008909C;
 extern MATRIX D_000890BC;
@@ -429,7 +430,7 @@ extern void SetRotMatrix();
 extern void func_0004EAC0();
 extern int MapHeight();
 extern void sQuad();
-extern long long pauseflag;
+extern int pauseflag;
 extern unsigned short *modelpointers[];
 extern SMOKE D_000B92A0[];
 extern int func_000776E4();
@@ -444,14 +445,14 @@ extern int D_00096AC0;
 extern int D_00097430;
 extern short D_000B7EC8[];
 extern LEAF D_000B7584[];
-extern long long gNight;
+extern int gNight;
 extern unsigned char D_00096AA8;
 extern char D_0009B16C[];   /* = &car_data[0].pos (0x9B0A4 + 0xC8) */
 /* car_data reached through an interior symbol (D_0009B16C, D_0009B1D4): the original's %hi/%lo name it */
 #define CARS_AT(sym, off) ((CAR_DATA *)((char *)(sym) - (off)))
-extern long long D_00096834;
-extern long long D_00096854;
-extern long long D_00096CD0;
+extern int D_00096834;
+extern int D_00096854;
+extern int D_00096CD0;
 extern TEXTURE_DETAILS D_000B736C;
 extern TEXTURE_DETAILS D_000B737C;
 extern TEXTURE_DETAILS D_000B7EA8;
@@ -500,7 +501,7 @@ extern TEXTURE_DETAILS D_000BBDC0;
 extern TEXTURE_DETAILS D_000BBE44;
 extern void GetTextureDetails(char *name, TEXTURE_DETAILS *info);
 extern void func_0005CB68(int clut, int a, int b);
-extern long long D_00096804;
+extern int D_00096804;
 extern int D_00097448;
 extern int D_00097414;
 extern int D_0009742C;
@@ -509,11 +510,11 @@ extern int D_00097478;
 extern int D_00097488;
 extern int D_0009745C;
 extern short D_0009744C;
-extern long long D_0009744E;
-extern long long D_00097450;
+extern short D_0009744E;
+extern short D_00097450;
 extern short D_0009746C;
-extern long long D_0009746E;
-extern long long D_00097470;
+extern short D_0009746E;
+extern short D_00097470;
 extern LAMP Known_Lamps[];
 extern short D_000B9048[];
 extern DEBRIS debris[];
@@ -527,12 +528,12 @@ extern char D_000B8190[];
 extern char D_000B7F3C[];
 extern void func_0004EA98();
 extern int D_0009B1A8[];
-extern long long D_0009697C;
+extern COP **D_0009697C;
 extern COP *D_000A5DCC[];
 extern MATRIX D_0001064C;
 extern MATRIX D_000AF9C0;
-extern long long D_000971C0;
-extern long long D_00097128;
+extern int D_000971C0;
+extern int D_00097128;
 extern void func_0002DBB4();
 extern int func_0002C5F0();
 extern int func_0002C6DC();
@@ -541,12 +542,12 @@ extern int D_00097464;
 extern void DisplayLightReflections();
 extern volatile struct Q D_00097534;
 extern int D_000BBDD0[];
-extern long long D_001E4038;
-extern long long D_001E40A0;
+extern int D_001E4038;
+extern int D_001E40A0;
 extern int D_0009741C;
-extern long long D_000967F4;
-extern long long D_00096C48;
-extern long long D_00096C4A;
+extern int D_000967F4;
+extern short D_00096C48;
+extern short D_00096C4A;
 extern char car_cosmetics[];
 extern char D_0009B1D4[];   /* = (char *)car_data + 0x130 */
 extern CIV_SLOT D_00098950[];
@@ -558,13 +559,13 @@ extern int D_00097440;
 extern int D_00097468;
 extern int ratan2();
 extern int wetness;
-extern long long gLightsOn;
+extern int gLightsOn;
 extern B8 D_00097660;
 extern int D_0009740C;
 extern short D_0008EAAA[];
 extern unsigned char D_0008A8D8[];
-extern long long FastForward;
-extern long long CameraCnt;
+extern int FastForward;
+extern int CameraCnt;
 extern CIV_SLOT D_00098900[];
 extern int D_00096AA4;
 extern int D_00096AB8;
@@ -655,7 +656,7 @@ void AddRainDrops();
 
 /* ---------------- PlacePoolForCar (src/pilot/PlacePoolForCar.c) ---------------- */
 /* PlacePoolForCar (Driver 2 DEBRIS.C): car headlight / brake light pools */
-extern long long current;
+extern int current;
 #define current (*(DB **)&current)
 #define gte_SetTransVector(r0) __asm__ volatile ( \
     "lw    $12, 0( %0 );" "lw    $13, 4( %0 );" "lw    $14, 8( %0 );" \
@@ -965,7 +966,7 @@ void func_0004157C(int *pos, int n)
 
 /* ---------------- func_00041690 (src/pilot/func_00041690.c) ---------------- */
 /* particle sprites (no Driver 2 counterpart) */
-extern long long current;
+extern int current;
 #define current (*(DB **)&current)
 #define gte_stsxy3(r0, r1, r2) __asm__ volatile ( \
     "swc2  $12, 0( %0 );" "swc2  $13, 0( %1 );" "swc2  $14, 0( %2 )" : : "r"(r0), "r"(r1), "r"(r2) : "memory")
@@ -1399,7 +1400,7 @@ void AddGroundDebris(void)
 
 /* ---------------- func_0004287C (src/pilot/func_0004287C.c) ---------------- */
 /* func_0004287C: draws up to 8 spinning models (no Driver 2 counterpart identified) */
-extern long long current;
+extern int current;
 #define current (*(int **)&current)
 void func_0004287C(void)
 {
@@ -1975,7 +1976,7 @@ void func_00043FDC(SVECTOR *pos, int car, CVECTOR *col, short size, int arg4, in
 
 /* ---------------- ShowLight1 (src/pilot/ShowLight1.c) ---------------- */
 /* ShowLight1 (Driver 2) */
-extern long long current;
+extern int current;
 #define current (*(DB_ShowLight1 **)&current)
 #define ldv3() __asm__ volatile("lwc2 $0,%0;lwc2 $1,%1;lwc2 $2,%2;lwc2 $3,%3;lwc2 $4,%4;lwc2 $5,%5" : : "m"(vert[0].vx),"m"(vert[0].vz),"m"(vert[1].vx),"m"(vert[1].vz),"m"(vert[2].vx),"m"(vert[2].vz))
 #define rtpt() __asm__ volatile("nop;nop;rtpt")
@@ -2043,7 +2044,7 @@ void ShowLight1(void *v1, unsigned char *col, short size, TEXTURE_DETAILS *textu
 
 /* ---------------- ShowLight (src/pilot/ShowLight.c) ---------------- */
 /* ShowLight (Driver 2) */
-extern long long current;
+extern int current;
 #define current (*(DB_ShowLight **)&current)
 #define FrameCnt (*(volatile int *)&(*(long long *)&D_00097534))
 #define SetTransVec(r0) __asm__ volatile ( \
@@ -2287,7 +2288,7 @@ void ShowLight(void *v1, CVECTOR *col, short size, TEXTURE_DETAILS *texture) {
 
 /* ---------------- RoundShadow (src/pilot/RoundShadow.c) ---------------- */
 /* Driver 2: RoundShadow (DEBRIS.C) */
-extern long long current;
+extern int current;
 #define current (*(DB **)&current)
 #define gte_stsxy3(r0, r1, r2) __asm__ volatile ( \
     "swc2  $12, 0( %0 );" "swc2  $13, 0( %1 );" "swc2  $14, 0( %2 )" : : "r"(r0), "r"(r1), "r"(r2) : "memory")
@@ -2376,7 +2377,7 @@ void RoundShadow(VECTOR *v1, CVECTOR *col, short size)
 
 /* ---------------- ShowGroundLight (src/pilot/ShowGroundLight.c) ---------------- */
 /* Driver 2: ShowGroundLight (DEBRIS.C) */
-extern long long current;
+extern int current;
 #define current (*(DB **)&current)
 #define gte_stsxy3(r0, r1, r2) __asm__ volatile ( \
     "swc2  $12, 0( %0 );" "swc2  $13, 0( %1 );" "swc2  $14, 0( %2 )" : : "r"(r0), "r"(r1), "r"(r2) : "memory")
@@ -2465,7 +2466,7 @@ void ShowGroundLight(VECTOR *v1, CVECTOR *col, short size)
 
 /* ---------------- ShowFlare (src/pilot/ShowFlare.c) ---------------- */
 /* Driver 2: ShowFlare (DEBRIS.C) */
-extern long long current;
+extern int current;
 #define current (*(DB **)&current)
 #define gte_stsxy3(r0, r1, r2) __asm__ volatile ( \
     "swc2  $12, 0( %0 );" "swc2  $13, 0( %1 );" "swc2  $14, 0( %2 )" : : "r"(r0), "r"(r1), "r"(r2) : "memory")
@@ -2576,7 +2577,7 @@ void ShowFlare(VECTOR *v1, CVECTOR *col, short size, int rotation)
 
 /* ---------------- DisplayWater (src/pilot/DisplayWater.c) ---------------- */
 /* Driver 2: DisplayWater (DEBRIS.C) */
-extern long long current;
+extern int current;
 #define current (*(DB **)&current)
 #define gte_stsxy3(r0, r1, r2) __asm__ volatile ( \
     "swc2  $12, 0( %0 );" "swc2  $13, 0( %1 );" "swc2  $14, 0( %2 )" : : "r"(r0), "r"(r1), "r"(r2) : "memory")
@@ -2675,7 +2676,7 @@ void DisplayWater(SMOKE *smoke)
 
 /* ---------------- DisplaySpark (src/pilot/DisplaySpark.c) ---------------- */
 /* Driver 2: DisplaySpark (DEBRIS.C) */
-extern long long current;
+extern int current;
 #define current (*(DB **)&current)
 #define gte_stsxy3(r0, r1, r2) __asm__ volatile ( \
     "swc2  $12, 0( %0 );" "swc2  $13, 0( %1 );" "swc2  $14, 0( %2 )" : : "r"(r0), "r"(r1), "r"(r2) : "memory")
@@ -3084,7 +3085,7 @@ void func_00046C58(int a)
 /* ---------------- DrawLensFlare (src/pilot/DrawLensFlare.c) ---------------- */
 /* FAKEMATCH: second extern name (__asm__ alias) for the same symbol to defeat CSE */
 /* Driver 2: DrawLensFlare (SKY.C) */
-extern long long current;
+extern int current;
 #define current (*(DB_DrawLensFlare **)&current)
 #define gTimeOfDay (*(int *)&gNight)
 #define GameLevel (*(int *)&D_00096834)
@@ -3247,7 +3248,7 @@ void DrawLensFlare(void)
  * The real original probably got that copy from somewhere CSE could not see through.
  * Driver 2: DisplaySun (SKY.C) - null FT3 + sun FT4 + rotating flare FT4. run4: 99.37 -> 100 (the earlier `idx`
  * reuse steering is gone; the second product reads sin into its own local first, then cos + sin). */
-extern long long current;
+extern int current;
 #define current (*(DB **)&current)
 #define angle (*(unsigned short *)&D_00096C4A)
 #define setaddr(_p, _addr) (((P_TAG *)(_p))->addr = (unsigned long)(_addr))
@@ -3613,7 +3614,7 @@ void func_00047FA4(VECTOR *pos, VECTOR *vel, int count, unsigned char type)
 
 /* ---------------- DisplayDebris (src/pilot/DisplayDebris.c) ---------------- */
 /* DisplayDebris: Driver 2 DisplayDebris (DEBRIS_DisplayDebris.C) */
-extern long long current;
+extern int current;
 #define current (*(DB **)&current)
 #define gte_ldv3(r0, r1, r2) __asm__ volatile ( \
     "lwc2 $0, 0(%0);" "lwc2 $1, 4(%0);" "lwc2 $2, 0(%1);" "lwc2 $3, 4(%1);" \
@@ -3751,7 +3752,7 @@ void DisplayDebris(DEBRIS_DisplayDebris *debris, unsigned char type)
 /* ---------------- HandleDebris (src/pilot/HandleDebris.c) ---------------- */
 /* HandleDebris (Driver 2 name) */
 /* rcossin_tbl */
-extern long long pauseflag;
+extern int pauseflag;
 /* pauseflag */
 /* variable_weather */
 /* weather_level */
@@ -3980,9 +3981,9 @@ void HandleDebris(void)
 
 /* ---------------- DisplaySmoke (src/pilot/DisplaySmoke.c) ---------------- */
 /* DisplaySmoke (Driver 2 name) */
-extern long long current;
+extern int current;
 #define current (*(DB **)&current)
-extern long long gNight;
+extern int gNight;
 #define gTimeOfDay (*(int *)&D_00096834)
 #define gNight (*(int *)&gNight)
 #define gte_SetTransVector(r0) __asm__ volatile ( \
@@ -4161,7 +4162,7 @@ void DisplaySmoke(SMOKE *smoke)
 #define getaddr(p) (unsigned int)(((P_TAG *)(p))->addr)
 #define addPrim(ot, p) setaddr(p, getaddr(ot)), setaddr(ot, p)
 /* Driver 2: add_haze */
-extern long long current;
+extern int current;
 #define current (*(DB **)&current)
 void add_haze(int top_col, int bot_col, short ot_pos)
 {
@@ -4220,7 +4221,7 @@ void SetupRain(void) {
 
 /* ---------------- DrawRainDrops (src/pilot/DrawRainDrops.c) ---------------- */
 /* Driver 2: DrawRainDrops (DEBRIS.C) */
-extern long long current;
+extern int current;
 #define current (*(DB **)&current)
 #define gte_SetTransVector(r0) __asm__ volatile ( \
     "lw    $12, 0( %0 );" "lw    $13, 4( %0 );" "lw    $14, 8( %0 );" \
@@ -4344,7 +4345,7 @@ void DrawRainDrops(void)
 #define gte_rtps() __asm__ volatile ("nop;" "nop;" "rtps")
 #define gte_stsxy(r0) __asm__ volatile ("swc2  $14, 0( %0 )" : : "r"(r0) : "memory")
 #define gte_stsz(r0) __asm__ volatile ("swc2  $19, 0( %0 )" : : "r"(r0) : "memory")
-extern long long current;
+extern int current;
 #define current (*(DB **)&current)
 static inline void ReleaseRainDrop_f49914(int RainIndex)
 {
@@ -4564,10 +4565,10 @@ typedef struct { unsigned char r, g, b, cd; } CVEC;
 typedef struct { char c[4]; } COL;
 typedef struct { char c[4]; } C4 __attribute__((aligned(1)));
 typedef struct { unsigned char r, g, b, a; } RGBA;
-extern long long D_000971B4;
+extern int D_000971B4;
 extern unsigned int D_00096C44;
 extern int D_00096AAC;
-extern long long D_00096980;
+extern int D_00096980;
 /* calls as the pilots made them (unprototyped: no narrowing of the short params) */
 #define ShowLight ((void (*)())ShowLight)
 #define add_haze ((void (*)())add_haze)
@@ -4667,7 +4668,7 @@ typedef struct {
 #define POLY_FT4 POLY_FT4_DisplayLightReflections
 #define TEXTURE_DETAILS TEXTURE_DETAILS_DisplayLightReflections
 /* Driver 2: DisplayLightReflections (DEBRIS.C) */
-extern long long current;
+extern int current;
 #define current (*(DB **)&current)
 #define gte_stsxy3(r0, r1, r2) __asm__ volatile ( \
     "swc2  $12, 0( %0 );" "swc2  $13, 0( %1 );" "swc2  $14, 0( %2 )" : : "r"(r0), "r"(r1), "r"(r2) : "memory")
