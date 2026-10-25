@@ -13,9 +13,16 @@
  *    three are the player record, not car_data). OBJ, ENT, E and CP are func_00068C6C's shapes.
  *  - D_0008BD58: E[] (struct E: st, nx, w2, w3); func_000687D4's E16.type is st.
  *  - D_0009778C: int; func_00068C6C stores it into obj->pc through (int *).
+ * Step 3 (include/structs.h): car_data and the player's car are CAR_DATA (pilot CAR and func_000682C0's struct A:
+ *    c8/cc/d0 -> pos, f8/fF8 -> direction, w/f114 -> damage, f12f -> hit, s17c/f17C -> totalDamage, f0 -> id);
+ *    D_00098900 is CIV_SLOT[] (M80, ENT_6A318: b1 -> f1); VEC -> VECTOR, V3/POS -> VECTOR_NOPAD.
+ *    Kept local: the mission record D_000C6F04 (OBJ) and its per-function shapes (struct C, MS, OBJ_68384,
+ *    PLR_6A178/6A318/6A934, E_*, CP*) - one file's record, not shared; H (D_000BE9C4/E0, the percentage bars,
+ *    seen differently by glaunch.c/main.c - a candidate for a shared record later); script/sound shapes.
  */
+#include "structs.h"
+
 /* ---- types ---- */
-struct A { char pad[0xC8]; int c8, cc, d0; char pad1[0xF8-0xD4]; int f8; char pad2[0x114-0xFC]; int w[6]; char pad3[3]; char f12f; char pad4[0x17C-0x130]; short s17c; };
 struct B { int a, b, c, d, e; short h[10]; unsigned short h28; };
 struct C { char pad[0x98]; int f98, f9c; char pad2[0x2A0-0xA0]; int f2a0; };
 typedef struct { int w[11]; } S44;
@@ -40,7 +47,6 @@ typedef struct {
     short f;
     int g, h, i, j, k;
 } ENT_68384;
-typedef struct { unsigned char b0, b1; char pad[0x4E]; } ENT_6A318;
 typedef struct { short a, b; } E_686BC;
 typedef struct { int w[11]; } CP_68928;
 typedef struct {
@@ -57,21 +63,6 @@ typedef struct {
     unsigned char f2E0;
 } MS;
 typedef struct { char pad[0xE]; short h; } H;
-typedef struct { int vx, vy, vz, pad; } VEC;
-typedef struct {
-    unsigned char f0;
-    char pad1[0xC8 - 1];
-    VEC pos;            /* 0xC8 */
-    char padD8[0xF8 - 0xD8];
-    int fF8;            /* 0xF8 */
-    char padFC[0x114 - 0xFC];
-    int f114[6];        /* 0x114 */
-    char pad12C[3];
-    unsigned char f12F; /* 0x12F */
-    char pad130[0x17C - 0x130];
-    short f17C;         /* 0x17C */
-    char pad17E[0x18C - 0x17E];
-} CAR;
 typedef struct {
     int *ptr;
     short s4;
@@ -118,11 +109,6 @@ typedef struct {
     unsigned char f14;
 } X15;
 typedef struct {
-    char pad[0x10];
-    unsigned char f10, f11;
-    char pad12[80 - 0x12];
-} M80;
-typedef struct {
     char pad0[0xD0];
     int fD0;
     char pad1[0x104 - 0xD4];
@@ -145,15 +131,13 @@ typedef struct {
     unsigned int f4;
     int f8;
     int fC;
-    VEC *f10;
+    VECTOR *f10;
 } S0;
-typedef struct { int vx, vy, vz; } V3;
-typedef struct { unsigned lo, hi; int pad[2]; V3 *pos; } TH;
+typedef struct { unsigned lo, hi; int pad[2]; VECTOR_NOPAD *pos; } TH;
 typedef struct { int a, b, c, d; } F;
 typedef struct { char pad[0xC]; short fC, fE; char pad2[8]; int f18; } ST;
-typedef struct { int x, y, z; } POS;
 typedef struct {
-    POS *pos;               /* 0x0 */
+    VECTOR_NOPAD *pos;               /* 0x0 */
     short timer;            /* 0x4 */
     short s6;               /* 0x6 */
     short s8;               /* 0x8 */
@@ -188,7 +172,7 @@ typedef struct {
     unsigned int b;
     int c;
     int d;
-    VEC *e;
+    VECTOR *e;
     short f;
     int *g;
     Q4 q;
@@ -220,7 +204,7 @@ typedef struct {
     CP cur;             /* 0x84 */
     CD d[1];            /* 0xB0 */
     STAT st;            /* 0xD0 */
-    CAR *fF8;           /* 0xF8 */
+    CAR_DATA *fF8;           /* 0xF8 */
     int *fFC;           /* 0xFC */
     int f100;
     int f104;
@@ -233,7 +217,7 @@ typedef struct {
     int *f128;
     int f12C;
     ENT ent[6];         /* 0x130 */
-    VEC tgt[6];         /* 0x238 */
+    VECTOR tgt[6];         /* 0x238 */
     int f298;
     int f29C;
     int f2A0;
@@ -299,7 +283,7 @@ typedef struct {
 /* ---- externs ---- */
 extern long long D_00097708;
 extern long long D_00097118;
-extern CAR car_data[];
+extern CAR_DATA car_data[];
 extern OBJ D_000C6F04;
 extern long long D_00097098;
 extern int D_0009778C;
@@ -349,13 +333,13 @@ extern X15 *D_0008B9F8[];
 extern int D_0008B9E8[];
 extern int D_000C01EC[];
 extern short D_000C4C9C[];
-extern VEC D_000A7AAC;
-extern VEC D_0008AE7C;
-extern M80 D_00098900[];
+extern VECTOR D_000A7AAC;
+extern VECTOR D_0008AE7C;
+extern CIV_SLOT D_00098900[];
 extern int printf();
 extern void func_00017AA0();
 extern int func_0001638C();
-extern CAR *func_00016094();
+extern CAR_DATA *func_00016094();
 extern void func_00061A14();
 extern unsigned char func_00061240();
 extern void func_0006DD3C();
@@ -407,18 +391,18 @@ void func_0006A6C8();
 void func_0006A934();
 
 /* ---------------- func_000682C0 (src/pilot/func_000682C0.c) ---------------- */
-void func_000682C0(struct A *a, struct B *b)
+void func_000682C0(CAR_DATA *a, struct B *b)
 {
     int *p;
     short *q;
     unsigned short t;
-    a->c8 = b->a; a->cc = b->b; a->d0 = b->c; a->f8 = b->d;
-    p = &a->w[0];
+    a->pos.vx = b->a; a->pos.vy = b->b; a->pos.vz = b->c; a->direction = b->d;
+    p = &a->damage[0];
     q = (short *)((char *)b + 0x1C);
-    while (p < &a->w[6]) { *p = *q; p++; q++; }
+    while (p < &a->damage[6]) { *p = *q; p++; q++; }
     t = b->h28;
-    a->f12f = 1;
-    a->s17c = t;
+    a->hit = 1;
+    a->totalDamage = t;
     if ((char *)a == (char *)car_data) *(int *)&D_00097708 = b->e;
     *(int *)&D_00097118 = ((struct C *)&D_000C6F04)->f98;
     ((struct C *)&D_000C6F04)->f2a0 = ((struct C *)&D_000C6F04)->f9c;
@@ -792,7 +776,7 @@ void func_00068C6C(OBJ *obj)
                     if (r == 0)
                         break;
                 }
-                obj->fF8 = (CAR *)r;
+                obj->fF8 = (CAR_DATA *)r;
             }
             break;
         case 22:
@@ -917,7 +901,7 @@ void func_00068C6C(OBJ *obj)
             {
                 int i = q[0];
                 ENT *e = &obj->ent[i];
-                VEC *t;
+                VECTOR *t;
                 unsigned int v;
                 Q4 *qq = &e->q;
                 e->a = 0x2EE;
@@ -1023,16 +1007,16 @@ void func_00068C6C(OBJ *obj)
         case 88:
             {
                 CP *cp = &obj->saved;
-                CAR *c = &car_data[0];
+                CAR_DATA *c = &car_data[0];
                 int *src;
                 short *dst;
                 cp->x = c->pos.vx;
                 cp->y = c->pos.vy;
                 cp->z = c->pos.vz;
-                cp->dir = c->fF8;
+                cp->dir = c->direction;
                 cp->g = *(int *)&D_00097708;
-                cp->s17C = c->f17C;
-                for (src = c->f114, dst = cp->s; src < &car_data[0].f114[6]; src++, dst++)
+                cp->s17C = c->totalDamage;
+                for (src = c->damage, dst = cp->s; src < &car_data[0].damage[6]; src++, dst++)
                     *dst = *src;
                 cp->h = *(int *)&D_00097118;
                 cp->i = obj->f2A0;
@@ -1060,16 +1044,16 @@ void func_00068C6C(OBJ *obj)
             break;
         case 65:
             {
-                CAR *c = &car_data[*(int *)&D_00096888];
+                CAR_DATA *c = &car_data[*(int *)&D_00096888];
                 int v = q[0];
-                c->f114[0] = v;
-                c->f114[1] = v;
-                c->f114[2] = v;
-                c->f114[3] = v;
-                c->f114[4] = v;
-                c->f114[5] = v;
-                c->f17C = v * 6;
-                c->f12F = 1;
+                c->damage[0] = v;
+                c->damage[1] = v;
+                c->damage[2] = v;
+                c->damage[3] = v;
+                c->damage[4] = v;
+                c->damage[5] = v;
+                c->totalDamage = v * 6;
+                c->hit = 1;
             }
             break;
         case 94:
@@ -1232,20 +1216,20 @@ void func_00068C6C(OBJ *obj)
         case 113:
             {
                 CD *d = &obj->d[q[0]];
-                CAR *c = &car_data[q[1]];
+                CAR_DATA *c = &car_data[q[1]];
                 d->x = c->pos.vx;
                 d->y = c->pos.vy;
                 d->z = c->pos.vz;
-                d->dir = c->fF8;
-                d->s[0] = c->f114[0];
-                d->s[1] = c->f114[1];
-                d->s[2] = c->f114[2];
-                d->s[3] = c->f114[3];
-                d->s[4] = c->f114[4];
-                d->s[5] = c->f114[5];
-                d->s1C = c->f17C;
+                d->dir = c->direction;
+                d->s[0] = c->damage[0];
+                d->s[1] = c->damage[1];
+                d->s[2] = c->damage[2];
+                d->s[3] = c->damage[3];
+                d->s[4] = c->damage[4];
+                d->s[5] = c->damage[5];
+                d->s1C = c->totalDamage;
                 {
-                    M80 *m = &D_00098900[c->f0];
+                    CIV_SLOT *m = &D_00098900[c->id];
                     d->b1E = m->f10;
                     d->b1F = m->f11;
                 }
@@ -1254,7 +1238,7 @@ void func_00068C6C(OBJ *obj)
         case 114:
             {
                 CD *d = &obj->d[q[0]];
-                CAR *c;
+                CAR_DATA *c;
                 int a, b, dir, x, z;
                 func_00017AA0(2);
                 a = d->b1E;
@@ -1264,14 +1248,14 @@ void func_00068C6C(OBJ *obj)
                 z = d->z;
                 func_00017AA0(2);
                 c = func_00016094(a, b, dir, x, z);
-                c->f114[0] = d->s[0];
-                c->f114[1] = d->s[1];
-                c->f114[2] = d->s[2];
-                c->f114[3] = d->s[3];
-                c->f114[4] = d->s[4];
-                c->f114[5] = d->s[5];
-                c->f17C = d->s1C;
-                c->f12F = 1;
+                c->damage[0] = d->s[0];
+                c->damage[1] = d->s[1];
+                c->damage[2] = d->s[2];
+                c->damage[3] = d->s[3];
+                c->damage[4] = d->s[4];
+                c->damage[5] = d->s[5];
+                c->totalDamage = d->s1C;
+                c->hit = 1;
             }
             break;
         }
@@ -1285,8 +1269,8 @@ void func_00068C6C(OBJ *obj)
 int func_00069D08(S1 *a, S0 *b)
 {
     int dist;
-    VEC d;
-    VEC *p;
+    VECTOR d;
+    VECTOR *p;
     int dx, dz;
     int v;
     int t;
@@ -1392,11 +1376,11 @@ int func_00069D08(S1 *a, S0 *b)
 /* ---------------- func_0006A178 (src/pilot/func_0006A178.c) ---------------- */
 void func_0006A178(PLR_6A178 *car, TH *th)
 {
-    V3 v;
+    VECTOR_NOPAD v;
     unsigned d;
     int t;
     int *q;
-    V3 *pp = th->pos;
+    VECTOR_NOPAD *pp = th->pos;
     v.vx = car_data[0].pos.vx - pp->vx;
     v.vz = car_data[0].pos.vz - pp->vz;
     d = v.vx * v.vx + v.vz * v.vz;
@@ -1443,7 +1427,7 @@ void func_0006A318(PLR_6A318 *car)
     int second = 0x7FFFFFFF;
     E_6A318 *bestp = 0;
     unsigned char *p;
-    ENT_6A318 *q;
+    CIV_SLOT *q;
     ST *st;
     int lim;
     int n;
@@ -1472,10 +1456,10 @@ void func_0006A318(PLR_6A318 *car)
         break;
     case 6:
         p = car->fF8;
-        q = &((ENT_6A318 *)D_00098900)[*p];
+        q = &((CIV_SLOT *)D_00098900)[*p];
         if (p == 0)
             break;
-        if (q->b1 == 0) {
+        if (q->f1 == 0) {
             E_6A318 *e2;
             for (e2 = car->e; e2 < &car->e[6]; e2++) {
                 if (e2->f10 == (F *)(p + 0xC8))
@@ -1551,7 +1535,7 @@ void func_0006A6C8(SNDOBJ *p)
     SNDENT *e;
     unsigned char play;
     int r;
-    POS *pos;
+    VECTOR_NOPAD *pos;
 
     if (p->flags & 1) {
         if (p->t.timer > 0) {
@@ -1581,7 +1565,7 @@ void func_0006A6C8(SNDOBJ *p)
                     break;
                 case 4:
                     pos = e->pos;
-                    Start3DSoundVolPitch(-1, e->b2, e->b1, pos->x, pos->y, pos->z, e->s6, e->s8);
+                    Start3DSoundVolPitch(-1, e->b2, e->b1, pos->vx, pos->vy, pos->vz, e->s6, e->s8);
                     break;
                 case 2:
                     StartSound(-1, e->b2, e->b1, e->s6, e->s8);
