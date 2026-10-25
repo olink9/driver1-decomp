@@ -10,6 +10,13 @@
  *   are MENU_ITEM (f0/f4 -> enter/leave, b[0..3] -> left/right/up/down); DB from the header (x -> ot slot, primtab);
  *   the unused MTEXT is dropped; PL (D_000C6F04) is MISSION (w104/w2A0/b2E4 -> f104/f2A0/f2E4, +0xD0 -> &st).
  *   No views; MENTRY/ARG stay local.
+ * Step 4: defines its own data, in address order: .sdata 0x96EFC-0x96F74 (small variables, D_00096F20/24, the
+ * <= 8-byte menu strings, D_00096F68, then the code's "%d" and "" literals), .data 0x8C380-0x8D0AC (string tables, the 15
+ * MENTRY layouts and 17 MENU_ITEM handler tables - D_0008C634/D_0008C6E4 are unreferenced menus splat folded into
+ * D_0008C5B4 - and the two level lists), .rodata 0x1144C-0x1162D (the menu strings, then the code literals) and .sbss
+ * 0x977B4-0x977D4. The menu strings are named const arrays (D_00096F20/24 point at two of them although they come
+ * after D_00096F24 in .sdata - literals would be emitted before the pointer). D_000977B4/B8 keep their complete
+ * char[4] type (incomplete-first made cc1 keep the address in a register) and are in abs=.
  */
 /* MKTU CONFLICTS (first spelling active, others commented at their place below):
  * decl D_00096F08:
@@ -50,6 +57,7 @@
  *     typedef struct { void (*f0)(); void (*f4)(); int a; unsigned char b[4]; } ENT;    <- func_0006C964
  */
 
+/* maspsx: abs=D_000977B4,D_000977B8,D_0009709C,pauseflag,D_00096874,D_000967CC,D_000967F4,D_0009763C,D_00097670,current,D_00097524,D_00096834,D_000967E0,D_000977E8,D_00096F90,D_000977EC,D_000967E8,D_00097538,D_00096CB0,D_0009752C,D_00096C94,D_00096C90,D_00097534,D_000967D4,D_00096808,D_000970A4,D_00096A08 */
 #include "structs.h"
 
 /* ---- types ---- */
@@ -62,109 +70,48 @@ typedef struct {
 typedef struct { int a; char *b; } ARG;
 
 /* ---- externs ---- */
-extern int D_00096F04;
-extern int D_00096F10;
-extern int D_00096F08;
-extern long long D_0009709C;
-extern long long pauseflag;
-extern long long D_00096874;
-extern long long D_000967CC;
-extern long long D_000967F4;
-extern int D_00096F18;
-extern int D_00096F0C;
-extern int D_00096F68;
-extern MENU_ITEM *D_000977CC;
-extern MENTRY *D_000977C0;
-extern MENU_ITEM D_0008D064[];
-extern char D_0008D024[];
-extern int D_00096F14;
-extern long long D_0009763C;
-extern long long D_00097670;
-extern long long current;
-extern long long D_00097524;
+extern int D_0009709C;
+extern int pauseflag;
+extern int D_00096874;
+extern int D_000967CC;
+extern int D_000967F4;
+extern int D_0009763C;
+extern int D_00097670;
+extern int current;
+extern int D_00097524;
 extern int D_000BDFA4[];
 extern void SetDispMask();
 extern void func_00033AF8();
 extern void func_000513D4();
 extern void DrawSync();
-extern char D_000115E8[];
 extern void Loadfile();
 extern void func_EC280();
 extern void func_E7508();
 extern void func_0003A068();
-extern long long D_00096834;
+extern int D_00096834;
 extern int D_000868E0[];
-extern long long D_000967E0;
-extern long long D_000977E8;
-extern long long D_00096F90;
-extern long long D_000977EC;
+extern int D_000967E0;
+extern int D_000977E8;
+extern int D_00096F90;
+extern int D_000977EC;
 extern int D_000868DC[];
 extern void func_0006EB48();
-extern MENTRY *D_000977C4;
-extern int D_000977C8;
-extern MENU_ITEM *D_000977D0;
-extern long long D_000967E8;
-extern long long D_00097538;
-extern long long D_00096CB0;
-extern long long D_0009752C;
-extern long long D_00096C94;
-extern long long D_00096C90;
-extern unsigned char D_00096EFC;
-extern unsigned char D_00096EFD;
-extern char D_000977B4[4];
-extern char D_000977B8[4];
-extern char D_00096F6C[];
+extern int D_000967E8;
+extern int D_00097538;
+extern int D_00096CB0;
+extern int D_0009752C;
+extern int D_00096C94;
+extern int D_00096C90;
 extern void SetMasterVolume();
 extern void func_0004E454();
 extern int sprintf();
 extern MISSION D_000C6F04;
 extern int D_0009D8DC[];
-extern long long D_00097534;
-extern long long D_000967D4;
-extern long long D_00096808;
-extern long long D_000970A4;
-extern long long D_0008C388;
-extern long long D_00096A08;
-extern char *D_0008C388_[] __asm__("D_0008C388");
-extern unsigned char D_000977BC;
-extern unsigned char D_00096F1C;
-extern unsigned char D_00096F1D;
-extern int D_00096F00;
-extern int D_00096F20;
-extern int D_00096F24;
-extern signed char D_0008D0A0[];
-extern signed char D_0008D094[];
-extern char D_00096F70[];
-extern char D_000115F4[];
-extern char D_0001160C[];
-extern MENU_ITEM D_0008C5B4[];
-extern MENU_ITEM D_0008C474[];
-extern MENU_ITEM D_0008CEA4[];
-extern MENU_ITEM D_0008CF44[];
-extern MENU_ITEM D_0008CFE4[];
-extern MENU_ITEM D_0008CE04[];
-extern MENU_ITEM D_0008CD44[];
-extern MENU_ITEM D_0008CBB4[];
-extern MENU_ITEM D_0008CAF4[];
-extern MENU_ITEM D_0008CC74[];
-extern MENU_ITEM D_0008CA14[];
-extern MENU_ITEM D_0008C964[];
-extern MENU_ITEM D_0008C8C4[];
-extern MENU_ITEM D_0008C7F4[];
-extern MENTRY D_0008C524[];
-extern MENTRY D_0008C3B4[];
-extern MENTRY D_0008CE54[];
-extern MENTRY D_0008CEE4[];
-extern MENTRY D_0008CF94[];
-extern MENTRY D_0008CDA4[];
-extern MENTRY D_0008CCD4[];
-extern MENTRY D_0008CB54[];
-extern MENTRY D_0008CA84[];
-extern MENTRY D_0008CC04[];
-extern MENTRY D_0008C994[];
-extern MENTRY D_0008C924[];
-extern MENTRY D_0008C854[];
-extern MENTRY D_0008C784[];
+extern int D_00097534;
+extern int D_000967D4;
+extern int D_00096808;
+extern int D_000970A4;
+extern int D_00096A08;
 extern void func_0004DF28();
 extern void func_000359BC();
 extern void func_000514E0();
@@ -202,6 +149,386 @@ int func_0006C4BC();
 void func_0006C8CC();
 void func_0006C8D4();
 int func_0006C964();
+
+/* ---- .sdata 0x96EFC-0x96F28: pause.c's own small variables, in address order ---- */
+unsigned char D_00096EFC = 4;
+unsigned char D_00096EFD = 6;
+int D_00096F00 = 0;
+int D_00096F04 = 0;
+int D_00096F08 = 1;
+int D_00096F0C = 1;
+int D_00096F10 = 0;
+int D_00096F14 = 0;
+int D_00096F18 = 0;
+unsigned char D_00096F1C = 0;
+unsigned char D_00096F1D = 0;
+extern const char D_00096F28[],
+    D_00096F30[],
+    D_00096F38[],
+    D_00096F40[],
+    D_00096F48[],
+    D_00096F50[],
+    D_00096F58[],
+    D_00096F60[],
+    D_00096F64[],
+    D_0001144C[],
+    D_00011458[],
+    D_00011464[],
+    D_00011470[],
+    D_00011488[],
+    D_00011494[],
+    D_000114A0[],
+    D_000114B4[],
+    D_000114C4[],
+    D_000114D4[],
+    D_000114FC[],
+    D_0001150C[],
+    D_0001151C[],
+    D_0001152C[],
+    D_0001153C[],
+    D_00011548[],
+    D_00011554[],
+    D_00011560[],
+    D_0001156C[],
+    D_00011578[],
+    D_00011584[],
+    D_00011594[],
+    D_000115A4[],
+    D_000115B4[],
+    D_000115C0[],
+    D_000115D0[];
+char *D_00096F20 = (char *)D_00096F30, *D_00096F24 = (char *)D_00096F28;
+
+/* the menu strings are named arrays: the <= 8-byte ones land in .sdata 0x96F28-0x96F67, the others in .rodata
+ * 0x1144C-0x115E7, each in definition order (D_00096F20/24 point at two of them before they are defined) */
+const char D_00096F28[] = "Try It";
+const char D_00096F30[] = "Restart";
+const char D_00096F38[] = "Exit";
+const char D_00096F40[] = "PAUSE";
+const char D_00096F48[] = "Try it";
+const char D_00096F50[] = "Next";
+const char D_00096F58[] = "Retry";
+const char D_00096F60[] = "No";
+const char D_00096F64[] = "Yes";
+const char D_0001144C[] = "Show Map";
+const char D_00011458[] = "Try Again";
+const char D_00011464[] = "Continue";
+const char D_00011470[] = "-INTERVIEW FINISHED-";
+const char D_00011488[] = "Repeat Demo";
+const char D_00011494[] = "View Demo";
+const char D_000114A0[] = "TRAINING FINISHED";
+const char D_000114B4[] = "DEMO COMPLETE";
+const char D_000114C4[] = "MISSION OVER";
+const char D_000114D4[] = "This will end your game.\nAre you Sure?";
+const char D_000114FC[] = "Are You Sure?";
+const char D_0001150C[] = "Quick Replay";
+const char D_0001151C[] = "Film Director";
+const char D_0001152C[] = "Music Volume";
+const char D_0001153C[] = "Sfx Volume";
+const char D_00011548[] = "Play Again";
+const char D_00011554[] = "Save Replay";
+const char D_00011560[] = "Game Over";
+const char D_0001156C[] = "Enter Score";
+const char D_00011578[] = "Save Game";
+const char D_00011584[] = "Mission Over";
+const char D_00011594[] = "Mission Failed";
+const char D_000115A4[] = "See it again";
+const char D_000115B4[] = "Demo Over";
+const char D_000115C0[] = "Training Over";
+const char D_000115D0[] = "Garage Training Over";
+
+/* ---- .data 0x8C380-0x8D0AC: the pause/end-of-game menus, in address order ----
+ * The text pointers are (char *) casts of the named const strings above. */
+char *D_0008C380[] = { (char *)D_00011464, (char *)D_00011458 };
+char *D_0008C388[] = { (char *)D_0001144C };
+char *D_0008C38C[] = { (char *)D_000114C4, (char *)D_000114B4, (char *)D_000114A0, (char *)D_00096F28, (char *)D_00011494, (char *)D_00011458, (char *)D_00011488,
+    (char *)D_00011470 };
+char *D_0008C3AC[] = { (char *)D_000114FC, (char *)D_000114D4 };
+MENTRY D_0008C3B4[12] = {
+    { 0xF0, 0x53, 1, 0, 0, 0, (char *)D_00096F40, 0xFF, 0xFF, 0x40, 0xFF },
+    { 0, 0x62, 1, 0, 0, 0, (char *)D_00011464, 0xFF, 0xFF, 0xFF, 0xFF },
+    { 0, 0x71, 1, 0, 0, 0, (char *)D_00096F30, 0xFF, 0xFF, 0xFF, 0xFF },
+    { 0, 0x80, 1, 0, 0, 0, (char *)D_0001153C, 0xFF, 0xFF, 0xFF, 0xFF },
+    { 0x14E, 0x80, 0, 0, 0, 0, 0, 0xFF, 0xFF, 0xFF, 0xFF },
+    { 0, 0x8F, 1, 0, 0, 0, (char *)D_0001152C, 0xFF, 0xFF, 0xFF, 0xFF },
+    { 0x14E, 0x8F, 0, 0, 0, 0, 0, 0xFF, 0xFF, 0xFF, 0xFF },
+    { 0xBE, 0x9E, 1, 0, 0, 0, (char *)D_0001151C, 0xFF, 0xFF, 0xFF, 0xFF },
+    { 0xBE, 0xAD, 1, 0, 0, 0, (char *)D_0001150C, 0xFF, 0xFF, 0xFF, 0xFF },
+    { 0, 0xBC, 1, 0, 0, 0, (char *)D_0001144C, 0xFF, 0xFF, 0xFF, 0xFF },
+    { 0, 0xCB, 1, 0, 0, 0, (char *)D_00096F38, 0xFF, 0xFF, 0xFF, 0xFF },
+    { -1, -1, 0, 0, 0, 0, 0, 0xFF, 0xFF, 0xFF, 0xFF }
+};
+MENU_ITEM D_0008C474[11] = {
+    { (void (*)())func_0006C4AC, (void (*)())func_0006C4B4, (int (*)())func_0006C4A4, 1, 1, 1, 1 },
+    { (void (*)())func_0006BD58, (void (*)())func_0006BD60, (int (*)())func_0006BE3C, 1, 1, 10, 2 },
+    { (void (*)())func_0006BD58, (void (*)())func_0006BD60, (int (*)())func_0006BE58, 2, 2, 1, 3 },
+    { (void (*)())func_0006BFC8, (void (*)())func_0006BFD8, (int (*)())func_0006BDA4, 3, 3, 2, 5 },
+    { (void (*)())func_0006BD58, (void (*)())func_0006BD60, (int (*)())func_0006BDA4, 4, 4, 2, 5 },
+    { (void (*)())func_0006C020, (void (*)())func_0006C030, (int (*)())func_0006BDA4, 5, 5, 3, 7 },
+    { (void (*)())func_0006BD58, (void (*)())func_0006BD60, (int (*)())func_0006BDA4, 6, 6, 3, 7 },
+    { (void (*)())func_0006BD58, (void (*)())func_0006BD60, (int (*)())func_0006C078, 7, 7, 5, 8 },
+    { (void (*)())func_0006BD58, (void (*)())func_0006BD60, (int (*)())func_0006C12C, 8, 8, 7, 9 },
+    { (void (*)())func_0006BD58, (void (*)())func_0006BD60, (int (*)())func_0006C490, 9, 9, 8, 10 },
+    { (void (*)())func_0006BD58, (void (*)())func_0006BD60, (int (*)())func_0006BF24, 10, 10, 9, 1 }
+};
+MENTRY D_0008C524[9] = {
+    { 0xF0, 0x53, 1, 0, 0, 0, (char *)D_00096F40, 0xFF, 0xFF, 0x40, 0xFF },
+    { 0, 0x62, 1, 0, 0, 0, (char *)D_00011464, 0xFF, 0xFF, 0xFF, 0xFF },
+    { 0, 0x71, 1, 0, 0, 0, (char *)D_00096F30, 0xFF, 0xFF, 0xFF, 0xFF },
+    { 0, 0x80, 1, 0, 0, 0, (char *)D_0001153C, 0xFF, 0xFF, 0xFF, 0xFF },
+    { 0x144, 0x80, 0, 0, 0, 0, 0, 0xFF, 0xFF, 0xFF, 0xFF },
+    { 0, 0x8F, 1, 0, 0, 0, (char *)D_0001152C, 0xFF, 0xFF, 0xFF, 0xFF },
+    { 0x144, 0x8F, 0, 0, 0, 0, 0, 0xFF, 0xFF, 0xFF, 0xFF },
+    { 0, 0x9E, 1, 0, 0, 0, (char *)D_00096F38, 0xFF, 0xFF, 0xFF, 0xFF },
+    { -1, -1, 0, 0, 0, 0, 0, 0xFF, 0xFF, 0xFF, 0xFF }
+};
+MENU_ITEM D_0008C5B4[8] = {
+    { (void (*)())func_0006C4AC, (void (*)())func_0006C4B4, (int (*)())func_0006C4A4, 1, 1, 1, 1 },
+    { (void (*)())func_0006BD58, (void (*)())func_0006BD60, (int (*)())func_0006BE3C, 1, 1, 7, 2 },
+    { (void (*)())func_0006BD58, (void (*)())func_0006BD60, (int (*)())func_0006BDD8, 2, 2, 1, 3 },
+    { (void (*)())func_0006BFC8, (void (*)())func_0006BFD8, (int (*)())func_0006BDA4, 3, 3, 2, 5 },
+    { (void (*)())func_0006BD58, (void (*)())func_0006BD60, (int (*)())func_0006BDA4, 4, 4, 2, 5 },
+    { (void (*)())func_0006C020, (void (*)())func_0006C030, (int (*)())func_0006BDA4, 5, 5, 3, 7 },
+    { (void (*)())func_0006BD58, (void (*)())func_0006BD60, (int (*)())func_0006BDA4, 6, 6, 3, 7 },
+    { (void (*)())func_0006BD58, (void (*)())func_0006BD60, (int (*)())func_0006BF24, 7, 7, 5, 1 }
+};
+MENTRY D_0008C634[11] = {
+    { 0xF0, 0x53, 1, 0, 0, 0, (char *)D_00096F40, 0xFF, 0xFF, 0x40, 0xFF },
+    { 0, 0x62, 1, 0, 0, 0, (char *)D_00011464, 0xFF, 0xFF, 0xFF, 0xFF },
+    { 0, 0x71, 1, 0, 0, 0, (char *)D_00096F30, 0xFF, 0xFF, 0xFF, 0xFF },
+    { 0, 0x80, 1, 0, 0, 0, (char *)D_0001153C, 0xFF, 0xFF, 0xFF, 0xFF },
+    { 0x144, 0x80, 0, 0, 0, 0, 0, 0xFF, 0xFF, 0xFF, 0xFF },
+    { 0, 0x8F, 1, 0, 0, 0, (char *)D_0001152C, 0xFF, 0xFF, 0xFF, 0xFF },
+    { 0x144, 0x8F, 0, 0, 0, 0, 0, 0xFF, 0xFF, 0xFF, 0xFF },
+    { 0xBE, 0x9E, 1, 0, 0, 0, (char *)D_0001151C, 0xFF, 0xFF, 0xFF, 0xFF },
+    { 0xBE, 0xAD, 1, 0, 0, 0, (char *)D_0001150C, 0xFF, 0xFF, 0xFF, 0xFF },
+    { 0, 0xBC, 1, 0, 0, 0, (char *)D_00096F38, 0xFF, 0xFF, 0xFF, 0xFF },
+    { -1, -1, 0, 0, 0, 0, 0, 0xFF, 0xFF, 0xFF, 0xFF }
+};
+MENU_ITEM D_0008C6E4[10] = {
+    { (void (*)())func_0006C4AC, (void (*)())func_0006C4B4, (int (*)())func_0006C4A4, 1, 1, 1, 1 },
+    { (void (*)())func_0006BD58, (void (*)())func_0006BD60, (int (*)())func_0006BE3C, 1, 1, 9, 2 },
+    { (void (*)())func_0006BD58, (void (*)())func_0006BD60, (int (*)())func_0006BE58, 2, 2, 1, 3 },
+    { (void (*)())func_0006BFC8, (void (*)())func_0006BFD8, (int (*)())func_0006BDA4, 3, 3, 2, 5 },
+    { (void (*)())func_0006BD58, (void (*)())func_0006BD60, (int (*)())func_0006BDA4, 4, 4, 2, 5 },
+    { (void (*)())func_0006C020, (void (*)())func_0006C030, (int (*)())func_0006BDA4, 5, 5, 3, 7 },
+    { (void (*)())func_0006BD58, (void (*)())func_0006BD60, (int (*)())func_0006BDA4, 6, 6, 3, 7 },
+    { (void (*)())func_0006BD58, (void (*)())func_0006BD60, (int (*)())func_0006C078, 7, 7, 5, 8 },
+    { (void (*)())func_0006BD58, (void (*)())func_0006BD60, (int (*)())func_0006C12C, 8, 8, 7, 9 },
+    { (void (*)())func_0006BD58, (void (*)())func_0006BD60, (int (*)())func_0006BF24, 9, 9, 8, 1 }
+};
+MENTRY D_0008C784[7] = {
+    { 0xF0, 0x62, 1, 0, 0, 0, (char *)D_00011560, 0xFF, 0xFF, 0x40, 0xFF },
+    { 0, 0x71, 1, 0, 0, 0, (char *)D_0001151C, 0xFF, 0xFF, 0xFF, 0xFF },
+    { 0, 0x80, 1, 0, 0, 0, (char *)D_0001150C, 0xFF, 0xFF, 0xFF, 0xFF },
+    { 0, 0x8F, 1, 0, 0, 0, (char *)D_00011554, 0xFF, 0xFF, 0xFF, 0xFF },
+    { 0, 0x9E, 1, 0, 0, 0, (char *)D_00011548, 0xFF, 0xFF, 0xFF, 0xFF },
+    { 0, 0xAD, 1, 0, 0, 0, (char *)D_00096F38, 0xFF, 0xFF, 0xFF, 0xFF },
+    { -1, -1, 0, 0, 0, 0, 0, 0xFF, 0xFF, 0xFF, 0xFF }
+};
+MENU_ITEM D_0008C7F4[6] = {
+    { (void (*)())func_0006C4AC, (void (*)())func_0006C4B4, (int (*)())func_0006C4A4, 1, 1, 1, 1 },
+    { (void (*)())func_0006BD58, (void (*)())func_0006BD60, (int (*)())func_0006C078, 1, 1, 5, 2 },
+    { (void (*)())func_0006BD58, (void (*)())func_0006BD60, (int (*)())func_0006C12C, 2, 2, 1, 3 },
+    { (void (*)())func_0006BD58, (void (*)())func_0006BD60, (int (*)())func_0006C1E4, 3, 3, 2, 4 },
+    { (void (*)())func_0006BD58, (void (*)())func_0006BD60, (int (*)())func_0006BE58, 4, 4, 3, 5 },
+    { (void (*)())func_0006BD58, (void (*)())func_0006BD60, (int (*)())func_0006BF24, 5, 5, 4, 1 }
+};
+MENTRY D_0008C854[7] = {
+    { 0xF0, 0x62, 1, 0, 0, 0, (char *)D_00011560, 0xFF, 0xFF, 0x40, 0xFF },
+    { 0, 0x71, 1, 0, 0, 0, (char *)D_0001151C, 0xFF, 0xFF, 0xFF, 0xFF },
+    { 0, 0x80, 1, 0, 0, 0, (char *)D_0001150C, 0xFF, 0xFF, 0xFF, 0xFF },
+    { 0, 0x8F, 1, 0, 0, 0, (char *)D_00011554, 0xFF, 0xFF, 0xFF, 0xFF },
+    { 0, 0x9E, 1, 0, 0, 0, (char *)D_00011548, 0xFF, 0xFF, 0xFF, 0xFF },
+    { 0, 0xAD, 1, 0, 0, 0, (char *)D_0001156C, 0xFF, 0xFF, 0xFF, 0xFF },
+    { -1, -1, 0, 0, 0, 0, 0, 0xFF, 0xFF, 0xFF, 0xFF }
+};
+MENU_ITEM D_0008C8C4[6] = {
+    { (void (*)())func_0006C4AC, (void (*)())func_0006C4B4, (int (*)())func_0006C4A4, 1, 1, 1, 1 },
+    { (void (*)())func_0006BD58, (void (*)())func_0006BD60, (int (*)())func_0006C078, 1, 1, 5, 2 },
+    { (void (*)())func_0006BD58, (void (*)())func_0006BD60, (int (*)())func_0006C12C, 2, 2, 1, 3 },
+    { (void (*)())func_0006BD58, (void (*)())func_0006BD60, (int (*)())func_0006C1E4, 3, 3, 2, 4 },
+    { (void (*)())func_0006BD58, (void (*)())func_0006BD60, (int (*)())func_0006BE58, 4, 4, 3, 5 },
+    { (void (*)())func_0006BD58, (void (*)())func_0006BD60, (int (*)())func_0006BF24, 5, 5, 4, 1 }
+};
+MENTRY D_0008C924[4] = {
+    { 0xF0, 0x62, 1, 0, 0, 0, (char *)D_00011560, 0xFF, 0xFF, 0x40, 0xFF },
+    { 0, 0x71, 1, 0, 0, 0, (char *)D_00011548, 0xFF, 0xFF, 0xFF, 0xFF },
+    { 0, 0x80, 1, 0, 0, 0, (char *)D_00096F38, 0xFF, 0xFF, 0xFF, 0xFF },
+    { -1, -1, 0, 0, 0, 0, 0, 0xFF, 0xFF, 0xFF, 0xFF }
+};
+MENU_ITEM D_0008C964[3] = {
+    { (void (*)())func_0006C4AC, (void (*)())func_0006C4B4, (int (*)())func_0006C4A4, 1, 1, 1, 1 },
+    { (void (*)())func_0006BD58, (void (*)())func_0006BD60, (int (*)())func_0006BE58, 1, 1, 2, 2 },
+    { (void (*)())func_0006BD58, (void (*)())func_0006BD60, (int (*)())func_0006BF24, 2, 2, 1, 1 }
+};
+MENTRY D_0008C994[8] = {
+    { 0xF0, 0x62, 1, 0, 0, 0, (char *)D_00011584, 0xFF, 0xFF, 0x40, 0xFF },
+    { 0, 0x71, 1, 0, 0, 0, (char *)D_0001151C, 0xFF, 0xFF, 0xFF, 0xFF },
+    { 0, 0x80, 1, 0, 0, 0, (char *)D_0001150C, 0xFF, 0xFF, 0xFF, 0xFF },
+    { 0, 0x8F, 1, 0, 0, 0, (char *)D_00011554, 0xFF, 0xFF, 0xFF, 0xFF },
+    { 0, 0x9E, 1, 0, 0, 0, (char *)D_00011578, 0xFF, 0xFF, 0xFF, 0xFF },
+    { 0, 0xAD, 1, 0, 0, 0, (char *)D_00011464, 0xFF, 0xFF, 0xFF, 0xFF },
+    { 0, 0xBC, 1, 0, 0, 0, (char *)D_00096F38, 0xFF, 0xFF, 0xFF, 0xFF },
+    { -1, -1, 0, 0, 0, 0, 0, 0xFF, 0xFF, 0xFF, 0xFF }
+};
+MENU_ITEM D_0008CA14[7] = {
+    { (void (*)())func_0006C4AC, (void (*)())func_0006C4B4, (int (*)())func_0006C4A4, 1, 1, 1, 1 },
+    { (void (*)())func_0006BD58, (void (*)())func_0006BD60, (int (*)())func_0006C078, 1, 1, 6, 2 },
+    { (void (*)())func_0006BD58, (void (*)())func_0006BD60, (int (*)())func_0006C12C, 2, 2, 1, 3 },
+    { (void (*)())func_0006BD58, (void (*)())func_0006BD60, (int (*)())func_0006C1E4, 3, 3, 2, 4 },
+    { (void (*)())func_0006BD58, (void (*)())func_0006BD60, (int (*)())func_0006C2BC, 4, 4, 3, 5 },
+    { (void (*)())func_0006BD58, (void (*)())func_0006BD60, (int (*)())func_0006BE3C, 5, 5, 4, 6 },
+    { (void (*)())func_0006BD58, (void (*)())func_0006BD60, (int (*)())func_0006BF24, 6, 6, 5, 1 }
+};
+MENTRY D_0008CA84[7] = {
+    { 0xF0, 0x62, 1, 0, 0, 0, (char *)D_00011584, 0xFF, 0xFF, 0x40, 0xFF },
+    { 0, 0x71, 1, 0, 0, 0, (char *)D_0001151C, 0xFF, 0xFF, 0xFF, 0xFF },
+    { 0, 0x80, 1, 0, 0, 0, (char *)D_0001150C, 0xFF, 0xFF, 0xFF, 0xFF },
+    { 0, 0x8F, 1, 0, 0, 0, (char *)D_00011554, 0xFF, 0xFF, 0xFF, 0xFF },
+    { 0, 0x9E, 1, 0, 0, 0, (char *)D_00011464, 0xFF, 0xFF, 0xFF, 0xFF },
+    { 0, 0xAD, 1, 0, 0, 0, (char *)D_00096F38, 0xFF, 0xFF, 0xFF, 0xFF },
+    { -1, -1, 0, 0, 0, 0, 0, 0xFF, 0xFF, 0xFF, 0xFF }
+};
+MENU_ITEM D_0008CAF4[6] = {
+    { (void (*)())func_0006C4AC, (void (*)())func_0006C4B4, (int (*)())func_0006C4A4, 1, 1, 1, 1 },
+    { (void (*)())func_0006BD58, (void (*)())func_0006BD60, (int (*)())func_0006C078, 1, 1, 5, 2 },
+    { (void (*)())func_0006BD58, (void (*)())func_0006BD60, (int (*)())func_0006C12C, 2, 2, 1, 3 },
+    { (void (*)())func_0006BD58, (void (*)())func_0006BD60, (int (*)())func_0006C1E4, 3, 3, 2, 4 },
+    { (void (*)())func_0006BD58, (void (*)())func_0006BD60, (int (*)())func_0006BE3C, 4, 4, 3, 5 },
+    { (void (*)())func_0006BD58, (void (*)())func_0006BD60, (int (*)())func_0006BF24, 5, 5, 4, 1 }
+};
+MENTRY D_0008CB54[6] = {
+    { 0xF0, 0x62, 1, 0, 0, 0, (char *)D_00011584, 0xFF, 0xFF, 0x40, 0xFF },
+    { 0, 0x71, 1, 0, 0, 0, (char *)D_0001151C, 0xFF, 0xFF, 0xFF, 0xFF },
+    { 0, 0x80, 1, 0, 0, 0, (char *)D_0001150C, 0xFF, 0xFF, 0xFF, 0xFF },
+    { 0, 0x8F, 1, 0, 0, 0, (char *)D_00011464, 0xFF, 0xFF, 0xFF, 0xFF },
+    { 0, 0x9E, 1, 0, 0, 0, (char *)D_00096F38, 0xFF, 0xFF, 0xFF, 0xFF },
+    { -1, -1, 0, 0, 0, 0, 0, 0xFF, 0xFF, 0xFF, 0xFF }
+};
+MENU_ITEM D_0008CBB4[5] = {
+    { (void (*)())func_0006C4AC, (void (*)())func_0006C4B4, (int (*)())func_0006C4A4, 1, 1, 1, 1 },
+    { (void (*)())func_0006BD58, (void (*)())func_0006BD60, (int (*)())func_0006C078, 1, 1, 4, 2 },
+    { (void (*)())func_0006BD58, (void (*)())func_0006BD60, (int (*)())func_0006C12C, 2, 2, 1, 3 },
+    { (void (*)())func_0006BD58, (void (*)())func_0006BD60, (int (*)())func_0006BE3C, 3, 4, 2, 4 },
+    { (void (*)())func_0006BD58, (void (*)())func_0006BD60, (int (*)())func_0006BF24, 4, 4, 3, 1 }
+};
+MENTRY D_0008CC04[7] = {
+    { 0xF0, 0x62, 1, 0, 0, 0, (char *)D_00011584, 0xFF, 0xFF, 0x40, 0xFF },
+    { 0, 0x71, 1, 0, 0, 0, (char *)D_0001151C, 0xFF, 0xFF, 0xFF, 0xFF },
+    { 0, 0x80, 1, 0, 0, 0, (char *)D_0001150C, 0xFF, 0xFF, 0xFF, 0xFF },
+    { 0, 0x8F, 1, 0, 0, 0, (char *)D_00011578, 0xFF, 0xFF, 0xFF, 0xFF },
+    { 0, 0x9E, 1, 0, 0, 0, (char *)D_00011464, 0xFF, 0xFF, 0xFF, 0xFF },
+    { 0, 0xAD, 1, 0, 0, 0, (char *)D_00096F38, 0xFF, 0xFF, 0xFF, 0xFF },
+    { -1, -1, 0, 0, 0, 0, 0, 0xFF, 0xFF, 0xFF, 0xFF }
+};
+MENU_ITEM D_0008CC74[6] = {
+    { (void (*)())func_0006C4AC, (void (*)())func_0006C4B4, (int (*)())func_0006C4A4, 1, 1, 1, 1 },
+    { (void (*)())func_0006BD58, (void (*)())func_0006BD60, (int (*)())func_0006C078, 1, 1, 5, 2 },
+    { (void (*)())func_0006BD58, (void (*)())func_0006BD60, (int (*)())func_0006C12C, 2, 2, 1, 3 },
+    { (void (*)())func_0006BD58, (void (*)())func_0006BD60, (int (*)())func_0006C2BC, 3, 3, 2, 4 },
+    { (void (*)())func_0006BD58, (void (*)())func_0006BD60, (int (*)())func_0006BE3C, 4, 4, 3, 5 },
+    { (void (*)())func_0006BD58, (void (*)())func_0006BD60, (int (*)())func_0006BF24, 5, 5, 4, 1 }
+};
+MENTRY D_0008CCD4[7] = {
+    { 0xF0, 0x62, 1, 0, 0, 0, (char *)D_00011594, 0xFF, 0xFF, 0x40, 0xFF },
+    { 0, 0x71, 1, 0, 0, 0, (char *)D_0001151C, 0xFF, 0xFF, 0xFF, 0xFF },
+    { 0, 0x80, 1, 0, 0, 0, (char *)D_0001150C, 0xFF, 0xFF, 0xFF, 0xFF },
+    { 0, 0x8F, 1, 0, 0, 0, (char *)D_00011554, 0xFF, 0xFF, 0xFF, 0xFF },
+    { 0, 0x9E, 1, 0, 0, 0, (char *)D_00011458, 0xFF, 0xFF, 0xFF, 0xFF },
+    { 0, 0xAD, 1, 0, 0, 0, (char *)D_00096F38, 0xFF, 0xFF, 0xFF, 0xFF },
+    { -1, -1, 0, 0, 0, 0, 0, 0xFF, 0xFF, 0xFF, 0xFF }
+};
+MENU_ITEM D_0008CD44[6] = {
+    { (void (*)())func_0006C4AC, (void (*)())func_0006C4B4, (int (*)())func_0006C4A4, 1, 1, 1, 1 },
+    { (void (*)())func_0006BD58, (void (*)())func_0006BD60, (int (*)())func_0006C078, 1, 1, 5, 2 },
+    { (void (*)())func_0006BD58, (void (*)())func_0006BD60, (int (*)())func_0006C12C, 2, 2, 1, 3 },
+    { (void (*)())func_0006BD58, (void (*)())func_0006BD60, (int (*)())func_0006C1E4, 3, 3, 2, 4 },
+    { (void (*)())func_0006BD58, (void (*)())func_0006BD60, (int (*)())func_0006BE58, 4, 4, 3, 5 },
+    { (void (*)())func_0006BD58, (void (*)())func_0006BD60, (int (*)())func_0006BF24, 5, 5, 4, 1 }
+};
+MENTRY D_0008CDA4[6] = {
+    { 0xF0, 0x62, 1, 0, 0, 0, (char *)D_00011594, 0xFF, 0xFF, 0x40, 0xFF },
+    { 0, 0x71, 1, 0, 0, 0, (char *)D_0001151C, 0xFF, 0xFF, 0xFF, 0xFF },
+    { 0, 0x80, 1, 0, 0, 0, (char *)D_0001150C, 0xFF, 0xFF, 0xFF, 0xFF },
+    { 0, 0x8F, 1, 0, 0, 0, (char *)D_00011458, 0xFF, 0xFF, 0xFF, 0xFF },
+    { 0, 0x9E, 1, 0, 0, 0, (char *)D_00096F38, 0xFF, 0xFF, 0xFF, 0xFF },
+    { -1, -1, 0, 0, 0, 0, 0, 0xFF, 0xFF, 0xFF, 0xFF }
+};
+MENU_ITEM D_0008CE04[5] = {
+    { (void (*)())func_0006C4AC, (void (*)())func_0006C4B4, (int (*)())func_0006C4A4, 1, 1, 1, 1 },
+    { (void (*)())func_0006BD58, (void (*)())func_0006BD60, (int (*)())func_0006C078, 1, 1, 4, 2 },
+    { (void (*)())func_0006BD58, (void (*)())func_0006BD60, (int (*)())func_0006C12C, 2, 2, 1, 3 },
+    { (void (*)())func_0006BD58, (void (*)())func_0006BD60, (int (*)())func_0006BE58, 3, 3, 2, 4 },
+    { (void (*)())func_0006BD58, (void (*)())func_0006BD60, (int (*)())func_0006BF24, 4, 4, 3, 1 }
+};
+MENTRY D_0008CE54[5] = {
+    { 0xF0, 0x62, 1, 0, 0, 0, (char *)D_000115B4, 0xFF, 0xFF, 0x40, 0xFF },
+    { 0, 0x71, 1, 0, 0, 0, (char *)D_000115A4, 0xFF, 0xFF, 0xFF, 0xFF },
+    { 0, 0x80, 1, 0, 0, 0, (char *)D_00096F48, 0xFF, 0xFF, 0xFF, 0xFF },
+    { 0, 0x8F, 1, 0, 0, 0, (char *)D_00096F38, 0xFF, 0xFF, 0xFF, 0xFF },
+    { -1, -1, 0, 0, 0, 0, 0, 0xFF, 0xFF, 0xFF, 0xFF }
+};
+MENU_ITEM D_0008CEA4[4] = {
+    { (void (*)())func_0006C4AC, (void (*)())func_0006C4B4, (int (*)())func_0006C4A4, 1, 1, 1, 1 },
+    { (void (*)())func_0006BD58, (void (*)())func_0006BD60, (int (*)())func_0006BDAC, 1, 1, 3, 2 },
+    { (void (*)())func_0006BD58, (void (*)())func_0006BD60, (int (*)())func_0006BDD8, 2, 2, 1, 3 },
+    { (void (*)())func_0006BD58, (void (*)())func_0006BD60, (int (*)())func_0006BF24, 3, 3, 2, 1 }
+};
+MENTRY D_0008CEE4[6] = {
+    { 0xF0, 0x62, 1, 0, 0, 0, (char *)D_000115C0, 0xFF, 0xFF, 0x40, 0xFF },
+    { 0, 0x71, 1, 0, 0, 0, (char *)D_000115A4, 0xFF, 0xFF, 0xFF, 0xFF },
+    { 0, 0x80, 1, 0, 0, 0, (char *)D_00096F58, 0xFF, 0xFF, 0xFF, 0xFF },
+    { 0, 0x8F, 1, 0, 0, 0, (char *)D_00096F50, 0xFF, 0xFF, 0xFF, 0xFF },
+    { 0, 0x9E, 1, 0, 0, 0, (char *)D_00096F38, 0xFF, 0xFF, 0xFF, 0xFF },
+    { -1, -1, 0, 0, 0, 0, 0, 0xFF, 0xFF, 0xFF, 0xFF }
+};
+MENU_ITEM D_0008CF44[5] = {
+    { (void (*)())func_0006C4AC, (void (*)())func_0006C4B4, (int (*)())func_0006C4A4, 1, 1, 1, 1 },
+    { (void (*)())func_0006BD58, (void (*)())func_0006BD60, (int (*)())func_0006BDAC, 1, 1, 4, 2 },
+    { (void (*)())func_0006BD58, (void (*)())func_0006BD60, (int (*)())func_0006BDD8, 2, 2, 1, 3 },
+    { (void (*)())func_0006BD58, (void (*)())func_0006BD60, (int (*)())func_0006BE14, 3, 3, 2, 4 },
+    { (void (*)())func_0006BD58, (void (*)())func_0006BD60, (int (*)())func_0006BF24, 4, 4, 3, 1 }
+};
+MENTRY D_0008CF94[5] = {
+    { 0xF0, 0x62, 1, 0, 0, 0, (char *)D_000115D0, 0xFF, 0xFF, 0x40, 0xFF },
+    { 0, 0x71, 1, 0, 0, 0, (char *)D_000115A4, 0xFF, 0xFF, 0xFF, 0xFF },
+    { 0, 0x80, 1, 0, 0, 0, (char *)D_00096F58, 0xFF, 0xFF, 0xFF, 0xFF },
+    { 0, 0x8F, 1, 0, 0, 0, (char *)D_00096F38, 0xFF, 0xFF, 0xFF, 0xFF },
+    { -1, -1, 0, 0, 0, 0, 0, 0xFF, 0xFF, 0xFF, 0xFF }
+};
+MENU_ITEM D_0008CFE4[4] = {
+    { (void (*)())func_0006C4AC, (void (*)())func_0006C4B4, (int (*)())func_0006C4A4, 1, 1, 1, 1 },
+    { (void (*)())func_0006BD58, (void (*)())func_0006BD60, (int (*)())func_0006BDAC, 1, 1, 3, 2 },
+    { (void (*)())func_0006BD58, (void (*)())func_0006BD60, (int (*)())func_0006BDD8, 2, 2, 1, 3 },
+    { (void (*)())func_0006BD58, (void (*)())func_0006BD60, (int (*)())func_0006BF24, 3, 3, 2, 1 }
+};
+MENTRY D_0008D024[4] = {
+    { 0xF0, 0x62, 1, 0, 0, 0, (char *)D_000114FC, 0xFF, 0xFF, 0x40, 0xFF },
+    { 0xDC, 0x71, 0, 0, 0, 0, (char *)D_00096F64, 0xFF, 0xFF, 0xFF, 0xFF },
+    { 0x104, 0x71, 0, 0, 0, 0, (char *)D_00096F60, 0xFF, 0xFF, 0xFF, 0xFF },
+    { -1, -1, 0, 0, 0, 0, 0, 0xFF, 0xFF, 0xFF, 0xFF }
+};
+MENU_ITEM D_0008D064[3] = {
+    { (void (*)())func_0006C4AC, (void (*)())func_0006C4B4, (int (*)())func_0006C4A4, 1, 1, 1, 1 },
+    { (void (*)())func_0006BD58, (void (*)())func_0006BD60, (int (*)())func_0006C3FC, 2, 2, 1, 1 },
+    { (void (*)())func_0006BD58, (void (*)())func_0006BD60, (int (*)())func_0006C438, 1, 1, 2, 2 }
+};
+signed char D_0008D094[12] = { 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, -1 };
+signed char D_0008D0A0[12] = { 4, 7, 55, 15, 16, 22, 59, 60, 30, 34, 63, -1 };
+
+int D_00096F68 = 0;
+/* the code's literals follow: "%d" (0x96F6C) and "" (0x96F70) */
+
+/* ---- .sbss 0x977B4-0x977D4: pause.c's own uninitialised globals, in address order ---- */
+char D_000977B4[4];          /* the volume digits: addressed with lui/addiu -> abs= */
+char D_000977B8[4];
+unsigned char D_000977BC;
+MENTRY *D_000977C0;
+MENTRY *D_000977C4;
+int D_000977C8;
+MENU_ITEM *D_000977CC;
+MENU_ITEM *D_000977D0;
 
 /* ---------------- func_0006BD58 (src/pilot/func_0006BD58.c) ---------------- */
 void func_0006BD58(void)
@@ -394,7 +721,7 @@ int func_0006C1E4(void)
     func_000513D4();
     func_000513D4();
     DrawSync(0);
-    Loadfile(D_000115E8, 0xE6600);
+    Loadfile("MCARD.BIN", 0xE6600);
     func_EC280(1);
     a = D_000BDFA4;
     b = a + 0x20;
@@ -412,7 +739,7 @@ int func_0006C1E4(void)
 }
 
 /* ---------------- func_0006C2BC (src/pilot/func_0006C2BC.c) ---------------- */
-extern long long current, D_00097524;
+extern int current, D_00097524;
 #define current (*(DB **)&current)
 #define last (*(DB **)&D_00097524)
 int func_0006C2BC(void)
@@ -431,7 +758,7 @@ int func_0006C2BC(void)
     D_000868DC[0] = *(int *)&D_000967E0;
     D_000868DC[2] = *(int *)&D_00096F90;
     D_000868DC[3] = *(int *)&D_000977E8;
-    Loadfile(D_000115E8, 0xE6600);
+    Loadfile("MCARD.BIN", 0xE6600);
     func_EC280(1);
     current->primptr = current->primtab;
     last->primptr = last->primtab;
@@ -515,13 +842,13 @@ int func_0006C4BC(MENU_ITEM *menu, int sel) {
         if (pad & 0x2000) {
             if (*(int *)&D_00096C94 < 0) {
                 SetMasterVolume(*(int *)&D_00096C94 += 100);
-                sprintf(D_000977B4, D_00096F6C, *(int *)&D_00096C94 / 100 + 100);
+                sprintf(D_000977B4, "%d", *(int *)&D_00096C94 / 100 + 100);
                 D_000977C0[D_00096EFC].text = D_000977B4;
             }
         } else if (pad & 0x8000) {
             if (*(int *)&D_00096C94 > -10000) {
                 SetMasterVolume(*(int *)&D_00096C94 -= 100);
-                sprintf(D_000977B4, D_00096F6C, *(int *)&D_00096C94 / 100 + 100);
+                sprintf(D_000977B4, "%d", *(int *)&D_00096C94 / 100 + 100);
                 D_000977C0[D_00096EFC].text = D_000977B4;
             }
         }
@@ -530,13 +857,13 @@ int func_0006C4BC(MENU_ITEM *menu, int sel) {
         if (pad & 0x2000) {
             if (*(int *)&D_00096C90 < 0) {
                 func_0004E454(*(int *)&D_00096C90 += 100);
-                sprintf(D_000977B8, D_00096F6C, *(int *)&D_00096C90 / 100 + 100);
+                sprintf(D_000977B8, "%d", *(int *)&D_00096C90 / 100 + 100);
                 D_000977C0[D_00096EFD].text = D_000977B8;
             }
         } else if (pad & 0x8000) {
             if (*(int *)&D_00096C90 > -10000) {
                 func_0004E454(*(int *)&D_00096C90 -= 100);
-                sprintf(D_000977B8, D_00096F6C, *(int *)&D_00096C90 / 100 + 100);
+                sprintf(D_000977B8, "%d", *(int *)&D_00096C90 / 100 + 100);
                 D_000977C0[D_00096EFD].text = D_000977B8;
             }
         }
@@ -663,8 +990,8 @@ next:
     InitMenu(D_0008D064, 3, 1);
 
     if (mode == 0) {
-        sprintf(D_000977B4, D_00096F6C, *(int *)&D_00096C94 / 100 + 100);
-        sprintf(D_000977B8, D_00096F6C, *(int *)&D_00096C90 / 100 + 100);
+        sprintf(D_000977B4, "%d", *(int *)&D_00096C94 / 100 + 100);
+        sprintf(D_000977B8, "%d", *(int *)&D_00096C90 / 100 + 100);
         if (*(int *)&D_000967F4 == 0x16) {
             D_000977C8 = 8;
             D_000977CC = D_0008C5B4;
@@ -691,13 +1018,13 @@ next:
             D_000977D0 = D_0008C474;
             D_000977C0 = D_0008C3B4;
             D_000977C4 = D_0008C3B4;
-            D_0008C3B4[9].text = D_0008C388_[0];
+            D_0008C3B4[9].text = D_0008C388[0];
         } else {
             D_000977C8 = 11;
             D_0008C474[8].down = 10;
             D_0008C474[10].up = 8;
             D_0008C3B4[10].y = 0xBC;
-            D_0008C3B4[9].text = D_00096F70;
+            D_0008C3B4[9].text = "";
             D_000977CC = D_0008C474;
             D_000977D0 = D_0008C474;
             D_000977C0 = D_0008C3B4;
@@ -754,10 +1081,10 @@ next:
         if (*(int *)&D_000967E8 == 0) {
             if (*(int *)&D_00096A08 == 0) {
                 SetTextColour(0xFF, 0xFF, 0xFF);
-                func_0005C8F4(D_000115F4, 0x78);
+                func_0005C8F4("No Controller Connected", 0x78);
             } else if (*(int *)&D_00096A08 == -1) {
                 SetTextColour(0xFF, 0xFF, 0xFF);
-                func_0005C8F4(D_0001160C, 0x78);
+                func_0005C8F4("Unsupported Controller Connected", 0x78);
             } else {
                 p = D_000977C0;
                 i = 0;
