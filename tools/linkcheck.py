@@ -517,9 +517,10 @@ def is_bss(name):
     return name in BSSSECS or name.startswith((".bss.lc", ".sbss.lc"))
 
 
-def bss_labels(cobj):
+def bss_labels(cobj, want=is_bss):
     """{bss section: [(offset, symbol, is_global)]} for the C object's .bss/.sbss
-    (and .bss.lc<k>/.sbss.lc<k> pieces made by split_bss)."""
+    (and .bss.lc<k>/.sbss.lc<k> pieces made by split_bss); with `want`, for the
+    sections it accepts instead."""
     out = {}
     with open(cobj, "rb") as f:
         e = ELFFile(f)
@@ -528,7 +529,7 @@ def bss_labels(cobj):
             if not x.name or not isinstance(x["st_shndx"], int) or x["st_info"]["type"] == "STT_SECTION":
                 continue
             sec = e.get_section(x["st_shndx"]).name
-            if is_bss(sec):
+            if want(sec):
                 out.setdefault(sec, []).append((x["st_value"], x.name, x["st_info"]["bind"] == "STB_GLOBAL"))
     return out
 
@@ -549,15 +550,20 @@ def place_c(cobj, block, addrs):
     if not need and not bss:
         return []
     bases = pair_bases(cobj, block, addrs, need)
+    # named data a TU defines (its initialised globals) also places by its labels
+    for sec, ls in bss_labels(cobj, lambda n: n in need).items():
+        bases[sec] |= {addrs[n] - off for off, n, _ in ls if n in addrs}
     out = []
     labels = bss_labels(cobj) if bss else {}
     for s in bss:
         if not labels.get(s):
             raise LinkErr(f"cannot place C {s} ({secs[s]} bytes): no label in it")
-        miss = [n for _, n, _ in labels[s] if n not in addrs]
-        if miss:
-            raise LinkErr(f"cannot place C {s} ({secs[s]} bytes): no original address for {miss[0]}")
-        b = {addrs[n] - off for off, n, _ in labels[s]}
+        # labels the original has no symbol for (a TU's unreferenced variables between
+        # known ones) ride along: the known labels must exist and agree on one base
+        known = [(off, n) for off, n, _ in labels[s] if n in addrs]
+        if not known:
+            raise LinkErr(f"cannot place C {s} ({secs[s]} bytes): no original address for {labels[s][0][1]}")
+        b = {addrs[n] - off for off, n in known}
         if len(b) != 1:
             raise LinkErr(f"cannot place C {s} ({secs[s]} bytes): inconsistent bases " +
                           ",".join(f"0x{x:X}" for x in sorted(b)))
@@ -639,6 +645,7 @@ def maspsx_text(cpath, cobj):
     mx = [sys.executable, os.path.join(ROOT, "tools/maspsx/maspsx.py"), "--aspsx-version=2.79", "--expand-div", f"-G{G}"]
     env = dict(os.environ, MASPSX_EXTERN_G=os.environ.get("MASPSX_EXTERN_G", EXTERN_G),
                MASPSX_GP_ALLOW_OFFSET=os.environ.get("MASPSX_GP_ALLOW_OFFSET", "0"))
+    env.update(fnscore.file_maspsx_env(cpath))
     r = subprocess.run(mx, stdin=open(o_keep[:-2] + ".cc1.s"), cwd=ROOT, capture_output=True, text=True, env=env)
     if r.returncode:
         raise LinkErr("split: maspsx: " + r.stderr[-300:])

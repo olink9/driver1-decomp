@@ -1,7 +1,18 @@
 /* spool.c - Driver 1 CD streaming: spool queue, region/texture/model/soundbank loading.
  * Functions 216-247 of main (test_changemode..func_0003575C, 0x32DEC-0x357B4); D2 SPOOL.C counterpart.
  * Built from src/pilot by tools/mktu.py; conflicts unified to the Driver 2 types (SPOOLQ, Spool, SPL_REGIONINFO).
+ *
+ * The file defines its own data (.data 0x89118, .sdata 0x969E8, .sbss 0x971E0-0x972DC, each in address order;
+ * D_00097214/40/6C/78/84/88/B8/C4 are unreferenced variables that fill the .sbss gaps).
+ * maspsx settings for this file (tools/fnscore.py file_maspsx_env):
+ *   gp_allow_offset=1  D_00097218+2 (tpage.y) is $gp-relative although D_00097218 is .comm here
+ *   sbss_align8=0      D_0009728C (short[4], 8 bytes) sits at 0x9728C, not 8-aligned
+ *   abs=               reached with %hi/%lo by the original although small: two of the file's own
+ *                      variables (D_0009725C, D_000972CC) and the other files' small globals
+ *                      (what the pilot files spelled `extern long long`)
  */
+/* maspsx: gp_allow_offset=1 sbss_align8=0 abs=D_0009725C,D_000972CC */
+/* maspsx: abs=D_00097320,D_0009731C,D_0009730C,D_00097314,current_region,D_0009733C,D_00096A24,D_00096834,D_00097524,current,D_00097560,D_00096C88,D_00097324,D_00096884,D_00097344,D_000970E0,D_000970D4,D_00097108,D_00097350,D_00097098,FastForward,D_00097534 */
 #include "common.h"
 
 /* ---- types ---- */
@@ -76,68 +87,133 @@ typedef struct { short x, y, w, h; } RECT;
 typedef struct { int a; int idx; int *d; } S35558;
 typedef struct { unsigned short v; unsigned short w; } P35558;
 
+/* ---- .data 0x89118-0x89384 ---- */
+/* CLUT loaded at (0x3C0,0x1AA) by func_000334B4/func_00034808, which rotate entries 1-13; entries 14-15 are the first word of D_00089134 */
+unsigned short D_00089118[14] = {
+    0x741F, 0x28A5, 0x2D09, 0x350E, 0x496D, 0x5A23, 0x1E8E, 0x2ED6, 0x5E52, 0x55EF, 0x498C, 0x3D4A, 0x30E7, 0x28A5
+};
+/* image data uploaded by func_0003336C (0x250 bytes) */
+unsigned long D_00089134[148] = {
+    0x3DEF294A, 0x0000020C, 0x00000000, 0x00200008, 0x00000000, 0x7777FE00,
+    0x000EF777, 0x00000000, 0x00000000, 0x7777666E, 0x0E888777, 0x00000000,
+    0x5E000000, 0x77766666, 0x98888877, 0x0000000E, 0x55E00000, 0x77766666,
+    0x99888877, 0x000000E9, 0x555E0000, 0x77766665, 0x99888877, 0x00000E99,
+    0x5554E000, 0x77766665, 0x99988877, 0x0000EAA9, 0x55444E00, 0x77666655,
+    0x99988877, 0x000EAAAA, 0x54444400, 0x77666655, 0x99998877, 0x000BAAAA,
+    0x444443E0, 0x77666555, 0xA9998887, 0x00EBBAAA, 0x44433330, 0x77666555,
+    0xAA998887, 0x00BBBBAA, 0x4433333E, 0x77665554, 0xAAA99887, 0x0EBBBBBB,
+    0x4333332E, 0xFFF65544, 0xBAAA99FF, 0x0ECBBBBB, 0x33322222, 0xFFFF5443,
+    0xBBAAAFFF, 0x0CCCCBBB, 0x22222222, 0xEEFFF433, 0xCBBAFFFE, 0x0CCCCCCC,
+    0x22222111, 0x00EFF222, 0xCCCCFFE0, 0x0DDDCCCC, 0x11111111, 0x00EFF111,
+    0xDDDDFFE0, 0x0DDDDDDD, 0xDDDDDDDD, 0x00EFFDDD, 0x1111FFE0, 0x01111111,
+    0xCCCCCDDD, 0x00EFFCCC, 0x2222FFE0, 0x01112222, 0xCCCCCCCC, 0xEEFFFABB,
+    0x2334FFFE, 0x02222222, 0xBBBBCCCC, 0xFFFFAAAB, 0x33444FFF, 0x02222333,
+    0xBBBBBBCE, 0xFFF99AAA, 0x344455FF, 0x0E333333, 0xABBBBBBE, 0x778899AA,
+    0x44455667, 0x0E333333, 0xAAABBBB0, 0x7788899A, 0x44455667, 0x00333344,
+    0xAAAABBE0, 0x77888999, 0x44556667, 0x00E33444, 0x9AAAAB00, 0x77788999,
+    0x45556677, 0x00034444, 0x9AAAAE00, 0x77788899, 0x45556677, 0x000E4444,
+    0x99AAE000, 0x77788899, 0x55566677, 0x0000E444, 0x999E0000, 0x77788889,
+    0x55566677, 0x00000E45, 0x99E00000, 0x77788889, 0x55666677, 0x000000E5,
+    0x9E000000, 0x77788888, 0x55666677, 0x0000000E, 0x00000000, 0x7777888E,
+    0x0E666777, 0x00000000, 0x00000000, 0x7777FE00, 0x000EF777, 0x00000000,
+    0x00000133, 0x04CC0000, 0x00000000, 0x00000C00, 0x00000000, 0x00000000,
+    0x00000000, 0x00000000, 0x10001000, 0x00001000, 0x00000000, 0x00000000,
+    0x00000000, 0x00000000, 0x00000000, 0x00000000,
+};
+
+/* ---- .sdata 0x969E8-0x969F4 ---- */
+int D_000969E8 = 0;
+volatile int D_000969EC = 0;
+volatile int spoolpos_writing = 0;
+
+/* ---- .sbss 0x971E0-0x972DC: spool.c's own uninitialised globals, in address order ---- */
+unsigned char D_000971E0[8];
+unsigned char D_000971E8[8];
+int D_000971F0;
+int D_000971F4;
+int D_000971F8;
+int D_000971FC;
+int D_00097200;
+int D_00097204;
+int D_00097208;
+int D_0009720C;
+int D_00097210;
+int D_00097214;
+RECTXY D_00097218;
+SHORT1 D_0009721C;
+SHORT1 D_0009721E;
+int D_00097220;
+int D_00097224;
+int D_00097228;
+int D_0009722C;
+int D_00097230;
+volatile int D_00097234;
+char *D_00097238;
+int D_0009723C;
+int D_00097240;
+int D_00097244;
+int D_00097248;
+char *D_0009724C;
+int D_00097250;
+char *D_00097254;
+short *D_00097258;
+short *D_0009725C;
+int D_00097260;
+int D_00097264;
+int D_00097268;
+int D_0009726C;
+unsigned char *AreaTPages;
+int D_00097274;
+int D_00097278;
+int D_0009727C;
+int D_00097280;
+int D_00097284;
+int D_00097288;
+extern short D_0009728C[];
+short D_0009728C[4];
+AREA_DATA *D_00097294;
+int D_00097298;
+int D_0009729C;
+int D_000972A0;
+int D_000972A4;
+int D_000972A8;
+unsigned short *D_000972AC;
+volatile int spoolcounter;
+int D_000972B4;
+int D_000972B8;
+int D_000972BC;
+int D_000972C0;
+int D_000972C4;
+int *D_000972C8;
+int *D_000972CC;
+unsigned short *D_000972D0;
+volatile int D_000972D4;
+int D_000972D8;
+
 /* ---- externs ---- */
 extern SPOOLQ D_000A7BA4[];
 extern SPL_REGIONINFO D_000A7EA4[];
-extern volatile int D_000969EC;
-extern volatile int spoolcounter;
-extern int D_000971F4;
-extern int D_00097204;
-extern int D_000971F0;
-extern int D_000971F8;
-extern int D_000971FC;
-extern int D_000972BC;
-extern int D_0009720C;
-extern int D_00097210;
-extern int D_00097220;
-extern int D_000972B4;
-extern int D_00097268;
-extern int D_00097274;
-extern int D_00097280;
 extern int func_0007A12C();
 extern void func_0007A27C();
-extern long long D_00097320;
-extern long long D_0009731C;
-extern long long D_0009730C;
-extern long long D_00097314;
-extern long long current_region;
-extern long long D_0009733C;
-extern long long D_00096A24;
-extern long long D_00096834;
-extern short D_0009728C[];
-extern unsigned short *D_000972AC;
-extern int D_000969E8;
-extern int D_00097230;
-extern unsigned short D_00089118[];
-extern char D_00089134[];
+extern int D_00097320;
+extern int D_0009731C;
+extern int D_0009730C;
+extern int D_00097314;
+extern int current_region;
+extern int D_0009733C;
+extern int D_00096A24;
+extern int D_00096834;
 extern POLY_FT4 D_000A7B3C;
 extern void func_00074404();
 extern int func_0007A7F4();
-extern int D_00097248;
-extern volatile int D_000972D4;
-extern long long D_00097524;
-extern long long current;
+extern int D_00097524;
+extern int current;
 extern int func_000359BC();
 extern void func_0004DE58();
 extern void func_0004E024();
 extern void DrawPrim();
-extern int D_00097224;
-extern int D_00097260;
 extern void func_0007A53C();
 extern void func_0007A580();
-extern volatile int D_00097234;
-extern int D_00097244;
-extern int D_00097250;
-extern int D_0009727C;
-extern int D_000972A0;
-extern int D_000972A8;
-extern int D_000972A4;
-extern int D_000972D8;
-extern char *D_00097238;
-extern int D_00097208;
-extern RECTXY D_00097218;
-extern SHORT1 D_0009721C;
-extern SHORT1 D_0009721E;
 extern int tsetinfo[];
 extern unsigned char D_000BE278[];
 extern unsigned char tpageslots[];
@@ -145,56 +221,38 @@ extern SXYPAIR D_000BE708[];
 extern SXYPAIR D_000BE1BC[];
 extern unsigned long texture_cluts[][16];
 extern unsigned short texture_pages[];
-extern AREA_DATA *D_00097294;
-extern unsigned char *AreaTPages;
-extern long long D_00097560;
+extern int D_00097560;
 extern XYPAIR D_000BE0A4[][4];
 extern int D_000A7F54[];
-extern int D_00097228;
-extern int D_0009729C;
-extern long long D_00096C88;
+extern int D_00096C88;
 extern unsigned long D_000BCE74[];
 extern unsigned long D_000BD484[];
 extern void func_0004E40C();
 extern void func_0004E348();
-extern unsigned short *D_000972D0;
 extern OBJ *modelpointers[];
-extern long long D_00097324;
-extern char *D_00097254;
-extern int D_000972C0;
-extern long long D_00096884;
-extern long long D_00097344;
-extern long long D_000970E0;
+extern int D_00097324;
+extern int D_00096884;
+extern int D_00097344;
+extern int D_000970E0;
 extern short *D_0009E724[];
 extern int *D_0009D8F4[];
 extern char *D_000AA7E8[];
 extern int D_000AA7D4[];
 extern int D_000AB040[];
-extern char *D_0009724C;
-extern long long D_000970D4;
-extern long long D_00097108;
-extern long long D_00097350;
+extern int D_000970D4;
+extern int D_00097108;
+extern int D_00097350;
 extern int D_000A8024[];
 extern int RoadMapRegions[];
-extern long long D_00097098;
-extern int D_0009723C;
-extern int D_00097264;
+extern int D_00097098;
 extern int D_000AAF90[];
 extern int D_000AA7E4[];
 extern int D_000AB050[];
 extern int func_00079F70();
-extern int D_00097200;
-extern volatile int spoolpos_writing;
 extern void func_0007A4FC();
-extern unsigned char D_000971E0;
-extern unsigned char D_000971E8;
-extern long long FastForward;
-extern short *D_00097258;
-extern long long D_0009725C;
-extern int *D_000972C8;
-extern long long D_000972CC;
+extern int FastForward;
 extern S35558 D_000A7F44;
-extern long long D_00097534;
+extern int D_00097534;
 extern char D_0001052C[];
 extern int printf();
 
@@ -819,7 +877,7 @@ void func_00033F5C(void) {
 
 /* ---------------- CheckLoadAreaData (src/pilot/CheckLoadAreaData.c) ---------------- */
 /* Driver 2: CheckLoadAreaData (with LoadInAreaModels / RequestSpool inlined) */
-extern long long current_region;
+extern int current_region;
 #define current_region (*(int *)&current_region)
 #define old_region (*(int *)&D_00097324)
 /* mktu: RequestSpool - identical to the definition in src/pilot/LoadInAreaTSets.c */
@@ -1368,9 +1426,9 @@ void func_000352D4(unsigned char a, unsigned char *b)
 void StartSpooling(void) {
     int v;
     if (spoolcounter == 0 || D_000972D4 != 0) return;
-    D_000971E0 = 0x80;
-    CdControl(14, &D_000971E0, &D_000971E8);
-    if (D_000971E8 & 0x15) func_00034808();
+    D_000971E0[0] = 0x80;
+    CdControl(14, D_000971E0, D_000971E8);
+    if (D_000971E8[0] & 0x15) func_00034808();
     D_000972D4 = 1;
     UpdateSpool();
     v = *(unsigned char *)&FastForward;
@@ -1384,7 +1442,7 @@ void func_0003542C(void) {
     int idx = D_000972BC;
     D_000972A4 = 0;
     t = D_0009E724[D_000A7EA4[idx].target_barrel_region];
-    src = *(short **)&D_0009725C = (short *)D_000A7EA4[idx].roadm_addr;
+    src = D_0009725C = (short *)D_000A7EA4[idx].roadm_addr;
     out = D_00097258 = t;
     n = 0xE10;
     if (*(int *)src == -1) {
@@ -1409,7 +1467,7 @@ void func_000354D8(void) {
     int idx = D_000972BC;
     D_000972A8 = 0;
     t = D_0009D8F4[D_000A7EA4[idx].target_barrel_region];
-    src = *(int **)&D_000972CC = (int *)D_000A7EA4[idx].roadh_addr;
+    src = D_000972CC = (int *)D_000A7EA4[idx].roadh_addr;
     out = D_000972C8 = t;
     n = 0xE10;
     do {

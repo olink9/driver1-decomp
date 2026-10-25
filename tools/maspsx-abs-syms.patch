@@ -1,0 +1,50 @@
+--- a/maspsx/__init__.py
++++ b/maspsx/__init__.py
+@@ -469,6 +469,9 @@
+ 
+         self.sdata_limit = sdata_limit
+         self.extern_small = {}
++        # symbols the original addressed absolutely although this file makes them small
++        # (MASPSX_ABS=sym,sym - set per C file with a `/* maspsx: abs=... */` line, olink9/driver1)
++        self.force_abs = set(x for x in __import__("os").environ.get("MASPSX_ABS", "").split(",") if x)
+ 
+         self.expand_div = expand_div
+         self.expand_li = expand_li
+@@ -648,7 +651,9 @@
+                     continue
+ 
+                 if section == "sbss":
+-                    if size >= 8:
++                    # MASPSX_SBSS_ALIGN8=0: aspsx left an 8-byte short[4] at 0x9728C
++                    # (Driver 1 spool.c), so 8-byte objects need not be 8-aligned
++                    if size >= 8 and __import__("os").environ.get("MASPSX_SBSS_ALIGN8", "1") != "0":
+                         res.append("\t.align 3")
+                     elif size >= 4:
+                         res.append("\t.align 2")
+@@ -711,7 +716,7 @@
+                     symbol = operand
+                     gp_allowed = True
+ 
+-                if gp_allowed and (
++                if gp_allowed and symbol not in self.force_abs and (
+                     symbol in self.sbss_entries or symbol in self.sdata_entries
+                     or symbol in self.extern_small
+                 ):
+@@ -1013,7 +1018,7 @@
+                     gp_rel = f"%gp_rel({symbol})($gp)"
+                     gp_allowed = True
+ 
+-                if gp_allowed and (
++                if gp_allowed and symbol not in self.force_abs and (
+                     symbol in self.sdata_entries or symbol in self.sbss_entries
+                     or symbol in self.extern_small
+                 ):
+@@ -1105,7 +1110,7 @@
+                 if op == "la" and not self.gp_allow_la:
+                     gp_allowed = False
+ 
+-                if gp_allowed and (
++                if gp_allowed and symbol not in self.force_abs and (
+                     symbol in self.sdata_entries or symbol in self.sbss_entries
+                     or symbol in self.extern_small
+                 ):

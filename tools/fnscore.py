@@ -79,6 +79,7 @@ def compile_c(path, out, a):
         # all 778 matches unchanged, and func_0002A5CC / func_00051ADC need it
         env = dict(os.environ, MASPSX_EXTERN_G=os.environ.get("MASPSX_EXTERN_G", extern_g(a)),
                    MASPSX_GP_ALLOW_OFFSET=os.environ.get("MASPSX_GP_ALLOW_OFFSET", "0"))
+        env.update(file_maspsx_env(path))
         r = subprocess.run(mx, stdin=open(s), cwd=ROOT, capture_output=True, text=True, env=env)
         if r.returncode:
             return "maspsx: " + r.stderr[-2000:]
@@ -89,6 +90,25 @@ def compile_c(path, out, a):
         if a.keep_s:
             open(out[:-2] + ".cc1.s", "w").write(open(s).read())
     return None
+
+
+MASPSX_LINE = re.compile(r"^\s*/\*\s*maspsx:\s*(.*?)\s*\*/\s*$")
+
+
+def file_maspsx_env(path):
+    """Per-file maspsx settings from `/* maspsx: key=value ... */` lines of the C file
+    (translation units, TU-PLAN.md section 3): abs=SYM,SYM (MASPSX_ABS: never $gp; several lines add up)
+    and gp_allow_offset=0|1 (MASPSX_GP_ALLOW_OFFSET: sym+offset of a .comm symbol
+    may be $gp-relative - the real aspsx 2.79 behaviour for data the file defines)."""
+    env = {}
+    for line in open(path, errors="replace"):
+        m = MASPSX_LINE.match(line)
+        if m:
+            for kv in m.group(1).split():
+                k, _, v = kv.partition("=")
+                k = "MASPSX_" + k.upper()
+                env[k] = env[k] + "," + v if k == "MASPSX_ABS" and env.get(k) else v   # abs= lines add up
+    return env
 
 
 def extern_g(a):
