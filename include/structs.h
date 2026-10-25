@@ -271,8 +271,11 @@ typedef struct {
     UV coords;                      /* 0x0 */
     unsigned short tpageid;         /* 0x8 */
     unsigned short clutid;          /* 0xA */
+    unsigned char texture_number;   /* 0xC texture.c GetTextureDetails */
+    unsigned char texture_page;     /* 0xD */
 } TEXTURE_DETAILS;
 OFS_ASSERT(TEXTURE_DETAILS, clutid, 0xA);
+OFS_ASSERT(TEXTURE_DETAILS, texture_page, 0xD);
 
 /* ---- menu item (pause menu, FRONTEND): 16 bytes, handlers + neighbour indices ---- */
 typedef struct {
