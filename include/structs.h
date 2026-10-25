@@ -219,7 +219,7 @@ OFS_ASSERT(MODEL, collision_block, 0x20);
 /* ---- CELL_OBJECT (D2 engine/cell.h): a placed map object, 16 bytes ---- */
 typedef struct {
     VECTOR_NOPAD pos;               /* 0x0 */
-    unsigned char pad;              /* 0xC */
+    unsigned char computed;         /* 0xC frame stamp (draw.c DrawMapPSX); D2 pad */
     unsigned char yang;             /* 0xD */
     unsigned short type;            /* 0xE model number */
 } CELL_OBJECT;
