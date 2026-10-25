@@ -8,6 +8,8 @@
  * unreferenced; D_00096F8D-8F are padding only linkcheck needs - the asm label block of D_00096F8C is 4 bytes), .sbss
  * 0x977D4-0x977E0 (D_000977DC unreferenced); "FB\\%d\\FB%d.FB" (.rodata 0x11640) is a C literal.
  * extern long long -> int + maspsx abs= (5).
+ * .bss 0xC71EC-0xC782C is defined here too (the spline tables E16[40]/[41], the fade polys; D_000C77D0[20] is an
+ * unreferenced gap): the .bss tail from 0xC71EC (after mission.c's D_000C6F04 record) is laid out file by file.
  */
 /* MKTU CONFLICTS (first spelling active, others commented at their place below):
  * decl cameraview:
@@ -56,6 +58,16 @@
 /* ---- types ---- */
 typedef struct { int a, b, c, d; } E16;
 
+/* ---- .bss 0xC71EC-0xC782C: flyby.c's own arrays, in address order (D_000C77D0: unreferenced) ---- */
+E16 D_000C71EC[40];
+POLY_F4 D_000C746C[2];
+POLY_F4 D_000C749C[2];
+E16 D_000C74CC[41];
+POLY_GT4 D_000C775C[2];
+VECTOR_NOPAD D_000C77C4;
+char D_000C77D0[20];
+POLY_G4 D_000C77E4[2];
+
 /* ---- .data 0x8D0AC-0x8D0EC: flyby.c's own initialised data ---- */
 int D_0008D0AC[16] = { -1, 3, -3, 1, 2, -5, 4, -1, -1, 0, 1, 0, 0, 2, 0, 0 };
 
@@ -78,9 +90,6 @@ int D_000977DC;
 /* ---- externs ---- */
 extern short D_00097538[];
 extern char cameraview[8];
-extern E16 D_000C71EC[];
-extern E16 D_000C74CC[];
-extern VECTOR_NOPAD D_000C77C4;
 extern char camera_position[];
 extern short D_00096C48[4];
 extern short D_00096C4A[4];
@@ -92,10 +101,6 @@ extern int D_00096A60;
 extern int D_00096A58;
 extern int sprintf();
 extern void Loadfile();
-extern POLY_GT4 D_000C775C[];
-extern POLY_G4 D_000C77E4[];
-extern POLY_F4 D_000C749C[];
-extern POLY_F4 D_000C746C[];
 
 /* ---- functions defined in this file ---- */
 int func_0006D688();

@@ -3,6 +3,8 @@
  * Step 4: defines its own data, in address order: .data 0x8D208-0x8D968 (six tables), .sdata 0x96FA0-0x96FB8
  * (D_00096FA4 unreferenced, D_00096FA9-AB pad the D_00096FA8 label block; 0x96FB8 is the library's), .sbss
  * 0x97810-0x97848 (the end of .sbss, XMC included). No extern long long.
+ * .bss 0xC7888-0xC7A10 is defined here too (D_000C7888, D_000C78E8, D_000C7970, D_000C79D0; the library's .bss
+ * follows).
  */
 /* Conflicts from mktu (24) resolved by hand, one spelling per type and extern:
  *  - XMCHANNEL (0x78), XMSONG (0xBB0) and XMHEADER: D2 XMPLAY.H layouts (REDRIVER2), with D1's XMCHANNEL lacking
@@ -206,15 +208,17 @@ int D_00097840;
 int D_00097844;
 
 
+/* ---- .bss 0xC7888-0xC7A10: xmplay.c's own arrays, in address order ---- */
+XMSONG *D_000C7888[24];
+int D_000C78E8[1][34];
+XMHEADER *D_000C7970[24];
+VOICEATTR D_000C79D0;
+
 /* ---- externs ---- */
-extern int D_000C78E8[][34];
 extern int VSync(int);
-extern XMSONG *D_000C7888[];
-extern XMHEADER *D_000C7970[];
 extern int abs(int);
 extern void SpuSetKey();
 extern void SpuFlush();
-extern VOICEATTR D_000C79D0;
 extern void SpuSetVoiceAttr();
 extern void SpuGetAllKeysStatus();
 extern void SpuSetVoiceVolume(int voice, short l, short r);

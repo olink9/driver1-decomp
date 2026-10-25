@@ -10,11 +10,17 @@
  * string literals in reverse, so MV5..MV1 land at .rodata 0x116A8 in the original order), .sdata 0x96F94-0x96FA0
  * (D_00096F9E unreferenced), .sbss 0x977F4-0x97810 (D_00097804/0C unreferenced); NMAJ/CUTS are C literals too, so
  * .rodata 0x116A8-0x11739 is one block. extern long long -> int + maspsx abs= (1).
+ * .bss 0xC782C-0xC7884 is defined here too (D_000C782C, D_000C784C[7][2]; 0xC7884 is padding before xmplay.c's
+ * 8-aligned .bss).
  */
 
 /* maspsx: abs=D_00096C90 */
 /* ---- types ---- */
 typedef struct { char b[24]; } CdlFILE;
+
+/* ---- .bss 0xC782C-0xC7884: xaplay.c's own arrays ---- */
+unsigned short D_000C782C[16];
+int D_000C784C[7][2];
 
 /* ---- .data 0x8D1F4-0x8D208: the five movie XA files (their strings come out in reverse: one initialiser's literals) ---- */
 char *D_0008D1F4[] = { "\\DRIVER\\XA\\MV1.XA;1", "\\DRIVER\\XA\\MV2.XA;1", "\\DRIVER\\XA\\MV3.XA;1", "\\DRIVER\\XA\\MV4.XA;1", "\\DRIVER\\XA\\MV5.XA;1" };
@@ -37,7 +43,6 @@ int D_0009780C;
 
 
 /* ---- externs ---- */
-extern int D_000C784C[][2];
 extern int CdSearchFile();
 extern int CdPosToInt();
 extern void SsSetSerialVol(short s_num, short voll, short volr);
@@ -48,7 +53,6 @@ extern void CdControl(int, void *, void *);
 extern int func_0007A12C();
 extern void func_0007A580();
 extern void func_0007A27C(int a, int b);
-extern unsigned short D_000C782C[];
 extern void func_0007A4FC();
 
 /* ---- functions defined in this file ---- */
