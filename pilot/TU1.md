@@ -201,3 +201,10 @@ Step 4 (move definitions into the owning file) - the recipe that worked:
 - Recipe that worked first time: script-delete all view scaffolding -> swap prelude for header includes -> let compile errors drive renames (scoped per function) -> per-function compare names the few changed functions.
 - Overlay cmpfn: build/tu-s3mc/{cc.py,cmpfn.sh,fdiff.sh} (untracked; `env CCT=<target>`).
 - DVECTOR should move into structs.h with the gte types (iview keeps a local one).
+## Lessons (Step 3 C: mission draw tile sky texture civ_draw quad motion_c flyby players pause pedest + main/glaunch/overmap)
+- New shared records: PEDESTRIAN (0x58), MISSION (0x2E8, D_000C6F04, + MS_* sub-records), PERCENTAGE_BAR, MATRIX2. TEXTURE_DETAILS is 14 bytes now (texture_number/page at 0xC/0xD) - overlays include structs.h too: re-check them with --target after any size change.
+- Field renames, record-pointer parameter swaps, same-size struct copies, 8-bit bitfields -> plain chars: all byte-free.
+- Interior symbols reveal records under other names (D_000C0104 = ped[19], D_000C7034 = mission.ent[0]); field arithmetic (xC = x28 - x0) reveals layout.
+- motion_c.c's POLY_* shapes need a main-exe libgpu header (frontend.h has one for overlays only).
+- Open: tile.c func_000287A4 reads MODEL+0x24 - D1's MODEL header may be larger than D2's.
+- civ_ai.c still declares `extern B_t D_000C6F04` - switch to MISSION (one-liner).
