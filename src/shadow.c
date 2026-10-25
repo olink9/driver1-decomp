@@ -5,7 +5,7 @@
  *  - #include "common.h" dropped (only func_0002A5CC had it, for POLY_FT4 and setPolyFT4/setRGB0/setSemiTrans);
  *    its libgte/libgpu types clashed with the file-local ones. P_TAG takes the PsyQ shape (with code) and the three
  *    macros are copied from libgpu.h into func_0002A5CC's section.
- *  - D_000A1CCC / D_000A5D7C: int[4]; car_data: CAR[] (func_000299B8 casts it to char *).
+ *  - D_000A1CCC / D_000A5D7C: int[4]; car_data: CAR_DATA[] (func_000299B8 casts it to char *).
  *  - D_000A211C / D_000A20DC: VECTOR (Q16/T were the same 4 ints; func_000299B8's a/b/c are vx/vy/vz).
  *  - track_buffer: TYRE_TRACK[4][64] (DrawTyreTracks's shape); func_00029C00's TRAIL flag/type/p[4][3] are
  *    type/surface/p1..p4.
@@ -15,21 +15,19 @@
  *  - D_0009717C: void * (POLY_G3 * in clippedPoly, PG4 * in sQuad: one shadow-poly cursor).
  *  - DrawTyreTracks no longer #defines/#undefs gte_ldv0 and gte_stsz (gte.h has them): its #undef removed them
  *    for PlaceShadowForCar, which then called them as functions.
+ *  - Step 3: CAR_DATA, CIV_SLOT (E80.idx = f10), TEXINF (TexInfo: w/h = width/height), TEXTURE_DETAILS (UV
+ *    coords), DB and the gte base types (VECTOR_NOPAD too) come from include/structs.h.
  */
 #include "gte.h"
+
+#include "structs.h"
 
 /* ---- types ---- */
 typedef struct { int x, y, z; } V3;
 typedef struct { int a, b; } P8;
-typedef struct { char pad[16]; unsigned char idx; char rest[63]; } E80;
 typedef struct { char c[100]; } E100;
 typedef struct { char c[32]; } E32;
-typedef struct { int vx, vy, vz, pad; } VECTOR;
 typedef struct { unsigned char v; char pad[7]; } B8;
-typedef struct { int vx, vy, vz; } VECTOR_NOPAD;
-typedef struct { short vx, vy, vz, pad; } SVECTOR;
-typedef struct { short m[3][3]; short pad; int t[3]; } MATRIX;
-typedef struct { char *primptr; unsigned int *ot; int pad; int id; } DB;
 typedef struct { DB *p; int pad; } DBP8;
 typedef struct {
     unsigned char type;
@@ -37,10 +35,6 @@ typedef struct {
     unsigned char surface;
     VECTOR_NOPAD p1, p2, p3, p4;
 } TYRE_TRACK;
-typedef struct {
-    unsigned char u0, v0, u1, v1, u2, v2, u3, v3;
-    unsigned short tpageid, clutid;
-} TEXTURE_DETAILS;
 typedef struct {
     unsigned int tag;
     unsigned char r0, g0, b0, code;
@@ -59,10 +53,6 @@ typedef struct {
 } POLY_FT4;
 typedef struct { unsigned addr:24; unsigned len:8; unsigned char pad0, pad1, pad2, code; } P_TAG;
 typedef struct {
-    char pad[4];
-    unsigned char x, y, w, h;
-} TexInfo;
-typedef struct {
     unsigned long tag;
     unsigned long rgbc;
     unsigned long xy0;
@@ -74,11 +64,6 @@ typedef struct {
     unsigned long xy3;
     unsigned short uv3, pad2;
 } FT4;
-typedef struct {
-    char pad0[0x88];
-    VECTOR shadowPoints[4];
-    char padC8[0x18C - 0xC8];
-} CAR;
 typedef struct {
     unsigned int tag;
     unsigned char r0, g0, b0, code;
@@ -136,8 +121,8 @@ extern short *D_0009713C;
 extern short *D_00097140;
 extern int D_000A1CCC[4];
 extern int D_000A5D7C[4];
-extern CAR car_data[];
-extern E80 D_00098950[];
+extern CAR_DATA car_data[];
+extern CIV_SLOT D_00098950[];
 extern E32 D_000AF6A0[];
 extern E100 car_cosmetics[];
 extern E100 D_0009AF68[];
@@ -172,7 +157,7 @@ extern unsigned char D_00097178[8];
 extern unsigned short texture_pages[];
 extern unsigned short texture_cluts[][32];
 extern POLY_FT4 D_000A216C[2][25];
-extern TexInfo *GetTEXINFName();
+extern TEXINF *GetTEXINFName();
 extern long long D_00096874;
 extern SVECTOR D_000A1C58[];
 extern int D_00097170;
@@ -243,7 +228,7 @@ void func_000299B8(int n)
 	s6 = (char *)car_data;
 	if (n != 0) {
 		s6 += n * 396;
-		s5 = (char *)&car_cosmetics[D_00098950[n - 1].idx];
+		s5 = (char *)&car_cosmetics[D_00098950[n - 1].f10];
 		SetRotMatrix(&D_000AF6A0[n]);
 		n = 2;
 	} else {
@@ -491,14 +476,14 @@ void DrawTyreTracks(void)
                 poly->b0 = 35;
             }
 
-            poly->u0 = D_000BBE44.u0;
-            poly->v0 = D_000BBE44.v0;
-            poly->u1 = D_000BBE44.u1;
-            poly->v1 = D_000BBE44.v1;
-            poly->u2 = D_000BBE44.u2;
-            poly->v2 = D_000BBE44.v2;
-            poly->u3 = D_000BBE44.u3;
-            poly->v3 = D_000BBE44.v3;
+            poly->u0 = D_000BBE44.coords.u0;
+            poly->v0 = D_000BBE44.coords.v0;
+            poly->u1 = D_000BBE44.coords.u1;
+            poly->v1 = D_000BBE44.coords.v1;
+            poly->u2 = D_000BBE44.coords.u2;
+            poly->v2 = D_000BBE44.coords.v2;
+            poly->u3 = D_000BBE44.coords.u3;
+            poly->v3 = D_000BBE44.coords.v3;
             *(unsigned short *)((char *)poly + 0x16) = D_000BBE44.tpageid | 0x40;
             *(unsigned short *)((char *)poly + 0xE) = D_000BBE44.clutid;
             poly->code |= 2;
@@ -536,7 +521,7 @@ unsigned char D_00097174[4];
 void func_0002A5CC(void)
 {
     unsigned char buf[2];
-    TexInfo *t;
+    TEXINF *t;
     POLY_FT4 *p;
     int i, j;
 
@@ -547,12 +532,12 @@ void func_0002A5CC(void)
     D_00097188 = buf[1];
     D_00097174[0] = t->x;
     D_00097174[1] = t->y;
-    D_00097174[2] = t->x + t->w - 1;
+    D_00097174[2] = t->x + t->width - 1;
     D_00097174[3] = t->y;
     D_00097178[0] = t->x;
-    D_00097178[1] = t->y + t->h - 1;
-    D_00097178[2] = t->x + t->w - 1;
-    D_00097178[3] = t->y + t->h - 1;
+    D_00097178[1] = t->y + t->height - 1;
+    D_00097178[2] = t->x + t->width - 1;
+    D_00097178[3] = t->y + t->height - 1;
     if (*(int *)&D_00096834 == 1) {
         D_00097174[2] = D_00097174[2] - 1;
         D_00097178[2] = D_00097178[2] - 1;
@@ -739,7 +724,7 @@ void PlaceShadowForCar(int slot)
     SVECTOR points[4];
     int z0, z1, z2, z3;
     int z;
-    CAR *cp;
+    CAR_DATA *cp;
     POLY_FT4 *spt;
 
     if (slot == 0 && *(int *)&D_00096874 == 1)
