@@ -31,3 +31,7 @@ Final reply per file: functions merged, conflicts found / how resolved, boundary
 - int[] -> char[]+cast can reschedule code at the same address: keep the type the scheduling-sensitive function used.
 - A file including common.h clashes with unprototyped PsyQ externs elsewhere: until shared headers exist, declare the few GPU types locally.
 - Commit with explicit paths (`git commit -- <paths>`) so another agent's staged files can't end up in your commit.
+## Lessons (batch B: denting, bcollide, cars, camera, shadow - all byte-identical, ~10 min)
+- mktu `#undef` trap (silent): a pilot section that #defines a macro gte.h already provides and #undefs it at the end removes the header's macro for all later sections -> implicit function calls (shows only as a size mismatch). Delete such duplicate define/undef pairs.
+- Merged types can change codegen (incomplete int[] -> complete struct; struct-member view -> pointer cast). On a diff, spell the access the way the pilot did.
+- Arity mismatches: give the definition the extra unused params its callers pass - same bytes every time.
