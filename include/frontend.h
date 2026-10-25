@@ -95,6 +95,12 @@ typedef struct {
     short w, h;
 } SPRT;
 typedef struct {
+    unsigned int tag;
+    unsigned char r0, g0, b0, code;
+    short x0, y0;
+    short x1, y1;
+} LINE_F2;
+typedef struct {
     RECT clip;
     short ofs[2];
     RECT tw;
