@@ -6,36 +6,49 @@
  *   func_0007A12C  unprototyped int - returns the old callback (func_0006F57C), takes it back (func_0006F6E8)
  *   D_00096F9C     unsigned short (cbready compares with lhu)
  *   func_0007A27C  (int, int)
+ * Step 4: defines its own data, in address order: .data 0x8D1F4 (the movie XA names - gcc emits one initialiser's
+ * string literals in reverse, so MV5..MV1 land at .rodata 0x116A8 in the original order), .sdata 0x96F94-0x96FA0
+ * (D_00096F9E unreferenced), .sbss 0x977F4-0x97810 (D_00097804/0C unreferenced); NMAJ/CUTS are C literals too, so
+ * .rodata 0x116A8-0x11739 is one block. extern long long -> int + maspsx abs= (1).
  */
 
+/* maspsx: abs=D_00096C90 */
 /* ---- types ---- */
 typedef struct { char b[24]; } CdlFILE;
 
+/* ---- .data 0x8D1F4-0x8D208: the five movie XA files (their strings come out in reverse: one initialiser's literals) ---- */
+char *D_0008D1F4[] = { "\\DRIVER\\XA\\MV1.XA;1", "\\DRIVER\\XA\\MV2.XA;1", "\\DRIVER\\XA\\MV3.XA;1", "\\DRIVER\\XA\\MV4.XA;1", "\\DRIVER\\XA\\MV5.XA;1" };
+
+/* ---- .sdata 0x96F94-0x96FA0 (D_00096F9E: unreferenced second half of the D_00096F9C label block) ---- */
+int D_00096F94 = 0;
+int D_00096F98 = 0;
+unsigned short D_00096F9C = 0;
+unsigned short D_00096F9E = 0;
+
+/* ---- .sbss 0x977F4-0x97810 (D_00097804/0C: unreferenced gap fillers) ---- */
+unsigned short D_000977F4;
+unsigned short D_000977F6;
+int D_000977F8;
+int D_000977FC;
+int D_00097800;
+int D_00097804;
+int D_00097808;
+int D_0009780C;
+
+
 /* ---- externs ---- */
-extern int D_0008D1F4[];
 extern int D_000C784C[][2];
-extern char D_0001170C[];
-extern char D_00011724[];
-extern int D_00097800;
-extern int D_00097808;
 extern int CdSearchFile();
 extern int CdPosToInt();
 extern void SsSetSerialVol(short s_num, short voll, short volr);
-extern long long D_00096C90;
+extern int D_00096C90;
 extern void VSync();
 extern void CdInit(void);
 extern void CdControl(int, void *, void *);
 extern int func_0007A12C();
-extern int D_00096F94;
-extern int D_00096F98;
-extern int D_000977FC;
-extern unsigned short D_00096F9C;
-extern int D_000977F8;
 extern void func_0007A580();
 extern void func_0007A27C(int a, int b);
 extern unsigned short D_000C782C[];
-extern unsigned short D_000977F4;
-extern unsigned short D_000977F6;
 extern void func_0007A4FC();
 
 /* ---- functions defined in this file ---- */
@@ -65,8 +78,8 @@ void func_0006F2DC(unsigned char flags, int idx)
         for (i = 0; i < 5; i++) {
             D_000C784C[i][0] = getpos(D_0008D1F4[i]);
         }
-        D_00097800 = getpos(D_0001170C);
-        D_00097808 = getpos(D_00011724);
+        D_00097800 = getpos("\\DRIVER\\XA\\NMAJ.XA;1");
+        D_00097808 = getpos("\\DRIVER\\XA\\CUTS.XA;1");
         return;
     }
     if (flags & 8) {
@@ -79,10 +92,10 @@ void func_0006F2DC(unsigned char flags, int idx)
         }
     }
     if ((flags & 1) || (flags & 4)) {
-        D_00097800 = getpos(D_0001170C);
+        D_00097800 = getpos("\\DRIVER\\XA\\NMAJ.XA;1");
     }
     if (flags & 0x10) {
-        D_00097808 = getpos(D_00011724);
+        D_00097808 = getpos("\\DRIVER\\XA\\CUTS.XA;1");
     }
 }
 
