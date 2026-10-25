@@ -8,39 +8,14 @@
  *  - D_000A1AB0 / D_000A1AE0: MODEL* (TBL/T were the same layout; field 0x14 = poly_block).
  *  - D_000B09BC, D_000AF97A, D_000B08B8: DentCar's 2-D / unsigned spellings; func_0003EB0C indexes [0][i] and casts.
  *  - D_000B700C: HUBCAP; InitHubcap/func_0003ED58 address it as before through (int *) / .Present.
+ *  - Step 3: CAR_DATA, CIV_SLOT (D_00098950, .model = f10) and MODEL (D2 int offsets; vertices/poly_block are
+ *    cast at their uses) come from include/structs.h, with the gte base types; t[] = pos, h = totalDamage.
  *  - func_0003ECCC takes the 3 args its callers pass (empty body); LoseHubcap gets MoveHubcap's 2nd arg (unused).
  */
 
+#include "structs.h"
+
 /* ---- types ---- */
-typedef struct { short vx, vy, vz, pad; } SVECTOR;
-typedef struct {
-    char pad[0xC];
-    unsigned short num_vertices;
-    unsigned short num_polys;
-    SVECTOR *vertices;
-    char *poly_block;
-} MODEL;
-typedef struct { long vx, vy, vz, pad; } VECTOR;
-typedef struct { short m[3][3]; long t[3]; } MATRIX;
-typedef struct {
-    char pad0[0x40];
-    long linearVelocity[3];
-    long angularVelocity[3];
-    char pad1[0xC8 - 0x58];
-    long t[3];
-    char pad2[0x104 - 0xD4];
-    int wheel_speed;
-    char pad3[0x114 - 0x108];
-    int damage[6];
-    char pad4[0x17C - 0x12C];
-    short h;
-    char pad5[0x18C - 0x17E];
-} CAR_DATA;
-typedef struct {
-    char pad[0x10];
-    unsigned char model;
-    char pad2[80 - 0x11];
-} CAR_INFO;
 typedef struct {
     int Present[4];
     VECTOR Offset[4];
@@ -51,7 +26,6 @@ typedef struct {
     int Rotation;
     int Duration;
 } HUBCAP;
-typedef struct { unsigned char r, g, b, cd; } CVECTOR;
 
 /* ---- externs ---- */
 extern long long D_00096804;
@@ -67,7 +41,7 @@ extern int D_0008A6FC[];
 extern MODEL *D_000A1AE0[];
 extern char D_000B6DBC[];
 extern CAR_DATA car_data[];
-extern CAR_INFO D_00098950[];
+extern CIV_SLOT D_00098950[];
 extern long long D_0009683C;
 extern MODEL *D_000A1AD0[];
 extern MODEL *D_000A1AB0[];
@@ -115,7 +89,7 @@ void func_0003E540(void)
     for (i = 1; i < 4; i++) {
         for (j = 0; j < D_000A1AE0[i]->num_polys; j++)
             D_000B6DBC[i * 50 + j] = 0;
-        func_0003ECCC(D_000A1AE0[i]->poly_block, &D_000B6DBC[i * 50], D_000A1AE0[i]->num_polys);
+        func_0003ECCC((char *)D_000A1AE0[i]->poly_block, &D_000B6DBC[i * 50], D_000A1AE0[i]->num_polys);
     }
     func_0003EB0C(0, 0);
     InitHubcap();
@@ -145,12 +119,12 @@ void DentCar(int id)
     MaxDamage = 0;
 
     if (id != 0) {
-        model = D_00098950[id - 1].model;
-        DamVertPtr = D_000A1AD0[model]->vertices;
-        CleanVertPtr = D_000A1AB0[model]->vertices;
+        model = D_00098950[id - 1].f10;
+        DamVertPtr = (SVECTOR *)D_000A1AD0[model]->vertices;
+        CleanVertPtr = (SVECTOR *)D_000A1AB0[model]->vertices;
     } else {
-        DamVertPtr = D_000A1AD0[0]->vertices;
-        CleanVertPtr = D_000A1AB0[0]->vertices;
+        DamVertPtr = (SVECTOR *)D_000A1AD0[0]->vertices;
+        CleanVertPtr = (SVECTOR *)D_000A1AB0[0]->vertices;
         model = *(int *)&D_0009683C;
     }
 
@@ -253,7 +227,7 @@ void func_0003EB0C(int idx, unsigned int type)
     if (type > 0x10)
         return;
     dst = &D_000B09BC[0][idx * 128];
-    src = D_000A1AB0[type]->vertices;
+    src = (SVECTOR *)D_000A1AB0[type]->vertices;
     i = D_000A1AB0[type]->num_vertices;
     i--;
     while (i != -1) {
@@ -267,7 +241,7 @@ void func_0003EB0C(int idx, unsigned int type)
         dst++;
         i--;
     }
-    p = D_000A1AB0[type]->poly_block;
+    p = (char *)D_000A1AB0[type]->poly_block;
     if (idx != 0)
         buf = (char *)&D_000AF97A[0][idx * 150];
     else
@@ -277,7 +251,7 @@ void func_0003EB0C(int idx, unsigned int type)
     func_0003ECCC(p, buf, D_000A1AB0[type]->num_polys);
     for (j = 5; j >= 0; j--)
         car_data[idx].damage[j] = 0;
-    car_data[idx].h = 0;
+    car_data[idx].totalDamage = 0;
 }
 
 /* ---------------- func_0003ECCC (src/pilot/func_0003ECCC.c) ---------------- */
@@ -339,9 +313,9 @@ void LoseHubcap(int Hubcap, int Velocity)
     SetRotMatrix(&D_000AF6A0);
     func_0004EAC0(&D_000B700C.Position);
 
-    D_000B700C.Position.vx += car_data[0].t[0];
-    D_000B700C.Position.vy -= car_data[0].t[1];
-    D_000B700C.Position.vz += car_data[0].t[2];
+    D_000B700C.Position.vx += car_data[0].pos.vx;
+    D_000B700C.Position.vy -= car_data[0].pos.vy;
+    D_000B700C.Position.vz += car_data[0].pos.vz;
 
     D_000B700C.Orientation = D_000AF6A0;
     func_0004E948(&D_000B700C.LocalOrientation, &InitialLocalAngle);

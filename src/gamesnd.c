@@ -10,49 +10,17 @@
  *  - D_000BD498: CHAN[]; func_0004CF50's SNDSTATE.vol (0x4E6) is D_000BD498[9].f42.
  *  - GetEngineRevs returns int, as in D2 (its caller func_0004C72C zero-extends the result late),
  *    with (unsigned short) on the returned values (the pilot declared the return unsigned short).
+ * Step 3: CAR_DATA and CIV_SLOT (D_00098950) come from include/structs.h. Renamed: type = id, b7c/b84 =
+ *    wheel[1]/[3].susCompression, pos[]/vel[] = VECTOR pos/vel, acc = fF0, i100 = wheelspin, ws = wheel_speed,
+ *    i108 = speed, b185 = f185.
  * Boundary: the .sbss order 0x974B0 (objcoll) | 0x974B8 (func_0004C1C8) 0x974BC/0x974C4 (func_0004D208)
  * 0x974C0 (func_0004C438, func_0004CF50) 0x974C8 (func_0004C438) ties 386-388 to the rest of this file.
  */
+#include "structs.h"
+
 /* ---- types ---- */
-typedef struct { int vx, vy, vz, pad; } VECTOR;
 typedef struct { int lowidl_ws, low_ws, hi_ws, ratio_ac, ratio_id; } GEAR_DESC;
-typedef struct {                 /* car_data record, 0x18C bytes */
-    unsigned char type;          /* 0x00 */
-    char p1[2];
-    unsigned char f3;            /* 0x03 */
-    char p4[0x7C - 4];
-    unsigned char b7c;           /* 0x7C */
-    char p7D[0x84 - 0x7D];
-    unsigned char b84;           /* 0x84 */
-    char p85[0xC8 - 0x85];
-    int pos[4];                  /* 0xC8 */
-    int vel[4];                  /* 0xD8 */
-    char pE8[0xF0 - 0xE8];
-    int acc;                     /* 0xF0 */
-    char pF4[0x100 - 0xF4];
-    int i100;                    /* 0x100 */
-    int ws;                      /* 0x104 */
-    int i108;                    /* 0x108 */
-    char p10C[0x12E - 0x10C];
-    unsigned char f12E;          /* 0x12E */
-    char p12F[0x180 - 0x12F];
-    short f180;                  /* 0x180 */
-    short f182;                  /* 0x182 */
-    unsigned char gear;          /* 0x184 */
-    unsigned char b185;          /* 0x185 */
-    char p186[0x18C - 0x186];
-} CAR;
 struct SQ { int count; int slot[7]; };
-typedef struct {
-    char pad0;
-    unsigned char f1;
-    unsigned char f2;
-    char pad3[0xD - 3];
-    unsigned char fD;
-    char padE[2];
-    unsigned char f10;
-    char pad11[0x50 - 0x11];
-} CS;
 typedef struct {
     char pad0[0x40];
     unsigned char f40;
@@ -99,12 +67,12 @@ extern int D_00096C68;
 extern int D_00096C6C;
 extern int D_00096C64;
 extern int D_00096C60;
-extern CS D_00098950[];
+extern CIV_SLOT D_00098950[];
 extern int D_00096C5C;
 extern long long D_000BD97C;
 extern void ClearMem(void *p, int n);
 extern int camera_position[];
-extern CAR car_data[];
+extern CAR_DATA car_data[];
 extern CHAN D_000BD498[];
 extern long long D_0009779C;
 extern int *D_000C7000[];
@@ -249,13 +217,13 @@ void func_0004C438(void)
 
 /* ---------------- GetEngineRevs (src/pilot/GetEngineRevs.c) ---------------- */
 /* Driver 2: GetEngineRevs */
-int GetEngineRevs(CAR *cp)
+int GetEngineRevs(CAR_DATA *cp)
 {
 	int gear, old, ws, acc;
 	GEAR_DESC *gd;
 	gear = cp->gear;
-	ws = cp->ws;
-	acc = cp->acc;
+	ws = cp->wheel_speed;
+	acc = cp->fF0;
 	if (ws > 0) {
 		ws >>= 11;
 		if (gear < 0) gear = 0;
@@ -281,28 +249,28 @@ int GetEngineRevs(CAR *cp)
 
 /* ---------------- func_0004C72C (src/pilot/func_0004C72C.c) ---------------- */
 /* Driver 2 name: unknown */
-void func_0004C72C(CAR *p)
+void func_0004C72C(CAR_DATA *p)
 {
     int s2;
     unsigned int ang;
     int tgt;
     int a0;
 
-    s2 = p->acc;
+    s2 = p->fF0;
     ang = (unsigned short)p->f180;
-    p->b185 = 0;
-    if (p->i100 == 0) {
+    p->f185 = 0;
+    if (p->wheelspin == 0) {
         int v;
-        if (p->type == 0x17 && *(int *)&D_000967F4 != 0x16)
+        if (p->id == 0x17 && *(int *)&D_000967F4 != 0x16)
             goto b0;
         v = D_000C7004[0];
         if (v == 0x7f) goto b0;
         if ((unsigned)(v - 0xAA) < 10) goto b0;
         if (*(int *)&D_00096858 == 0) goto call;
 b0:
-        if (*(int *)&D_00096858 != 0 || p->b7c != 0)
+        if (*(int *)&D_00096858 != 0 || p->wheel[1].susCompression != 0)
             goto call;
-        if (p->b84 != 0) {
+        if (p->wheel[3].susCompression != 0) {
 call:
             tgt = GetEngineRevs(p);
             goto mid;
@@ -316,12 +284,12 @@ mid:
     if ((unsigned short)ang - (a0 & 0xFFFF) > D_00096C68) {
         s2 = 0;
         a0 = ang - (unsigned short)D_00096C68;
-        p->b185 = 1;
+        p->f185 = 1;
     }
     if ((a0 & 0xFFFF) - (unsigned short)ang > D_00096C6C)
         a0 = ang + (unsigned short)D_00096C6C;
     p->f180 = a0;
-    if (s2 != 0 || p->i108 >= 0x1F) {
+    if (s2 != 0 || p->speed >= 0x1F) {
         int m = s2 ? 0 : D_00096C64;
         p->f182 -= (unsigned short)D_00096C60;
         if (p->f182 < m) p->f182 = m;
@@ -399,14 +367,14 @@ void func_0004CA5C(void)
     int left3;
     int left5;
     int ch;
-    CAR *cp;
+    CAR_DATA *cp;
     int *pos;
 
     n = 0;
     for (i = 0; i < 25; i++) {
         if (i != 0 && D_00098950[i - 1].f1 != 0 && D_00098950[i - 1].f1 != 1) {
             order[n++] = i;
-            dist[i] = ABS(car_data[i].pos[0] - camera_position[0]) + ABS(car_data[i].pos[2] - camera_position[2]);
+            dist[i] = ABS(car_data[i].pos.vx - camera_position[0]) + ABS(car_data[i].pos.vz - camera_position[2]);
         }
     }
 
@@ -427,13 +395,13 @@ void func_0004CA5C(void)
         c = order[i];
         if (c < 25) {
             cp = &car_data[c];
-            pos = cp->pos;
+            pos = (int *)&cp->pos;
             if (cp->f12E == 1) {
                 if (left5 && D_00098950[c - 1].f10 == 1 && (t = D_00098950[c - 1].fD) < 80) {
                     left5--;
                     ch = left5 + 5;
                     D_000BD498[ch].f42 = 50;
-                    func_0004DDA8(ch, pos, cp->vel, -2000 - t * 30, sub(c * 4, t * 48 - 4096));
+                    func_0004DDA8(ch, pos, &cp->vel, -2000 - t * 30, sub(c * 4, t * 48 - 4096));
                 }
             }
             if (cp->f12E == 1 || cp->f3 == 1) {
@@ -441,7 +409,7 @@ void func_0004CA5C(void)
                     left3--;
                     ch = left3 + 7;
                     D_000BD498[ch].f42 = 50;
-                    func_0004DDA8(ch, cp->pos, cp->vel, -2000, sub(cp->f180 >> 2, (cp->f182 >> 7) - 1000));
+                    func_0004DDA8(ch, &cp->pos, &cp->vel, -2000, sub(cp->f180 >> 2, (cp->f182 >> 7) - 1000));
                 }
             }
         }
@@ -451,11 +419,11 @@ void func_0004CA5C(void)
         c = order[i];
         if (c < 25) {
             cp = &car_data[c];
-            pos = cp->pos;
+            pos = (int *)&cp->pos;
             if (cp->f12E != 1 && cp->f3 != 1 && left3) {
                 left3--;
                 D_000BD498[left3 + 7].f42 = 50;
-                func_0004DDA8(left3 + 7, pos, cp->vel, -6000, 0x830);
+                func_0004DDA8(left3 + 7, pos, &cp->vel, -6000, 0x830);
             }
         }
     }
@@ -486,7 +454,7 @@ void func_0004CA5C(void)
 #define gamemode (*(unsigned char *)&cameraview)
 void func_0004CF50(void)
 {
-    CAR *p;
+    CAR_DATA *p;
     QUEUE *q;
     int v;
 
@@ -496,9 +464,9 @@ void func_0004CF50(void)
     }
 
     if (gamemode == 2 || gamemode == 0) {
-        D_000BD474.vx = car_data[0].vel[0];
-        D_000BD474.vy = car_data[0].vel[1];
-        D_000BD474.vz = car_data[0].vel[2];
+        D_000BD474.vx = car_data[0].vel.vx;
+        D_000BD474.vy = car_data[0].vel.vy;
+        D_000BD474.vz = car_data[0].vel.vz;
     } else {
         D_000BD474.vx = 0;
         D_000BD474.vy = 0;
@@ -506,14 +474,14 @@ void func_0004CF50(void)
     }
 
     p = &car_data[*(int *)&D_00096888];
-    func_0004DDA8(1, p->pos, p->vel, p->f182 - 12000, 0x1000);
-    func_0004DDA8(0, p->pos, p->vel, -p->f182 - 2000, (p->f180 >> 2) - (short)((p->f182 >> 7) - 1000));
+    func_0004DDA8(1, &p->pos, &p->vel, p->f182 - 12000, 0x1000);
+    func_0004DDA8(0, &p->pos, &p->vel, -p->f182 - 2000, (p->f180 >> 2) - (short)((p->f182 >> 7) - 1000));
 
     if (*(int *)&D_00096840 != 0) {
         if (*(int *)&D_00097080 != 0)
-            func_0004DDA8(4, p->pos, p->vel, 1000, 0x1000);
+            func_0004DDA8(4, &p->pos, &p->vel, 1000, 0x1000);
         else
-            func_0004DDA8(4, p->pos, p->vel, -10000, 0x1000);
+            func_0004DDA8(4, &p->pos, &p->vel, -10000, 0x1000);
     }
 
     func_0004CA5C();

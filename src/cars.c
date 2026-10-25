@@ -13,51 +13,18 @@
  *  - D_000AF5B0: PolyLists (func_0003BDC8's shape); VIEWS.f38 = x38, SEG.a1/g0/g1 = p0/n6/p6.
  *  - #include "common.h" dropped (only func_0003BA7C had it, for nothing); its libgte VECTOR/MATRIX/SVECTOR,
  *    P_TAG and the MulMatrix0 prototype clashed with the file-local ones.
+ *  - Step 3: CAR_DATA, CIV_SLOT (D_00098950), MODEL, DB, WHEEL and the gte base types come from include/structs.h.
+ *    Renamed: mat = where, x/y/z = pos.vx/vy/vz, f40/f48 = linearVelocity[0]/[2], f108 = speed, f114/f118 =
+ *    damage[0]/[1], f17C = totalDamage, direction (0xF4) = fF4. MODEL's D2 int offsets are cast at their uses.
  *  - func_0003B168 takes the 4th argument func_0003A698 passes (unused).
  */
 #include "gte.h"
 
+#include "structs.h"
+
 /* ---- types ---- */
-typedef struct { int vx, vy, vz, pad; } VECTOR;
-typedef struct { short m[3][3]; int t[3]; } MATRIX;
 typedef struct { int m[8]; } MAT8;
 typedef struct { unsigned char c[8]; } B8;
-typedef struct { short vx, vy, vz, pad; } SVECTOR;
-typedef struct {
-    unsigned char susCompression;
-    unsigned char locked;
-    char pad[2];
-} WHEEL;
-typedef struct {
-    int pad0;               /* 0x00 */
-    MATRIX mat;             /* 0x04 */
-    char pad24[0x40 - 0x24];
-    int f40;                /* 0x40 */
-    int pad44;
-    int f48;                /* 0x48 */
-    char pad4C[0x78 - 0x4C];
-    WHEEL wheel[4];         /* 0x78 */
-    char pad88[0xC8 - 0x88];
-    int x, y, z;            /* 0xC8 */
-    char padD4[0xF4 - 0xD4];
-    int direction;          /* 0xF4 */
-    char padF8[0x100 - 0xF8];
-    int wheelspin;          /* 0x100 */
-    int wheel_speed;        /* 0x104 */
-    int f108;               /* 0x108 */
-    char pad10C[0x114 - 0x10C];
-    int f114;               /* 0x114 */
-    int f118;               /* 0x118 */
-    char pad11C[0x17C - 0x11C];
-    short f17C;             /* 0x17C */
-    char pad17E[0x18C - 0x17E];
-} CAR_DATA;
-typedef struct {
-    unsigned char f0, f1;
-    char pad2[0x17 - 2];
-    unsigned char f17;
-    char pad18[80 - 0x18];
-} PED;
 typedef struct { char c[50]; } S50;
 typedef struct { char c[150]; } S150;
 typedef struct { char c[1024]; } S1024;
@@ -75,21 +42,6 @@ typedef struct {
     UV_INFO uv0, uv1, uv2, uv3;
     unsigned char r, g, b, pad;
 } POLYFT4;
-typedef struct {
-    unsigned short shape_flags;         /* 0x00 */
-    unsigned short flags2;              /* 0x02 */
-    short instance_number;              /* 0x04 */
-    unsigned char tri_verts, zBias;     /* 0x06 */
-    short bounding_sphere;              /* 0x08 */
-    unsigned short num_point_normals;   /* 0x0A */
-    unsigned short num_vertices;        /* 0x0C */
-    unsigned short num_polys;           /* 0x0E */
-    SVECTOR *vertices;                  /* 0x10 */
-    POLYFT4 *poly_block;                /* 0x14 */
-    int normals;                        /* 0x18 */
-    SVECTOR *point_normals;             /* 0x1C */
-} MODEL;
-typedef struct { char *primptr; unsigned int *ot; } DB;
 typedef struct {
     unsigned int tag;
     unsigned char r0, g0, b0, code;
@@ -192,7 +144,7 @@ extern MAT8 D_000AF6A0[];
 extern MAT8 inv_camera_matrix;
 extern char D_000AB454[];
 extern char D_000B08B8[];
-extern PED D_00098950[];
+extern CIV_SLOT D_00098950[];
 extern int ROADS_GetRouteData();
 extern void PlaceShadowForCar();
 extern void func_0002C564();
@@ -325,16 +277,16 @@ void func_0003A698(int i, int view)
 
     if (cameraview.c[0] == 2 && i == I32(D_0009688C)) {
         CAR_DATA *cars = car_data;
-        int *src = (int *)&car_data[i].mat;
+        int *src = (int *)&car_data[i].where;
         int *dst = D_000AF6A0[i].m;
 
-        if (view == 0 && ROADS_GetRouteData(cars->x, cars->z, tmp)) {
-            if ((*modelpointers[tmp[0]] & 0x80) && cars->y < 220) {
+        if (view == 0 && ROADS_GetRouteData(cars->pos.vx, cars->pos.vz, tmp)) {
+            if ((*modelpointers[tmp[0]] & 0x80) && cars->pos.vy < 220) {
                 if (I32(pauseflag) == 0) {
                     if (I32(D_00097004) != 0)
                         I32(D_00097004) = I32(D_00097004) - 1;
-                    car_data[i].f40 -= car_data[i].f40 >> 4;
-                    car_data[i].f48 -= car_data[i].f48 >> 4;
+                    car_data[i].linearVelocity[0] -= car_data[i].linearVelocity[0] >> 4;
+                    car_data[i].linearVelocity[2] -= car_data[i].linearVelocity[2] >> 4;
                 }
             } else {
                 I32(D_00097004) = 25;
@@ -343,16 +295,16 @@ void func_0003A698(int i, int view)
         }
         CopyMatrix(src, dst);
 
-        if (car_data[i].f114 < 500)
+        if (car_data[i].damage[0] < 500)
             D_00097458.c[0] = 2;
-        else if (car_data[i].f114 < 1000)
+        else if (car_data[i].damage[0] < 1000)
             D_00097458.c[0] = 1;
         else
             D_00097458.c[0] = 0;
 
-        if (car_data[i].f118 < 500)
+        if (car_data[i].damage[1] < 500)
             D_00097460.c[0] = 2;
-        else if (car_data[i].f118 < 1000)
+        else if (car_data[i].damage[1] < 1000)
             D_00097460.c[0] = 1;
         else
             D_00097460.c[0] = 0;
@@ -369,10 +321,10 @@ void func_0003A698(int i, int view)
     if (i == 0)
         view2 = 0;
 
-    v98.vx = pos.vx = cp->x;
-    y = -cp->y;
+    v98.vx = pos.vx = cp->pos.vx;
+    y = -cp->pos.vy;
     pos.vy = y;
-    v98.vz = pos.vz = cp->z;
+    v98.vz = pos.vz = cp->pos.vz;
     if (D_0009D8DC[1] != 0) {
         pos.vy = y + 120;
         if (D_0009D8DC[2] != 0)
@@ -415,16 +367,16 @@ void func_0003A698(int i, int view)
             func_0003B994(cp, i);
 
         {
-            int s = cp->f108 << 13;
-            if (cp->f17C >= I32(D_00096E7C)) {
+            int s = cp->speed << 13;
+            if (cp->totalDamage >= I32(D_00096E7C)) {
                 if ((unsigned)(s + 59999) <= 119998)
                     func_00046C58(i, s);
                 if ((unsigned)(s + 399999) <= 1199998)
                     func_00046A1C(i, 1, s);
-            } else if (cp->f114 > 3000 || cp->f118 > 3000) {
+            } else if (cp->damage[0] > 3000 || cp->damage[1] > 3000) {
                 if ((unsigned)(s + 399999) <= 1199998)
                     func_00046A1C(i, 1, s);
-            } else if (cp->f114 > 2000 || cp->f118 > 2000) {
+            } else if (cp->damage[0] > 2000 || cp->damage[1] > 2000) {
                 if ((unsigned)(s + 399999) <= 1199998)
                     func_00046A1C(i, 0, s);
             }
@@ -433,7 +385,7 @@ void func_0003A698(int i, int view)
                 if ((i == 0 && I32(D_00096874) == 0) ||
                     (i != 0 && D_00098950[i - 1].f1 != 1 && D_00096A44 != 0)) {
                     skid = 0;
-                    if (cp->f114 > 3000 || cp->f118 > 3000)
+                    if (cp->damage[0] > 3000 || cp->damage[1] > 3000)
                         skid = 1;
                     func_000467DC(i, s, skid);
                 }
@@ -441,14 +393,14 @@ void func_0003A698(int i, int view)
         }
 
         if (view == 0) {
-            if (ROADS_GetRouteData(cp->x, cp->z, tmp)) {
-                if (I32(D_00096834) != 1 && (*modelpointers[tmp[0]] & 0x80) && cp->y < 220) {
+            if (ROADS_GetRouteData(cp->pos.vx, cp->pos.vz, tmp)) {
+                if (I32(D_00096834) != 1 && (*modelpointers[tmp[0]] & 0x80) && cp->pos.vy < 220) {
                     if (I32(pauseflag) == 0) {
                         if (I32(D_00097004) != 0)
                             I32(D_00097004) = I32(D_00097004) - 1;
                         func_000412D4(i, tmp[1] + 100, I32(D_00097004) == 0);
-                        car_data[i].f40 -= car_data[i].f40 >> 4;
-                        car_data[i].f48 -= car_data[i].f48 >> 4;
+                        car_data[i].linearVelocity[0] -= car_data[i].linearVelocity[0] >> 4;
+                        car_data[i].linearVelocity[2] -= car_data[i].linearVelocity[2] >> 4;
                     }
                 } else {
                     I32(D_00097004) = 25;
@@ -575,7 +527,7 @@ void DrawCarWheels(int car, MATRIX *RearMatrix, VECTOR *pos, int unused, int cos
     else
         WheelModelBack = gFastWheelModelPtr;
 
-    v = WheelModelFront->vertices;
+    v = (SVECTOR *)WheelModelFront->vertices;
     a = D_0008EAAA[(D_000AB654[car] & 0xFFF) * 2] * 101 >> 12;
     b = D_0008EAAA[(D_000AB654[car] & 0xFFF) * 2 - 1] * 101 >> 12;
     c = -b; d = -a;
@@ -587,7 +539,7 @@ void DrawCarWheels(int car, MATRIX *RearMatrix, VECTOR *pos, int unused, int cos
     v[13].vz = v[10].vz = c;
     v[12].vy = v[11].vy = b;
     v[12].vz = v[11].vz = d;
-    v = WheelModelBack->vertices;
+    v = (SVECTOR *)WheelModelBack->vertices;
     a = D_0008EAAA[(D_000AB6C4[car] & 0xFFF) * 2] * 101 >> 12;
     b = D_0008EAAA[(D_000AB6C4[car] & 0xFFF) * 2 - 1] * 101 >> 12;
     c = -b; d = -a;
@@ -599,9 +551,9 @@ void DrawCarWheels(int car, MATRIX *RearMatrix, VECTOR *pos, int unused, int cos
     v[13].vz = v[10].vz = c;
     v[12].vy = v[11].vy = b;
     v[12].vz = v[11].vz = d;
-    SteerMatrix.m[2][2] = D_0008EAAA[(cp->direction & 0xFFF) * 2];
+    SteerMatrix.m[2][2] = D_0008EAAA[(cp->fF4 & 0xFFF) * 2];
     SteerMatrix.m[0][0] = SteerMatrix.m[2][2];
-    SteerMatrix.m[0][2] = D_0008EAAA[(cp->direction & 0xFFF) * 2 - 1];
+    SteerMatrix.m[0][2] = D_0008EAAA[(cp->fF4 & 0xFFF) * 2 - 1];
     SteerMatrix.m[1][1] = 0x1000;
     SteerMatrix.m[2][1] = 0;
     SteerMatrix.m[1][2] = 0;
@@ -616,7 +568,7 @@ void DrawCarWheels(int car, MATRIX *RearMatrix, VECTOR *pos, int unused, int cos
             model = WheelModelBack;
         else
             model = WheelModelFront;
-        VertPtr = model->vertices;
+        VertPtr = (SVECTOR *)model->vertices;
 
         if (car == 0 && D_000B700C[3 - loop] == 0)
             model = gDamWheelModelPtr;
@@ -683,7 +635,7 @@ void DrawWheelObject(MODEL *model, SVECTOR *verts, int transparent)
     unsigned int clut;
     unsigned int tpage;
 
-    src = model->poly_block;
+    src = (POLYFT4 *)model->poly_block;
     prims = (PFT4 *)current->primptr;
     i = model->num_polys;
     clut = texture_cluts[src->texture_set][src->texture_id] << 16;
@@ -784,10 +736,10 @@ void func_0003BA7C(int car, unsigned char *out)
     unsigned char *p;
     int i;
 
-    x = (car_data[car].x >> 8) & 0x3F;
-    z = -(car_data[car].z >> 8) & 0x3F;
-    sv = D_000A1AB0[0]->point_normals;
-    InvertMatrix(&car_data[car].mat, (MATRIX *)0x1F800344);
+    x = (car_data[car].pos.vx >> 8) & 0x3F;
+    z = -(car_data[car].pos.vz >> 8) & 0x3F;
+    sv = (SVECTOR *)D_000A1AB0[0]->point_normals;
+    InvertMatrix(&car_data[car].where, (MATRIX *)0x1F800344);
     SetRotMatrix((MATRIX *)0x1F800344);
     for (i = 0; i < D_000A1AB0[0]->num_point_normals; i++) {
         gte_ldv0(&sv[i]);
@@ -1036,7 +988,7 @@ void MangleWheelModels(void)
             break;
         }
 
-        src = m->poly_block;
+        src = (POLYFT4 *)m->poly_block;
         src[0] = src[2];
         src[1] = src[3];
         src[2] = src[4];
