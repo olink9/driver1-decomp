@@ -6,6 +6,9 @@
  * (struct T / E / MTEXT were partial views of it; the char * users index through a cast), D_000977CC/D0 are ENT *,
  * D_0008D064 is ENT[] (= MENU), D_000BDFA4 int[], D_000977B4/B8 char[4]; func_0006C4BC's inlined copy of
  * func_0006C438 is renamed func_0006C438_inl.
+ * Step 3 (include/structs.h): MENU and ENT (the pause-menu handler tables D_0008C474.., D_0008D064, D_000977CC/D0)
+ *   are MENU_ITEM (f0/f4 -> enter/leave, b[0..3] -> left/right/up/down); DB from the header (x -> ot slot, primtab);
+ *   the unused MTEXT is dropped. No views; MENTRY/PL/ARG stay local (PL is mission.c's D_000C6F04 record).
  */
 /* MKTU CONFLICTS (first spelling active, others commented at their place below):
  * decl D_00096F08:
@@ -46,16 +49,9 @@
  *     typedef struct { void (*f0)(); void (*f4)(); int a; unsigned char b[4]; } ENT;    <- func_0006C964
  */
 
+#include "structs.h"
+
 /* ---- types ---- */
-typedef struct { char *primptr; int x; char *primtab; } DB;
-typedef struct {
-    void (*enter)();
-    void (*leave)();
-    int (*action)();
-    unsigned char left, right, up, down;
-} MENU;
-typedef struct { int a, b; char *text; int d; } MTEXT;
-typedef struct { void (*f0)(); void (*f4)(); int a; unsigned char b[4]; } ENT; /* = MENU */
 typedef struct {
     short x, y;
     unsigned char flag, p5, p6, p7;
@@ -84,9 +80,9 @@ extern long long D_000967F4;
 extern int D_00096F18;
 extern int D_00096F0C;
 extern int D_00096F68;
-extern ENT *D_000977CC;
+extern MENU_ITEM *D_000977CC;
 extern MENTRY *D_000977C0;
-extern ENT D_0008D064[];
+extern MENU_ITEM D_0008D064[];
 extern char D_0008D024[];
 extern int D_00096F14;
 extern long long D_0009763C;
@@ -113,7 +109,7 @@ extern int D_000868DC[];
 extern void func_0006EB48();
 extern MENTRY *D_000977C4;
 extern int D_000977C8;
-extern ENT *D_000977D0;
+extern MENU_ITEM *D_000977D0;
 extern long long D_000967E8;
 extern long long D_00097538;
 extern long long D_00096CB0;
@@ -148,20 +144,20 @@ extern signed char D_0008D094[];
 extern char D_00096F70[];
 extern char D_000115F4[];
 extern char D_0001160C[];
-extern ENT D_0008C5B4[];
-extern ENT D_0008C474[];
-extern ENT D_0008CEA4[];
-extern ENT D_0008CF44[];
-extern ENT D_0008CFE4[];
-extern ENT D_0008CE04[];
-extern ENT D_0008CD44[];
-extern ENT D_0008CBB4[];
-extern ENT D_0008CAF4[];
-extern ENT D_0008CC74[];
-extern ENT D_0008CA14[];
-extern ENT D_0008C964[];
-extern ENT D_0008C8C4[];
-extern ENT D_0008C7F4[];
+extern MENU_ITEM D_0008C5B4[];
+extern MENU_ITEM D_0008C474[];
+extern MENU_ITEM D_0008CEA4[];
+extern MENU_ITEM D_0008CF44[];
+extern MENU_ITEM D_0008CFE4[];
+extern MENU_ITEM D_0008CE04[];
+extern MENU_ITEM D_0008CD44[];
+extern MENU_ITEM D_0008CBB4[];
+extern MENU_ITEM D_0008CAF4[];
+extern MENU_ITEM D_0008CC74[];
+extern MENU_ITEM D_0008CA14[];
+extern MENU_ITEM D_0008C964[];
+extern MENU_ITEM D_0008C8C4[];
+extern MENU_ITEM D_0008C7F4[];
 extern MENTRY D_0008C524[];
 extern MENTRY D_0008C3B4[];
 extern MENTRY D_0008CE54[];
@@ -471,7 +467,7 @@ int func_0006C438(void) {
     int a = (int)D_000977D0, b = (int)D_000977C4, c = D_00096F0C, d = D_000977C8;
     D_00096F68 = 1;
     D_00096F10 = -1;
-    D_000977CC = (ENT *)a;
+    D_000977CC = (MENU_ITEM *)a;
     D_000977C0 = (MENTRY *)b;
     D_00096F08 = c;
     func_0006C8D4(a, d, c);
@@ -511,7 +507,7 @@ static inline int func_0006C438_inl(void) {
     *(int *)&D_0009763C = 0;
     return D_00096F08;
 }
-int func_0006C4BC(MENU *menu, int sel) {
+int func_0006C4BC(MENU_ITEM *menu, int sel) {
     int old = sel;
     unsigned short pad;
 
@@ -588,29 +584,29 @@ void func_0006C8CC(void)
 }
 
 /* ---------------- func_0006C8D4 (src/pilot/func_0006C8D4.c) ---------------- */
-void func_0006C8D4(ENT *t, int n, int idx) {
+void func_0006C8D4(MENU_ITEM *t, int n, int idx) {
     int i;
     for (i = 0; i < n; i++) {
         D_00096F08 = i;
-        t[i].f4();
+        t[i].leave();
     }
     D_00096F08 = idx;
-    t[idx].f0();
+    t[idx].enter();
 }
 
 /* ---------------- func_0006C964 (src/pilot/func_0006C964.c) ---------------- */
 /* func_0006C964: pause menu loop (Driver 2: ShowPauseMenu-like) */
-static inline void InitMenu(ENT *t, int n, int idx)
+static inline void InitMenu(MENU_ITEM *t, int n, int idx)
 {
     int i;
     for (i = 0; i < n; i++) {
         D_00096F08 = i;
-        t[i].f4();
+        t[i].leave();
     }
     D_00096F08 = idx;
-    t[idx].f0();
+    t[idx].enter();
 }
-static inline void SetMenu(ENT *t, MENTRY *m, int n)
+static inline void SetMenu(MENU_ITEM *t, MENTRY *m, int n)
 {
     D_000977C8 = n;
     D_000977CC = t;
@@ -626,7 +622,7 @@ int func_0006C964(int mode)
     ARG arg;
     int r;
     int n;
-    ENT *t;
+    MENU_ITEM *t;
     int i;
 
     first = 1;
@@ -695,8 +691,8 @@ next:
                 D_0008C524[2].text = (char *)D_00096F20;
         } else if (*(int *)&D_000970A4 != 0) {
             D_000977C8 = 11;
-            D_0008C474[8].b[3] = 9;
-            D_0008C474[10].b[2] = 9;
+            D_0008C474[8].down = 9;
+            D_0008C474[10].up = 9;
             D_0008C3B4[10].y = 0xCB;
             D_000977CC = D_0008C474;
             D_000977D0 = D_0008C474;
@@ -705,8 +701,8 @@ next:
             D_0008C3B4[9].text = D_0008C388_[0];
         } else {
             D_000977C8 = 11;
-            D_0008C474[8].b[3] = 10;
-            D_0008C474[10].b[2] = 8;
+            D_0008C474[8].down = 10;
+            D_0008C474[10].up = 8;
             D_0008C3B4[10].y = 0xBC;
             D_0008C3B4[9].text = D_00096F70;
             D_000977CC = D_0008C474;
