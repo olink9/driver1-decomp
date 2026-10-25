@@ -242,8 +242,6 @@ extern short D_0008EAAA[];
 extern void func_00064FE0();
 extern int gNight;
 extern unsigned char D_000C6F02[];
-extern char D_00010000[];
-extern char D_00010018[];
 extern int func_00020AE4();
 extern int sprintf();
 typedef struct {
@@ -3556,14 +3554,14 @@ void func_0001A9BC(void)
         D_00096FE8 = -1;
     } else if (v != 0x8000) {
         if (v < 0x4000) {
-            sprintf(buf, D_00010000, v);
+            sprintf(buf, "Driving on road %d.\n", v);
             if (v != D_00096FE8) {
                 if (func_0001AC18(v))
                     func_000650E4(D_000988C8, 3, 0x1000);
                 D_00096FE8 = r;
             }
         } else {
-            sprintf(buf, D_00010018, r & 0x3FFF);
+            sprintf(buf, "Driving on junction %d.\n", r & 0x3FFF);
         }
     }
 
