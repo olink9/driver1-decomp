@@ -12,7 +12,14 @@
  *   instance_number; poly_block cast at the use), TEXINF (w/h -> width/height), TEXTURE_DETAILS (TD: coords[k] ->
  *   coords.u0..v3; texture_number/texture_page added to the header). RECT16 = RECT. No views.
  * func_00051ADC was matched with --aspsx 2.69 (gp_allow_offset=False); the TU links identical as it is.
+ * Step 4: the file defines its .sdata (0x96CD0-0x96CDD, the "SKID" literal last) and .sbss (0x97548-0x975AC) in
+ *   address order, each one block; .rodata (jump tables 0x109B0) was already its own. It has no .data: the tables at
+ *   0x8ABAC-0x8B080 sit before overmap.c's and are left to objanim.c. D_000975AC is reached through $gp by both
+ *   texture.c and objanim.c (one file? only this one symbol says so - not merged); left to objanim.c.
+ *   maspsx: sbss_align8=0 (RECT D_00097574 at +0x2C), abs= D_00097584/D_00097598 (its own, stored with %hi/%lo)
+ *   and the other files' small globals (the old `extern long long`). .bss stays extern (.comm).
  */
+/* maspsx: sbss_align8=0 abs=D_00097584,D_00097598,D_00096804,D_0009683C,D_00097098,D_000970F0,D_000974B4,D_0009712C,D_00097370,D_00096834 */
 
 #include "structs.h"
 
@@ -25,41 +32,55 @@ typedef struct { int w[25]; } BLOCK100;
 typedef struct { int a, b, c; } E;
 typedef struct { int a, b, c, d; } E16;
 
+/* ---- texture.c's own data (Step 4), in address order ---- */
+/* .sdata 0x96CD0-0x96CD8 (0x96CD8: the "SKID" literal; D_00096CD4 is the rest of D_00096CD0's 8-byte slot) */
+int D_00096CD0 = 0;
+int D_00096CD4 = 0;
+
+/* .sbss 0x97548-0x975AC. The three RECTs are reached through $gp at +0 and with %hi/%lo at +2..+6 (D_00097552..
+ * labels, see func_00051ADC); D_00097584/D_00097598 are stored with %hi/%lo (abs=). D_0009756C fills a gap;
+ * D_000975A8 (main/map only) is placed here, D_000975AC (also reached through $gp by objanim.c) is left out. */
+TPENT *D_00097548;
+int D_0009754C;
+RECT D_00097550;
+int D_00097558;
+int D_0009755C;
+int D_00097560;
+int *D_00097564;
+char *D_00097568;
+int D_0009756C;
+int D_00097570;
+RECT D_00097574;
+int D_0009757C;
+int D_00097580;
+int D_00097584;
+int D_00097588;
+int D_0009758C;
+int D_00097590;
+TPENT *D_00097594;
+RECT D_00097598;
+RECT D_000975A0;
+int D_000975A8;
+
 /* ---- externs ---- */
 extern unsigned short texture_pages[];
 extern unsigned short texture_cluts[][32];
-extern int D_0009757C;
 extern void func_00035B5C();
 extern void func_00074404();
 extern unsigned short func_0007A7F4();
 extern unsigned short GetTPage();
 extern int D_00089F1C[];
-extern int D_0009755C;
-extern char *D_00097568;
 extern int D_000BE2F8[];
 extern TEXINF *D_000BE508[];
 extern int func_0007B228();
-extern int D_00097558;
-extern int D_0009758C;
-extern int D_00097570;
-extern int *D_00097564;
-extern TPENT *D_00097594;
-extern TPENT *D_00097548;
-extern int D_00097580;
-extern long long D_00097584;
 extern RECT D_000974E0;
 extern RECT D_000976A4;
 extern RECT D_000975F0;
-extern RECT D_00097598;
-extern long long D_00096804;
-extern long long D_0009683C;
-extern long long D_00097098;
-extern long long D_000970F0;
-extern long long D_000974B4;
-extern int D_0009754C;
-extern int D_00097560;
-extern int D_00097588;
-extern int D_00097590;
+extern int D_00096804;
+extern int D_0009683C;
+extern int D_00097098;
+extern int D_000970F0;
+extern int D_000974B4;
 extern unsigned char D_000BE278[];
 extern unsigned char tpageslots[];
 extern XY D_000BE708[];
@@ -69,12 +90,10 @@ extern void loadsectors();
 extern void func_00056610();
 extern void func_0005674C();
 extern void func_000511EC();
-extern int D_00096CD0;
-extern char D_00096CD8[];
-extern long long D_0009712C;
-extern long long D_00097370;
+extern int D_0009712C;
+extern int D_00097370;
 extern MODEL *modelpointers[];
-extern long long D_00096834;
+extern int D_00096834;
 extern BLOCK100 D_000853D8[];
 extern BLOCK100 D_000855CC[];
 extern BLOCK100 D_00085630[];
@@ -269,9 +288,6 @@ void ProcessTextureInfo(int *ptr) {
 /* 94.13 with fnscore defaults; MATCH 100.0 with --aspsx 2.69 (gp_allow_offset=False: the .comm RECTs
    D_00097550/D_00097574/D_000975A0 are $gp-relative at +0 but lui/%lo at +2..+6, as in the target). Same case as func_0002A5CC. */
 /* no Driver 2 counterpart (texture page / CLUT loader, LoadPermanentTPages-like) */
-RECT D_00097550;
-RECT D_00097574;
-RECT D_000975A0;
 static inline void RegisterTPage(int id)
 {
     int k = D_00097560;
@@ -440,7 +456,7 @@ TEXTURE_DETAILS *info;
         }
     }
     D_00096CD0 = 0;
-    GetTextureDetails(D_00096CD8, info);
+    GetTextureDetails("SKID", info);
 }
 
 /* ---------------- func_00052434 (src/pilot/func_00052434.c) ---------------- */
