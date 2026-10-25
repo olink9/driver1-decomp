@@ -81,3 +81,9 @@ Step 4 (move definitions into the owning file) - the recipe that worked:
 - A TU's .sdata/.sbss must be ONE contiguous block: if a file's named globals sit between its unnamed constants, stop the TU there until Step 4 moves the data (debris.c stops before DisplaySplashes; 5 functions left as pilots).
 - Casting an extern to another type at the same address can still change register allocation - give the symbol its real record type or use field access.
 - draw.c: functions 163-164 (func_0002BDB0, func_0002C29C) link byte-identical as their own block (build/tu-quad/quad.c) - not committed yet, no file name in the plan.
+## Lessons (batch F: convert loadview overlay pause handling - byte-identical)
+- Type views for incompatible pilot spellings in a big TU: `extern T sym__fn __asm__("sym");` + #define/#undef around that function's section (bodies unchanged). This is SCAFFOLDING for Step 3 (shared headers) - list every view in the file header so Step 3 can remove them. Renamed struct typedefs need views for every extern of that type too.
+- Volatile split: if volatile-everywhere grows a function, use `*(volatile int *)&X` only in the readers that need it.
+- mktu misses a static inline copy of a function the TU itself defines (redefinition error) - rename the copy `<fn>_inl`.
+- Big TUs: `nm -S` sizes vs glabel addresses find the guilty function before fdiff.sh.
+- handling.c stops before func_00020AE4 (main wip, 90.22) - 0x20AE4-0x212F0 is left for later.
