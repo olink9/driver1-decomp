@@ -65,32 +65,6 @@ extern short D_000978B0[];
 typedef struct { int nx, ny, nz, d; } PLANE;
 extern unsigned char D_000988B0[];
 typedef struct {
-    unsigned char c0;
-    unsigned char c1;
-    unsigned char c2;
-    unsigned char c3;
-    int pad4;
-    unsigned char c8;
-    char pad9[0x1C - 9];
-    int i1C;
-    int i20;
-    int i24;
-    int i28;
-    int i2C;
-    int pad30;
-    int i34;
-    int i38;
-    int pad3C[5];
-} Entry;
-typedef struct {
-    unsigned char c0;
-    char pad1[0x1F];
-    int i20;
-    int pad24[2];
-    int i2C;
-    unsigned char c30;
-} Actor;
-typedef struct {
     int pad0[2];
     short s8;
     short padA;
@@ -115,7 +89,6 @@ typedef struct {
     REC rec[1];
 } PATH;
 extern int D_00099AE0[];
-typedef struct { unsigned char p0, f1, f2, p3, p4, f5, p6, f7, f8; char pad[71]; } E80;
 extern char D_000C71E7[];
 extern void func_0004C8F8();
 extern void func_000650E4();
@@ -195,7 +168,6 @@ extern short *D_0009E724[];
 extern int *D_0009D8F4[];
 extern CELLPOS D_00099720[];
 typedef struct { short x, y; } E __attribute__((aligned(4)));
-typedef struct { char p0[2]; char b2; char p1[0xC5]; int c8, cc, d0; char p2[0x24]; int f8; char p3[0x90]; } A_t;
 typedef struct { char p0[0x12C]; int f12c; char p1[0x2A4 - 0x130]; int a4, a8, ac; char p3[0x2DE - 0x2B0]; unsigned char b2de; char p4[0x100]; } B_t;
 typedef struct { int x, y, z, w; } V3;
 typedef struct { int x, y, z; } V3s;
@@ -222,7 +194,6 @@ typedef struct {
     unsigned char flags;
     char pad2[5];
 } ROADINFO;
-typedef struct { char p0[4]; short s4; char p1[4]; short sA; short sC; char p2[4]; short s12; } Rd;
 typedef struct {
     char p0[0xA];
     unsigned char xA;
@@ -255,7 +226,6 @@ extern int func_00063B14();
 typedef struct {
     int x, y, z, pad;
 } VEC;
-typedef struct { char pad0; char c1; char pad2[6]; char c8; char pad9[0x47]; } SLOT;
 extern int func_00058A00();
 extern void func_000589B4();
 typedef struct {
@@ -289,7 +259,6 @@ typedef struct {
 } RINFO;
 extern long long D_00096884;
 extern int func_000612FC();
-typedef struct { char p0; unsigned char f1; char p2, p3, p4; unsigned char f5; char p6, p7; unsigned char f8; char pad[0x47]; } S50;
 extern void func_00063AB4();
 struct O { unsigned char a; char p1[7]; char c8; char p2[2]; unsigned char cB; char p3[0x1C]; int i28; };
 typedef struct {
@@ -302,7 +271,6 @@ typedef struct {
     int b;
 } PAIR;
 extern void func_0004D740();
-struct X { char pad[0xF4]; int out; int ang; char pad2[0x18C - 0xFC]; };
 typedef struct {
     unsigned char id;
     unsigned char x1;
@@ -333,12 +301,6 @@ typedef struct {
     char pad[0x18C - 12];
 } POS_b062;
 typedef struct {
-    char pad0[0xF4];
-    int xF4;
-    int xF8;
-    char pad[0x18C - 0xFC];
-} CAR2_b062;
-typedef struct {
     int a;
     int b;
     int pad8;
@@ -352,7 +314,6 @@ typedef struct {
     int x;
     int z;
 } XZ_b062;
-typedef struct { char pad[0xF4]; int f; char pad2[0x18C-0xF8]; } S18C;
 typedef struct {
     char pad[0x794];
     int f794;
@@ -362,21 +323,6 @@ typedef struct {
     unsigned char c26;
 } C;
 typedef struct { int x, z; } POS2;
-typedef struct {
-    char pad[0xC8];
-    int x;
-    int y;
-    int z;
-    char pad2[396 - 0xD4];
-} PLAYER;
-typedef struct {
-    char pad[200];
-    int x;
-    int pad2;
-    int z;
-    char pad3[396 - 212];
-} CARDATA;
-typedef struct { char pad[1960]; } SND;
 extern long long D_00096870;
 extern short func_00020DB4();
 typedef struct {
@@ -384,14 +330,11 @@ typedef struct {
     int z;
 } POS;
 extern int func_0004A9F4();
-typedef struct { int x, z; } CELL;
 extern short D_0008EAAA[];
 extern void(*D_0008539C[])();
 extern int D_00096FCC;
 extern int D_00096FEC;
 extern void func_00064FE0();
-struct S98950 { char a, b; char pad[0x4E]; };
-struct S9B230 { char pad[0x18C]; };
 extern long long gNight;
 extern unsigned char D_000C6F02[];
 extern char D_00010000[];
@@ -644,78 +587,75 @@ int func_0001262C(CIV_SLOT *cp)
 }
 
 /* ---------------- func_00012E98 (src/pilot/func_00012E98.c) ---------------- */
-#define D_00098950 D_00098950__func_00012E98
 #define check1 check1__func_00012E98
 #define check2 check2__func_00012E98
 #define check3 check3__func_00012E98
 /* no Driver 2 counterpart */
-extern Entry D_00098950[] __asm__("D_00098950");
 #define nodes (*(Node **)&D_00097044)
-static inline int check1(Actor *a)
+static inline int check1(CIV_SLOT *a)
 {
     int i;
-    Entry *p;
-    unsigned char id = a->c0;
-    int road = a->i20;
+    CIV_SLOT *p;
+    unsigned char id = a->id;
+    int road = a->f20;
 
     for (p = D_00098950, i = 0; i < 22; i++, p++) {
-        if (p->c8 && p->c0 != id && p->c3 && p->i20 == road)
+        if (p->f8 && p->id != id && p->f3 && p->f20 == road)
             return 0;
     }
     return 1;
 }
-static inline int check2(Actor *a, int idx)
+static inline int check2(CIV_SLOT *a, int idx)
 {
     int i;
-    Entry *p;
-    int id = a->c0;
-    int road = a->i20;
-    unsigned char lane = a->c30;
+    CIV_SLOT *p;
+    int id = a->id;
+    int road = a->f20;
+    unsigned char lane = a->f30;
 
     for (p = D_00098950, i = 0; i < 22; i++, p++) {
-        if (!p->c8 || p->c0 == id)
+        if (!p->f8 || p->id == id)
             continue;
-        if (p->i28 == idx) {
-            if (p->i24 == lane)
+        if (p->f28 == idx) {
+            if (p->f24 == lane)
                 return 1;
-        } else if (p->c3 && p->i20 == road && p->i2C == idx) {
+        } else if (p->f3 && p->f20 == road && p->f2C == idx) {
             return 1;
         }
     }
     return 0;
 }
-static inline int check3(Actor *a)
+static inline int check3(CIV_SLOT *a)
 {
     int i;
-    Entry *p;
-    int id = a->c0;
-    int idx = a->i2C;
-    unsigned char lane = a->c30;
+    CIV_SLOT *p;
+    int id = a->id;
+    int idx = a->f2C;
+    unsigned char lane = a->f30;
     int lim;
 
     p = D_00098950;
-    if (p[id].i34)
+    if (p[id].f34)
         lim = 6000;
     else
         lim = 3000;
     for (i = 0; i < 22; i++, p++) {
-        if (p->c1 >= 2 && p->c0 != id
-            && p->i28 == idx && p->i24 == lane
-            && p->i1C < lim && p->i38 < 30)
+        if (p->f1 >= 2 && p->id != id
+            && p->f28 == idx && p->f24 == lane
+            && p->f1C < lim && p->f38 < 30)
             return 1;
     }
     return 0;
 }
-int func_00012E98(Actor *a, int mode)
+int func_00012E98(CIV_SLOT *a, int mode)
 {
     if (mode == 1 && !check1(a))
         return 1;
-    if (nodes[a->i2C].s8 >= 4 || !check2(a, a->i2C))
+    if (nodes[a->f2C].s8 >= 4 || !check2(a, a->f2C))
         return check3(a);
     return 1;
 }
 #undef nodes
-#undef D_00098950
 #undef check1
 #undef check2
 #undef check3
