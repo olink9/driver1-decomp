@@ -11,9 +11,15 @@
  * printers reach the .sdata word D_00096E34 (next to D_00096E30) and the font .sbss D_00097684/94/98
  * through $gp exactly like PrintString, and func_0005D89C's D_000976AC follows the file's .sbss run
  * (0x97684-0x976A6) with func_0005C68C's absolute heap pair D_00097098/D_00097534.
+ * Step 4: the file defines its data in address order, each section ONE block: .data 0x8B6EC-0x8B70C, .rodata
+ *   0x10EF4-0x10F26 ("DATA\\LANG.ENG" that D_00096E30 points at, "too many lines!\n", "GFX\\FONT2.FNT"), .sdata
+ *   0x96E30-0x96E44, .sbss 0x97684-0x976B8. D_00097699/D_0009769A stay extern labels inside the colour slot (B8
+ *   views, reached with %hi/%lo); abs= D_000976A6 (its own) and the other files' small globals (the old
+ *   `extern long long`). .bss stays extern (.comm).
  */
 
 /* ---- types ---- */
+/* maspsx: abs=D_000976A6,D_00097098,D_00097534,D_000967E8,current */
 typedef struct { char pad[4]; unsigned char w; char pad2[3]; } GLYPH;
 struct G { char p[4]; unsigned char w; char q[3]; };
 typedef struct { short x, y, w, h; } RECT;
@@ -74,25 +80,56 @@ typedef struct {
 } TEXTURE_DETAILS;
 typedef struct { unsigned char v; char pad[7]; } B8;
 
+/* ---- pres.c's own data (Step 4), in address order ---- */
+/* .data 0x8B6EC-0x8B70C (D_0008B704: an 8-byte char array in .data, so declared without size first, as the
+ * original header must have done; the records after it belong to civ_draw.c) */
+FONT_DIGIT D_0008B6EC[12] = {
+    { 4, 0x18 }, { 0x1C, 0x16 }, { 0x34, 0x18 }, { 0x4E, 0x18 }, { 0x68, 0x18 }, { 0x80, 0x16 },
+    { 6, 0x18 }, { 0x20, 0x18 }, { 0x3A, 0x18 }, { 0x54, 0x18 }, { 0x70, 0x12 }, { 0x84, 0xC }
+};
+extern char D_0008B704[];
+char D_0008B704[] = { 1, 1, 2, 1, 1, 0, 0, 0 };
+
+/* .sdata 0x96E30-0x96E44: the language file name (its string heads .rodata 0x10EF4), D_00096E34, two short
+ * strings no code references ("%d", "%x": debug leftovers, as char arrays) and an unreferenced word */
+int D_00096E30 = (int)"DATA\\LANG.ENG";
+int D_00096E34 = 0;
+char D_00096E38[4] = "%d";
+char D_00096E3C[4] = "%x";
+int D_00096E40 = 0;
+
+/* .sbss 0x97684-0x976B8. D_00097699/D_0009769A (bytes 1-2 of the colour slot at 0x97698) and D_000976A6
+ * (.y of the rect at 0x976A4) are reached with %hi/%lo: the first two stay extern labels inside the slot,
+ * D_000976A6 is abs=. The rest fill gaps. */
+unsigned short D_00097684;
+short D_00097686;
+int D_00097688;
+int D_0009768C;
+int D_00097690;
+unsigned short D_00097694;
+short D_00097696;
+unsigned char D_00097698;
+unsigned char D_00097698_1;
+short D_00097698_2;
+int D_0009769C;
+int D_000976A0;
+short D_000976A4;
+short D_000976A6;
+int D_000976A8;
+int D_000976AC;
+int D_000976B0;
+int D_000976B4;
+
 /* ---- externs ---- */
-extern int D_00096E30;
-extern long long D_00097098;
-extern int D_000976A0;
-extern int D_00097688;
-extern volatile long long D_00097534;
+extern int D_00097098;
+extern volatile int D_00097534;
 extern char *D_000BF7EC[];
 extern void Loadfile();
 extern int printf();
-extern unsigned char D_00097698;
 extern B8 D_00097699; /* 8-byte struct: absolute, and MEM_IN_STRUCT for PrintDigit */
 extern B8 D_0009769A;
 extern unsigned char D_000BF6EC[];
 extern OUT_FONTINFO D_000BF2EC[];
-extern char D_00010F18[];
-extern short D_000976A4;
-extern long long D_000976A6;
-extern unsigned short D_00097684;
-extern unsigned short D_00097694;
 extern void func_00079DB0();
 extern int func_0007A7F4();
 extern void func_00074404();
@@ -100,14 +137,10 @@ extern int GetTPage();
 extern int DrawSync();
 extern void func_000766A8();
 extern void func_0007D608();
-extern long long D_000967E8;
+extern int D_000967E8;
 extern void DrawPrim();
-extern FONT_DIGIT D_0008B6EC[];
 extern TEXTURE_DETAILS D_000B9140;
-extern int D_00096E34;
-extern int D_000976AC;
 extern int D_000C015C[];
-extern char D_0008B704[];
 
 /* ---- functions defined in this file ---- */
 void func_0005C68C();
@@ -237,7 +270,7 @@ void LoadFont(void)
 	W16 *d;
 	W16 *s;
 
-	Loadfile(D_00010F18, 0xF8600);
+	Loadfile("GFX\\FONT2.FNT", 0xF8600);
 	file = (char *)0xF8604;
 	nchars = *(int *)0xF8600;
 	nchars <<= 3;
@@ -300,7 +333,7 @@ void func_0005CB68(unsigned int pos, unsigned short mask, unsigned char idx)
 
 /* ---------------- PrintString (src/pilot/PrintString.c) ---------------- */
 /* Driver 2: PrintString (PRES.C) */
-extern long long current;
+extern int current;
 #define current (*(DB **)&current)
 #define fontinfo D_000BF2EC
 #define AsciiTable D_000BF6EC
@@ -398,7 +431,7 @@ int PrintString(char *string, int x, int y)
    conflict with the in-struct font->y0 store, which keeps `sh y0` below the colour loads (as in the target).
    null->tpage via digit_texture.tpageid assembles as D_000B9140+8 (= D_000B9148, bytes identical). */
 /* Driver 2: PrintDigit (PRES.C) */
-extern long long current;
+extern int current;
 #define current (*(DB **)&current)
 #define fontDigit D_0008B6EC
 #define digit_texture D_000B9140
@@ -503,7 +536,7 @@ short PrintDigit(int x, int y, char *string)
 
 /* ---------------- func_0005D164 (src/pilot/func_0005D164.c) ---------------- */
 /* scaled/multi-line font print into POLY_FT4s (PRES.C family) */
-extern long long current;
+extern int current;
 #define current (*(DB **)&current)
 #define fontinfo D_000BF2EC
 #define AsciiTable D_000BF6EC
@@ -588,7 +621,7 @@ int func_0005D164(char *string, int x, int y, int sx, int sy, int semi)
 
 /* ---------------- func_0005D4C0 (src/pilot/func_0005D4C0.c) ---------------- */
 /* print the whole font character set (debug/font test) into POLY_FT4s (PRES.C family) */
-extern long long current;
+extern int current;
 #define current (*(DB **)&current)
 #define fontinfo D_000BF2EC
 #define AsciiTable D_000BF6EC
