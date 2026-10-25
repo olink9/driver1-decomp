@@ -53,11 +53,11 @@ typedef struct {
     short f12; /* 0x12 */
 } ROAD_INFO;
 typedef struct {
-    short f0; /* 0x0 */
-    char f2; /* 0x2 */
+    short model; /* 0x0 */
+    char flag; /* 0x2 */
     char pad3[0x4 - 0x3];
-    int f4; /* 0x4 */
-    int f8; /* 0x8 */
+    int x; /* 0x4 */
+    int z; /* 0x8 */
 } CELL_OBJ;
 
 /* ---- shared declarations (identical in every pilot) ---- */
@@ -105,13 +105,6 @@ extern long long D_00097054;
 extern long long D_00097038;
 extern int D_000852FC[];
 extern int D_0008530C[];
-typedef struct {
-    short model;
-    char flag;
-    char pad;
-    int x;
-    int z;
-} CELLOBJ;
 typedef struct {
     int x;
     int z;
@@ -312,6 +305,8 @@ extern PURSUER D_000C4690[];
 extern PURSUER D_000C4E38[];
 extern ROAD_INFO D_0009E744[];
 extern CELL_OBJ D_00099180[];
+extern SXY D_00099B08[];
+extern VECTOR camera_position;
 extern volatile long long CameraCnt;
 extern unsigned char D_00096FC4;
 extern long long D_00096898;   /* majority spelling; other pilots keep a view */
@@ -1069,14 +1064,8 @@ tab:
 #undef O
 
 /* ---------------- func_000143CC (src/pilot/func_000143CC.c) ---------------- */
-#define D_00099180 D_00099180__func_000143CC
-#define D_00099B08 D_00099B08__func_000143CC
-#define car_data car_data__func_000143CC
 #define cellmid cellmid__func_000143CC
 /* func_000143CC - no Driver 2 counterpart: gather the objects of the cells around the player (offset table D_00099B08) */
-extern int car_data[] __asm__("car_data");
-extern short D_00099B08[] __asm__("D_00099B08");
-extern CELLOBJ D_00099180[] __asm__("D_00099180");
 static inline int cellmid(int c)
 {
     return c * 1500 + 750;
@@ -1084,7 +1073,7 @@ static inline int cellmid(int c)
 void func_000143CC(void)
 {
     short *ofs;
-    CELLOBJ *obj;
+    CELL_OBJ *obj;
     CELLPOS *pos;
     int cx, cz;
     int i;
@@ -1097,17 +1086,17 @@ void func_000143CC(void)
     unsigned short uval;
     int wx;
 
-    ofs = D_00099B08;
+    ofs = (short *)D_00099B08;
     obj = D_00099180;
     pos = D_00099720;
     D_00096FD4 = 0;
     D_00096FD8 = 0;
     if (D_00096780 != 0 || D_0009677C != 0) {
-        cx = (car_data[0x245C / 4] + D_0009E714[0] * 750) / 1500;
-        cz = (D_0009E714[1] * 750 - car_data[0x2464 / 4]) / 1500;
+        cx = (car_data[23].pos.vx + D_0009E714[0] * 750) / 1500;
+        cz = (D_0009E714[1] * 750 - car_data[23].pos.vz) / 1500;
     } else {
-        cx = (car_data[0xC8 / 4] + D_0009E714[0] * 750) / 1500;
-        cz = (D_0009E714[1] * 750 - car_data[0xD0 / 4]) / 1500;
+        cx = (car_data[0].pos.vx + D_0009E714[0] * 750) / 1500;
+        cz = (D_0009E714[1] * 750 - car_data[0].pos.vz) / 1500;
     }
     for (i = 0; i < 120; i++, ofs += 2) {
         x = cx + ofs[0];
@@ -1151,23 +1140,16 @@ void func_000143CC(void)
         obj++;
     }
 }
-#undef D_00099180
-#undef D_00099B08
-#undef car_data
 #undef cellmid
 
 /* ---------------- func_000147C4 (src/pilot/func_000147C4.c) ---------------- */
-#define A A__func_000147C4
-#define D_00099B08 D_00099B08__func_000147C4
 #define rcossin_tbl rcossin_tbl__func_000147C4
-typedef struct { short x, y; } A;
 extern E rcossin_tbl[] __asm__("rcossin_tbl");
-extern A D_00099B08[] __asm__("D_00099B08");
 void func_000147C4(void)
 {
-    A last, v;
+    SXY last, v;
     E e;
-    A *out = D_00099B08;
+    SXY *out = D_00099B08;
     int i;
     memset(&last, 0, 4);
     for (i = 0; i < 0x1000; i += 0x20) {
@@ -1185,15 +1167,11 @@ void func_000147C4(void)
         }
     }
 }
-#undef A
-#undef D_00099B08
 #undef rcossin_tbl
 
 /* ---------------- func_000148C4 (src/pilot/func_000148C4.c) ---------------- */
-#define camera_position camera_position__func_000148C4
 #define G04 (*(int *)&D_00096804)
 #define G34 (*(int *)&D_00096834)
-extern V3s camera_position __asm__("camera_position");
 /* Driver 2 name: unknown */
 void func_000148C4(void)
 {
@@ -1225,37 +1203,20 @@ void func_000148C4(void)
         func_0001B720(&car_data[0], 0);
         car_data[0].model = 0;
     }
-    camera_position.x = car_data[0].pos.vx;
-    camera_position.y = -car_data[0].pos.vy - 200;
-    camera_position.z = car_data[0].pos.vz;
+    camera_position.vx = car_data[0].pos.vx;
+    camera_position.vy = -car_data[0].pos.vy - 200;
+    camera_position.vz = car_data[0].pos.vz;
 }
 #undef G04
 #undef G34
-#undef camera_position
 
 /* ---------------- func_00014A8C (src/pilot/func_00014A8C.c) ---------------- */
-#define CAR CAR__func_00014A8C
-#define D_0009B230 D_0009B230__func_00014A8C
-#define VECTOR VECTOR__func_00014A8C
-#define camera_position camera_position__func_00014A8C
 /* func_00014A8C - DrawAllTheCars-like (sort visible cars by distance, then draw)
  * run3-r4: MATCH. Final fix: the car pointer `c` of the sort loop is REUSED for the per-entry car in the
  * draw loop (`c = &D_0009B230[e->f0]`, no separate `car`) - gives the split `lui v0; addiu a0,v0` base
  * (lesson r4-02), and `c = D_0009B230;` written before `e = D_00098950;` fixes the prologue order.
  * Earlier: car loop biv c++ with call arg D_0009B230[i].t, ENT biv e++, separate draw counter m.
  */
-typedef struct { int vx, vy, vz; } VECTOR;
-typedef struct {
-    char pad0[0x18];
-    int f18;
-    char pad1c[0x20 - 0x1c];
-    int f20;
-    char pad24[0xC8 - 0x24];
-    int t[3];
-    char padD4[0x18C - 0xD4];
-} CAR;
-extern CAR D_0009B230[] __asm__("D_0009B230");
-extern int camera_position[] __asm__("camera_position");
 #define current (*(DB **)&current)
 void func_00014A8C(void)
 {
@@ -1270,22 +1231,22 @@ void func_00014A8C(void)
     CIV_SLOT *e;
     int *cur;
     char *p;
-    CAR *c;
+    CAR_DATA *c;
     int r;
     int a1;
 
     c = D_0009B230;
     e = D_00098950;
     *(int *)&D_000973B4 = 0;
-    camx = camera_position[0];
-    camz = camera_position[2];
+    camx = camera_position.vx;
+    camz = camera_position.vz;
     n = 0;
     for (i = 0; i < 25; i++, e++, c++) {
-        if (e->f1 != 0 && func_000398B0((VECTOR *)D_0009B230[i].t) == 1) {
-            dx = camx - c->t[0];
-            if (dx < 0) dx = c->t[0] - camx;
-            dz = camz - c->t[2];
-            if (dz < 0) dz = c->t[2] - camz;
+        if (e->f1 != 0 && func_000398B0(&D_0009B230[i].pos) == 1) {
+            dx = camx - c->pos.vx;
+            if (dx < 0) dx = c->pos.vx - camx;
+            dz = camz - c->pos.vz;
+            if (dz < 0) dz = c->pos.vz - camz;
             d = dx + dz;
             if (d < 27000) {
                 D_0009784C[n] = d;
@@ -1328,20 +1289,20 @@ void func_00014A8C(void)
             a1 = e->f24;
             if (a1 & 1) {
                 if (e->f44 != 0x7FFFFFFF) {
-                    if (e->f44 < c->f20) {
+                    if (e->f44 < c->where.t[2]) {
                         if (a1 == 3) func_000439E4(idx, 0);
                         else func_000439E4(idx, 1);
-                    } else if (c->f20 < e->f44) {
+                    } else if (c->where.t[2] < e->f44) {
                         if (a1 == 1) func_000439E4(idx, 0);
                         else func_000439E4(idx, 1);
                     }
                 }
             } else {
                 if (e->f40 != 0x7FFFFFFF) {
-                    if (e->f40 < c->f18) {
+                    if (e->f40 < c->where.t[0]) {
                         if (a1 == 0) func_000439E4(idx, 0);
                         else func_000439E4(idx, 1);
-                    } else if (c->f18 < e->f40) {
+                    } else if (c->where.t[0] < e->f40) {
                         if (a1 == 2) func_000439E4(idx, 0);
                         else func_000439E4(idx, 1);
                     }
@@ -1362,10 +1323,6 @@ void func_00014A8C(void)
     }
 }
 #undef current
-#undef CAR
-#undef D_0009B230
-#undef VECTOR
-#undef camera_position
 
 /* ---------------- func_00014F28 (src/pilot/func_00014F28.c) ---------------- */
 void func_00014F28(void) {
@@ -2131,10 +2088,10 @@ void func_00016B24(void)
     e = &D_00099180[idx];
     a0 = 0;
     if (*(int *)&D_00096834 != 2 && *(int *)&D_00096834 != 6) {
-        if (e->f0 != -1)
-            a0 = func_000154A8(local, e->f0, func_0004FFE8(local) & 1, e->f4, e->f8);
+        if (e->model != -1)
+            a0 = func_000154A8(local, e->model, func_0004FFE8(local) & 1, e->x, e->z);
         else
-            a0 = func_000154A8(local, -1, e->f2 & 3, e->f4, e->f8);
+            a0 = func_000154A8(local, -1, e->flag & 3, e->x, e->z);
     }
     if (D_0009677C && a0)
         func_000589B4(idx, (unsigned char)local);
