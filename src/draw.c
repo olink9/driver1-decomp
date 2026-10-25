@@ -21,14 +21,13 @@
  *    (MODEL's int vertices/poly_block are cast at the use). Views gone: CELL_OBJECT_DrawMapPSX (vx/vy/vz ->
  *    pos.vx/.., computed = the header's 0xC field), MODEL_DrawMapPSX (f10/f14/fE -> vertices/poly_block/num_polys),
  *    OBJ (unused), MAT, SVEC, struct M (D_000A668C is MATRIX2), PF4_f2F444 (x3 -> xy3). The local UV union is UVW
- *    (structs.h owns UV). Left local: MATRIX2, CELL_DATA, B8 and the libgpu shapes (P_TAG, DVECTOR, PF3/PF4/PFT3/
+ *    (structs.h owns UV). MATRIX2 moved to the header. Left local: CELL_DATA, B8 and the libgpu shapes (P_TAG, DVECTOR, PF3/PF4/PFT3/
  *    PFT4) - structs.h pulls in no PsyQ types.
  */
 #include "gte.h"
 #include "structs.h"
 
 /* ---- types ---- */
-typedef struct { short m[3][3]; short computed; int t[3]; } MATRIX2;
 typedef struct { unsigned addr:24; unsigned len:8; } P_TAG;
 
 typedef struct {
