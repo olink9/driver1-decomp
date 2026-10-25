@@ -253,7 +253,7 @@ extern void func_0007A4FC();
 extern int FastForward;
 extern S35558 D_000A7F44;
 extern int D_00097534;
-extern char D_0001052C[];
+
 extern int printf();
 
 /* ---- functions defined in this file ---- */
@@ -1531,7 +1531,7 @@ void func_00035558()
             }
         }
     } else {
-        printf(D_0001052C);
+        printf("Ulp!!! error\n");
         while (*(volatile int *)&D_00097534 != 0x78654321)
             __asm__ volatile("break 1024");
     }
