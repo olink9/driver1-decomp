@@ -182,3 +182,9 @@ Step 4 (move definitions into the owning file) - the recipe that worked:
 - Narrow reads from wider fields and `&arr[i].field` for interior symbols are byte-free.
 - Let the compiler drive renames: delete the local typedef, parse "no member named" errors, rename only those lines (~200 renames, no mistakes).
 - Grep trap: `\bC\b` matches "AI.C" in comments - check one-letter type names by hand.
+## Lessons (main leftovers: wips as INCLUDE_ASM, stranded functions, HANDWRITTEN .s modules)
+- -G8: cc1 emits function bodies at the end but top-level asm() immediately - tools/fnscore.py place_include_asm() moves INCLUDE_ASM back before the next function's .ent (needed for a wip in the MIDDLE of a main TU).
+- Build .s modules from the pilot's MASPSX output, not its __asm__ strings (maspsx adds the delay-slot nops the X-macros suppressed); a short module "passes" if the missing tail is zero - check for "+0x.. zero padding" in the report.
+- Unreferenced .sdata words inside a file's slice: define them as plain globals at the right point. Definition placement in the source sets .sdata order (constants come with their function).
+- Main's modules don't follow the overlays' 8-byte object-padding rule.
+- 6 asm modules: src/{unpack,tile,gte,mdraw,rle,carpoly}_asm.s; the 13 zero words at 0x26760 are the unpacker's scratch, not padding.
