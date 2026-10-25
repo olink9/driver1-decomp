@@ -24,7 +24,8 @@ O_FILES  := $(S_FILES:%.s=$(BUILD)/%.o)
 # (the same cpp/cc1/maspsx/as pipeline as every pilot check), maps its .text onto that block
 # range, places its .rodata/.sdata/.sbss at the original addresses and links the rest from
 # the same asm. The sha1 check below stays the arbiter.
-TU_FILES := $(wildcard src/*.c)
+# only committed TUs: agents keep work-in-progress files in src/ while they merge
+TU_FILES := $(shell git ls-files ':(glob)src/*.c' 2>/dev/null)
 
 all: $(BUILD)/SLUS_008.42
 	@sha1sum -c $(BASENAME).sha1
