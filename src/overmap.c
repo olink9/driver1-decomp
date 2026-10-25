@@ -9,12 +9,12 @@
  *    P_TAG is the libgpu shape (code at +7); POLY_F3 is declared locally.
  *  - D_0008B080: OVERMAP, the D2 layout (x_offset, y_offset, width, height, toptile, dummy, scale at 0x14); the
  *    pilot views SCALE_b062/OVMAP/ENT/A/MAPDEF map onto it by offset, func_00058278 keeps its T58278 view by cast.
- *  - car_data: one CAR (0x18C) with the fields every pilot read: x18/z20 (func_00055820's C), x/y/z at 0xC8,
+ *  - car_data: one CAR_DATA (0x18C) with the fields every pilot read: x18/z20 (func_00055820's C), x/y/z at 0xC8,
  *    dir at 0xF8 (CAR_b062 xC8/xD0/dirF8, CAR18C, B cx/cy, C rot).
  *  - D_000BE774/D_000BE998/D_000BE9C4: PERCENTAGE_BAR (D2); ELEM w/h/f14/f18 and TXT val are xpos/ypos/flags/
  *    active/position.
  *  - D_000C6F04: HUD; DrawOverheadMap's TGT.f2D0 is HUD.mode.
- *  - D_000BE9B4: VEC (V3 x/y/z = vx/vy/vz; DrawOverheadMap passes its address).
+ *  - D_000BE9B4: VECTOR (V3 x/y/z = vx/vy/vz; DrawOverheadMap passes its address).
  *  - D_000B9170: SPRT_UV (UVS was the same); DrawStopZone's byte indexing is u0..v3 and tpage.
  *  - D_0008B140: MAPPOS (short x, y); LoadMapTile reads it as unsigned (XY) by cast.
  *  - D_00096D1C stays `extern long long` (absolute): the char[] spelling rescheduled func_00057458; DrawOverheadMap
@@ -24,21 +24,16 @@
  *  - Types: MATRIX/VECTOR one spelling each (the long variants were identical), DB {primptr, ot} (draw_box's DBX
  *    is DB), func_0005847C's {PRIM *} view is DB_5847C, func_00056A18's OBJ is OBJ_56A18, ENT is func_00056610's
  *    (D_0008ABAC), POLY_G4 uses the libgpu pad1..pad3 names.
+ *  - Step 3: CAR_DATA (x18/z20 = where.t[0]/[2], x/y/z = pos, dir = direction; OBJ, the car seen through CARX.obj,
+ *    is CAR_DATA with model = id and pos = where.t), PURSUER (CARX: obj = car), CIV_SLOT (MODELINF type/b5, P k/on =
+ *    f1/f5), DB (DBY, BUF) and the gte base types (VEC, SVEC) come from include/structs.h.
+ *  - View kept: `camb` (__asm__ second name of D_0008909C) is a codegen device, not a type view (see its comment).
  */
 #include "gte.h"
 
+#include "structs.h"
+
 /* ---- types ---- */
-typedef struct {
-    char pad0[0x18];
-    int x18;                /* 0x18 (func_00055820) */
-    int pad1C;
-    int z20;                /* 0x20 */
-    char pad24[0xC8 - 0x24];
-    int x, y, z;            /* 0xC8 */
-    char padD4[0xF8 - 0xD4];
-    int dir;                /* 0xF8 */
-    char padFC[0x18C - 0xFC];
-} CAR;
 typedef struct {
     int x_offset;           /* 0x00 */
     int y_offset;
@@ -51,10 +46,7 @@ typedef struct {
 } OVERMAP;
 typedef struct { int x, y; } XP;
 typedef struct { unsigned long *ot; } DBX;
-typedef struct { char *primptr; unsigned long *ot; } DBY;
-typedef struct { int vx, vy, vz, pad; } VECTOR;
 typedef struct { int x, y; } XYPAIR;
-typedef struct { char *primptr; unsigned int *ot; } DB;
 typedef struct {
     unsigned int tag;
     unsigned char r0, g0, b0, code;
@@ -74,9 +66,6 @@ typedef struct {
     int mode;
 } HUD;
 typedef struct { int a, b, c, d; } TMP;
-typedef struct { char *primptr; unsigned long *ot; } BUF;
-typedef struct { short vx, vy, vz, pad; } SVECTOR;
-typedef struct { short m[3][3]; int t[3]; } MATRIX;
 typedef struct { short x, y, w, h; } RECT;
 typedef struct { short u, w, v, h; } MAPTEX;
 typedef struct { short x, y; } MAPPOS;
@@ -118,25 +107,8 @@ typedef struct {
     unsigned short pad1;
 } POLY_FT3;
 typedef struct { unsigned int tag; unsigned int code[2]; } DR_AREA;
-typedef struct {
-    unsigned char model;
-    char pad[0x17];
-    VECTOR pos;
-    char pad2[0xF8 - 0x28];
-    int dir;
-} OBJ;
 
-typedef struct {
-    char pad[0x78C];
-    int active;
-    char pad2[8];
-    int f798;
-    char pad3[8];
-    OBJ *obj;
-} CARX;
-typedef struct { unsigned char b0, type, b2, b3, b4, b5; char pad[80 - 6]; } MODELINF;
 typedef struct { unsigned int tag; unsigned char r0, g0, b0, code; short x0, y0; } TILE_1;
-typedef struct { unsigned char f0, k, f2, f3, f4, on; char pad[0x50 - 6]; } P;
 typedef struct { unsigned addr:24; unsigned len:8; } TAG;
 typedef struct {
     unsigned int tag;
@@ -181,7 +153,6 @@ typedef struct {
 } PF3_b062;
 typedef struct { int x, y, z; } V3;
 struct O { int a; short w4, h6, w8, h10, c12, d14; int e16; int f20; };
-typedef struct { unsigned char r, g, b, cd; } CVECTOR;
 typedef struct {
     unsigned int tag;
     unsigned char r0, g0, b0, code;
@@ -209,8 +180,6 @@ typedef struct {
 typedef struct { int x, pad, y, pad2; } PT;
 typedef struct { int a,b,c,d; } V;
 typedef struct { int pad[3]; int flags; V *p; int pad2[6]; } E;
-typedef struct { short vx, vy, vz, pad; } SVEC;
-typedef struct { int vx, vy, vz, pad; } VEC;
 typedef struct {
     unsigned int tag;
     unsigned char r0, g0, b0, code;
@@ -296,7 +265,7 @@ typedef struct { int pad0[3]; int flags; int p10; int pad14[3]; V3 off; } OBJ_56
 #define setLineF2(p)	setlen(p, 3),  setcode(p, 0x40)
 
 /* ---- externs ---- */
-extern CAR car_data[];
+extern CAR_DATA car_data[];
 extern short rcossin_tbl[];
 extern OVERMAP D_0008B080[];
 extern long long D_00096888;
@@ -360,15 +329,15 @@ extern int D_0008B278[];
 extern int D_0008B2B8[];
 extern MAPPOS D_0008B140[];
 extern unsigned short texture_pages[];
-extern CARX D_000C4E38[];
-extern MODELINF D_00098900[];
+extern PURSUER D_000C4E38[];
+extern CIV_SLOT D_00098900[];
 extern char D_0009B0BC[];
 extern long long D_00096D1C;
 extern long long D_00097758;
-extern VEC D_000BE9B4;
+extern VECTOR D_000BE9B4;
 extern void func_00074CAC();
 extern void func_0004EA98();
-extern P D_00098950[];
+extern CIV_SLOT D_00098950[];
 extern short D_0008EAAA[];
 extern VECTOR D_0008909C;
 extern VECTOR camb __asm__("D_0008909C");
@@ -457,7 +426,7 @@ void func_000539C8(VECTOR *in, VECTOR *out, int count, unsigned char flag, unsig
     MATRIX m;
     int s, c;
     int a;
-    a = car_data[*(int *)&D_00096888].dir & 0xFFF;
+    a = car_data[*(int *)&D_00096888].direction & 0xFFF;
     s = rcossin_tbl[a*2];
     c = rcossin_tbl[a*2+1];
     m.m[2][0] = -s;
@@ -488,8 +457,8 @@ void func_000539C8(VECTOR *in, VECTOR *out, int count, unsigned char flag, unsig
             vv.vx = in->vx / scale;
             vv.vz = -in->vz / scale;
         } else {
-            vv.vx = (in->vx - car_data[0].x) / scale;
-            vv.vz = (car_data[0].z - in->vz) / scale;
+            vv.vx = (in->vx - car_data[0].pos.vx) / scale;
+            vv.vz = (car_data[0].pos.vz - in->vz) / scale;
         }
         RotTrans(&vv, out++, &f);
         in++;
@@ -498,7 +467,7 @@ void func_000539C8(VECTOR *in, VECTOR *out, int count, unsigned char flag, unsig
 
 /* ---------------- DrawN (src/pilot/DrawN.c) ---------------- */
 extern long long current;
-#define current (*(DBY **)&current)
+#define current (*(DB **)&current)
 /* DrawN */
 void DrawN(VECTOR *pScreenPosition, int direct)
 {
@@ -720,7 +689,7 @@ void func_000543D8(void)
 
 /* ---------------- FlashOverheadMap (src/pilot/FlashOverheadMap.c) ---------------- */
 /* FlashOverheadMap */
-#define cur (*(BUF **)&current)
+#define cur (*(DB **)&current)
 void FlashOverheadMap(int r, int g, int b)
 {
     TILE *prim;
@@ -777,7 +746,7 @@ void DrawOverheadMap(void)
     POLY_F4 *sptb;
     POLY_FT3 *null;
     DR_AREA *drarea;
-    CARX *cp;
+    PURSUER *cp;
     int intens;
     int tmp;
     int tw, th;
@@ -819,12 +788,12 @@ void DrawOverheadMap(void)
 
     for (cp = D_000C4E38; cp < &D_000C4E38[4]; cp++) {
         if (cp->active) {
-            OBJ *o = cp->obj;
+            CAR_DATA *o = cp->car;
             int col = 0xFFFFFF;
-            MODELINF *m = &D_00098900[o->model];
-            if (m->type == 4 && ((D_000975B0 + m->b5 * 3) & 4) == 0)
+            CIV_SLOT *m = &D_00098900[o->id];
+            if (m->f1 == 4 && ((D_000975B0 + m->f5 * 3) & 4) == 0)
                 col = 0;
-            func_00055530(&o->pos, col);
+            func_00055530((VECTOR *)o->where.t, col);
         }
     }
 
@@ -833,7 +802,7 @@ void DrawOverheadMap(void)
 
     for (cp = D_000C4E38; cp < &D_000C4E38[4]; cp++) {
         if (cp->active && cp->f798 == 0)
-            DrawSightCone(&D_00097758, &cp->obj->pos, cp->obj->dir);
+            DrawSightCone(&D_00097758, (VECTOR *)cp->car->where.t, cp->car->direction);
     }
 
     DrawCompass();
@@ -922,7 +891,7 @@ void DrawOverheadMap(void)
 
     direction.vy = 0;
     direction.vx = 0;
-    direction.vz = 0xC00 - car_data[*(int *)&D_00096888].dir & 0xFFF;
+    direction.vz = 0xC00 - car_data[*(int *)&D_00096888].direction & 0xFFF;
     func_0004EA98(&map_matrix, &direction);
 
     map_matrix.m[0][0] *= 3;
@@ -1049,7 +1018,7 @@ void func_00055530(VECTOR *pos, int col)
 #undef current
 
 /* ---------------- func_000555F4 (src/pilot/func_000555F4.c) ---------------- */
-#define cur (*(BUF **)&current)
+#define cur (*(DB **)&current)
 void func_000555F4(int x, int level)
 {
     unsigned long *ot;
@@ -1113,19 +1082,19 @@ void func_00055820(void)
     int s, c, dx, dz, vx, vy, q, k, ax;
     int idx;
     int big = 0x3FFF0;
-     P *pl = D_00098950;
+     CIV_SLOT *pl = D_00098950;
 
     *(volatile int *)&CameraCnt;
     *(volatile int *)&CameraCnt;
-    idx = car_data[0].dir & 0xFFF;
+    idx = car_data[0].direction & 0xFFF;
     s = D_0008EAAA[idx * 2];
     c = D_0008EAAA[idx * 2 - 1];
     for (i = 0; i < 22; i++, pl++) {
-        k = pl->k;
-        if (k && pl->on) {
-            CAR *car = (CAR *)((i + 1) * 0x18C + (int)car_data);
-            dx = car->x18 - car_data[0].x18;
-            dz = car->z20 - car_data[0].z20;
+        k = pl->f1;
+        if (k && pl->f5) {
+            CAR_DATA *car = (CAR_DATA *)((i + 1) * 0x18C + (int)car_data);
+            dx = car->where.t[0] - car_data[0].where.t[0];
+            dz = car->where.t[2] - car_data[0].where.t[2];
             vx = ((dx * s - dz * c + 0x800) >> 12) * 3 / 4;
             vy = -((dx * c + dz * s + 0x800) >> 12);
             if (vx < 0) ax = -vx; else ax = vx;
@@ -1239,8 +1208,8 @@ void func_00055CA0(VECTOR *pos)
     POLY_G3 *poly3;
     DR_TPAGE *tp;
 
-    vertex[2].vx = pos->vx - car_data[0].x;
-    vertex[2].vz = pos->vz - car_data[0].z;
+    vertex[2].vx = pos->vx - car_data[0].pos.vx;
+    vertex[2].vz = pos->vz - car_data[0].pos.vz;
     vertex[0].vx = (vertex[2].vz + 2) >> 2;
     vertex[0].vz = (2 - vertex[2].vx) >> 2;
 
@@ -1348,8 +1317,8 @@ void LoadMapTile(int a0, int a1, int a2)
 /* ---------------- SetMapPos (src/pilot/SetMapPos.c) ---------------- */
 void SetMapPos(void)
 {
-    D_00096D24 = D_0008B080[*(int *)&D_00096834].x_offset + car_data[*(int *)&D_00096888].z / D_0008B080[*(int *)&D_00096834].scale;
-    D_00096D28 = D_0008B080[*(int *)&D_00096834].y_offset + car_data[*(int *)&D_00096888].x / D_0008B080[*(int *)&D_00096834].scale;
+    D_00096D24 = D_0008B080[*(int *)&D_00096834].x_offset + car_data[*(int *)&D_00096888].pos.vz / D_0008B080[*(int *)&D_00096834].scale;
+    D_00096D28 = D_0008B080[*(int *)&D_00096834].y_offset + car_data[*(int *)&D_00096888].pos.vx / D_0008B080[*(int *)&D_00096834].scale;
 }
 
 /* ---------------- draw_box (src/pilot/draw_box.c) ---------------- */
@@ -1767,10 +1736,10 @@ void func_00057458(char *base) {
     "swc2  $19, 0( %0 )" : : "r"(r0) : "memory")
 extern long long current;
 #define current (*(DB **)&current)
-void func_00057510(VEC *pos)
+void func_00057510(VECTOR *pos)
 {
-    SVEC v[3];
-    VEC t;
+    SVECTOR v[3];
+    VECTOR t;
     int z;
     int flag;
     int oz;
@@ -1778,7 +1747,7 @@ void func_00057510(VEC *pos)
     short *xy;
     short *first;
     unsigned char i;
-    SVEC *vp;
+    SVECTOR *vp;
 
     if (func_000398B0(pos) == 0)
         return;
@@ -1954,8 +1923,8 @@ void func_00057AE4(void)
 
     w = D_0008B080[MODE].width;
     h = D_0008B080[MODE].height;
-    pos.x = car_data[0].x;
-    pos.y = car_data[0].z;
+    pos.x = car_data[0].pos.vx;
+    pos.y = car_data[0].pos.vz;
     ox = (0x200 - w) >> 1;
     oy = (0xF0 - h) >> 1;
     func_00058278(&pos);
@@ -2179,9 +2148,9 @@ void func_0005847C(P2 *a, P2 *b)
 /* ---------------- func_000585D8 (src/pilot/func_000585D8.c) ---------------- */
 void func_000585D8(int *pos)
 {
-    VEC v;
-    VEC pts[4];
-    VEC *pp;
+    VECTOR v;
+    VECTOR pts[4];
+    VECTOR *pp;
     LG2 *p;
     unsigned char i;
     int x, z;
