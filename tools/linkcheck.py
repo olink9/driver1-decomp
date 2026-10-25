@@ -100,12 +100,13 @@ TEXT_ASM = "asm/2C8C.s"
 G, EXTERN_G = "8", "4"
 SRCDIR = os.path.join(ROOT, "src", "pilot")
 BSS_LO = "main_BSS_START"
+SBSS_LO = 0x96FBC        # main: the real .sbss start (the libraries' last .sdata word is 0x96FB8)
 
 
 def configure(name):
     """Point every module setting at target `name` (tools/targets.py)."""
     global TARGET, LC, BASE, ORIG, LDSCRIPT, SHA1, VRAM, FILEOFF, ASMFILES, TEXT_ASM, UNDEF, G, EXTERN_G
-    global SRCDIR, BSS_LO, RAM_END
+    global SRCDIR, BSS_LO, RAM_END, SBSS_LO
     t = targets.get(name)
     TARGET = name
     if name != "main":
@@ -116,6 +117,7 @@ def configure(name):
     ASMFILES, TEXT_ASM, UNDEF = dict(t["asmfiles"]), t["text_asm"], list(t["undef"])
     G, EXTERN_G = t["G"], t["extern_g"]
     SRCDIR, BSS_LO, RAM_END = targets.path(t, "src"), t["bss_lo"], t["bss_hi"]
+    SBSS_LO = 0x96FBC if name == "main" else None
     fnscore.set_target(name)
 
 
@@ -571,6 +573,14 @@ def place_c(cobj, block, addrs):
                           ",".join(f"0x{x:X}" for x in sorted(b)))
         a = b.pop()
         lo = addrs.get(BSS_LO) if isinstance(BSS_LO, str) else BSS_LO
+        if lo is not None and a < lo and SBSS_LO is not None and a >= SBSS_LO:
+            # main's real .sbss starts at 0x96FBC, below the splat bss start (0x97000): that
+            # slice is zero words in the .data asm, so a C .sbss piece there replaces them
+            # like initialised data (a section straddling 0x97000 is cut at its labels)
+            if a + secs[s] > lo:
+                raise LinkErr(f"cannot place C {s} ({secs[s]} bytes): inconsistent bases (straddles the splat bss start)")
+            out.append((a, secs[s], cobj, s, bytes(secs[s])))
+            continue
         if lo is None or a < lo or a + secs[s] > RAM_END:
             raise LinkErr(f"C {s} at 0x{a:X} (0x{secs[s]:X} bytes) is outside the original bss")
         out.append((a, secs[s], cobj, s, None))
