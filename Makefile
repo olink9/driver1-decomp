@@ -35,6 +35,9 @@ all: $(BUILD)/SLUS_008.42
 # References into main resolve through build/main_syms.ld (PROVIDE list exported from
 # main's ELF by tools/mainsyms.py); FRONTEND <-> MCARD calls through splat's
 # undefined_*_auto.<overlay>.txt.
+# Overlay TUs: committed src/<overlay>/*.c (and src/nfmv/*.c) replace their asm the same way
+# main's src/*.c do (linkcheck --target <overlay> --link, workdir build/tulink-<overlay>);
+# with none committed the overlay links straight from the split asm as before.
 overlays: $(foreach o,$(OVERLAYS),$(o)) nfmv
 frontend: $(BUILD)/FRONTEND.BIN
 	@sha1sum -c frontend.sha1
@@ -54,8 +57,9 @@ $(1)_O := $$($(1)_S:%.s=$(BUILD)/$(1)/%.o)
 $(BUILD)/$(1)/%.o: %.s
 	@mkdir -p $$(dir $$@)
 	$$(AS) $$(ASFLAGS) -o $$@ $$<
-$(BUILD)/$(1).elf: $$($(1)_O) $(1).ld $(BUILD)/main_syms.ld
-	$$(LD) -EL -T $(BUILD)/main_syms.ld -T undefined_syms_auto.$(1).txt -T undefined_funcs_auto.$(1).txt -T $(1).ld -Map $(BUILD)/$(1).map --no-check-sections -o $$@
+$(1)_TU := $$(shell git ls-files ':(glob)src/$(1)/*.c' 2>/dev/null)
+$(BUILD)/$(1).elf: $$($(1)_O) $(1).ld $(BUILD)/main_syms.ld $$($(1)_TU) $$(if $$($(1)_TU),$$(shell find include -name '*.h') tools/linkcheck.py tools/fnscore.py)
+	$$(if $$($(1)_TU),$$(PYTHON) tools/linkcheck.py --target $(1) -j 2 --workdir $(BUILD)/tulink-$(1) --link $$@ --tu $$($(1)_TU),$$(LD) -EL -T $(BUILD)/main_syms.ld -T undefined_syms_auto.$(1).txt -T undefined_funcs_auto.$(1).txt -T $(1).ld -Map $(BUILD)/$(1).map --no-check-sections -o $$@)
 $(BUILD)/$(2): $(BUILD)/$(1).elf
 	$$(OBJCOPY) -O binary $$< $$@
 endef
@@ -73,8 +77,9 @@ nfmv_O := $(nfmv_S:%.s=$(BUILD)/nfmv/%.o)
 $(BUILD)/nfmv/%.o: %.s
 	@mkdir -p $(dir $@)
 	$(AS) $(ASFLAGS) -o $@ $<
-$(BUILD)/nfmv.elf: $(nfmv_O) nfmv.ld
-	$(LD) -EL -T undefined_syms_auto.nfmv.txt -T undefined_funcs_auto.nfmv.txt -T nfmv.ld -Map $(BUILD)/nfmv.map --no-check-sections -o $@
+nfmv_TU := $(shell git ls-files ':(glob)src/nfmv/*.c' 2>/dev/null)
+$(BUILD)/nfmv.elf: $(nfmv_O) nfmv.ld $(nfmv_TU) $(if $(nfmv_TU),$(shell find include -name '*.h') tools/linkcheck.py tools/fnscore.py)
+	$(if $(nfmv_TU),$(PYTHON) tools/linkcheck.py --target nfmv -j 2 --workdir $(BUILD)/tulink-nfmv --link $@ --tu $(nfmv_TU),$(LD) -EL -T undefined_syms_auto.nfmv.txt -T undefined_funcs_auto.nfmv.txt -T nfmv.ld -Map $(BUILD)/nfmv.map --no-check-sections -o $@)
 $(BUILD)/NFMV.EXE: $(BUILD)/nfmv.elf
 	$(OBJCOPY) -O binary $< $@
 
