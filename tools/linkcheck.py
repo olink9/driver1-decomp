@@ -93,20 +93,20 @@ OBJCOPY = "mips-linux-gnu-objcopy"
 VRAM, FILEOFF = 0x10000, 0x800
 # asm file -> build/asm object name used in slus_008.42.ld
 ASMFILES = {"asm/2C8C.s": "build/asm/2C8C.o", "asm/data/800.rodata.s": "build/asm/data/800.rodata.o",
-            "asm/data/75B14.data.s": "build/asm/data/75B14.data.o", "asm/data/87800.bss.s": "build/asm/data/87800.bss.o",
+            "asm/data/75B14.data.s": "build/asm/data/75B14.data.o", "asm/data/877BC.bss.s": "build/asm/data/877BC.bss.o",
             "asm/header.s": "build/asm/header.o"}
 TARGET = "main"
 TEXT_ASM = "asm/2C8C.s"
 G, EXTERN_G = "8", "4"
 SRCDIR = os.path.join(ROOT, "src", "pilot")
 BSS_LO = "main_BSS_START"
-SBSS_LO = 0x96FBC        # main: the real .sbss start (the libraries' last .sdata word is 0x96FB8)
+PAD_TO = 0x87800         # main: file size (objcopy --pad-to; .sbss starts before the 2 KB padding ends)
 
 
 def configure(name):
     """Point every module setting at target `name` (tools/targets.py)."""
     global TARGET, LC, BASE, ORIG, LDSCRIPT, SHA1, VRAM, FILEOFF, ASMFILES, TEXT_ASM, UNDEF, G, EXTERN_G
-    global SRCDIR, BSS_LO, RAM_END, SBSS_LO
+    global SRCDIR, BSS_LO, RAM_END, PAD_TO
     t = targets.get(name)
     TARGET = name
     if name != "main":
@@ -117,7 +117,7 @@ def configure(name):
     ASMFILES, TEXT_ASM, UNDEF = dict(t["asmfiles"]), t["text_asm"], list(t["undef"])
     G, EXTERN_G = t["G"], t["extern_g"]
     SRCDIR, BSS_LO, RAM_END = targets.path(t, "src"), t["bss_lo"], t["bss_hi"]
-    SBSS_LO = 0x96FBC if name == "main" else None
+    PAD_TO = t.get("pad_to")
     fnscore.set_target(name)
 
 
@@ -284,8 +284,8 @@ def data_layout(files, pieces):
     layout, dups, touched = {}, [], set()
     placed = []                                              # (addr, end, bytes)
     for src, (secname, blocks) in files.items():
-        if src == TEXT_ASM or blocks[0].addr is None:
-            continue
+        if src == TEXT_ASM or blocks[0].addr is None or secname in BSSSECS:
+            continue                                         # bss asm: see gen_script
         lo, hi = blocks[0].addr, blocks[-1].addr + blocks[-1].size
         mine = sorted(p for p in pieces if lo <= p[0] < hi)
         cuts = []
@@ -364,6 +364,9 @@ def gen_script(files, repl, pieces, provides, tag, pads=None):
     layout, dups, _ = data_layout(files, pieces)
     bss = bss_pieces(pieces)
     pads = pads or {}
+    # a global the C object defines in bss replaces the symbol script's `sym = addr;`
+    # (an assignment there would silently win over the C definition) and the asm bss label
+    drop = {n for _, _, o, sec, _ in bss for _, n, g in bss_labels(o).get(sec, []) if g}
     out = []
     for line in open(LDSCRIPT).read().split("\n"):
         m = re.match(r"(\s*)(build/\S+\.o)\((\.\w+)\);$", line)
@@ -395,6 +398,14 @@ def gen_script(files, repl, pieces, provides, tag, pads=None):
                 else:
                     out.append(f"{ind}{b.o}({sec});")
             continue
+        if sec in BSSSECS and blocks[0].addr is not None:
+            # main's .sbss head 0x96FBC-0x96FFF (splat labels, inside the file's zero padding):
+            # each label at its address, minus the ones a C object now defines (.lcbss<k>)
+            for b in blocks:
+                if not set(b.syms) & drop:
+                    out.append(f"{ind}. = 0x{b.addr - VRAM:X};")
+                    out.append(f"{ind}{b.o}({sec});")
+            continue
         if src not in layout:
             out.append(f"{ind}{blocks[0].o}({sec});")
             continue
@@ -408,9 +419,6 @@ def gen_script(files, repl, pieces, provides, tag, pads=None):
     path = os.path.join(LC, "ld", tag + ".ld")
     os.makedirs(os.path.dirname(path), exist_ok=True)
     open(path, "w").write(text)
-    # a global the C object defines in bss replaces the symbol script's `sym = addr;`
-    # (an assignment there would silently win over the C definition)
-    drop = {n for _, _, o, sec, _ in bss for _, n, g in bss_labels(o).get(sec, []) if g}
     undef = []
     for u in UNDEF:
         if not drop:
@@ -444,7 +452,7 @@ def link(gen, tag, pieces=()):
             x = e.get_section_by_name(f".lcbss{k}")
             if x is None or x["sh_addr"] != a or x["sh_size"] != n:
                 raise LinkErr(f"C {sec} did not land at 0x{a:X} (0x{n:X} bytes)")
-    r = sh([OBJCOPY, "-O", "binary", elf, exe])
+    r = sh([OBJCOPY, "-O", "binary"] + ([f"--pad-to=0x{PAD_TO:X}"] if PAD_TO else []) + [elf, exe])
     if r.returncode:
         raise LinkErr("objcopy: " + r.stderr[-300:])
     return elf, exe
@@ -573,14 +581,6 @@ def place_c(cobj, block, addrs):
                           ",".join(f"0x{x:X}" for x in sorted(b)))
         a = b.pop()
         lo = addrs.get(BSS_LO) if isinstance(BSS_LO, str) else BSS_LO
-        if lo is not None and a < lo and SBSS_LO is not None and a >= SBSS_LO:
-            # main's real .sbss starts at 0x96FBC, below the splat bss start (0x97000): that
-            # slice is zero words in the .data asm, so a C .sbss piece there replaces them
-            # like initialised data (a section straddling 0x97000 is cut at its labels)
-            if a + secs[s] > lo:
-                raise LinkErr(f"cannot place C {s} ({secs[s]} bytes): inconsistent bases (straddles the splat bss start)")
-            out.append((a, secs[s], cobj, s, bytes(secs[s])))
-            continue
         if lo is None or a < lo or a + secs[s] > RAM_END:
             raise LinkErr(f"C {s} at 0x{a:X} (0x{secs[s]:X} bytes) is outside the original bss")
         out.append((a, secs[s], cobj, s, None))

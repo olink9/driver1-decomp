@@ -116,3 +116,12 @@ then lessons (append them to this file under "## Lessons" with your batch name, 
 - Helpers (untracked): build/tu4b/{own.py (labels + users + gp/abs per range), dat.py (C initialiser from the exe), gen.py
   (spec -> definitions, drops replaced externs), ll.py (extern long long -> int + abs=), lit.py (string label -> literal),
   cmpfn.sh (per-function compare that ignores relocation-form diffs)}.
+### Loose ends (last `extern long long` data symbols, main's bss start)
+- debris.c/draw.c: the last 29 data `extern long long` became int/short/pointer + abs= (build/tu4b/ll.py, then types
+  by hand from the casts); the `__asm__` aliases stay. No data `extern long long` is left in src/*.c.
+- slus_008.42.yaml now starts main's bss at 0x96FBC (rom 0x877BC). The file still runs to 0x87800 (2 KB zero padding),
+  so the Makefile and linkcheck objcopy with `--pad-to=0x87800` (targets.py `pad_to`). splat writes asm/data/877BC.bss.s
+  with labels for 0x96FBC-0x96FFF (.word 0 in .bss); linkcheck places each at its address and skips the ones a C
+  object defines. SBSS_LO is gone. After a re-split delete the stale asm/data/87800.bss.s (Makefile finds every .s).
+- handling.c's .sbss was in pieces because its byte variables were packed, not because of 0x97000: scalar char fillers
+  after D_00097028/2C make it one block.

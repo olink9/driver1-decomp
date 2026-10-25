@@ -100,8 +100,9 @@ $(BUILD)/$(BASENAME).elf: $(O_FILES) $(BASENAME).ld $(TU_FILES) $(shell find inc
 	$(PYTHON) tools/linkcheck.py -j 2 --workdir $(BUILD)/tulink --link $@ --tu $(TU_FILES)
 endif
 
+# .sbss starts at 0x96FBC, inside the file's 2 KB zero padding (0x877BC-0x877FF): pad back to 0x87800
 $(BUILD)/SLUS_008.42: $(BUILD)/$(BASENAME).elf
-	$(OBJCOPY) -O binary $< $@
+	$(OBJCOPY) -O binary --pad-to=0x87800 $< $@
 
 clean:
 	rm -rf $(BUILD)

@@ -22,7 +22,7 @@
  *    D_00096FE4 (main.c) are only used elsewhere; D_000853C8, D_00096FDC/E0 are unreferenced fillers.
  *    D_00085314 (int[2]) needs __attribute__((section(".data"))): at 8 bytes cc1 puts it in .sdata.
  *    D_0008530C stays an extern label (= D_00085314 - 8, indexed with f9 & 3 = 2..3).
- *    .sbss below 0x97000 is zero words in splat's .data asm: tools/linkcheck.py places it like data (SBSS_LO).
+ *    .sbss starts at 0x96FBC in slus_008.42.yaml too (inside the file's zero padding up to 0x87800; objcopy --pad-to).
  *    maspsx abs= lists every other file's small global the original reaches with %hi/%lo (was `long long`).
  *
  * Conflicts (mktu listed 47) were first resolved by build/tu-civ_ai/nsgen2.py + cfg2.py with ~50 per-function

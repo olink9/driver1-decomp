@@ -17,8 +17,7 @@
  *   VECTORs), .data 0x853D8-0x8670F (car cosmetics COS[5] D_000853D8, texture.c's three BLOCK100 tables
  *   D_000855CC/D_00085630/D_00085694 which sit inside this file's block, D_00086698, D_000866F8), .sdata
  *   0x96784-0x967A7 and .sbss 0x96FF8-0x97037 (D_00097008/20 and D_000967A4 are unreferenced fillers). The .sbss
- *   is one block in the original; linkcheck reports it in label pieces only because 0x96FF8-0x96FFF lie below
- *   splat's bss start 0x97000. COS pads are short arrays now so the table takes a flat initialiser.
+ *   is one block (byte variables 4 apart: scalar char fillers after D_00097028/2C). COS pads are short arrays now so the table takes a flat initialiser.
  *   maspsx abs= lists the other files' small globals the original reaches with %hi/%lo (was `long long`).
  * Kept on purpose (byte-proven or not a car record):
  *   - SetShadowPoints walks `(CAR_DATA *)((char *)car + j * 16)` and writes ->shadowPoints[0]: indexing
@@ -352,7 +351,7 @@ int D_0009679C = 0;
 int *D_000967A0 = 0;
 int D_000967A4 = 0;   /* unreferenced */
 
-/* .sbss 0x96FF8-0x97037 (0x96FF8-0x96FFF lie below splat's bss start: zero .data words there) */
+/* .sbss 0x96FF8-0x97037 */
 int D_00096FF8;
 int D_00096FFC;
 int D_00097000;
@@ -366,7 +365,9 @@ unsigned char D_0009701C;
 int D_00097020;   /* unreferenced */
 int D_00097024;
 unsigned char D_00097028;
+unsigned char D_00097029, D_0009702A, D_0009702B;   /* byte vars sit 4 apart: fillers */
 unsigned char D_0009702C;
+unsigned char D_0009702D, D_0009702E, D_0009702F;
 int D_00097030;
 int D_00097034;
 

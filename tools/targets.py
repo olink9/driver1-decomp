@@ -54,7 +54,7 @@ TARGETS = {
         vram=0x10000, fileoff=0x800, ldscript="slus_008.42.ld",
         asmfiles={"asm/2C8C.s": "build/asm/2C8C.o", "asm/data/800.rodata.s": "build/asm/data/800.rodata.o",
                   "asm/data/75B14.data.s": "build/asm/data/75B14.data.o",
-                  "asm/data/87800.bss.s": "build/asm/data/87800.bss.o",
+                  "asm/data/877BC.bss.s": "build/asm/data/877BC.bss.o",
                   "asm/header.s": "build/asm/header.o"},
         text_asm="asm/2C8C.s",
         undef=["undefined_syms_auto.txt", "undefined_syms_manual.txt", "undefined_funcs_auto.txt"],
@@ -62,6 +62,8 @@ TARGETS = {
         queue="pilot/queue.tsv", linkcheck="pilot/linkcheck.tsv",
         G="8", extern_g="4",
         bss_lo="main_BSS_START", bss_hi=0x200000, lib_start=0x738F0,
+        # .sbss starts at 0x96FBC, but the file runs on to 0x87800 (PS-X EXE 2 KB padding, zeros)
+        pad_to=0x87800,
         make="build/SLUS_008.42",
     ),
     "frontend": _overlay("frontend", "FRONTEND.BIN", "62f9e054eccd83f0aa688b6e1b5aad5693f35849", 0x1C0000, 0x1D3308),
