@@ -784,7 +784,8 @@ def text_symbols(cobj):
         st = e.get_section_by_name(".symtab")
         out = {(x["st_value"], x.name) for x in st.iter_symbols()
                if x.name and x["st_shndx"] == ti and x["st_info"]["type"] != "STT_SECTION"
-               and not x.name.startswith((".L", "$", "gcc2_compiled", "__gnu_compiled"))}
+               and not x.name.startswith((".L", "$", "gcc2_compiled", "__gnu_compiled"))
+               and not x.name.endswith(".NON_MATCHING")}           # INCLUDE_ASM'd wip (macro.inc)
     return sorted(out)
 
 
