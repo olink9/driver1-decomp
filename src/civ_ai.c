@@ -66,9 +66,13 @@ typedef struct {
     unsigned char f18; /* 0x18 */
     char pad19;
     short f1A, f1C, f1E; /* 0x1A */
-    char pad20[0x26 - 0x20];
+    char pad20[0x24 - 0x20];
+    unsigned char f24; /* 0x24 */
+    unsigned char f25; /* 0x25 */
     unsigned char f26; /* 0x26 */
-    char pad27[0x38 - 0x27];
+    unsigned char f27; /* 0x27 */
+    unsigned char f28; /* 0x28 */
+    char pad29[0x38 - 0x29];
 } REC_99120;
 
 /* ---- shared declarations (identical in every pilot) ---- */
@@ -271,6 +275,7 @@ extern CELL_OBJ D_00099180[];
 extern SXY D_00099B08[];
 extern VECTOR camera_position;
 extern CAR_DATA *D_00096FC0;
+extern short D_000988C8[];
 extern volatile long long CameraCnt;
 extern unsigned char D_00096FC4;
 extern long long D_00096898;   /* majority spelling; other pilots keep a view */
@@ -832,8 +837,6 @@ int func_00013A90(int a, int b, int c, int d)
 }
 
 /* ---------------- func_00013B80 (src/pilot/func_00013B80.c) ---------------- */
-#define D_000988C8 D_000988C8__func_00013B80
-extern char D_000988C8[] __asm__("D_000988C8");
 void func_00013B80(int a, int b, int c)
 {
     CIV_SLOT *p = &D_00098900[a];
@@ -866,7 +869,6 @@ void func_00013B80(int a, int b, int c)
         if (q->f1 == 1) { q->f2 = 1; q->f8 = 0; }
     }
 }
-#undef D_000988C8
 
 /* ---------------- func_00013D88 (src/pilot/func_00013D88.c) ---------------- */
 #define reroute reroute__func_00013D88
@@ -3010,26 +3012,17 @@ int func_000192D0(unsigned char *p, int c) {
 }
 
 /* ---------------- func_00019314 (src/pilot/func_00019314.c) ---------------- */
-#define D_0009E744 D_0009E744__func_00019314
-#define OBJ OBJ__func_00019314
-#define car_data car_data__func_00019314
 /* func_00019314 */
-typedef struct {
-	char p0[0x1A]; short h1A; char p1[2]; short h1E; char p2[4];
-	unsigned char b24; char p3; unsigned char b26; unsigned char b27; unsigned char b28;
-} OBJ;
-extern int car_data[] __asm__("car_data");
-extern unsigned char D_0009E744[] __asm__("D_0009E744");
-int func_00019314(OBJ *p, int dir)
+int func_00019314(REC_99120 *p, int dir)
 {
 	int r, idx;
 	unsigned char *t;
 	unsigned char v = dir;
-	if (p->h1E != 0 || p->h1A != -1) {
+	if (p->f1E != 0 || p->f1A != -1) {
 	fail:
 		return 0;
 	}
-	r = func_00021558(car_data[50], car_data[52]);
+	r = func_00021558(car_data[0].pos.vx, car_data[0].pos.vz);
 	if (r & 0xC000)
 		goto fail;
 	idx = r & 0xFFFF;
@@ -3037,19 +3030,16 @@ int func_00019314(OBJ *p, int dir)
 		goto fail;
 	if ((dir & 1) != *(unsigned char *)(*(int *)&D_0009704C + idx * 20 + 0x10))
 		goto fail;
-	t = D_0009E744 + idx * 20;
-	p->b24 = t[v] + t[(v + 2) & 3];
-	if (p->b24 == 0)
+	t = (unsigned char *)&D_0009E744[idx];
+	p->f24 = t[v] + t[(v + 2) & 3];
+	if (p->f24 == 0)
 		goto fail;
-	p->b26 = 0;
-	p->h1A = r;
-	p->b27 = dir;
-	p->b28 = 1;
+	p->f26 = 0;
+	p->f1A = r;
+	p->f27 = dir;
+	p->f28 = 1;
 	return 1;
 }
-#undef D_0009E744
-#undef OBJ
-#undef car_data
 
 /* ---------------- func_0001943C (src/pilot/func_0001943C.c) ---------------- */
 #define D_0009E744 D_0009E744__func_0001943C
@@ -3429,18 +3419,14 @@ void func_0001A024(P *p)
 #undef P
 
 /* ---------------- func_0001A1BC (src/pilot/func_0001A1BC.c) ---------------- */
-#define S S__func_0001A1BC
-#define car_data car_data__func_0001A1BC
 /* func_0001A1BC */
-typedef struct { char pad0[0xC8]; int x; char pad1[4]; int z; char pad2[0x24]; int rot; } S;
-extern S car_data __asm__("car_data");
-int func_0001A1BC(S *p)
+int func_0001A1BC(CAR_DATA *p)
 {
     int dx, dz, r, c, s, a, b;
-    r = car_data.rot;
-    if ((unsigned)(((r - p->rot) & 0xfff) - 0x69c) >= 0x2c9) return 0;
-    dx = p->x - car_data.x;
-    dz = p->z - car_data.z;
+    r = car_data[0].direction;
+    if ((unsigned)(((r - p->direction) & 0xfff) - 0x69c) >= 0x2c9) return 0;
+    dx = p->pos.vx - car_data[0].pos.vx;
+    dz = p->pos.vz - car_data[0].pos.vz;
     if ((unsigned)(dx + 0x2328) >= 0x4651) return 0;
     if (dz < -0x2328) return 0;
     if (dz >= 0x2329) return 0;
@@ -3454,8 +3440,6 @@ int func_0001A1BC(S *p)
     s = rcossin_tbl[((r - 0x3ce) & 0xfff) * 2 + 1];
     return !(dx * c + dz * s < -0x258000);
 }
-#undef S
-#undef car_data
 
 /* ---------------- func_0001A30C (src/pilot/func_0001A30C.c) ---------------- */
 #define remove_civ remove_civ__func_0001A30C
@@ -3609,28 +3593,7 @@ void func_0001A94C(void) {
 }
 
 /* ---------------- func_0001A9BC (src/pilot/func_0001A9BC.c) ---------------- */
-#define Car Car__func_0001A9BC
-#define D_000988C8 D_000988C8__func_0001A9BC
-#define car_data car_data__func_0001A9BC
 /* per-frame bonus/score condition checks (no Driver 2 counterpart) */
-typedef struct {
-    char pad0[0xC8];
-    int fC8;
-    int padCC;
-    int fD0;
-    char padD4[0xF8 - 0xD4];
-    int fF8;
-    int padFC;
-    int f100;
-    int pad104;
-    int f108;
-    int pad10C;
-    int f110;
-    int f114;
-    int f118;
-} Car;
-extern Car car_data[] __asm__("car_data");
-extern short D_000988C8[] __asm__("D_000988C8");
 void func_0001A9BC(void)
 {
     char buf[80];
@@ -3639,8 +3602,8 @@ void func_0001A9BC(void)
     unsigned short v;
     int t;
 
-    dir = func_000635B0(car_data[0].fF8);
-    r = func_00021558(car_data[0].fC8, car_data[0].fD0);
+    dir = func_000635B0(car_data[0].direction);
+    r = func_00021558(car_data[0].pos.vx, car_data[0].pos.vz);
     v = r;
     if (v == 0xFFFF) {
         D_00096FE8 = -1;
@@ -3657,31 +3620,28 @@ void func_0001A9BC(void)
         }
     }
 
-    t = func_00020AE4(car_data[0].fC8, car_data[0].fD0);
+    t = func_00020AE4(car_data[0].pos.vx, car_data[0].pos.vz);
     if (t != -1 && (t & 0xC000) == 0 && t == ((dir + 2) & 3)) {
         D_000988C8[16]++;
-        if (car_data[0].f108 > 120)
+        if (car_data[0].speed > 120)
             D_000C6F02[0] = 1;
     } else {
         D_000988C8[16] = 0;
     }
     func_000650E4(D_000988C8, 8, 0x1000);
 
-    if (*(int *)&gNight != 0 && car_data[0].f114 > 1000 && car_data[0].f118 > 1000)
+    if (*(int *)&gNight != 0 && car_data[0].damage[0] > 1000 && car_data[0].damage[1] > 1000)
         func_000650E4(D_000988C8, 9, 0x1000);
 
-    if (car_data[0].f100 != 0 || abs(car_data[0].f110) > 16000)
+    if (car_data[0].wheelspin != 0 || abs(car_data[0].f110) > 16000)
         D_000988C8[20]++;
     else
         D_000988C8[20] = 0;
     func_000650E4(D_000988C8, 10, 0x1000);
 
-    if (car_data[0].f108 > 180)
+    if (car_data[0].speed > 180)
         func_000650E4(D_000988C8, 2, 0x1000);
 }
-#undef Car
-#undef D_000988C8
-#undef car_data
 
 /* ---------------- func_0001AC18 (src/pilot/func_0001AC18.c) ---------------- */
 #define JN JN__func_0001AC18
