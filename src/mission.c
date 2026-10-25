@@ -15,6 +15,8 @@
  *    initialiser's literals in reverse element order), "+%d sec" (ShowNum, an inline defined before the first
  *    function, so its literal comes before the code's) and the overlay code's formats.
  *  - .sbss 0x9778C-0x977B4 (D_00097798/9C, D_000977B0 are reached only through D_0008BD58 here).
+ *  - .bss 0xC6EA8-0xC71EC: D_000C6EA8 (the bonus counters; its last bytes are the D_000C6F00/01/02 other files name)
+ *    and D_000C6F04, the MISSION record; the .bss tail is per file (flyby.c follows at 0xC71EC).
  *  - .rodata 0x11010-0x1144B: "Checkpoint", the code literals, the jump tables. The five message strings
  *    0x10FAC-0x1100F that D_0008BD58 points at stay one extern label (D_00010FAC + offset): as literals they come out
  *    in the right order, but the object's .rodata then starts at 0x10FAC (4 mod 8) and the .align 3 jump tables land
@@ -107,6 +109,13 @@ typedef struct E {
     int *w2;
     int w3;
 } E;
+/* ---- .bss 0xC6EA8-0xC71EC: the overlay's bonus counters and the mission record (the .bss tail is laid out file by
+ * file; flyby.c's follows at 0xC71EC) ---- */
+char D_000C6EA8[0x5C];              /* ENT[11] of func_0006B97C/func_0006B9D8 (0x58 bytes), then the three bytes
+                                     * bcollide.c/pedest.c/civ_ai.c name D_000C6F00/01/02: in .bss, not .sbss, so they
+                                     * are not three small variables - kept as the tail of this array */
+MISSION D_000C6F04;
+
 /* ---- .sdata 0x96E78-0x96E80: mission.c's own initialised small data ---- */
 int D_00096E78 = 0x4E20;
 int D_00096E7C = 0x1F40;
@@ -146,12 +155,10 @@ typedef short (*FN)();
 extern int D_00097708;
 extern int D_00097118;
 extern CAR_DATA car_data[];
-extern MISSION D_000C6F04;
 extern int D_00097098;
 extern int D_0009683C;
 extern int D_000970EC;
 extern int D_000BE78C[];
-extern char D_000C6EA8[];
 extern MS_TARGET D_000C7034[];
 extern void memset();
 extern void func_0006B97C();
