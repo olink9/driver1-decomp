@@ -5,20 +5,17 @@
  * DestroyPedestrians, DestroyPedestrian on pedest.c's gp data). What is left uses no $gp data at all and
  * only reaches the .sdata words D_00096E44/D_00096E48 absolutely; DrawCiv is D2 MOTION_C.C, but D1's
  * motion_c.c (0x35BC8-0x39450) is far away, so this is a separate civ-drawing file.
+ * Step 3 (include/structs.h): the pedestrian slot is PEDESTRIAN (new in the header, shared with pedest.c): DrawCiv's
+ *   PED, func_0005D974's OBJ (s18/s1c -> dir.vx/vz, s22 -> vel.vy, p38 -> bones, s40 -> f40, c48 -> frame, i4c ->
+ *   motion, c50 -> speed, c55 -> pal, c56 -> type) and D_000BFA7C's struct Q (f -> flags). VECTOR/SVECTOR/CVECTOR/
+ *   MATRIX/DB from the header. No views; TEX/BONE/MOTION/PFT4/P_TAG/S4 stay local.
  */
 
 #include "gte.h"
+#include "structs.h"
 
 /* ---- types ---- */
-typedef struct { char pad0[0x18]; short s18; char pad1a[2]; short s1c; char pad1e[4]; short s22; char pad24[0x14];
- void *p38; short s3c; short s3e_unused; short s40; char pad42[6]; char c48; char pad49[3]; int i4c; char c50; char pad51[4]; unsigned char c55; unsigned char c56; } OBJ;
 typedef struct { char c[4]; } S4;
-struct Q { char pad[0x3C]; int f; char pad2[0x58 - 0x40]; };
-typedef struct { short vx, vy, vz, pad; } SVECTOR;
-typedef struct { int vx, vy, vz, pad; } VECTOR;
-typedef struct { unsigned char r, g, b, cd; } CVECTOR;
-typedef struct { short m[3][3]; short pad; int t[3]; } MATRIX;
-typedef struct { char *primptr; unsigned int *ot; } DB;
 typedef struct {
     unsigned short uv0, uv1, uv2, uv3;
     unsigned short tpage, clut;
@@ -37,21 +34,6 @@ typedef struct {
     unsigned char pad3;
     short offs[1];
 } MOTION;
-typedef struct {
-    VECTOR pos;          /* 0x00 */
-    char pad10[8];
-    SVECTOR dir;         /* 0x18 */
-    char pad20[0x18];
-    BONE **bones;        /* 0x38 */
-    int flags;           /* 0x3C */
-    short f40;           /* 0x40 */
-    char pad42[6];
-    unsigned char frame; /* 0x48 */
-    char pad49[3];
-    MOTION *motion;      /* 0x4C */
-    char pad50[5];
-    unsigned char pal;   /* 0x55 */
-} PED;
 typedef struct {
     unsigned int tag;
     unsigned int rgbc;
@@ -76,7 +58,7 @@ extern char D_0008B934[];
 extern char D_0008B970[];
 extern char D_0008B9AC[];
 extern int func_0004FFE8();
-extern struct Q D_000BFA7C[];
+extern PEDESTRIAN D_000BFA7C[];
 extern S4 D_00096E44[];
 extern void func_0002DBB4();
 extern int func_000398B0();
@@ -111,39 +93,39 @@ void DrawCiv();
 
 /* ---------------- func_0005D974 (src/pilot/func_0005D974.c) ---------------- */
 /* Driver 2 name: unknown */
-void func_0005D974(OBJ *o)
+void func_0005D974(PEDESTRIAN *o)
 {
     int a, b;
-    o->s40 = 0x800;
-    o->s18 = 0;
-    o->s1c = 0;
+    o->f40 = 0x800;
+    o->dir.vx = 0;
+    o->dir.vz = 0;
     a = func_0004FFE8(1);
     b = func_0004FFE8(1);
-    o->c48 = 0;
-    o->s22 = 10;
-    o->c50 = 10;
-    o->c55 = a % 5 + (b % 5) * 16;
-    switch (o->c56) {
+    o->frame = 0;
+    o->vel.vy = 10;
+    o->speed = 10;
+    o->pal = a % 5 + (b % 5) * 16;
+    switch (o->type) {
     case 3:
-        o->i4c = D_000C0164[0];
-        o->p38 = D_0008B934;
-        o->c50 = 30;
+        o->motion = D_000C0164[0];
+        o->bones = D_0008B934;
+        o->speed = 30;
         break;
     case 6:
-        o->i4c = D_000C0168[0];
+        o->motion = D_000C0168[0];
         break;
     case 0:
     default:
-        o->i4c = D_000C015C[0];
+        o->motion = D_000C015C[0];
         break;
     }
-    if (o->c56 == 4) {
-        o->p38 = D_0008B9AC;
-    } else if (o->c56 != 3) {
+    if (o->type == 4) {
+        o->bones = D_0008B9AC;
+    } else if (o->type != 3) {
         switch (func_0004FFE8(1) % 2) {
-        case 0: o->p38 = D_0008B8BC; break;
-        case 1: o->p38 = D_0008B8F8; break;
-        case 2: o->p38 = D_0008B970; break;
+        case 0: o->bones = D_0008B8BC; break;
+        case 1: o->bones = D_0008B8F8; break;
+        case 2: o->bones = D_0008B970; break;
         }
     }
 }
@@ -152,11 +134,11 @@ void func_0005D974(OBJ *o)
 void func_0005DB30(void) {
     S4 s;
     int i;
-    struct Q *p = D_000BFA7C;
+    PEDESTRIAN *p = D_000BFA7C;
     s = D_00096E44[0];
     func_0002DBB4();
     for (i = 0; i < 20; i++, p++) {
-        if ((p->f & 0x10) && func_000398B0(p) && func_0002C5F0(p, 0x12C) != -1)
+        if ((p->flags & 0x10) && func_000398B0(p) && func_0002C5F0(p, 0x12C) != -1)
             DrawCiv(p, i);
     }
 }
@@ -203,7 +185,7 @@ extern long long current;
     (M)->m[2][1] = FIX((M)->m[0][2] * sz) - FIX((M)->m[0][0] * (M)->m[1][2]); \
     (M)->m[2][2] = FIX((M)->m[0][0] * (M)->m[1][1]) - FIX((M)->m[0][1] * sz); \
 }
-void DrawCiv(PED *p, int idx)
+void DrawCiv(PEDESTRIAN *p, int idx)
 {
     char pad[0x20];
     MATRIX m;
