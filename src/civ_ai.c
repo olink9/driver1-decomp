@@ -17,27 +17,28 @@
  *    counterpart of D2 CIV_AI.C. D2 COP_AI-like code is not identified here (cop logic seems to live
  *    in the felony area; D_0008539C also points at func_00065424 there).
  *
- * Conflicts (mktu listed 47), resolved by build/tu-civ_ai/nsgen2.py + cfg2.py (rerunnable from the pilots):
+ * Conflicts (mktu listed 47) were first resolved by build/tu-civ_ai/nsgen2.py + cfg2.py with ~50 per-function
+ * `__asm__` views; Step 3 removed every one of them (byte-identical at each step):
  *  - Records: CIV_SLOT (D_00098900/D_00098950, 0x50; D_00098950 is D_00098900[1]), CAR_DATA (car_data and
- *    D_0009B230 = car_data[1], 0x18C) and PURSUER (D_000C4690/D_000C4E38, 0x7A8) come from include/structs.h
- *    (Step 3; CAR_DATA renames: x/y/z at 0xC8 = pos.vx/vy/vz, f18/f20 = where.t[0]/t[2], f2 = model,
- *    fEA = angle.vy, fF8 = direction, f104 = wheel_speed, f108 = speed, f17C = totalDamage). ROAD_INFO
- *    (D_0009E744, 0x14) and CELL_OBJ (D_00099180, 0xC) stay file-local (fXX = offset). A function whose pilot
- *    shape fits was rewritten onto them (type name, field names; char signedness was allowed to differ - the
- *    build confirms the bytes); scalar `car_data.x` users became `car_data[0].x`.
- *  - Functions: one unprototyped `RET f();` where every caller agreed on the return type (void callers
- *    of an int function allowed) and no prototype had a char/short parameter.
- *  - CameraCnt is volatile everywhere, D_00096FC4 unsigned char; D_00096898, D_00099120, rcossin_tbl,
- *    func_00021558, func_00021820 use the majority spelling at the top.
- *  - Remaining scaffolding for Step 3 (shared headers): what still differs stays in its function's
- *    section under a per-section name (`#define NAME NAME__<func>` ... `#undef NAME`), an extern there
- *    being a view of the real symbol (`extern T sym__<func> __asm__("sym");`). About 50 views remain:
- *    shapes that do not fit the records above (byte-array views of ROAD_INFO, CAR_DATA through int[] or
- *    with an int t[3] at 0xC8, two civ-slot users whose field names clash with another local type),
- *    functions whose callers expected uchar/ushort/short results (func_0001262C, func_00017A50,
- *    func_000192D0, func_00021558, func_00021820...) or pass args unprototyped to a char parameter
- *    (func_00014FC4, func_00017780, func_000154A8), and D_00099B08/D_0009B2F8/D_000988C8/camera_position.
- *  - The static inline ClearMem copies (5 functions) and other inline helpers keep per-section names.
+ *    D_0009B230 = car_data[1], 0x18C) and PURSUER (D_000C4690/D_000C4E38, 0x7A8) come from include/structs.h.
+ *    CAR_DATA spellings: 0xC8 = pos (old x/y/z, t[3], XZ), where.t[0]/t[2] = 0x18/0x20, model = 0x2,
+ *    angle.vy = 0xEA, direction = 0xF8, wheelspin = 0x100, wheel_speed = 0x104, speed = 0x108,
+ *    damage[0..1] = 0x114/0x118, totalDamage = 0x17C. D_0009B2F8 = &D_0009B230[i].pos; car_data int[]
+ *    offsets 0x245C/0x2464 = car_data[23].pos.vx/vz. PURSUER (old PED): active = 0x78C, car = 0x7A4.
+ *  - File-local records: ROAD_INFO (D_0009E744, 0x14: lanes[4] + pos[4][2]), CELL_OBJ (D_00099180, 0xC) and
+ *    REC_99120 (D_00099120, 0x38, a civ group: x/y/z, f10[4], counts at 0x24-0x26, dir 0x27, slot-id list
+ *    at 0x29; func_0001943C/19314/19AF4/19DAC/1A024 take it). Other local types are per-function shapes
+ *    of tables reached through pointers (D_00097040/44/4C) and stay under per-section names.
+ *  - Functions: one unprototyped `RET f();` per callee. Char parameters: func_00014FC4, func_000154A8 and
+ *    func_000197E0 have K&R definitions (unprototyped callers pass ints; same callee bytes). Narrow results:
+ *    a cast at the use, `(unsigned char)func_00017A50()`, `(unsigned char)func_000192D0()`,
+ *    `(short)func_00021558()`, `(unsigned short)func_00021820()`; func_00017DE8 calls the uchar-returning
+ *    func_00017780 through `((int (*)(CIV_SLOT *, VECTOR *, int *, unsigned char))func_00017780)` because
+ *    its original keeps the full v0 (a plain call adds an andi).
+ *  - Globals: D_00096898 is read as `*(unsigned char *)&`, D_000988C8 is short[], D_00099B08 SXY[],
+ *    camera_position VECTOR; func_000147C4 reads rcossin_tbl as 4-byte-aligned pairs `((E *)rcossin_tbl)[i]`
+ *    (one lw per entry).
+ *  - The static inline ClearMem copies (4 functions) and other inline helpers keep per-section names.
  *  - #include "common.h" (func_000148C4) is dropped: nothing from it was used.
  */
 #include "structs.h"
