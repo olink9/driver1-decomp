@@ -7,9 +7,10 @@
  *  - D_000967BC/BD, D_00096895/98/99: unsigned char (the plain-char pilots only test or store them).
  *  - D_00096AA8/AA9: B8 (8 bytes, absolute like the long long spelling; stores go through (char *)).
  *  - car_data: CAR_DATA[]; func_00025C68's CARX view goes through ((CARX *)car_data)->.
- *  - D_000C6F04: PlayerS for the file, but func_00024F1C indexes it as int[] (gcc then keeps the
- *    base in $s6 across the loop; a cast folds to sym+260 and changes allocation), so that function
- *    has a block-scope `extern int D_000C6F04[]` and the PlayerS declaration follows it.
+ *  - D_000C6F04: structs.h MISSION for the file (was PlayerS: car -> fF8, idx -> f2D8), but func_00024F1C
+ *    indexes it as int[] (gcc then keeps the base in $s6 across the loop; a cast folds to sym+260 and changes
+ *    allocation), so that function keeps a block-scope `extern int D_000C6F04[]` VIEW and the MISSION
+ *    declaration follows it.
  *  - DrawSync, VSync, RotMatrix, SVECTOR, VECTOR: taken from the PsyQ headers via common.h.
  * Same file as main.c? Probably: the string literals are interleaved in .rodata - 0x1023C GLOAD.TIM
  * (func_00024754/func_00024F1C) and 0x10258-0x10298 (main(); MCARD.BIN 0x10280 and 0x1028C are also
@@ -32,12 +33,6 @@ typedef struct {
     short c;
     char pad1[2];
 } SndS;
-typedef struct {
-    char pad0[0xF8];
-    CAR_DATA *car;
-    char pad1[0x2D8 - 0xFC];
-    int idx;
-} PlayerS;
 /* func_00025C68's view of car_data[0] (kept: CAR_DATA field access grows it by 12 bytes) */
 typedef struct {
     char pad0[4];
@@ -757,7 +752,7 @@ void func_00024F1C(void)
     SetDispMask(1);
 }
 
-extern PlayerS D_000C6F04;
+extern MISSION D_000C6F04;
 
 /* ---------------- ReInitFrontend (src/pilot/ReInitFrontend.c) ---------------- */
 /* Driver 2: ReInitFrontend */
@@ -883,11 +878,11 @@ void func_00025748(void)
             }
 
             snd = -1;
-            if (D_000C6F04.idx >= 0) {
-                snd = car_data[D_000C6F04.idx].totalDamage;
-            } else if (D_000C6F04.idx == -1) {
-                if (D_000C6F04.car != 0)
-                    snd = D_000C6F04.car->totalDamage;
+            if (D_000C6F04.f2D8 >= 0) {
+                snd = car_data[D_000C6F04.f2D8].totalDamage;
+            } else if (D_000C6F04.f2D8 == -1) {
+                if (D_000C6F04.fF8 != 0)
+                    snd = D_000C6F04.fF8->totalDamage;
             }
 
             if (snd != -1 && D_000967E8 == 0 && D_00096858 == 0) {
