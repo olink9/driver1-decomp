@@ -4,7 +4,7 @@
  * Step 3 (include/structs.h, after common.h): V3 -> VECTOR_NOPAD, VEC -> VECTOR; CARS (`extern CARS car_data`,
  *   pos0 at 0xC8 and pos1 at 0x245C) -> CAR_DATA car_data[]: car_data[0].pos / car_data[23].pos (0x245C = 23 * 0x18C
  *   + 0xC8); D_000C0104's P -> PEDESTRIAN (D_000C0104 = D_000BFA7C[19]; kept as its own symbol - the original's
- *   %hi/%lo name it): e28/e2c/e30 -> f28/f2C/f30, e3c -> flags, b50 -> speed, b55 -> pal, b56 -> type.
+ *   %hi/%lo name it): e28/e2c/e30 -> target.vx/vy/vz, e3c -> flags, b50 -> speed, b55 -> pal, b56 -> type.
  *   No views; LERP/OBJ/OBJ2/T/V/S17C/En stay local (this file's records).
  */
 /* MKTU CONFLICTS (first spelling active, others commented at their place below):
@@ -313,9 +313,9 @@ void func_00061A14(char *o)
 			d->pos.vx = *(int *)o + e->a;
 			d->pos.vz = *(int *)(o + 8) + *(int *)((char *)e + 8);
 			d->pos.vy = -MapHeight(d);
-			d->f28 = *(int *)(o + 0x18);
-			d->f2C = *(int *)(o + 0x1c);
-			d->f30 = *(int *)(o + 0x20);
+			d->target.vx = *(int *)(o + 0x18);
+			d->target.vy = *(int *)(o + 0x1c);
+			d->target.vz = *(int *)(o + 0x20);
 			d->flags = *(int *)((char *)e + 0xc) | 0x50;
 			d->pal = e->f;
 			d->speed = e->g;

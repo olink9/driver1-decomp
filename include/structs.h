@@ -289,20 +289,16 @@ SIZE_ASSERT(MENU_ITEM, 16);
 /* ---- D_000BFA7C[20]: one pedestrian, 0x58 bytes (civ_draw.c draws it, pedest.c moves it). D1's own record,
  * not D2's PEDESTRIAN (0x94); the D2 name is kept for the type only. ---- */
 typedef struct {
-    VECTOR pos;                     /* 0x00 */
-    int f10;                        /* 0x10 */
-    int f14;                        /* 0x14 */
+    VECTOR_NOPAD pos;               /* 0x00 */
+    VECTOR_NOPAD delta;             /* 0x0C target - pos (pedest.c func_000604F8) */
     SVECTOR dir;                    /* 0x18 vy = heading */
     SVECTOR vel;                    /* 0x20 */
-    int f28;                        /* 0x28 */
-    int f2C;                        /* 0x2C */
-    int f30;                        /* 0x30 */
-    int f34;                        /* 0x34 */
+    VECTOR target;                  /* 0x28 next cell centre (pedest.c func_0005FBE0) */
     void *bones;                    /* 0x38 civ_draw BONE ** */
     int flags;                      /* 0x3C */
-    short f40;                      /* 0x40 head yaw (DrawCiv) */
-    short f42;                      /* 0x42 */
-    short f44;                      /* 0x44 */
+    short f40;                      /* 0x40 head yaw (DrawCiv) / heading to the camera (pedest.c) */
+    short slot;                     /* 0x42 own index (pedest.c free list D_000C0340) */
+    short route;                    /* 0x44 chosen direction bit 1/2/4/8 (pedest.c func_0005FBE0) */
     short f46;                      /* 0x46 */
     unsigned char frame;            /* 0x48 */
     unsigned char f49;
@@ -320,6 +316,8 @@ typedef struct {
 } PEDESTRIAN;
 SIZE_ASSERT(PEDESTRIAN, 0x58);
 OFS_ASSERT(PEDESTRIAN, dir, 0x18);
+OFS_ASSERT(PEDESTRIAN, target, 0x28);
+OFS_ASSERT(PEDESTRIAN, route, 0x44);
 OFS_ASSERT(PEDESTRIAN, bones, 0x38);
 OFS_ASSERT(PEDESTRIAN, flags, 0x3C);
 OFS_ASSERT(PEDESTRIAN, frame, 0x48);
