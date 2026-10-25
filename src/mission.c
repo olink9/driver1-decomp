@@ -24,8 +24,9 @@
  *    f2B4/f2B8 -> end/pc, T29C by cast). The target slot views S0, TH, E_6A318, E_6A60C, E_6A934 (+SUB) and
  *    ENT_68384 are MS_TARGET (f0..f10 -> a..e with (VECTOR *) casts where they stored an F *, f14 -> f, f18 -> g,
  *    f1C..f28 / sub -> q.h..k); func_000682C0's struct B is MS_SAVE (h28 -> s17C, the short walk at 0x1C -> s).
- *    Kept local: H (D_000BE9C4/E0, the percentage bars, seen differently by glaunch.c/main.c), S16/S32 (the raw
- *    copies func_00068384 makes), script/sound shapes (SND, SNDENT, SNDOBJ, T17C, T38, R20, X15, ST, E, F).
+ *    The percentage bars D_000BE774 (ST: fC/fE/f18) and D_000BE9C4/E0 (H: h) are PERCENTAGE_BAR (position/max/
+ *    active). Kept local: S16/S32 (the raw copies func_00068384 makes), script/sound shapes (SNDENT, SNDOBJ,
+ *    T17C, T38, R20, X15, E, F).
  */
 #include "structs.h"
 
@@ -33,7 +34,6 @@
 typedef struct { int w[4]; } S16;
 typedef struct { int w[8]; } S32;
 typedef struct { short a, b; } E_686BC;
-typedef struct { char pad[0xE]; short h; } H;
 typedef struct {
     char pad[0x34];
     short f34;
@@ -58,7 +58,6 @@ typedef struct {
     unsigned char f14;
 } X15;
 typedef struct { int a, b, c, d; } F;
-typedef struct { char pad[0xC]; short fC, fE; char pad2[8]; int f18; } ST;
 typedef struct {
     VECTOR_NOPAD *pos;               /* 0x0 */
     short timer;            /* 0x4 */
@@ -117,8 +116,8 @@ extern long long D_00096898;
 extern long long D_000967BF;
 extern long long D_00096810;
 extern long long D_00096F80;
-extern H D_000BE9C4;
-extern H D_000BE9E0;
+extern PERCENTAGE_BAR D_000BE9C4;
+extern PERCENTAGE_BAR D_000BE9E0;
 extern long long D_0009709C;
 extern long long D_00096878;
 extern long long D_00097760;
@@ -168,7 +167,7 @@ extern int D_000C4C8C[];
 extern MS_TARGET *D_000977AC;
 extern F D_000BE9B4;
 extern int D_00097790;
-extern ST D_000BE774;
+extern PERCENTAGE_BAR D_000BE774;
 extern char D_000BC9BC[];
 extern int func_0004FFE8(void);
 extern void PlaySpeech();
@@ -427,8 +426,8 @@ void func_00068B88(void) {
                 v = a[-1];
                 if (n) {
                 *n = v;
-                if (&D_0008BD58[i] == D_0008BD58 + 0x1f) D_000BE9C4.h = v;
-                else if (&D_0008BD58[i] == D_0008BD58 + 0xa) D_000BE9E0.h = v;
+                if (&D_0008BD58[i] == D_0008BD58 + 0x1f) D_000BE9C4.max = v;
+                else if (&D_0008BD58[i] == D_0008BD58 + 0xa) D_000BE9E0.max = v;
                 }
             }
         } else {
@@ -439,8 +438,8 @@ void func_00068B88(void) {
                 v = p->w3;
                 if (n) {
                 *n = v;
-                if (&D_0008BD58[i] == D_0008BD58 + 0x1f) D_000BE9C4.h = v;
-                else if (&D_0008BD58[i] == D_0008BD58 + 0xa) D_000BE9E0.h = v;
+                if (&D_0008BD58[i] == D_0008BD58 + 0x1f) D_000BE9C4.max = v;
+                else if (&D_0008BD58[i] == D_0008BD58 + 0xa) D_000BE9E0.max = v;
                 }
             }
         }
@@ -494,9 +493,9 @@ void func_00068C6C(MISSION *obj)
                 if (n) {
                     *n = v;
                     if (e == &D_0008BD58[0x1F])
-                        D_000BE9C4.h = v;
+                        D_000BE9C4.max = v;
                     else if (e == &D_0008BD58[10])
-                        D_000BE9E0.h = v;
+                        D_000BE9E0.max = v;
                 }
             }
             break;
@@ -1233,7 +1232,7 @@ void func_0006A318(MISSION *car)
     MS_TARGET *bestp = 0;
     unsigned char *p;
     CIV_SLOT *q;
-    ST *st;
+    PERCENTAGE_BAR *st;
     int lim;
     int n;
 
@@ -1292,9 +1291,9 @@ void func_0006A318(MISSION *car)
     case 4:
         st = &D_000BE774;
         lim = D_00097790;
-        st->f18 = 1;
-        st->fE = lim;
-        st->fC = car->f2DC = func_0006B9D8(D_000C6EA8, (int *)car_data, car->f2DC);
+        st->active = 1;
+        st->max = lim;
+        st->position = car->f2DC = func_0006B9D8(D_000C6EA8, (int *)car_data, car->f2DC);
         if (car->f2DC >= lim)
             car->f104 = 0x7FFF;
         break;
