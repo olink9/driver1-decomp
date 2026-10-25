@@ -3,11 +3,15 @@
  * one ROAD (16 bytes, D_00097044), JUNC (44 bytes, D_00097040) and RBOX (20 bytes, D_0009704C)
  * record laid out by offset from the pilot shapes; D_0009E724/D_0009D8F4 are short*[4]/int*[4]
  * (ushort / int[60] views by cast); the 0x97038/50/54 counters are unsigned char.
+ * Step 4: owns .data 0x86710-0x8671B, .sdata 0x967A8-0x967B7, .sbss 0x97038-0x9705B (one block each);
+ *   D_000967B0, D_00097051-53 are unreferenced fillers (the byte counters sit 4 apart), D_0009703C is
+ *   used only by felony.c/map.c. maspsx abs= for the other files' small globals (was `long long`).
  * Boundary: func_00020AE4 (0x20AE4, a 90.22 wip) is the head of this file - it reaches
  * D_000967A8/D_00097040/D_00097044 through $gp exactly like func_00021DE8/func_00021F5C, and
  * handling.c's small data ends below 0x97038. It is pulled in as INCLUDE_ASM; the C draft
  * is src/pilot/func_00020AE4.wip.c - paste it over the INCLUDE_ASM line once it matches.
  */
+/* maspsx: abs=D_00097374,D_00097098 */
 /* MKTU CONFLICTS (first spelling active, others commented at their place below):
  * decl D_0009E724:
  *     extern short *D_0009E724[];    <- func_00020DB4, func_00021558
@@ -96,28 +100,39 @@ typedef struct { unsigned char b[4]; short s[8]; } R20;
 /* ---- externs ---- */
 extern int D_0009E714[];
 extern short *D_0009E724[];
-extern long long D_00097374;
+extern int D_00097374;
 extern void memset();
 extern int func_0004A9F4();
-extern long long D_00097098;
+extern int D_00097098;
 extern int *D_0009D8F4[];
 extern int RoadMapRegions[];
 extern void ClearMem();
-extern RBOX *D_0009704C;
-extern ROAD *D_00097044;
-extern JUNC *D_00097040;
 extern unsigned char D_000967B4[];
-extern int D_00097058;
-extern unsigned char D_00097054;
-extern unsigned char D_00097050;
-extern unsigned char D_00097038;
-extern int *D_00097048;
 extern int D_0009D904[];
 extern void Getlong();
-extern int D_000967AC;
-extern int D_000967A8;
-extern unsigned char D_00086710[];
 extern R20 D_0009E744[];
+
+/* ---- the file's own data (Step 4), each section in address order ---- */
+/* .data 0x86710-0x8671B */
+unsigned char D_00086710[12] = { 0, 1, 3, 7, 0xF, 0x1F, 0x3F, 0x7F, 0xFF, 0, 0, 0 };
+
+/* .sdata 0x967A8-0x967B7 (D_000967B4 is reached with %hi/%lo: declared incomplete above) */
+int D_000967A8 = 0;
+int D_000967AC = 0;
+int D_000967B0 = 0;   /* unreferenced */
+unsigned char D_000967B4[4] = { 2, 3, 0, 1 };
+
+/* .sbss 0x97038-0x9705B */
+unsigned char D_00097038;
+int D_0009703C;   /* used by felony.c, map.c */
+JUNC *D_00097040;
+ROAD *D_00097044;
+int *D_00097048;
+RBOX *D_0009704C;
+unsigned char D_00097050;
+unsigned char D_00097051, D_00097052, D_00097053;   /* unreferenced: D_00097054 sits 4 bytes on */
+unsigned char D_00097054;
+int D_00097058;
 
 /* ---- functions defined in this file ---- */
 short func_00020DB4();
