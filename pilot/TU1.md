@@ -188,3 +188,11 @@ Step 4 (move definitions into the owning file) - the recipe that worked:
 - Unreferenced .sdata words inside a file's slice: define them as plain globals at the right point. Definition placement in the source sets .sdata order (constants come with their function).
 - Main's modules don't follow the overlays' 8-byte object-padding rule.
 - 6 asm modules: src/{unpack,tile,gte,mdraw,rle,carpoly}_asm.s; the 13 zero words at 0x26760 are the unpacker's scratch, not padding.
+## Lessons (Step 3 overlays: frontend 23 files, nfmv, cred onto headers - views -> 0)
+- include/frontend.h (MENU_TEXT 16 B labels, MENU_TITLE, TEX, TEXINFO, TP_ENTRY/TP_SHEET, DB_ENV 0x80 with real PSX DRAWENV 0x5C - only when common.h is not included) and include/nfmv.h (DECENV, MOVIE, DRAWENV_PSX).
+- Header size checks must use their own macro name per header (`__LINE__`-named asserts collide across headers).
+- MENU_ITEM neighbour bytes are left/right/up/down (PSX pad bit order); frontend's up/down/left/right spelling was renamed.
+- Free changes: char vs unsigned char (-funsigned-char), int vs void returns when ignored, signedness on stores. NOT free: signedness of a short passed as a call ARGUMENT (sll/sra); some casts change allocation - then retype the global for the whole file.
+- `current->b->ot` = `current->ot[2]`; `(DB_ENV *)current` is free.
+- Overlay checks compile against the WORKING-TREE structs.h: never leave a broken structs.h edit uncommitted while others build.
+- mcard.c (50 views) and iview.c (23 views) not yet on headers.
