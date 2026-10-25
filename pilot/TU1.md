@@ -196,3 +196,8 @@ Step 4 (move definitions into the owning file) - the recipe that worked:
 - `current->b->ot` = `current->ot[2]`; `(DB_ENV *)current` is free.
 - Overlay checks compile against the WORKING-TREE structs.h: never leave a broken structs.h edit uncommitted while others build.
 - mcard.c (50 views) and iview.c (23 views) not yet on headers.
+## Lessons (Step 3: mcard.c, iview.c - views 50+23 -> 0; include/mcard.h)
+- `(short)X == 0` on an unsigned short global folds back to lhu; only `*(short *)&X` keeps lh.
+- Recipe that worked first time: script-delete all view scaffolding -> swap prelude for header includes -> let compile errors drive renames (scoped per function) -> per-function compare names the few changed functions.
+- Overlay cmpfn: build/tu-s3mc/{cc.py,cmpfn.sh,fdiff.sh} (untracked; `env CCT=<target>`).
+- DVECTOR should move into structs.h with the gte types (iview keeps a local one).
