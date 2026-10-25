@@ -22,6 +22,7 @@
  * (D_00096E5C is reached with %hi/%lo -> abs=; the 4 unlabelled words 0x96E4C-0x96E58 before it are left to civ_draw.c's
  * block), .sbss 0x976F8-0x97768 (D_00097718/1C/20/2C fill unreferenced gaps; D_00097758/5A/5C are the three LIM shorts,
  * +2/+4 reached absolutely -> abs=). I4 moved up to the part-1 types. extern long long -> real types + abs=.
+ * .bss 0xC4690-0xC6CD8 is defined here too: PURSUER D_000C4690[5] (the part-2 views of it stay).
  */
 /* maspsx: abs=D_00096FBC,D_0009775A,D_0009775C,D_00096FC8,D_00096898,D_00096E5C,D_0009703C,D_000976E8,D_000976EC,D_00096FF4,CameraCnt,D_00096770,D_000974C0,D_00096834,D_00097004,D_00096870 */
 #include "structs.h"
@@ -36,6 +37,10 @@ typedef struct { short a, b, c; } LIM;
 typedef struct { short a, b; } P;
 typedef struct { int v; } __attribute__((packed)) U;
 typedef struct { int v; } I4;
+
+/* ---- .bss 0xC4690-0xC6CD8: the five pursuer records (D_000C4E38 = &[1]; D_000C4B8C.. D_000C4CA8 are names the
+ * original gives inside [0]); the .bss tail is per file (pathfind.c before, job_fx.c after) ---- */
+PURSUER D_000C4690[5];
 
 /* ---- .data 0x8BB6C-0x8BC34: felony.c's own initialised data, in address order ---- */
 unsigned short D_0008BB6C[12] = { 0x18, 0, 0, 0, 0, 0, 0, 0, 0x18, 0, 0x18, 0 };
@@ -106,7 +111,6 @@ extern int D_000C4C6C[];
 extern short D_000C4C7C[];
 extern P D_000988C8[];
 extern CAR_DATA D_0009B230[];
-extern PURSUER D_000C4690[];
 extern short rcossin_tbl[];
 extern int D_0009703C;
 
