@@ -138,6 +138,12 @@ typedef struct {
 } MENU_TEXT;
 FE_SIZE_ASSERT(MENU_TEXT, 16);
 
+/* ---- a screen title (func_001C2114's first argument; the screens' enter handlers set text/x/y) ---- */
+typedef struct {
+    short x, y;                     /* 0x0 */
+    char *text;                     /* 0x4 */
+} MENU_TITLE;
+
 /* ---- a texture found by name (func_001C334C): D2 TEXTURE_DETAILS + the sheet's entry/slot ---- */
 typedef struct {
     unsigned char u0, v0, u1, v1, u2, v2, u3, v3; /* 0x0 */

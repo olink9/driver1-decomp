@@ -6,19 +6,18 @@
  */
 /* cityselect.c: 19 functions func_001C41D8..func_001C4AE4 (0x1C41D8-0x1C4BC8)
  * Step 3: types from include/frontend.h + structs.h (MENU_ITEM D_001CE048/D_001CE0FC, MENU_TEXT D_001CDFE8/D_001CE0CC,
- * DB *current, POLY_FT4/TEX). TITLE (D_001CDFC0, func_001C2114's first argument) is file-local. No views;
+ * DB *current, POLY_FT4/TEX). MENU_TITLE D_001CDFC0. No views;
  * SetDispMask is `extern int` for the whole file (func_001C4A7C's FAKEMATCH note; same bytes elsewhere).
  */
 
 /* ---- types ---- */
 #include "frontend.h"
-typedef struct { short x, y; char *p; } TITLE;
 typedef struct { short y, pad; } YPOS;
 
 /* ---- externs ---- */
 extern MENU_ITEM D_001CE048[];
 extern MENU_TEXT D_001CDFE8[];
-extern TITLE D_001CDFC0;
+extern MENU_TITLE D_001CDFC0;
 extern char *D_001CE08C[];
 extern char *D_001CE09C[];
 extern int D_001CDEDC;
@@ -143,7 +142,7 @@ int func_001C41D8(void)
 }
 
 /* ---------------- func_001C43EC (src/pilot/frontend/func_001C43EC.c) ---------------- */
-void func_001C43EC(void){ D_001CDFC0.p = D_001C03AC; D_001CDFC0.x = 0x147; D_001CDFC0.y = 0xB6; D_001CDFFC = 1; D_001CDEDC = 0; D_00096834 = 0; D_001D2DB0 = D_001D2D10; }
+void func_001C43EC(void){ D_001CDFC0.text = D_001C03AC; D_001CDFC0.x = 0x147; D_001CDFC0.y = 0xB6; D_001CDFFC = 1; D_001CDEDC = 0; D_00096834 = 0; D_001D2DB0 = D_001D2D10; }
 
 /* ---------------- func_001C4440 (src/pilot/frontend/func_001C4440.c) ---------------- */
 void func_001C4440(void) { D_001CDFFC = 0; }
@@ -166,7 +165,7 @@ int func_001C444C(void)
 }
 
 /* ---------------- func_001C44FC (src/pilot/frontend/func_001C44FC.c) ---------------- */
-void func_001C44FC(void){ D_001CDFC0.p = D_001C0388; D_001CDFC0.x = 0x148; D_001CDFC0.y = 0x9A; D_001CE00C = 1; D_001CDEDC = 0; D_00096834 = 1; D_001D2DB0 = D_001D2D38; }
+void func_001C44FC(void){ D_001CDFC0.text = D_001C0388; D_001CDFC0.x = 0x148; D_001CDFC0.y = 0x9A; D_001CE00C = 1; D_001CDEDC = 0; D_00096834 = 1; D_001D2DB0 = D_001D2D38; }
 
 /* ---------------- func_001C4554 (src/pilot/frontend/func_001C4554.c) ---------------- */
 void func_001C4554(void) { D_001CE00C = 0; }
@@ -189,7 +188,7 @@ int func_001C4560(void)
 }
 
 /* ---------------- func_001C4610 (src/pilot/frontend/func_001C4610.c) ---------------- */
-void func_001C4610(void){ D_001CDFC0.p = D_001C037C; D_001CDFC0.x = 0x148; D_001CDFC0.y = 0xC8; D_001CE01C = 1; D_001CDEDC = 0; D_00096834 = 3; D_001D2DB0 = D_001D2D60; }
+void func_001C4610(void){ D_001CDFC0.text = D_001C037C; D_001CDFC0.x = 0x148; D_001CDFC0.y = 0xC8; D_001CE01C = 1; D_001CDEDC = 0; D_00096834 = 3; D_001D2DB0 = D_001D2D60; }
 
 /* ---------------- func_001C4668 (src/pilot/frontend/func_001C4668.c) ---------------- */
 void func_001C4668(void) { D_001CE01C = 0; }
@@ -211,7 +210,7 @@ int func_001C4674(void)
 }
 
 /* ---------------- func_001C46FC (src/pilot/frontend/func_001C46FC.c) ---------------- */
-void func_001C46FC(void){ D_001CDFC0.p = D_001C0370; D_001CDFC0.x = 0x147; D_001CDFC0.y = 0x8A; D_001CE02C = 1; D_001CDEDC = 0; D_00096834 = 5; D_001D2DB0 = D_001D2D88; }
+void func_001C46FC(void){ D_001CDFC0.text = D_001C0370; D_001CDFC0.x = 0x147; D_001CDFC0.y = 0x8A; D_001CE02C = 1; D_001CDEDC = 0; D_00096834 = 5; D_001D2DB0 = D_001D2D88; }
 
 /* ---------------- func_001C4754 (src/pilot/frontend/func_001C4754.c) ---------------- */
 void func_001C4754(void) { D_001CE02C = 0; }
