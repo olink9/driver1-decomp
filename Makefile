@@ -16,7 +16,7 @@ CPPFLAGS := -Iinclude -Isrc -undef -Wall -lang-c -fno-builtin -Dmips -D__GNUC__=
 MASPSX   := MASPSX_EXTERN_G=4 $(PYTHON) tools/maspsx/maspsx.py --aspsx-version=2.79 --expand-div -G8
 
 OVERLAYS := frontend mcard cred iview
-S_FILES  := $(shell find asm -name '*.s' -not -path 'asm/nonmatchings/*' $(foreach o,$(OVERLAYS),-not -path 'asm/$(o)/*'))
+S_FILES  := $(shell find asm -name '*.s' -not -path 'asm/nonmatchings/*' $(foreach o,$(OVERLAYS) nfmv,-not -path 'asm/$(o)/*'))
 C_FILES  := $(shell find src -name '*.c' -not -path 'src/pilot/*' 2>/dev/null)   # pilot files are standalone, not linked yet
 O_FILES  := $(S_FILES:%.s=$(BUILD)/%.o) $(C_FILES:%.c=$(BUILD)/%.o)
 
@@ -28,7 +28,7 @@ all: $(BUILD)/SLUS_008.42
 # References into main resolve through build/main_syms.ld (PROVIDE list exported from
 # main's ELF by tools/mainsyms.py); FRONTEND <-> MCARD calls through splat's
 # undefined_*_auto.<overlay>.txt.
-overlays: $(foreach o,$(OVERLAYS),$(o))
+overlays: $(foreach o,$(OVERLAYS),$(o)) nfmv
 frontend: $(BUILD)/FRONTEND.BIN
 	@sha1sum -c frontend.sha1
 mcard: $(BUILD)/MCARD.BIN
@@ -57,6 +57,20 @@ $(eval $(call OVERLAY_RULES,mcard,MCARD.BIN))
 $(eval $(call OVERLAY_RULES,cred,CRED.BIN))
 $(eval $(call OVERLAY_RULES,iview,IVIEW.BIN))
 
+# NFMV.EXE (nfmv.yaml): the FMV player, a separate PS-X EXE at 0x80100000 with its own
+# PsyQ libraries and gp - it does not link against main (no main_syms.ld).
+nfmv: $(BUILD)/NFMV.EXE
+	@sha1sum -c nfmv.sha1
+nfmv_S := $(shell find asm/nfmv -name '*.s' 2>/dev/null)
+nfmv_O := $(nfmv_S:%.s=$(BUILD)/nfmv/%.o)
+$(BUILD)/nfmv/%.o: %.s
+	@mkdir -p $(dir $@)
+	$(AS) $(ASFLAGS) -o $@ $<
+$(BUILD)/nfmv.elf: $(nfmv_O) nfmv.ld
+	$(LD) -EL -T undefined_syms_auto.nfmv.txt -T undefined_funcs_auto.nfmv.txt -T nfmv.ld -Map $(BUILD)/nfmv.map --no-check-sections -o $@
+$(BUILD)/NFMV.EXE: $(BUILD)/nfmv.elf
+	$(OBJCOPY) -O binary $< $@
+
 $(BUILD)/%.o: %.s
 	@mkdir -p $(dir $@)
 	$(AS) $(ASFLAGS) -o $@ $<
@@ -73,4 +87,4 @@ $(BUILD)/SLUS_008.42: $(BUILD)/$(BASENAME).elf
 
 clean:
 	rm -rf $(BUILD)
-.PHONY: all clean overlays $(OVERLAYS)
+.PHONY: all clean overlays $(OVERLAYS) nfmv

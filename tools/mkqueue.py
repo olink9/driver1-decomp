@@ -3,7 +3,7 @@
 overlay): game functions (main: below the PsyQ libraries, which start at __main 0x738F0)
 smallest first, with the Driver 2 counterpart hint from pilot/d2map.tsv when there is one.
 
-    tools/mkqueue.py [--target main|frontend|mcard|cred|iview]
+    tools/mkqueue.py [--target main|frontend|mcard|cred|iview|nfmv]
 """
 import argparse, os, re, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -14,6 +14,7 @@ ap = argparse.ArgumentParser()
 ap.add_argument("--target", choices=targets.NAMES, default="main")
 T = targets.get(ap.parse_args().target)
 LIB_START = T["lib_start"]
+GAME_START = T.get("game_start")
 FN = targets.path(T, "fn")
 hint = {}
 p = os.path.join(ROOT, "pilot/d2map.tsv")
@@ -30,6 +31,8 @@ for f in os.listdir(FN):
         continue
     addr = int(a.group(1), 16)
     if LIB_START is not None and addr >= LIB_START:
+        continue
+    if GAME_START is not None and addr < GAME_START:
         continue
     h = hint.get(m.group(1), ("", ""))
     rows.append((int(m.group(2), 16), addr, m.group(1), h[0], h[1]))

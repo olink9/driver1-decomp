@@ -20,6 +20,7 @@ tools/progress.py via `--target NAME`. Paths are relative to the repo root.
   extern_g  MASPSX_EXTERN_G default (externs of <= N bytes are $gp-relative)
   bss_lo    lowest address C .bss may be placed at (symbol name or int); bss_hi upper bound
   lib_start functions at/above this address are PsyQ library code (not queued)
+  game_start functions below this address are not queued either (NFMV: crt0 + __main stub)
 """
 import os
 
@@ -69,6 +70,27 @@ TARGETS = {
     # neither config includes the other's (their func_ names do not collide)
     "cred": _overlay("cred", "CRED.BIN", "ea5a8e516f3642789131882aa5a2d17edd09ad4d", 0x1E0000, 0x1F3878),
     "iview": _overlay("iview", "IVIEW.BIN", "8ef018b016a0fd9679c87659ef16433fac2d26da", 0x1E0000, 0x1E42E0),
+    # NFMV.EXE: the FMV player, its own PS-X EXE (main Exec()s it) - own PsyQ libs, own gp
+    # 0x80126748, never linked against main. Its game code uses $gp (sdata at gp+0..0x20,
+    # sbss above): -G8 / extern 4 like main. Game code = main 0x80100B14 .. 0x80101FA8.
+    "nfmv": dict(
+        name="nfmv", orig="orig/NFMV.EXE", sha1="45592283155ef3bcf04d64d68aa5b54d7dc87834",
+        vram=0x80100000, fileoff=0x800, ldscript="nfmv.ld",
+        asmfiles={"asm/nfmv/nfmv.s": "build/nfmv/asm/nfmv/nfmv.o",
+                  "asm/nfmv/data/nfmv_rodata.rodata.s": "build/nfmv/asm/nfmv/data/nfmv_rodata.rodata.o",
+                  "asm/nfmv/data/nfmv_data.data.s": "build/nfmv/asm/nfmv/data/nfmv_data.data.o",
+                  "asm/nfmv/data/nfmv_tail.data.s": "build/nfmv/asm/nfmv/data/nfmv_tail.data.o",
+                  "asm/nfmv/data/nfmv_bss.bss.s": "build/nfmv/asm/nfmv/data/nfmv_bss.bss.o",
+                  "asm/nfmv/header.s": "build/nfmv/asm/nfmv/header.o"},
+        text_asm="asm/nfmv/nfmv.s",
+        undef=["undefined_syms_auto.nfmv.txt", "undefined_funcs_auto.nfmv.txt"],
+        fn="asm_fn/nonmatchings/nfmv", src="src/pilot/nfmv",
+        queue="pilot/queue-nfmv.tsv", linkcheck="pilot/linkcheck-nfmv.tsv",
+        G="8", extern_g="4",
+        # crt0 clears bss from 0x80126768 (the file's zero tail, split as data) to 0x8012FFB0
+        bss_lo=0x80126768, bss_hi=0x8012FFB0, lib_start=0x80101FA8, game_start=0x80100B14,
+        make="build/NFMV.EXE",
+    ),
 }
 NAMES = list(TARGETS)
 
@@ -85,7 +107,9 @@ def path(t, key):
 
 def of_symbol(sym, default="main"):
     """The target whose per-function asm has SYM.s (names are address-based, unique
-    across main and the overlays; CRED/IVIEW checked to be disjoint); `default` if none has it."""
+    across main and the overlays; CRED/IVIEW checked to be disjoint); `default` if none has it.
+    NFMV shares real names with main (main, __main, its PsyQ libs): pass --target nfmv
+    (fnscore also infers it from a C file under src/pilot/nfmv/)."""
     for n, t in TARGETS.items():
         if os.path.exists(os.path.join(ROOT, t["fn"], sym + ".s")):
             return n

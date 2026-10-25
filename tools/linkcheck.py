@@ -206,7 +206,7 @@ def prepare(jobs):
         files[src] = (secname, blocks)
         for b in blocks:
             b.header = header
-            if src == "asm/header.s" or len(blocks) == 1 and b.name == "all":
+            if os.path.basename(src) == "header.s" or len(blocks) == 1 and b.name == "all":
                 write_if_changed(b.s, "\n".join(b.lines) + "\n")
             else:
                 write_if_changed(b.s, header + "\n".join(b.lines) + "\n")

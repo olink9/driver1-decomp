@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Compile one candidate C file and score one function against the original.
 
-    tools/fnscore.py SYMBOL FILE.c [--target main|frontend|mcard|cred|iview] [--cc 2.7.2] [--opt -O2] [-G 8] [--aspsx 2.79] [--asm]
+    tools/fnscore.py SYMBOL FILE.c [--target main|frontend|mcard|cred|iview|nfmv] [--cc 2.7.2] [--opt -O2] [-G 8] [--aspsx 2.79] [--asm]
 
 Prints `MATCH <percent>`; 100.0 only when objdiff marks no instruction as
 different (never rounded). The target is the function's split asm
@@ -13,8 +13,8 @@ original's D_/jtbl_ label counts as equal when the bytes at the original
 address match (jump tables: same entry count). --asm prints both listings.
 --target picks the binary (tools/targets.py): its asm_fn/nonmatchings/<target>/ dir,
 original file, address -> file offset mapping and -G / MASPSX_EXTERN_G defaults (main
--G8 / 4, the overlays -G0 / 0). Without it, the target whose asm dir has SYMBOL.s
-(main first).
+-G8 / 4, the overlays -G0 / 0, NFMV.EXE -G8 / 4). Without it, the directory of FILE.c when
+it is src/pilot/<target>/, else the target whose asm dir has SYMBOL.s (main first).
 Run inside distrobox `build`.
 """
 import argparse, json, os, re, struct, subprocess, sys, tempfile
@@ -230,6 +230,10 @@ def main():
     ap.add_argument("--diff", action="store_true", help="print only the rows that differ")
     ap.add_argument("--quiet", action="store_true", help="print only the MATCH line")
     a = ap.parse_args()
+    if a.target is None:                     # a C file under src/pilot/<target>/ names its target
+        d = os.path.basename(os.path.dirname(os.path.abspath(a.file)))
+        if d in targets.NAMES and d != "main" and os.path.exists(os.path.join(targets.path(targets.get(d), "fn"), a.symbol + ".s")):
+            a.target = d
     a.target = a.target or targets.of_symbol(a.symbol)
     set_target(a.target)
     if a.G is None:
