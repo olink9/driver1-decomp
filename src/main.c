@@ -10,6 +10,7 @@
  *  - D_000967BF: unsigned char. D_00097124: unsigned short (func_000230B0 loads it).
  *  - D_00096E7C: H8; D_00096AA8/AA9, tracking_car: B8 (8 bytes, absolute like long long).
  *  - D_000C6F04: structs.h MISSION (was S6F04: f84 -> &cur); func_0002360C passes &D_000C6F04.
+ *  - D_000BE9E0: structs.h PERCENTAGE_BAR (was SE9E0: f4/f6/f18 -> xpos/ypos/active).
  *  - VSync, func_00079AF0: int ().
  *  - Step 3: CAR_DATA and VECTOR come from include/structs.h (CAR.speed at 0xC = where.m[1][1], f17C =
  *    totalDamage, V16 pos = VECTOR pos, D_000A1AF0 is a VECTOR); CARI stays as func_00022168's int view.
@@ -21,13 +22,6 @@
 /* ---- types ---- */
 typedef struct { int a[99]; } CARI;
 typedef struct { int v[8]; } CL;
-typedef struct {
-    int f0;
-    short f4;
-    short f6;
-    char pad8[0x10];
-    int f18;
-} SE9E0;
 typedef struct { signed char a; unsigned char b; } PADV;
 typedef struct { unsigned short v; char pad[6]; } H8;
 typedef struct { int w[4]; } Q16;
@@ -163,7 +157,7 @@ extern char D_000101E4[];
 extern char D_0008B1A4[];
 extern char D_00096918[];
 extern MISSION D_000C6F04;
-extern SE9E0 D_000BE9E0;
+extern PERCENTAGE_BAR D_000BE9E0;
 extern int D_00086F00[];
 extern int D_0008A1DC[];
 extern void func_00058814();
@@ -775,9 +769,9 @@ void func_00022818(void)
         func_00059698();
 
     func_00056B5C(&D_000BE9E0, *(int *)&D_00096E7C, D_0008B1A4, D_00096918);
-    D_000BE9E0.f4 = 16;
-    D_000BE9E0.f6 = 24;
-    D_000BE9E0.f18 = 1;
+    D_000BE9E0.xpos = 16;
+    D_000BE9E0.ypos = 24;
+    D_000BE9E0.active = 1;
 
     if (D_00096834 == 4)
         *(int *)&D_000971B4 = 0x400;
