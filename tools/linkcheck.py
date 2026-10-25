@@ -58,7 +58,9 @@ How it works (all output under build/linkcheck/, nothing else is written):
 Translation units (real multi-function files, src/<file>.c, made by tools/mktu.py):
     tools/linkcheck.py --tu src/spool.c [...]          # check these TUs only
     tools/linkcheck.py --all --tu src/spool.c          # plus every pilot function outside them
-    tools/linkcheck.py --link build/slus_008.42.elf --tu src/*.c   # what `make` runs
+    tools/linkcheck.py --link build/slus_008.42.elf --tu src/*.c src/*.s   # what `make` runs
+  * A .s TU is an original assembler module (the HANDWRITTEN ASM runs): assembled as it is
+    (mips-linux-gnu-as, macro.inc via .include), then mapped and checked exactly like a C TU.
   * A TU object's .text symbols (functions, static ones included, in .text order) must
     be the names of consecutive asm blocks, each at the same offset from the first as in
     the original: the TU replaces that whole block range (a "span"), so a mismatch names
@@ -874,6 +876,8 @@ def main():
     tus = []                                                    # (name, path, source)
     for p in a.tu:
         try:
+            if not p.endswith((".c", ".s")):
+                sys.exit(f"--tu {p}: a TU is a .c file or an original assembler module (.s)")
             tus.append((os.path.basename(p)[:-2], os.path.abspath(p), open(p).read()))
         except OSError as e:
             sys.exit(f"--tu {p}: {e}")
@@ -917,9 +921,16 @@ def main():
     def prep_tu(t):
         """(object, data pieces, pad, span) for TU t = (name, path, source)."""
         name, path, src = t
-        cpath = os.path.join(srcdir, "tu", name + ".c")         # compile the snapshot
+        ext = os.path.splitext(path)[1]                         # .c, or .s: an original asm module
+        cpath = os.path.join(srcdir, "tu", name + ext)          # compile the snapshot
         write_if_changed(cpath, src)
-        o, err = compile_one(name, cpath, os.path.join(LC, "obj", "tu", name + ".o"))
+        if ext == ".s":
+            o = os.path.join(LC, "obj", "tu", name + ".o")
+            os.makedirs(os.path.dirname(o), exist_ok=True)
+            r = subprocess.run(AS + ["-o", o, cpath], cwd=ROOT, capture_output=True, text=True)
+            err = r.returncode and ("as: " + r.stderr)
+        else:
+            o, err = compile_one(name, cpath, os.path.join(LC, "obj", "tu", name + ".o"))
         if err:
             raise LinkErr("compile error: " + " ".join(err.split())[:300])
         span, n = tu_span(o, textblocks)

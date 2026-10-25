@@ -25,7 +25,8 @@ O_FILES  := $(S_FILES:%.s=$(BUILD)/%.o)
 # range, places its .rodata/.sdata/.sbss at the original addresses and links the rest from
 # the same asm. The sha1 check below stays the arbiter.
 # only committed TUs: agents keep work-in-progress files in src/ while they merge
-TU_FILES := $(shell git ls-files ':(glob)src/*.c' 2>/dev/null)
+# original assembler modules (the HANDWRITTEN ASM runs) are TUs too: src/*.s, assembled as they are
+TU_FILES := $(shell git ls-files ':(glob)src/*.c' ':(glob)src/*.s' 2>/dev/null)
 
 all: $(BUILD)/SLUS_008.42
 	@sha1sum -c $(BASENAME).sha1

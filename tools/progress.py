@@ -5,6 +5,7 @@ pilot/queue-<t>.tsv, pilot/linkcheck-<t>.tsv, src/pilot/<t>/ for an overlay).
 
 A function counts as matched when
   * it is defined in a committed translation unit (main: src/*.c, overlay: src/<t>/*.c;
+    or an original assembler module src[/<t>]/*.s, one function per `glabel`;
     `git ls-files`, so untracked drafts don't count) - `make` links those and checks the
     sha1, and linkcheck --tu proves each one byte-identical. A TU row marked `fail` in the
     linkcheck TSV removes that TU's functions again. Functions a TU still pulls in with
@@ -27,9 +28,10 @@ import targets  # noqa: E402
 
 def tu_files(T):
     """Committed TUs of target T: main src/*.c, overlay src/<t>/*.c."""
-    pat = ":(glob)src/*.c" if T["name"] == "main" else f":(glob)src/{T['name']}/*.c"
+    d = "src" if T["name"] == "main" else f"src/{T['name']}"
+    pats = [f":(glob){d}/*.c", f":(glob){d}/*.s"]          # .s: original assembler modules
     try:
-        out = subprocess.run(["git", "ls-files", pat], cwd=ROOT, capture_output=True, text=True, check=True).stdout
+        out = subprocess.run(["git", "ls-files"] + pats, cwd=ROOT, capture_output=True, text=True, check=True).stdout
     except (OSError, subprocess.CalledProcessError):
         return []
     return [os.path.join(ROOT, l) for l in out.split()]
@@ -46,6 +48,16 @@ def tu_functions(path):
     """[(name, text)] for every top-level function definition of a TU, in file order
     (text = the function's section, see the module doc), and the INCLUDE_ASM names."""
     src = open(path, encoding="utf-8", errors="replace").read()
+    if path.endswith(".s"):                    # an assembler module: every `glabel fn` is a function
+        heads = [(m.start(), m.group(1)) for m in re.finditer(r"(?m)^/\* -{8,} (\w+) \(", src)]
+        out = []
+        for name in re.findall(r"(?m)^glabel\s+(\w+)", src):
+            h = next((k for k, (a, n) in enumerate(heads) if n == name), None)
+            if h is None:
+                out.append((name, ""))
+                continue
+            out.append((name, src[heads[h][0]:heads[h + 1][0] if h + 1 < len(heads) else len(src)]))
+        return out, []
     code = _blank(src)
     ansi = re.compile(r"(\w+)\s*\((?:[^()]|\([^()]*\))*\)\s*$")
     knr = re.compile(r"(\w+)\s*\([\w\s,]*\)\s*(?:[^;{}()=]*;\s*)+$")   # f(a, b) int a; char *b;
