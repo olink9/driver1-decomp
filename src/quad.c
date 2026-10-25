@@ -8,7 +8,9 @@
  * func_0002C29C kept its own shape as POLYFT4SRC_f2C29C/PFT4_f2C29C until Step 3.
  * Step 3: DB and SVECTOR come from include/structs.h; the two views are gone (func_0002C29C reads the uv pairs as
  * `*(unsigned short *)&src->uv[k]` and stores through &prims->xyK) - same bytes. POLYFT4SRC/PFT4/UVS/P_TAG stay local.
+ * Step 4: owns .data 0x890DC-0x89117 (D_000890DC + 7 unreferenced words up to spool.c's 0x89118); no small data.
  */
+/* maspsx: abs=current */
 
 #include "structs.h"
 
@@ -36,10 +38,13 @@ typedef struct {
 } PFT4;
 typedef struct { unsigned addr:24; unsigned len:8; } P_TAG;
 
+/* ---- the file's own data (Step 4): .data 0x890DC-0x89117 ---- */
+int D_000890DC[8] = { 0, 3, 4, 5, 4, 5, 1, 2 };
+int D_000890FC[7] = { 0x630716, 0x21230F, 0x10, 8, 0x2C, 0x1E00000, 0x10010 };   /* unreferenced */
+
 /* ---- externs ---- */
 extern unsigned short texture_cluts[][32];
 extern unsigned short texture_pages[];
-extern int D_000890DC[];
 
 /* ---- functions defined in this file ---- */
 void func_0002BDB0();
@@ -47,7 +52,7 @@ void func_0002C29C();
 
 /* ---------------- func_0002BDB0 (src/pilot/func_0002BDB0.c) ---------------- */
 /* textured quad (POLY_FT4) split into two halves with midpoint vertices */
-extern long long current;
+extern int current;
 #define current (*(DB **)&current)
 #define gte_ldv3c(r0) __asm__ volatile ( \
     "lwc2  $0, 0( %0 );" "lwc2  $1, 4( %0 );" "lwc2  $2, 8( %0 );" \
@@ -143,7 +148,7 @@ void func_0002BDB0(POLYFT4SRC *src, short *verts)
 
 /* ---------------- func_0002C29C (src/pilot/func_0002C29C.c) ---------------- */
 /* semi-transparent textured quad (POLY_FT4) from 4 model vertices */
-extern long long current;
+extern int current;
 #define current (*(DB **)&current)
 #define gte_ldv3(r0, r1, r2) __asm__ volatile ( \
     "lwc2  $0, 0( %0 );" "lwc2  $1, 4( %0 );" "lwc2  $2, 0( %1 );" \
