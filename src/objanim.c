@@ -9,7 +9,15 @@
  *   modelpointers M *[] (the int[] users only pass the entry on)
  *   D_000BE744   int [3]
  * Step 3: CAR_DATA comes from include/structs.h (the anonymous scalar car_data.x/z view = car_data[0].pos).
+ * Step 4: the file defines its data in address order, each section one block: .data 0x8ABAC-0x8B080 (the animated-
+ *   object tables, D_0008AE3C/5C/7C, and the 25 smashable objects D_0008AE8C - bcollide.c and texture.c read them),
+ *   .sdata 0x96D18, .sbss 0x975AC; its .rodata jump tables (0x10C18) were already its own. The names the tables
+ *   point at are this file's too (.sdata 0x96CE4-0x96D17, .rodata 0x10A40-0x10C17, in front of the jump tables;
+ *   "TLIGHT01".. are shared between tables, so one object) but stay asm labels: linkcheck pairs .sdata/.rodata
+ *   through code relocations only. D_0008ABAC (used only by overmap.c) is placed here: it sits between system.c's
+ *   .data and these tables. abs= replaces the old `extern long long` spellings; .bss stays extern (.comm).
  */
+/* maspsx: abs=D_00096834,D_00097050,D_00097054,gLightsOn,D_00097704,D_00097708,D_00096808,D_00096878,CameraCnt,D_00097128 */
 
 #include "structs.h"
 
@@ -53,25 +61,97 @@ typedef struct {
     unsigned char *p;
 } HDR;
 
+/* ---- objanim.c's own data (Step 4), in address order ---- */
+/* .data 0x8ABAC-0x8B080. The name pointers point at strings that stay asm: the .sdata ones (D_00096CE4..D_00096D0C)
+ * and .rodata 0x10A40-0x10C17 (D_00010A40 + offset) - linkcheck pairs .sdata/.rodata through code relocations only. */
+extern char D_00010A40[];
+extern char D_00096CE4[], D_00096CEC[], D_00096CF4[], D_00096CFC[], D_00096D04[], D_00096D0C[];
+/* used only by overmap.c (0x100 bytes between system.c's and this file's tables; owner unproven) */
+int D_0008ABAC[64] = {
+    0x1E, 0x3E, 0x1B, 3, -1, -1, -1, -1, 0x1B, 6, 0x1B, 0x43, -1, -1, -1, -1,
+    -1, 3, 4, 3, -1, -1, -1, -1, 2, 3, 4, 5, -1, -1, -1, -1,
+    -1, -1, -1, -1, -1, -1, -1, -1, 0x18, 0x3E, 0x1B, 4, -1, -1, -1, -1,
+    0xB, 3, 4, 3, -1, -1, -1, -1, 5, 2, 3, 2, -1, -1, -1, -1
+};
+/* animated-object tables per level: { index, 0, name, flag } (AO) */
+AO D_0008ACAC[7] = {
+    { 0, 0, (int)(D_00010A40 + 0xC), 0 }, { 1, 0, (int)D_00010A40, 0 },
+    { 2, 0, (int)D_00096D04, 0 }, { 3, 0, (int)D_00096CFC, 1 },
+    { 4, 0, (int)D_00096CF4, 1 }, { 5, 0, (int)D_00096CEC, 0 },
+    { 6, 0, (int)D_00096CE4, 0 }
+};
+AO D_0008AD1C[6] = {
+    { 0, 0, (int)(D_00010A40 + 0x48), 0 }, { 1, 0, (int)(D_00010A40 + 0xC), 0 },
+    { 2, 0, (int)(D_00010A40 + 0x3C), 1 }, { 3, 0, (int)(D_00010A40 + 0x30), 1 },
+    { 4, 0, (int)(D_00010A40 + 0x24), 0 }, { 5, 0, (int)(D_00010A40 + 0x18), 0 }
+};
+AO D_0008AD7C[5] = {
+    { 0, 0, (int)(D_00010A40 + 0x48), 0 }, { 1, 0, (int)(D_00010A40 + 0xC), 0 },
+    { 2, 0, (int)(D_00010A40 + 0x3C), 1 }, { 3, 0, (int)(D_00010A40 + 0x30), 1 },
+    { 4, 0, (int)(D_00010A40 + 0x18), 0 }
+};
+AO D_0008ADCC[7] = {
+    { 0, 0, (int)(D_00010A40 + 0x48), 0 }, { 1, 0, (int)(D_00010A40 + 0xC), 0 },
+    { 2, 0, (int)(D_00010A40 + 0x3C), 1 }, { 3, 0, (int)(D_00010A40 + 0x30), 1 },
+    { 4, 0, (int)(D_00010A40 + 0x18), 0 }, { 5, 0, (int)D_00096D0C, 0 },
+    { 6, 0, (int)(D_00010A40 + 0x54), 0 }
+};
+AO *D_0008AE3C[8] = { D_0008ACAC, D_0008AD1C, 0, D_0008AD7C, 0, D_0008ADCC, 0, 0 };
+int D_0008AE5C[8] = { 7, 6, 0, 4, 0, 6, 0, 0 };
+/* 16 bytes: a V3 and an unreferenced word (a separate 4-byte variable would go to .sdata) */
+struct { int x, y, z, pad; } D_0008AE7C[1] = { { 0x1A5E0, 0, -0x5FC3A, 0 } };
+/* the smashable objects { model, name, sound, volume, pitch } (D2 SMASHABLE_OBJECT, 25 of them); D_0008AEB4
+ * (= entry 2, bcollide.c) is reached by name: PROVIDEd by the link */
+int D_0008AE8C[25][5] = {
+    { 0, (int)(D_00010A40 + 0x1CC), 0xB, 0, 0x320 },
+    { 0, (int)(D_00010A40 + 0x1C0), 0xA, 0xFA0, 0x1000 },
+    { 0, (int)(D_00010A40 + 0x1B0), 0xB, 0, 0x320 },
+    { 0, (int)(D_00010A40 + 0x1A0), 0xB, 0, 0x320 },
+    { 0, (int)(D_00010A40 + 0x194), 0xD, -0x1964, 0xC80 },
+    { 0, (int)(D_00010A40 + 0x184), 0xD, -0x1964, 0xC80 },
+    { 0, (int)(D_00010A40 + 0x174), 0xC, -0xCE4, 0x960 },
+    { 0, (int)(D_00010A40 + 0x164), 0xD, -0x1964, 0xC80 },
+    { 0, (int)(D_00010A40 + 0x154), 0xD, -0x1964, 0xC80 },
+    { 0, (int)(D_00010A40 + 0x144), 0xD, -0x1964, 0xC80 },
+    { 0, (int)(D_00010A40 + 0x130), 0xD, -0x1964, 0xC80 },
+    { 0, (int)(D_00010A40 + 0x120), 0xC, -0xCE4, 0x960 },
+    { 0, (int)(D_00010A40 + 0x110), 0xC, -0xCE4, 0x960 },
+    { 0, (int)(D_00010A40 + 0x100), 0xD, -0x1964, 0xC80 },
+    { 0, (int)(D_00010A40 + 0xF4), 0xD, -0x1964, 0xC80 },
+    { 0, (int)(D_00010A40 + 0xE4), 0xC, -0x1D4C, 0x2328 },
+    { 0, (int)(D_00010A40 + 0xD4), 0xD, -0x1964, 0xC80 },
+    { 0, (int)(D_00010A40 + 0xC4), 0xB, 0, 0x320 },
+    { 0, (int)(D_00010A40 + 0xB4), 0xB, 0, 0x320 },
+    { 0, (int)(D_00010A40 + 0xA4), 0xB, 0, 0x320 },
+    { 0, (int)(D_00010A40 + 0x94), 0xB, 0, 0x320 },
+    { 0, (int)(D_00010A40 + 0x84), 0xB, 0, 0x320 },
+    { 0, (int)(D_00010A40 + 0x74), 0xB, 0, 0x320 },
+    { 0, (int)(D_00010A40 + 0x64), 0xB, 0, 0x320 },
+    { 0, 0, 0, 0, 0 }
+};
+
+/* .sdata 0x96D18 (the strings before it, 0x96CE4-0x96D17, are the names the tables above point at) */
+int D_00096D18 = 0;
+
+/* .sbss 0x975AC (also reached through $gp by texture.c) */
+int D_000975AC;
+
 /* ---- externs ---- */
 extern M *modelpointers[];
-extern AO *D_0008AE3C[];
-extern long long D_00096834;
-extern int D_000975AC;
-extern long long D_00097050;
-extern long long D_00097054;
-extern long long gLightsOn;
+extern int D_00096834;
+extern int D_00097050;
+extern int D_00097054;
+extern int gLightsOn;
 extern void func_0004343C();
 extern void func_00042EBC();
 extern void func_00042C8C();
 extern void func_0004A718();
 extern void func_0004A83C();
-extern long long D_00097704;
-extern long long D_00097708;
-extern V3 D_0008AE7C[];
+extern int D_00097704;
+extern int D_00097708;
 extern GARAGE_DOOR D_000BE754;
-extern long long D_00096808;
-extern long long D_00096878;
+extern int D_00096808;
+extern int D_00096878;
 extern CAR_DATA car_data[];
 extern int camera_position[];
 extern char inv_camera_matrix[];
@@ -82,11 +162,9 @@ extern void func_0004E948();
 extern void MulMatrix0();
 extern void func_0002DCAC();
 extern int D_000BE744[3];
-extern int D_00096D18;
-extern long long CameraCnt;
-extern int D_0008AE5C[];
+extern int CameraCnt;
 extern int D_00089F1C[];
-extern long long D_00097128;
+extern int D_00097128;
 
 /* ---- functions defined in this file ---- */
 void DrawAnimatingObject();
