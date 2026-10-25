@@ -17,8 +17,14 @@ MASPSX   := MASPSX_EXTERN_G=4 $(PYTHON) tools/maspsx/maspsx.py --aspsx-version=2
 
 OVERLAYS := frontend mcard cred iview
 S_FILES  := $(shell find asm -name '*.s' -not -path 'asm/nonmatchings/*' $(foreach o,$(OVERLAYS) nfmv,-not -path 'asm/$(o)/*'))
-C_FILES  := $(shell find src -name '*.c' -not -path 'src/pilot/*' 2>/dev/null)   # pilot files are standalone, not linked yet
-O_FILES  := $(S_FILES:%.s=$(BUILD)/%.o) $(C_FILES:%.c=$(BUILD)/%.o)
+O_FILES  := $(S_FILES:%.s=$(BUILD)/%.o)
+# Real translation units (src/<file>.c, made with tools/mktu.py; src/pilot/ is per-function
+# and not linked here). While there are none, main links straight from the split asm.
+# Each one replaces the asm of the functions it defines: tools/linkcheck.py --link compiles it
+# (the same cpp/cc1/maspsx/as pipeline as every pilot check), maps its .text onto that block
+# range, places its .rodata/.sdata/.sbss at the original addresses and links the rest from
+# the same asm. The sha1 check below stays the arbiter.
+TU_FILES := $(wildcard src/*.c)
 
 all: $(BUILD)/SLUS_008.42
 	@sha1sum -c $(BASENAME).sha1
@@ -79,8 +85,13 @@ $(BUILD)/%.o: %.c
 	@mkdir -p $(dir $@)
 	$(CPP) $(CPPFLAGS) $< | $(CC1) $(CFLAGS) | $(MASPSX) | $(AS) $(ASFLAGS) -o $@
 
+ifeq ($(strip $(TU_FILES)),)
 $(BUILD)/$(BASENAME).elf: $(O_FILES) $(BASENAME).ld
 	$(LD) -EL -T undefined_syms_auto.txt -T undefined_syms_manual.txt -T undefined_funcs_auto.txt -T $(BASENAME).ld -Map $(BUILD)/$(BASENAME).map --no-check-sections -o $@
+else
+$(BUILD)/$(BASENAME).elf: $(O_FILES) $(BASENAME).ld $(TU_FILES) $(shell find include -name '*.h') tools/linkcheck.py tools/fnscore.py
+	$(PYTHON) tools/linkcheck.py -j 2 --workdir $(BUILD)/tulink --link $@ --tu $(TU_FILES)
+endif
 
 $(BUILD)/SLUS_008.42: $(BUILD)/$(BASENAME).elf
 	$(OBJCOPY) -O binary $< $@
