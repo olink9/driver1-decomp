@@ -9,9 +9,14 @@
  * POLYFT3/PGT3_wjmDraw3, PFT3_3837C, PGT4_3811C, POLYFT4SRC/PFT4_3881C, POLYFT3/PGT3_38DA4,
  * PGT4/POLYFT4_390C8.
  * `current` stays `extern long long` with a per-section #define (DB * view), as in the pilots.
+ * Step 3 (include/structs.h): DB comes from the header - the only shared record this file touches. The renamed
+ * NAME_<func> shapes above are KEPT: they are libgpu POLY_* primitives and model polygon records, which structs.h
+ * does not carry (no PsyQ types; frontend.h has a libgpu subset for the overlay only). Unifying them is a job for a
+ * main-exe libgpu/polygon header.
  */
+#include "structs.h"
+
 /* ---- types ---- */
-typedef struct { char *primptr; unsigned int *ot; } DB;
 typedef struct { unsigned addr:24; unsigned len:8; } P_TAG;
 typedef struct {
     unsigned char id, a, b, c;
