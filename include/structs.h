@@ -40,7 +40,8 @@ typedef struct { short x, y; } SXY;
 typedef struct {
     unsigned char susCompression;
     unsigned char locked;
-    unsigned char pad[2];
+    unsigned char onGrass;          /* handling.c StepOneCar */
+    unsigned char pad;
 } WHEEL;
 typedef struct {
     unsigned char id;               /* 0x000 slot/control id (objcoll: controlType; gamesnd: type) */
