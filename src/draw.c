@@ -17,52 +17,28 @@
  *  - #include "common.h" dropped (DrawMapPSX, func_0002D7C4): its libgte RotMatrix/MulMatrix0 prototypes and
  *    VECTOR/MATRIX/P_TAG clash with the file-local, unprototyped ones the pilots used.
  *  - DrawMapPSX's __asm__ alias externs (its FAKEMATCH, below) stay with it.
+ * Step 3 (include/structs.h): VECTOR/SVECTOR/VECTOR_NOPAD/MATRIX, MODEL, CELL_OBJECT and DB come from the header
+ *    (MODEL's int vertices/poly_block are cast at the use). Views gone: CELL_OBJECT_DrawMapPSX (vx/vy/vz ->
+ *    pos.vx/.., computed = the header's 0xC field), MODEL_DrawMapPSX (f10/f14/fE -> vertices/poly_block/num_polys),
+ *    OBJ (unused), MAT, SVEC, struct M (D_000A668C is MATRIX2), PF4_f2F444 (x3 -> xy3). The local UV union is UVW
+ *    (structs.h owns UV). Left local: MATRIX2, CELL_DATA, B8 and the libgpu shapes (P_TAG, DVECTOR, PF3/PF4/PFT3/
+ *    PFT4) - structs.h pulls in no PsyQ types.
  */
 #include "gte.h"
+#include "structs.h"
 
 /* ---- types ---- */
-typedef struct { short vx, vy, vz, pad; } SVECTOR;
-typedef struct { int vx, vy, vz, pad; } VECTOR;
-typedef struct { int vx, vy, vz; } VECTOR_NOPAD;
-typedef struct { short m[3][3]; int t[3]; } MATRIX;
 typedef struct { short m[3][3]; short computed; int t[3]; } MATRIX2;
 typedef struct { unsigned addr:24; unsigned len:8; } P_TAG;
-typedef struct {
-    unsigned short shape_flags;         /* 0x00 */
-    unsigned short flags2;              /* 0x02 */
-    short instance_number;              /* 0x04 */
-    unsigned char tri_verts, zBias;     /* 0x06 */
-    short bounding_sphere;              /* 0x08 */
-    unsigned short num_point_normals;   /* 0x0A */
-    unsigned short num_vertices;        /* 0x0C */
-    unsigned short num_polys;           /* 0x0E */
-    SVECTOR *vertices;                  /* 0x10 */
-    unsigned char *poly_block;          /* 0x14 */
-} MODEL;
-typedef struct {
-    VECTOR_NOPAD pos;                   /* 0x00 */
-    unsigned char pad;                  /* 0x0C */
-    unsigned char yang;                 /* 0x0D */
-    unsigned short type;                /* 0x0E */
-} CELL_OBJECT;
 
 typedef struct {
     unsigned short num;
     unsigned short next;
 } CELL_DATA;
-typedef struct { char *primptr; unsigned int *ot; } DB;
-typedef struct { short m[3][3]; int t[3]; } MAT;
-typedef struct { short vx, vy, vz, pad; } SVEC;
-struct M { short m[3][3]; short pad; int t[3]; };
 typedef void (*POLYFUNC)(int);
 typedef struct { unsigned char v; char pad[7]; } B8;
-typedef struct {
-    char pad0[0xD];
-    unsigned char flags;          /* 0x0D */
-    unsigned short model;         /* 0x0E */
-} OBJ;
 typedef struct { short vx, vy; } __attribute__((aligned(4))) DVECTOR;
-typedef union { struct { unsigned char u, v; } b; unsigned short w; } UV;
+typedef union { struct { unsigned char u, v; } b; unsigned short w; } UVW;
 typedef struct { int u, v; } UVBASE;
 typedef struct {
     unsigned int tag;
@@ -85,33 +61,6 @@ typedef struct {
     DVECTOR xy0; unsigned int uv0clut; DVECTOR xy1; unsigned int uv1tpage; DVECTOR xy2; unsigned int uv2; DVECTOR xy3; unsigned int uv3;
 } PFT4;
 
-
-/* ---- per-function views: the shape each function used (see the head comment) ---- */
-typedef struct {
-    int vx, vy, vz;
-    unsigned char computed;
-    unsigned char yang;
-    unsigned short type;
-} CELL_OBJECT_DrawMapPSX;
-typedef struct {
-    unsigned short shape_flags;
-    unsigned short flags2;
-    int f4;
-    short bounding_sphere;
-    short fA;
-    short fC;
-    unsigned short fE;
-    int f10;
-    int f14;
-} MODEL_DrawMapPSX;
-typedef struct {
-    unsigned int tag;
-    unsigned char r0, g0, b0, code;
-    short x0, y0;
-    short x1, y1;
-    short x2, y2;
-    short x3, y3;
-} PF4_f2F444;
 /* ---- externs ---- */
 extern long long D_00096804;
 extern long long D_00097534;
@@ -180,10 +129,10 @@ extern int D_000C6F04[];
 extern void func_00039D94();
 extern void func_0003A270();
 extern short rcossin_tbl[];
-extern SVEC D_00096C48;
+extern SVECTOR D_00096C48;
 extern MATRIX D_000A5E1C;
 extern int rcos(int);
-extern struct M D_000A668C[];
+extern MATRIX2 D_000A668C[];
 extern void RotMatrix();
 extern void InvertMatrix();
 extern POLYFUNC D_00089FFC[];
@@ -277,8 +226,8 @@ void DrawMapPSX(void)
     int tiles;
     int nbuild;
     int boff;
-    CELL_OBJECT_DrawMapPSX **blist;
-    CELL_OBJECT_DrawMapPSX **slist;
+    CELL_OBJECT **blist;
+    CELL_OBJECT **slist;
     int rightcos, rightsin, leftcos, leftsin, backcos, backsin;
     int rightPlane, leftPlane, backPlane;
     int cr, cl, cb;
@@ -288,17 +237,17 @@ void DrawMapPSX(void)
     int modx;
     int nanim;
     int nspr;
-    CELL_OBJECT_DrawMapPSX **ap;
-    CELL_OBJECT_DrawMapPSX *cop;
-    MODEL_DrawMapPSX *model;
+    CELL_OBJECT **ap;
+    CELL_OBJECT *cop;
+    MODEL *model;
     int flags;
     int i;
     unsigned int idx;
     int *p;
     int *q;
 
-    blist = (CELL_OBJECT_DrawMapPSX **)0x1F800170;
-    slist = (CELL_OBJECT_DrawMapPSX **)0x1F800200;
+    blist = (CELL_OBJECT **)0x1F800170;
+    slist = (CELL_OBJECT **)0x1F800200;
 
     rightcos = *(short *)((int)D_0008EAAA + ((*(short *)&D_00096C4A - D_000971B4 / 2) & 0xfff) * 4);
     rightsin = *(short *)((int)D_0008EAAA + ((*(short *)&D_00096C4A - D_000971B4 / 2) & 0xfff) * 4 - 2);
@@ -360,14 +309,14 @@ void DrawMapPSX(void)
                 rsel = (rx_ & 1) + ((rz_ & 1) << 1);
                 idx = (*(unsigned short **)&D_000970E0)[rsel * rsq + modx + modz * region];
                 if (idx != 0xFFFF) {
-                    ap = (CELL_OBJECT_DrawMapPSX **)(nanim * 4 + (int)((CELL_OBJECT_DrawMapPSX **)D_000A663C));
+                    ap = (CELL_OBJECT **)(nanim * 4 + (int)((CELL_OBJECT **)D_000A663C));
                     do {
                         cd = &(*(CELL_DATA **)&D_000970D4)[idx];
-                        cop = &(*(CELL_OBJECT_DrawMapPSX **)&D_00097108)[cd->num];
+                        cop = &(*(CELL_OBJECT **)&D_00097108)[cd->num];
                         if (cop->computed != frame) {
-                            model = ((MODEL_DrawMapPSX **)modelpointers)[cop->type];
+                            model = ((MODEL **)modelpointers)[cop->type];
                             flags = model->shape_flags;
-                            if (cop->vx != 0xFD46FEC0 && !(flags & 0x10) &&
+                            if (cop->pos.vx != 0xFD46FEC0 && !(flags & 0x10) &&
                                 func_0002C5F0(cop, model->bounding_sphere) != -1) {
                                 if (flags & 0x4000) {
                                     current->primptr = (char *)func_0002C6DC(model, current->primptr, current->ot, cop->yang);
@@ -376,26 +325,26 @@ void DrawMapPSX(void)
                                         !(cop->yang & 0x20) && z < 10000) {
                                         gte_SetRotMatrix(&inv_camera_matrix);
                                         if (z < 2000) {
-                                            func_0002BDB0(((MODEL_DrawMapPSX **)modelpointers)[cop->type]->f14, ((MODEL_DrawMapPSX **)modelpointers)[cop->type]->f10);
-                                            if (model->fE == 2)
-                                                func_0002BDB0(((MODEL_DrawMapPSX **)modelpointers)[cop->type]->f14 + 0x14, ((MODEL_DrawMapPSX **)modelpointers)[cop->type]->f10);
+                                            func_0002BDB0(((MODEL **)modelpointers)[cop->type]->poly_block, ((MODEL **)modelpointers)[cop->type]->vertices);
+                                            if (model->num_polys == 2)
+                                                func_0002BDB0(((MODEL **)modelpointers)[cop->type]->poly_block + 0x14, ((MODEL **)modelpointers)[cop->type]->vertices);
                                         } else {
-                                            func_0002C29C(((MODEL_DrawMapPSX **)modelpointers)[cop->type]->f14, ((MODEL_DrawMapPSX **)modelpointers)[cop->type]->f10);
-                                            if (model->fE == 2)
-                                                func_0002C29C(((MODEL_DrawMapPSX **)modelpointers)[cop->type]->f14 + 0x14, ((MODEL_DrawMapPSX **)modelpointers)[cop->type]->f10);
+                                            func_0002C29C(((MODEL **)modelpointers)[cop->type]->poly_block, ((MODEL **)modelpointers)[cop->type]->vertices);
+                                            if (model->num_polys == 2)
+                                                func_0002C29C(((MODEL **)modelpointers)[cop->type]->poly_block + 0x14, ((MODEL **)modelpointers)[cop->type]->vertices);
                                         }
                                         gte_SetRotMatrix(&D_000AF9C0);
                                     }
                                     if (model->flags2 & 0x2000) {
                                         if ((D_00096998++ & 0xf) == 0) {
-                                            if ((int)D_0009697C < (int)((CELL_OBJECT_DrawMapPSX **)D_000A5E0C))
+                                            if ((int)D_0009697C < (int)((CELL_OBJECT **)D_000A5E0C))
                                                 *D_0009697C++ = cop;
                                         }
                                     }
                                     if (flags & 4) {
                                         if (nanim == 20) {
                                             i = 19;
- ap = &((CELL_OBJECT_DrawMapPSX **)D_000A663C)[i];
+ ap = &((CELL_OBJECT **)D_000A663C)[i];
  nanim = i;
                                         }
                                         *ap++ = cop;
@@ -404,17 +353,17 @@ void DrawMapPSX(void)
                                 } else if (*(unsigned int *)model & 0xC0000480) {
                                     if (model->flags2 & 0x80) {
                                         if ((D_00096984++ & 0xf) == 0) {
-                                            if ((int)D_0009697C < (int)((CELL_OBJECT_DrawMapPSX **)D_000A5E0C))
+                                            if ((int)D_0009697C < (int)((CELL_OBJECT **)D_000A5E0C))
                                                 *D_0009697C++ = cop;
                                         }
                                     }
                                     if (nspr < 128)
                                         slist[nspr] = cop;
                                     else
-                                        (*(CELL_OBJECT_DrawMapPSX ***)&D_0009715C)[nspr - 128] = cop;
+                                        (*(CELL_OBJECT ***)&D_0009715C)[nspr - 128] = cop;
                                     nspr++;
                                 } else if (flags & 8) {
-                                    ((CELL_OBJECT_DrawMapPSX **)D_0009719C)[tiles++] = cop;
+                                    ((CELL_OBJECT **)D_0009719C)[tiles++] = cop;
                                 } else {
                                     if (cop->yang & 0xf) {
                                         if (CompoundMatrix[cop->yang].computed != frame) {
@@ -428,14 +377,14 @@ void DrawMapPSX(void)
                                         nanim++;
                                         if (nanim >= 11) {
                                             i = 11;
- ap = &((CELL_OBJECT_DrawMapPSX **)D_000A663C)[i];
+ ap = &((CELL_OBJECT **)D_000A663C)[i];
  nanim = i;
                                         }
                                     }
                                     blist[nbuild & 0x1f] = cop;
                                     nbuild++;
                                     if ((nbuild & 0x1f) == 0) {
-                                        func_0002C598((char *)((CELL_OBJECT_DrawMapPSX **)D_000A76AC) + boff, blist, 0x80);
+                                        func_0002C598((char *)((CELL_OBJECT **)D_000A76AC) + boff, blist, 0x80);
                                         boff += 0x80;
                                     }
                                 }
@@ -463,7 +412,7 @@ void DrawMapPSX(void)
     }
 
     if (nbuild & 0x1f)
-        func_0002C598((char *)((CELL_OBJECT_DrawMapPSX **)D_000A76AC) + boff, blist, (nbuild & 0x1f) * 4);
+        func_0002C598((char *)((CELL_OBJECT **)D_000A76AC) + boff, blist, (nbuild & 0x1f) * 4);
 
     if (nspr) {
         q = (int *)0x1F800000;
@@ -478,7 +427,7 @@ void DrawMapPSX(void)
 
     if (nbuild) {
         if (*(int *)&D_00096804 == 1) {
-            func_1CC894(((CELL_OBJECT_DrawMapPSX **)D_000A76AC), nbuild);
+            func_1CC894(((CELL_OBJECT **)D_000A76AC), nbuild);
         } else {
             *(unsigned int *)0x1F800000 = current->ot[0x107E] & 0xFFFFFF;
             p = (int *)0x1F800024;
@@ -528,18 +477,18 @@ void DrawMapPSX(void)
             p[5] = 0xA54BD50;
             p[6] = 0x41492398;
             p[7] = 0x2B62;
-            current->primptr = (char *)func_00030ED0(((CELL_OBJECT_DrawMapPSX **)D_000A76AC), nbuild, current);
+            current->primptr = (char *)func_00030ED0(((CELL_OBJECT **)D_000A76AC), nbuild, current);
         }
     }
 
     for (i = 0; i < nanim; i++) {
-        cop = ((CELL_OBJECT_DrawMapPSX **)D_000A663C)[i];
-        pos.vx = cop->vx - camera_position.vx;
-        pos.vy = cop->vy - camera_position.vy;
-        pos.vz = cop->vz - camera_position.vz;
+        cop = ((CELL_OBJECT **)D_000A663C)[i];
+        pos.vx = cop->pos.vx - camera_position.vx;
+        pos.vy = cop->pos.vy - camera_position.vy;
+        pos.vz = cop->pos.vz - camera_position.vz;
         func_0002C564(&pos);
         gte_SetRotMatrix(&matrixtable[cop->yang]);
-        DrawAnimatingObject(((MODEL_DrawMapPSX **)modelpointers)[cop->type], cop, &pos);
+        DrawAnimatingObject(((MODEL **)modelpointers)[cop->type], cop, &pos);
     }
 
     if (tiles)
@@ -692,7 +641,7 @@ void func_0002DCAC(MODEL *model)
 
     sxy = (long *)0x1F800044;
     zbuf = (short *)0x1F800240;
-    verts = model->vertices;
+    verts = (SVECTOR *)model->vertices;
     i = 0;
     for (n = model->num_vertices / 3; n > 0; ) {
         gte_ldv3(&verts[i], &verts[i + 1], &verts[i + 2]);
@@ -737,7 +686,7 @@ void func_0002DCAC(MODEL *model)
         zbuf[i + 1] = z0 >> 3;
         break;
     }
-    poly = model->poly_block;
+    poly = (unsigned char *)model->poly_block;
     *(MODEL **)0x1F800018 = model;
     *(short **)0x1F80001C = zbuf;
     for (i = 0; i < model->num_polys; i++) {
@@ -849,7 +798,7 @@ void func_0002E230(MODEL *model, MATRIX *rot, VECTOR_NOPAD *trans, int zbias)
     gte_SetTransVector(trans);
     MulMatrix0(&inv_camera_matrix, rot, &m);
     SetRotMatrix(&m);
-    verts = model->vertices;
+    verts = (SVECTOR *)model->vertices;
     i = 0;
     for (n = model->num_vertices / 3; n > 0; ) {
         gte_ldv3(&verts[i], &verts[i + 1], &verts[i + 2]);
@@ -894,7 +843,7 @@ void func_0002E230(MODEL *model, MATRIX *rot, VECTOR_NOPAD *trans, int zbias)
         zbuf[i + 1] = (z0 >> 3) + zbias;
         break;
     }
-    poly = model->poly_block;
+    poly = (unsigned char *)model->poly_block;
     *(MODEL **)0x1F800018 = model;
     *(short **)0x1F80001C = zbuf;
     if (D_00096990) {
@@ -964,7 +913,7 @@ int func_0002E6B8(MODEL *model, MATRIX *rot, VECTOR_NOPAD *trans)
     gte_SetTransVector(trans);
     MulMatrix0(&inv_camera_matrix, rot, &m);
     SetRotMatrix(&m);
-    verts = model->vertices;
+    verts = (SVECTOR *)model->vertices;
     i = 0;
     for (n = model->num_vertices / 3; n > 0; ) {
         gte_ldv3(&verts[i], &verts[i + 1], &verts[i + 2]);
@@ -1023,7 +972,7 @@ int func_0002E6B8(MODEL *model, MATRIX *rot, VECTOR_NOPAD *trans)
         for (i = 0; i < model->num_vertices; i++)
             zbuf[i] += 0xDC4 - sum;
     }
-    poly = model->poly_block;
+    poly = (unsigned char *)model->poly_block;
     *(MODEL **)0x1F800018 = model;
     *(short **)0x1F80001C = zbuf;
     for (i = 0; i < model->num_polys; i++) {
@@ -1078,10 +1027,10 @@ void func_0002EB94(int count)
     unsigned char *polys;
     unsigned char type;
     DVECTOR *sxy;
-    UV *uv;
+    UVW *uv;
     UVBASE *uvbase;
 
-    uv = (UV *)0x1F800040;
+    uv = (UVW *)0x1F800040;
     uvbase = (UVBASE *)0x1F800060;
     sxy = (DVECTOR *)0x1F800000;
     list = D_0009719C;
@@ -1091,8 +1040,8 @@ void func_0002EB94(int count)
     for (i = 0; i < count; i++) {
         obj = list[i];
         model = modelpointers[obj->type];
-        polys = model->poly_block;
-        verts = model->vertices;
+        polys = (unsigned char *)model->poly_block;
+        verts = (SVECTOR *)model->vertices;
         if (i == 0) {
             if (obj->yang & 0x20)
                 uvbase->u = ((*(VECTOR_NOPAD *)&camera_position).vx >> 7) & 0x3F;
@@ -1227,10 +1176,10 @@ extern long long current;
 #define gte_stsxy(r0) __asm__ volatile ("swc2 $14, 0(%0)" : : "r"(r0) : "memory")
 static inline void DrawQuad(SVECTOR *a, SVECTOR *b, SVECTOR *c, SVECTOR *d, int col)
 {
-    PF4_f2F444 *p;
+    PF4 *p;
 
     if (a->vz > 700 && b->vz > 700 && c->vz > 700 && d->vz > 700) {
-        p = (PF4_f2F444 *)current->primptr;
+        p = (PF4 *)current->primptr;
         gte_ldv3(a, b, d);
         gte_rtpt();
         *(int *)&p->r0 = col;
@@ -1241,7 +1190,7 @@ static inline void DrawQuad(SVECTOR *a, SVECTOR *b, SVECTOR *c, SVECTOR *d, int 
         gte_rtps();
         ((P_TAG *)p)->addr = ((P_TAG *)&current->ot[0x107F])->addr;
         ((P_TAG *)&current->ot[0x107F])->addr = (unsigned int)p;
-        gte_stsxy(&p->x3);
+        gte_stsxy(&p->xy3);
         current->primptr = (char *)(p + 1);
     }
 }
