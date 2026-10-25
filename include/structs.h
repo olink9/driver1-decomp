@@ -420,4 +420,19 @@ OFS_ASSERT(MISSION, pc, 0x2B8);
 OFS_ASSERT(MISSION, f2DC, 0x2DC);
 OFS_ASSERT(MISSION, f2E4, 0x2E4);
 
+/* ---- PERCENTAGE_BAR (D2 overmap.h names; D1's is 0x1C): D_000BE774, D_000BE998, D_000BE9C4, D_000BE9E0
+ * (overmap.c draws them; mission.c, glaunch.c, main.c fill them) ---- */
+typedef struct {
+    char *tag;                      /* 0x00 */
+    short xpos, ypos;               /* 0x04 */
+    short width, height;            /* 0x08 */
+    short position, max;            /* 0x0C */
+    void *pColourBand;              /* 0x10 */
+    int flags;                      /* 0x14 */
+    int active;                     /* 0x18 */
+} PERCENTAGE_BAR;
+SIZE_ASSERT(PERCENTAGE_BAR, 0x1C);
+OFS_ASSERT(PERCENTAGE_BAR, position, 0xC);
+OFS_ASSERT(PERCENTAGE_BAR, active, 0x18);
+
 #endif

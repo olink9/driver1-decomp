@@ -11,7 +11,7 @@
  *    pilot views SCALE_b062/OVMAP/ENT/A/MAPDEF map onto it by offset, func_00058278 keeps its T58278 view by cast.
  *  - car_data: one CAR_DATA (0x18C) with the fields every pilot read: x18/z20 (func_00055820's C), x/y/z at 0xC8,
  *    dir at 0xF8 (CAR_b062 xC8/xD0/dirF8, CAR18C, B cx/cy, C rot).
- *  - D_000BE774/D_000BE998/D_000BE9C4: PERCENTAGE_BAR (D2); ELEM w/h/f14/f18 and TXT val are xpos/ypos/flags/
+ *  - D_000BE774/D_000BE998/D_000BE9C4: PERCENTAGE_BAR (D2; now in include/structs.h); ELEM w/h/f14/f18 and TXT val are xpos/ypos/flags/
  *    active/position.
  *  - D_000C6F04: HUD; DrawOverheadMap's TGT.f2D0 is HUD.mode.
  *  - D_000BE9B4: VECTOR (V3 x/y/z = vx/vy/vz; DrawOverheadMap passes its address).
@@ -164,15 +164,6 @@ typedef struct {
     unsigned char r0, g0, b0, code;
     short x0, y0, x1, y1;
 } LINE_F2;
-typedef struct {
-    char *tag;
-    short xpos, ypos;
-    short width, height;
-    short position, max;
-    void *pColourBand;
-    int flags;
-    int active;
-} PERCENTAGE_BAR;
 typedef struct {
     unsigned char u0, v0, u1, v1, u2, v2, u3, v3;
     unsigned short tpage, clut;
