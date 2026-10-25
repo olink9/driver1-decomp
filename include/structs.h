@@ -82,13 +82,14 @@ typedef struct {
     SXY trails[4][4];               /* 0x134 light trails */
     short old_clock[4];             /* 0x174 */
     short totalDamage;              /* 0x17C */
-    unsigned char f17E;             /* 0x17E */
+    signed char autoBrake;          /* 0x17E handling.c (lb) */
     unsigned char f17F;             /* 0x17F */
     short f180;                     /* 0x180 */
     short f182;                     /* 0x182 */
     unsigned char gear;             /* 0x184 */
     unsigned char f185;             /* 0x185 */
-    unsigned char pad186[0x18C - 0x186];
+    unsigned char pad186[2];
+    unsigned int lastPad;           /* 0x188 handling.c func_0001FF24 */
 } CAR_DATA;
 SIZE_ASSERT(CAR_DATA, 0x18C);
 OFS_ASSERT(CAR_DATA, where, 0x04);
@@ -112,6 +113,8 @@ OFS_ASSERT(CAR_DATA, old_clock, 0x174);
 OFS_ASSERT(CAR_DATA, totalDamage, 0x17C);
 OFS_ASSERT(CAR_DATA, f180, 0x180);
 OFS_ASSERT(CAR_DATA, gear, 0x184);
+OFS_ASSERT(CAR_DATA, autoBrake, 0x17E);
+OFS_ASSERT(CAR_DATA, lastPad, 0x188);
 
 /* ---- civ/ped slot D_00098900[] (0x50; D_00098950 = D_00098900[1]): one per car slot ---- */
 typedef struct {
