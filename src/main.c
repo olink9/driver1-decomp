@@ -1674,6 +1674,10 @@ void func_00025C68();
 void func_00025F48();
 void func_00026040();
 
+#ifdef PSX_PC
+extern int PC_ModSkipGarage(void);  /* port/pc/pc_mods.c */
+#endif
+
 /* ---------------- func_00024754 (src/pilot/func_00024754.c) ---------------- */
 /* func_00024754 - no Driver 2 counterpart (frontend/game-state dispatcher) */
 void func_00024754(void)
@@ -1866,6 +1870,17 @@ void func_00024754(void)
             D_00096899 = 0;
             D_00096898 = 0;
             D_00096834 = 2;
+#ifdef PSX_PC
+            /* PC mod "skip garage test" (port/pc/pc_mods.c, README "Mods"): instead of playing the interview,
+             * leave exactly what passing it leaves - iview.c func_001E0290 state 2 sets D_000970A8 = 1 (and
+             * D_0009709C = 1), func_00024F1C case 1 then takes mode 1 with D_00096818 = 1 and, on "Continue",
+             * ends with D_0009709C = 0 (set again just below). D_000970A8 == 1 is what starts the career
+             * ladder below (mladder.psx from the top: Miami, the first apartment screen). */
+            if (PC_ModSkipGarage()) {
+                D_000970A8 = 1;
+                D_00096818 = 1;
+            } else
+#endif
             func_00024F1C();
             D_000967F4 = 0;
             Loadfile("FRONTEND.BIN", PC_RAM(0x1C0000));

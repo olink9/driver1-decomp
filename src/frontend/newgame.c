@@ -40,6 +40,16 @@ extern void func_001C2F78();
 extern void func_001C1B4C();
 extern void func_0007457C();
 
+#ifdef PSX_PC
+/* PC mod (port/pc/pc_mods.c): a third entry, "Skip Garage Test: On/Off", on this screen */
+extern MENU_ITEM *PC_ModNewGameItems(MENU_ITEM *orig);
+#define NG_ITEMS PC_ModNewGameItems(D_001CEA18)
+#define NG_COUNT 3
+#else
+#define NG_ITEMS D_001CEA18
+#define NG_COUNT 2
+#endif
+
 /* ---- functions defined in this file ---- */
 int func_001C6DE0();
 void func_001C6EA4();
@@ -53,12 +63,24 @@ int func_001C6F40();
 int func_001C6DE0(void)
 {
     int r;
+#ifdef PSX_PC
+    MENU_ITEM *items;
+#endif
     D_001CEA38 = 0;
+#ifdef PSX_PC
+    items = NG_ITEMS;
+    func_001C2644(items, NG_COUNT, 0);
+#else
     func_001C2644(D_001CEA18, 2, 0);
+#endif
     func_001C2114(0, D_001CE9E8, 1);
     for (;;) {
         func_000514E0();
+#ifdef PSX_PC
+        r = func_001C26E4(items, &D_001CEA38);
+#else
         r = func_001C26E4(D_001CEA18, &D_001CEA38);
+#endif
         if (r != 0) break;
         func_001C19C4();
         func_001C1BD4(D_001CE9E8);
@@ -114,7 +136,7 @@ int func_001C6F40(void)
         SetDispMask(0);
     }
     r = 0;
-    func_001C2644(D_001CEA18, 2, D_001CEA38);
+    func_001C2644(NG_ITEMS, NG_COUNT, D_001CEA38);
     if (D_000967F0 != 0) {
         if (D_000A083C != -1) {
             DrawSync(r);

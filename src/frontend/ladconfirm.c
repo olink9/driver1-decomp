@@ -12,6 +12,9 @@
 
 /* ---- types ---- */
 #include "frontend.h"
+#ifdef PSX_PC
+extern void PC_LadderFrame(void);
+#endif
 typedef struct { int a, b, c, d; } E4;
 typedef struct { unsigned short f; unsigned short g; int pad; } S;
 
@@ -131,6 +134,9 @@ int func_001CA600(void)
             func_001CAA0C();
             D_001CF0DC++;
         }
+#ifdef PSX_PC
+        PC_LadderFrame();   /* port/pc/pc_main.c: present + pace (this loop never calls VSync) */
+#endif
         DrawSync(0);
         func_000513D4();
     }
@@ -268,6 +274,9 @@ void func_001CACE0(int mode)
             func_001CAA0C();
             D_001CF0DC++;
         }
+#ifdef PSX_PC
+        PC_LadderFrame();   /* port/pc/pc_main.c: present + pace (this loop never calls VSync) */
+#endif
         DrawSync(0);
         func_000513D4();
     }
@@ -322,6 +331,9 @@ int func_001CAF70(void)
         func_001CB380();
         func_001CA298();
         func_001CB95C(D_001CF208);
+#ifdef PSX_PC
+        PC_LadderFrame();   /* port/pc/pc_main.c: present + pace (this loop never calls VSync) */
+#endif
         DrawSync(0);
         func_000513D4();
     } while (D_001CF27C == 0);

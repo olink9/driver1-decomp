@@ -43,6 +43,35 @@ empty) for any unattended run, or a connected gamepad leaks in. Take A Ride, Mia
 `D1_PAD=2500=right,2600=right,2700=right,2800=right,2900=right,3000=x,3200=x,4000-8900=x`.
 Silent: `ALSOFT_DRIVERS=null SDL_AUDIODRIVER=dummy`. A crash prints a backtrace (`addr2line -e driver1 <addr>`).
 
+## Mods
+
+PC-only gameplay options (`port/pc/pc_mods.c`; the PS1 build never sees them). Settings live in
+`driver1_mods.ini` in the working directory (`D1_MODS_INI=path` overrides it), one `key=value` per line; the game
+rewrites the file when a setting is changed in a menu. A missing file means the defaults below.
+
+| key | default | what |
+|---|---|---|
+| `skip_garage_test` | `1` | A new Undercover career skips the garage driving test ("the interview") |
+
+**Skip the garage test.** Toggle it on the Undercover screen (main menu, first icon): below *New Game* and
+*Load Saved Game* there is a third entry, **Skip Garage Test: On/Off** - move down to it with the d-pad and press
+X; the change is saved at once. With it on, *New Game* plays what the original plays before the test (the intro
+FMV, skipped on PC until NFMV is ported) and then goes straight to the apartment (TV / "Save Game", "Get A New
+Job" on the answering machine), exactly where passing the test leads. With it off the garage test runs as on the
+PS1.
+
+How it works: a new game is `func_00024754` case 0 (main.c): it sets up mission 0xAE in the IVIEW level (city 2,
+`D_00096854` = interview mode) and runs it with `func_00024F1C`. Passing is `iview.c func_001E0290` state 2 setting
+`D_000970A8 = 1`; `func_00024F1C` then shows the end menu (mode 1, `D_00096818 = 1`) and returns, and case 0 starts
+the career ladder (`func_0006EACC` + `func_0006EB74`, `data\mladder.psx` from the top: Miami, apartment, first job)
+only when `D_000970A8 == 1` - failing/"Exit" leaves it 0 and returns to the frontend. The mod replaces only the
+`func_00024F1C()` call with those two stores, so every other assignment of the original path runs unchanged and the
+ladder starts in the state a pass leaves (mission state is re-initialised by the ladder's first mission anyway).
+The menu entry: `newgame.c` passes a 3-entry copy of the screen's MENU_ITEM table (`D_001CEA18` from FRONTEND.BIN,
+re-copied on each entry since the overlay is reloaded) with the up/down ring extended, to the game's own menu
+driver (`func_001C2644`/`func_001C26E4`); the label is drawn by a hook at the end of the label drawer
+(`fecore.c func_001C1BD4` and its copy in `wips_pc.c func_001C2114`).
+
 ## How it fits together
 
 ### Memory: PS1 RAM lives at its PS1 addresses
@@ -178,3 +207,11 @@ Build notes (`port/CMakeLists.txt`): the PsyQ replacements are upper-case
 - Function pointers splat printed as `.byte` runs (the frontend's menu tables, e.g. city select D_001CE048, and
   main's mission handler tables) got no fixup: pc_gendata.py now also fixes an aligned word of a .byte/.short run
   whose value is exactly a game function's entry address.
+- The career ladder after a new game / loaded save (first exercised by the garage-skip mod; passing the test for real
+  takes the same path) had three PC faults: (1) `modelpointers` slots no level has filled since boot are NULL and the
+  apartment view's first `func_000148C4` -> `func_0001EEB4` reads `modelpointers[tile][1]` before InitSpooling (the
+  PS1 reads its NULL garbage area): pc_main.c points still-NULL slots at `pc_lowram` at boot. (2) FRONTEND.BIN .data
+  0x1CF308-0x1CF324 holds eight raw scratchpad pointers (ladview.c's D_001CF308..D_001CF324, 0x1F8000xx):
+  PC_OverlayLoad rewrites them to `pc_scratchpad`. (3) ladconfirm.c (3 loops) and ladoptions.c loop on DrawSync +
+  the buffer flip with no VSync, so nothing was presented ("Get A New Job" froze, D1_QUIT never fired):
+  `PC_LadderFrame()` paces them like ladder.c's own loop (poll VSync(-1) until 2 vblanks passed).

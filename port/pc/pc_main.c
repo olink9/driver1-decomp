@@ -164,6 +164,16 @@ int PC_OverlayLoad(const char *name, int addr, int *size)
         }
         *size = CdReadFile(path, (unsigned long *)(pc_psxram + (addr & 0x1FFFFF)), 0);
         apply_fixups(ov[i].fix);
+        if (ov[i].fix == pc_fixups_frontend) {
+            /* FRONTEND.BIN .data 0x1CF308-0x1CF327: ladview.c's eight pointers into the scratchpad (D_001CF308
+             * plot table end .. D_001CF324, values 0x1F800010-0x1F800264, the only scratchpad addresses in any
+             * loaded image's data): point them at pc_scratchpad (ladder/apartment 3D view, func_001CC894). */
+            unsigned int *w = (unsigned int *)(pc_psxram + 0x1CF308);
+            int k;
+            for (k = 0; k < 8; k++)
+                if (w[k] - 0x1F800000u < 0x400u)
+                    w[k] = (unsigned int)(pc_scratchpad + (w[k] - 0x1F800000u));
+        }
         return 1;
     }
     return 0;
@@ -311,6 +321,19 @@ int __wrap_VSync(int mode)
     return r;
 }
 
+/* The career ladder's 3D apartment screens (frontend ladconfirm.c x3, ladoptions.c: "Get A New Job", the job
+ * confirm, options) loop on DrawSync + func_000513D4 (buffer flip) with no VSync at all: on the PS1 the flip's
+ * PutDispEnv shows the frame and the loop runs GPU-bound. Here nothing would be presented (the screen froze, and
+ * D1_QUIT/D1_SHOT never fired). PC: the same pacing as ladder.c's own loop (func_001C9048: poll VSync(-1) until 2
+ * vblanks have passed), whose polls present the frame. */
+void PC_LadderFrame(void)
+{
+    static int last;
+    while ((unsigned)(VSync(-1) - last) < 2)
+        ;
+    last = VSync(-1);
+}
+
 /* pc_compat.h: a game busy-wait on an interrupt-set flag (spool.c) - the CD/MDEC work it waits for runs here */
 void PC_WaitService(void)
 {
@@ -412,6 +435,19 @@ static void install_crash_handler(void)
 
 static void game_entry(void)
 {
+    /* modelpointers (PS1 .bss 0xA0E20, up to the next object D_000A1AA0: 0x320 slots) is only filled per model
+     * as a level loads/spools, never cleared. Until a model is in, its slot keeps the previous level's pointer or,
+     * if no level had it since boot, NULL - and the PS1 reads the kernel's NULL "garbage area" there: the first
+     * level init after boot that isn't the attract demo (a career started from the frontend: ladder apartment
+     * view, city 4) hits func_0001EEB4's modelpointers[tile][1] read before InitSpooling. PC: slots that are
+     * still NULL at boot point at pc_lowram, i.e. the same zero bytes. */
+    {
+        extern void *modelpointers[];
+        int i;
+        for (i = 0; i < 0x320; i++)
+            if (!modelpointers[i])
+                modelpointers[i] = pc_lowram;
+    }
     d1_main();
     fprintf(stderr, "[driver1] game main() returned\n");
     exit(0);

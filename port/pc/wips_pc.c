@@ -350,6 +350,7 @@ extern void func_001C5EE0();
 extern void func_000E7350();
 extern void func_000E6F14();
 extern void func_000E6F98();
+extern void PC_ModMenuExtra(void *tbl);
 
 static inline void func_001C2014(int x, int y, CVEC *c, int w, int h, int z)
 {
@@ -385,6 +386,7 @@ static inline void func_001C1BD4(E_001C1BD4 *p)
         func_000E6F98(q->f);
         q++;
     }
+    PC_ModMenuExtra(p);    /* port/pc/pc_mods.c: mod menu entries (as fecore.c's func_001C1BD4) */
 }
 
 void func_001C2114(int unused, E_001C1BD4 *tbl, int mode)

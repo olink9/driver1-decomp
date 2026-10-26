@@ -152,6 +152,12 @@ void func_001C1BD4(MENU_TEXT *p)
         func_000E6F98(q->text);
         q++;
     }
+#ifdef PSX_PC
+    {
+        extern void PC_ModMenuExtra(void *tbl); /* port/pc/pc_mods.c: mod menu entries */
+        PC_ModMenuExtra(p);
+    }
+#endif
 }
 
 /* ---------------- func_001C1C4C (src/pilot/frontend/func_001C1C4C.c) ---------------- */

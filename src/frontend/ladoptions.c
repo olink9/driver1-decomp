@@ -16,6 +16,9 @@
 
 /* ---- types ---- */
 #include "frontend.h"
+#ifdef PSX_PC
+extern void PC_LadderFrame(void);
+#endif
 
 /* ---- externs ---- */
 extern int D_00096C94;
@@ -106,6 +109,9 @@ int func_001CD5A8(void)
             func_001CA298();
             func_001CB95C(D_001CF710);
         }
+#ifdef PSX_PC
+        PC_LadderFrame();   /* port/pc/pc_main.c: present + pace (this loop never calls VSync) */
+#endif
         DrawSync(0);
         func_000513D4();
     } while (D_001CF850 != -1 && D_001CF878 == 0);
