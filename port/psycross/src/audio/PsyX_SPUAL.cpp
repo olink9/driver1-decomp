@@ -258,6 +258,11 @@ int PsyX_SPUAL_InitSound()
 	return 1;
 }
 
+// Driver 1 port: the XA stream source (PsyX_SPUAL_XAQueue, end of file)
+#define XA_NUM_BUFFERS	64		// ~3.4 s of 37.8 kHz stereo sectors
+static ALuint	s_xaSource = AL_NONE;
+static ALuint	s_xaBuffers[XA_NUM_BUFFERS];
+
 void PsyX_SPUAL_ShutdownSound()
 {
 	g_spuInit = 0;
@@ -271,6 +276,14 @@ void PsyX_SPUAL_ShutdownSound()
 		SPUALVoice* voice = &g_SpuVoices[i];
 		alDeleteSources(1, &voice->alSource);
 		alDeleteBuffers(1, &voice->alBuffer);
+	}
+
+	if (s_xaSource != AL_NONE)		// Driver 1 port: the XA stream
+	{
+		alSourceStop(s_xaSource);
+		alDeleteSources(1, &s_xaSource);
+		alDeleteBuffers(XA_NUM_BUFFERS, s_xaBuffers);
+		s_xaSource = AL_NONE;
 	}
 
 	if (g_ALEffectsSupported)
@@ -395,39 +408,38 @@ u_int PsyX_SPUAL_Read(u_char* addr, u_int size)
 	return size;
 }
 
-// PSX ADPCM coefficients
-static const float K0[5] = { 0, 0.9375, 1.796875, 1.53125, 1.90625 };
-static const float K1[5] = { 0, 0, -0.8125, -0.859375, -0.9375 };
+// PSX ADPCM decoding routine - decodes a single sample.
+// Driver 1 port: the SPU's integer formula (psx-spx "SPU ADPCM"): filters 0..4 as n/64, shift 13..15 acts
+// as 9, clamped to 16 bits. The float version (pow() per sample) cost milliseconds per key-on.
+static const int K0[5] = { 0, 60, 115, 98, 122 };
+static const int K1[5] = { 0, 0, -52, -55, -60 };
 
-// PSX ADPCM decoding routine - decodes a single sample
-static short vagToPcm(u_char soundParameter, int soundData, float* vagPrev1, float* vagPrev2)
+static short vagToPcm(u_char soundParameter, int soundData, int* vagPrev1, int* vagPrev2)
 {
-	int resultInt = 0;
+	int shift = soundParameter & 0x0F;
+	int filter = (soundParameter >> 4) & 0x0F;
+	int s;
 
-	float dTmp1 = 0.0;
-	float dTmp2 = 0.0;
-	float dTmp3 = 0.0;
+	if (shift > 12)
+		shift = 9;
+	if (filter > 4)
+		filter = 4;
 
 	if (soundData > 7)
 		soundData -= 16;
 
-	dTmp1 = (float)soundData * pow(2, (float)(12 - (soundParameter & 0x0F)));
+	s = (soundData << 12) >> shift;
+	s += ((*vagPrev1) * K0[filter] + (*vagPrev2) * K1[filter] + 32) >> 6;
 
-	dTmp2 = (*vagPrev1) * K0[(soundParameter >> 4) & 0x0F];
-	dTmp3 = (*vagPrev2) * K1[(soundParameter >> 4) & 0x0F];
+	if (s > 32767)
+		s = 32767;
+	if (s < -32768)
+		s = -32768;
 
 	(*vagPrev2) = (*vagPrev1);
-	(*vagPrev1) = dTmp1 + dTmp2 + dTmp3;
+	(*vagPrev1) = s;
 
-	resultInt = (int)round((*vagPrev1));
-
-	if (resultInt > 32767)
-		resultInt = 32767;
-
-	if (resultInt < -32768)
-		resultInt = -32768;
-
-	return (short)resultInt;
+	return (short)s;
 }
 
 typedef enum 
@@ -453,8 +465,8 @@ static int decodeSound(u_char* iData, int soundSize, short* oData, int* loopStar
 	u_char sp;
 	u_char flag;
 	int sd = 0;
-	float vagPrev1 = 0.0;
-	float vagPrev2 = 0.0;
+	int vagPrev1 = 0;
+	int vagPrev2 = 0;
 	int k = 0;
 
 	int loopStrt = 0, loopEnd = 0;
@@ -491,7 +503,9 @@ static int decodeSound(u_char* iData, int soundSize, short* oData, int* loopStar
 			// flags parsed
 			if (flag & LoopStart)
 			{
-				loopStrt = k + 26; // FIXME: is that correct?
+				// Driver 1 port: the loop starts at the beginning of this block (k counts the 2 samples
+				// already decoded from it); was k + 26, one block late
+				loopStrt = k - 2;
 			}
 
 			if (flag & LoopEnd)
@@ -573,9 +587,10 @@ static void UpdateVoiceSample(SPUALVoice* voice)
 
 	if (loopLen > 0)
 	{
-		loopStart += voice->attr.loop_addr - voice->attr.addr;
-
-		if (loopStart - 54 > 0 && loopStart + loopLen <= count)
+		// Driver 1 port: loopStart is a sample index from the data's LoopStart flag (0 = from the start
+		// address when the sample has none). It used to add loop_addr - addr, a byte distance, which with
+		// loop_addr never set (Driver only sets WDSA) made it negative, so the whole sample looped.
+		if (loopStart > 0 && loopStart + loopLen <= count)
 		{
 			int sampleOffs[] = { loopStart, loopStart + loopLen };
 			alBufferiv(alBuffer, AL_LOOP_POINTS_SOFT, sampleOffs);
@@ -854,4 +869,98 @@ u_int PsyX_SPUAL_GetReverbVoice()
 			bits |= SPU_KEYCH(i);
 	}
 	return bits;
+}
+//--------------------------------------------------------------------------------
+// Driver 1 port: XA-ADPCM stream output (the SPU's CD input). port/pc/pc_xa.c decodes the sectors the drive
+// sends to the SPU and queues them here as 16-bit PCM on one streaming source.
+
+static ALuint	s_xaFree[XA_NUM_BUFFERS];
+static int		s_xaNumFree = 0;
+static float	s_xaGain = 1.0f;
+
+static void XA_Init()
+{
+	if (s_xaSource != AL_NONE || !g_ALCcontext)
+		return;
+
+	alGenSources(1, &s_xaSource);
+	alGenBuffers(XA_NUM_BUFFERS, s_xaBuffers);
+	for (int i = 0; i < XA_NUM_BUFFERS; i++)
+		s_xaFree[i] = s_xaBuffers[i];
+	s_xaNumFree = XA_NUM_BUFFERS;
+
+	alSourcei(s_xaSource, AL_SOURCE_RELATIVE, AL_TRUE);
+	alSource3f(s_xaSource, AL_POSITION, 0, 0, 0);
+	alSourcef(s_xaSource, AL_GAIN, s_xaGain);
+}
+
+static void XA_Reclaim()
+{
+	ALint processed = 0;
+	alGetSourcei(s_xaSource, AL_BUFFERS_PROCESSED, &processed);
+	while (processed-- > 0 && s_xaNumFree < XA_NUM_BUFFERS)
+	{
+		ALuint buf;
+		alSourceUnqueueBuffers(s_xaSource, 1, &buf);
+		s_xaFree[s_xaNumFree++] = buf;
+	}
+}
+
+extern "C" void PsyX_SPUAL_XAQueue(const short* pcm, int frames, int stereo, int rate)
+{
+	if (!g_spuInit || !g_ALCcontext || frames <= 0)
+		return;
+
+	SDL_LockMutex(g_SpuMutex);
+	XA_Init();
+	XA_Reclaim();
+
+	if (s_xaNumFree > 0)
+	{
+		ALuint buf = s_xaFree[--s_xaNumFree];
+		alBufferData(buf, stereo ? AL_FORMAT_STEREO16 : AL_FORMAT_MONO16, pcm, frames * (stereo ? 4 : 2), rate);
+		alSourceQueueBuffers(s_xaSource, 1, &buf);
+
+		ALint state;
+		alGetSourcei(s_xaSource, AL_SOURCE_STATE, &state);
+		if (state != AL_PLAYING)		// first sector, or the queue ran dry
+			alSourcePlay(s_xaSource);
+	}
+	else
+	{
+		// more than XA_NUM_BUFFERS sectors behind the output: drop this one
+		static int dropped = 0;
+		if ((dropped++ & 1023) == 0)
+			eprintf("SPU WARNING: XA output %d sectors behind, sector dropped (%d so far)\n", XA_NUM_BUFFERS, dropped);
+	}
+
+	SDL_UnlockMutex(g_SpuMutex);
+}
+
+extern "C" void PsyX_SPUAL_XAStop(void)
+{
+	if (!g_spuInit || s_xaSource == AL_NONE)
+		return;
+
+	SDL_LockMutex(g_SpuMutex);
+	alSourceStop(s_xaSource);		// all queued buffers become processed
+	XA_Reclaim();
+	SDL_UnlockMutex(g_SpuMutex);
+}
+
+// SsSetSerialVol: 0..127 per side (CD input volume)
+extern "C" void PsyX_SPUAL_XASetVolume(int left, int right)
+{
+	s_xaGain = (float)(left + right) / 254.0f;
+	if (s_xaGain < 0.0f)
+		s_xaGain = 0.0f;
+	if (s_xaGain > 1.0f)
+		s_xaGain = 1.0f;
+
+	if (!g_spuInit || s_xaSource == AL_NONE)
+		return;
+
+	SDL_LockMutex(g_SpuMutex);
+	alSourcef(s_xaSource, AL_GAIN, s_xaGain);
+	SDL_UnlockMutex(g_SpuMutex);
 }

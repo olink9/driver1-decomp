@@ -2107,7 +2107,11 @@ void func_00073738(int a) {
         D_00097810 = D_000C7888[a];
         if (D_00097810->XMPlay) {
             D_00097810->XMPlay = 0;
+#ifdef PSX_PC
+            SilenceXM(a); /* PC-PORT: the PS1 call relies on a still being in a0 */
+#else
             SilenceXM();
+#endif
         }
     }
     D_0008D218[a] = -1;

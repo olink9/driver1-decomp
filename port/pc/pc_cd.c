@@ -13,7 +13,7 @@
  * The stream then delivers CdlDataReady per sector (ready callback -> CdGetSector -> data callback) until the
  * game pauses it or clears the ready callback, exactly the PS1 callback order. Re-seeks issued from inside a
  * callback (spool.c's UpdateSpool from data_cb_*) continue the same loop. No thread: deterministic.
- * XA audio streams (CdlModeRT set) are not played yet: the stream is accepted and stays silent. */
+ * XA audio streams (CdlModeRT set) go to pc_xa.c, which plays them in real time (see there). */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -22,6 +22,13 @@
 #include "psx/libcd.h"
 
 extern const char *PC_DataDir(void);       /* pc_main.c */
+/* pc_xa.c: XA-ADPCM streams (CdlModeRT) */
+extern void PC_XaSetFilter(const u_char *param);
+extern void PC_XaStart(int lba, int mode);
+extern void PC_XaStop(void);
+extern int PC_XaActive(void);
+extern void PC_XaService(CdlCB ready, void (*data)(void));
+extern int PC_XaGetSector(void *madr, int size);
 
 typedef struct {
     int lba, nsect, bytes, secsize;
@@ -44,7 +51,7 @@ static int s_pumping;
 static int s_stream_lba;
 static u_char s_sector[2048];
 static int s_getpos;
-static int s_xa_warned, s_size_warned;
+static int s_size_warned;
 
 /* ---- the disc index ---- */
 static void load_index(void)
@@ -171,6 +178,8 @@ static void pump(void)
 /* the points where the PS1 would have taken CD interrupts: pump a pending stream */
 void PC_CdService(void)
 {
+    if (PC_XaActive())           /* an XA stream runs on the drive's clock (pc_xa.c) */
+        PC_XaService(s_ready, s_data);
     if (s_pending && s_ready && !s_pumping)
         pump();
 }
@@ -179,6 +188,7 @@ void PC_CdService(void)
 int CdInit(void)
 {
     load_index();
+    PC_XaStop();
     s_ready = NULL;
     s_data = NULL;
     s_pending = 0;
@@ -235,11 +245,11 @@ static int control(u_char com, u_char *param, u_char *result)
         if (param)
             s_lba = CdPosToInt((CdlLOC *)param);
         s_stream_lba = s_lba;
+        PC_XaStop();
         if (s_mode & CdlModeRT) {
-            /* PC-PORT: XA ADPCM (xaplay.c) - audio not implemented yet, the stream stays silent */
-            if (!s_xa_warned++)
-                printf("[pc_cd] XA audio stream at sector %d ignored (not implemented)\n", s_lba);
+            /* XA-ADPCM (xaplay.c): pc_xa.c plays the audio sectors and delivers the others */
             s_pending = 0;
+            PC_XaStart(s_lba, s_mode);
             break;
         }
         s_pending = 1;           /* runs at the next service point, see the head comment */
@@ -248,8 +258,12 @@ static int control(u_char com, u_char *param, u_char *result)
     case CdlStop:
     case CdlStandby:
         s_pending = 0;
+        PC_XaStop();
         break;
-    default:                     /* Setfilter, Demute, Nop, GetlocP ...: nothing to emulate */
+    case CdlSetfilter:           /* XA file/channel */
+        PC_XaSetFilter(param);
+        break;
+    default:                     /* Demute, Nop, GetlocP ...: nothing to emulate */
         break;
     }
     return 1;
@@ -265,6 +279,7 @@ int CdRead(int sectors, u_long *buf, int mode)
     if ((mode & (CdlModeSize1 | CdlModeSize0)) && !s_size_warned++)
         printf("[pc_cd] CdRead mode 0x%x: raw sector sizes not emulated, reading 2048-byte sectors\n", mode);
     s_pending = 0;               /* a CdlReadN replaces any running stream */
+    PC_XaStop();
     while (sectors-- > 0) {
         read_sector(s_lba++, p);
         p += 2048;
@@ -318,6 +333,8 @@ CdlCB CdReadCallback(CdlCB func) { return NULL; }
 int CdGetSector(void *madr, int size)
 {
     int n = size * 4;
+    if (PC_XaGetSector(madr, size))  /* a data sector of an XA stream */
+        return 1;
     if (s_getpos + n > 2048)
         n = 2048 - s_getpos;
     if (n > 0) {

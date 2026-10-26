@@ -87,7 +87,11 @@ loops and CdSearchFile). Here everything is synchronous and deterministic (neede
   `CdReadSync` (`UpdateSpool`: callbacks, then ReadS). It delivers CdlDataReady per sector (ready callback ->
   `CdGetSector` -> data callback) until the game pauses it or clears the ready callback; re-seeks from inside a
   callback continue the same loop.
-- XA audio streams (`CdlModeRT`) are accepted and stay silent (not implemented).
+- XA audio streams (`CdlModeRT`, xaplay.c: MV1-5/NMAJ/CUTS.XA) go to `port/pc/pc_xa.c`: it reads the raw sectors at
+  the drive's speed (150/75 sectors per second of PsyCross's vblank clock - real time, so not part of the
+  deterministic model), decodes the audio sectors matching the CdlSetfilter file/channel (XA-ADPCM, bit-exact with
+  ffmpeg's adpcm_xa) into a streaming OpenAL source (`PsyX_SPUAL_XAQueue`), and delivers every other sector to the
+  ready callback (924h mode: CdGetSector starts at the header), where xaplay.c's cbready finds the end marker.
 Mods: replacing a file in `pcdata/` with one of the same sector count just works.
 
 ### Frames
@@ -128,9 +132,18 @@ Identified for the port by BIOS call number (`li t2,0xA0/0xB0; li t1,n`), the fu
 ### PsyCross
 Source changes: (1) the two GCC 13 build fixes (PsyX_GPU.cpp prim_terminator cast, PsyX_main.cpp SDL_strcasecmp);
 (2) `src/audio/PsyX_SPUAL.cpp` decodeSound stops at the output buffer size (a sample without an end flag overran
-waveBuffer and crashed in attract mode); (3) `include/psx/libgpu.h` DRAWENV loses PsyCross's unused `drt` byte, so DRAWENV has the real
+waveBuffer and crashed in attract mode); (2b) same file, Driver 1 port: integer SPU ADPCM decode, loop start at
+the start of the LoopStart block (was one block late, and offset by a byte distance so whole samples looped), and the
+XA stream output (`PsyX_SPUAL_XAQueue/XAStop/XASetVolume`); (3) `include/psx/libgpu.h` DRAWENV loses PsyCross's unused `drt` byte, so DRAWENV has the real
 PsyQ layout (0x5C bytes; Driver's draw buffers put DISPENV at DRAWENV + 0x5C and address fields by offset).
 Build notes (`port/CMakeLists.txt`): the PsyQ replacements are upper-case
 `src/psx/*.C`; gcc compiles `.C` as C++ (their headers have the `extern "C"` blocks for it), with `-fpermissive
 -Wno-narrowing`; LIBCD.C is superseded by `pc_cd.c`; LIBMCRD.C is bypassed (it indexes `memoryCards[2]` with
 `chan = port << 4` and fseeks a NULL FILE when `0.MCD` is missing).
+
+## Port notes
+- Audio: the PsyQ function at 0x7A794 named `SpuRead` (psyq_objs signature) is SpuWrite (it calls `_spu_write`,
+  func_0008213C: `_spu_t(2)`, `_spu_t(1 = write)`, `_spu_t(3)`); on PC the sound banks went nowhere and every voice
+  decoded empty SPU RAM ("sample has no end flag"). sound.c LoadSoundBank calls SpuWrite under PSX_PC; spool.c SendSBK (the in-game spooled bank) needs the same.
+- Audio: xmplay.c func_00073738 called `SilenceXM()` with the id left in a0 (same pattern as sound.c func_0004E67C);
+  PC passes it (crashed in ReInitFrontend after the attract demo).

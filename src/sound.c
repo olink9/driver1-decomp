@@ -118,6 +118,9 @@ extern void func_00079DB0();
 extern void SpuSetTransferMode();
 extern void SpuSetTransferStartAddr();
 extern void SpuRead();
+#ifdef PSX_PC
+extern unsigned int SpuWrite(unsigned char *addr, unsigned int size);
+#endif
 extern void SpuIsTransferCompleted();
 extern void func_00073840();
 extern void func_0006F8DC(void);
@@ -599,7 +602,14 @@ int LoadSoundBank(char *address, int length, int bank)
     spuaddress = D_000BD484[bank];
     SpuSetTransferMode(0);
     SpuSetTransferStartAddr(spuaddress);
+#ifdef PSX_PC
+    /* PC-PORT: the PsyQ function at 0x7A794 that splat/psyq_objs named SpuRead is SpuWrite (it calls _spu_write,
+     * func_0008213C: _spu_t(2, addr), _spu_t(1 = write), _spu_t(3, buf, size)); PsyCross's SpuRead copies the
+     * other way, so the bank never reached SPU RAM */
+    SpuWrite((unsigned char *)address, len);
+#else
     SpuRead(address, len);
+#endif
     SpuIsTransferCompleted(1);
 
     for (ct = 0; ct < num_samples; ct++) {
