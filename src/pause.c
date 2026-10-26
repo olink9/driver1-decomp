@@ -997,6 +997,16 @@ next:
     D_00096F18 = mode;
     D_00096F10 = -1;
     D_00096F04 = 0;
+#ifdef PSX_PC
+    {
+        /* PC-PORT: D_000977C0 is NULL until the first menu is set, yet this first InitMenu() already runs the
+         * items' leave() handlers (func_0006BD60 ...) through it: the PS1 writes into the kernel's NULL garbage
+         * area (0x0C..), the PC into pc_lowram */
+        extern unsigned char pc_lowram[];
+        if (!D_000977C0)
+            D_000977C0 = (MENTRY *)pc_lowram;
+    }
+#endif
     InitMenu(D_0008D064, 3, 1);
 
     if (mode == 0) {

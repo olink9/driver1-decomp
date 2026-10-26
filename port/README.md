@@ -2,8 +2,8 @@
 
 The decompiled game (`src/`) built as a native 32-bit Linux program on [PsyCross](https://github.com/OpenDriver2/PsyCross)
 (vendored in `port/psycross/`, MIT), the PsyQ-on-SDL2/OpenGL layer REDRIVER2 uses. Status: it builds, links and
-boots through the legal screen, the GT and Reflections splashes to the frontend title screen. No sound streaming
-(XA), no FMV, no memory card yet.
+boots through the splashes to the frontend, runs the attract-mode demos, and plays (Take A Ride in Miami, driven
+headlessly through `D1_PAD`). No FMV, no memory card yet.
 
 ## 1. Game data: unpack your disc
 
@@ -34,9 +34,14 @@ D1_DATA=/path/to/pcdata ../driver1-work/pcbuild/<dir>/driver1     # or: driver1 
 ```
 
 Headless (no window, e.g. over ssh): `SDL_VIDEODRIVER=offscreen`. Debug aids (environment):
-`D1_SHOT=n1,n2,...` writes `gl_<n>.ppm` (the window) and `shot_<n>.ppm` (the displayed VRAM area) at those vblank
-counts (the VRAM dump comes out red/blue-swapped next to the window grab - see the open issues in the
-port notes); `D1_QUIT=n` exits after n vblanks. A crash prints a backtrace (`addr2line -e driver1 <addr>`).
+`D1_SHOT=n1,n2,...` writes `gl_<n>.ppm` (the window, grabbed as the next frame is presented) and `shot_<n>.ppm`
+(the displayed VRAM area) at those vblank counts (the VRAM dump comes out red/blue-swapped next to the window grab);
+`D1_QUIT=n` exits after n vblanks. Counts are real 60 Hz vblanks (PsyCross's counter), the same clock in the
+frontend and in game. `D1_PAD=FROM[-TO]=BTN[+BTN..],...` replaces pad 1 with scripted presses (a lone FROM holds
+6 vblanks; BTN: up down left right x o tri sq l1 l2 r1 r2 start select) and ignores real input - set it (even
+empty) for any unattended run, or a connected gamepad leaks in. Take A Ride, Miami, day:
+`D1_PAD=2500=right,2600=right,2700=right,2800=right,2900=right,3000=x,3200=x,4000-8900=x`.
+Silent: `ALSOFT_DRIVERS=null SDL_AUDIODRIVER=dummy`. A crash prints a backtrace (`addr2line -e driver1 <addr>`).
 
 ## How it fits together
 
@@ -97,6 +102,12 @@ Mods: replacing a file in `pcdata/` with one of the same sector count just works
 ### Frames
 The game never calls `PsyX_EndScene` (REDRIVER2 does, from its game code), so `VSync` is wrapped
 (`-Wl,--wrap=VSync`, `pc_main.c`): a drawn scene is presented there, and pending CD/MDEC work completes there.
+Only on the game thread: PsyCross runs the PS1 VSyncCallback on its interrupt thread and Driver's callback (xmplay.c)
+calls VSync(1) itself - that stays a plain counter read. The frontend ends a frame with VSync(0); the in-game loop
+(main.c func_0002360C) draws with DrawOTag and then polls VSync(-1), so a poll presents too (and sleeps 0.2 ms
+while the count stands still). Busy-waits on a flag the CD interrupt sets (spool.c) call `PC_WaitService()`.
+Pads: PsyCross only updates the PadInitDirect buffers from `PsyX_UpdateInput()`, which its own code calls only in
+_DEBUG builds, so the game's pad read (pad.c func_000357F0) calls `PC_PadRead()` first.
 
 ### PsyQ functions known only by address
 The library is identified (`pilot/psyq_objs.tsv` names 67 by signature) but most calls are `func_0007xxxx`.
@@ -144,6 +155,26 @@ Build notes (`port/CMakeLists.txt`): the PsyQ replacements are upper-case
 ## Port notes
 - Audio: the PsyQ function at 0x7A794 named `SpuRead` (psyq_objs signature) is SpuWrite (it calls `_spu_write`,
   func_0008213C: `_spu_t(2)`, `_spu_t(1 = write)`, `_spu_t(3)`); on PC the sound banks went nowhere and every voice
-  decoded empty SPU RAM ("sample has no end flag"). sound.c LoadSoundBank calls SpuWrite under PSX_PC; spool.c SendSBK (the in-game spooled bank) needs the same.
+  decoded empty SPU RAM ("sample has no end flag"). sound.c LoadSoundBank calls SpuWrite under PSX_PC; spool.c SendSBK (the in-game spooled bank) does the same.
 - Audio: xmplay.c func_00073738 called `SilenceXM()` with the id left in a0 (same pattern as sound.c func_0004E67C);
   PC passes it (crashed in ReInitFrontend after the attract demo).
+- pathfind.c func_00063114 fills 0x1F6 A* heap slots from D_000C43B4 (declared [183]), running on into felony.c's
+  D_000C4690[0] as the contiguous PS1 .bss allows; on PC it ran over random .bss (FindSeated's pointer -> attract
+  crash). PC: one object D_000C43B4 spans both, felony.c only declares D_000C4690 (bound by pc_gendata rule 2).
+- Leftover-a0 calls (agent E's scan, each checked against the asm): civ_ai.c func_00013B80 -> func_0004C8F8(a),
+  handling.c func_00020780 -> func_000299B8(i), director.c func_00059638(a, b) passes both through to
+  func_0005C318, mission.c func_0006A6C8 -> func_0004FFE8(p->flags). The rest of the scan's hits are prototypes,
+  local inlines or rand(): no change.
+- VSync from PsyCross's interrupt thread presented frames and pumped the CD stream concurrently with the game:
+  in game the only VSync(>=0) calls came from there, so nothing showed and "[Psy-X] Failed to map the buffer"
+  (glMapBuffer without a GL context on that thread) flooded the log. Fixed in pc_main.c (Frames above).
+- spool.c func_00033AF8 / StartSpooling spin on D_000972D4 with nothing that services the CD: `PC_WaitService()`.
+- NULL dereferences the PS1 survives (kernel RAM 0x0-0xF is the "garbage area", psx-spx): iview.c func_001E1008
+  (D_001E4250 is never set), pause.c's first InitMenu (D_000977C0 NULL while leave() handlers run). PC points them
+  at `pc_lowram` (pc_main.c); page 0 can't be mapped.
+- include/frontend.h TEX (12 bytes) is filled by func_001C334C as a TEXINFO (14): on the PS1 the 2 bytes land in
+  the stack slot's padding, on PC they hit the next local (mcard.c func_000E6D60's font pointer -> no menu text).
+  PC: TEX gets 2 padding bytes.
+- Function pointers splat printed as `.byte` runs (the frontend's menu tables, e.g. city select D_001CE048, and
+  main's mission handler tables) got no fixup: pc_gendata.py now also fixes an aligned word of a .byte/.short run
+  whose value is exactly a game function's entry address.
