@@ -37,6 +37,23 @@
 
 #include "common.h"
 #include "structs.h"
+#ifndef PC_RAM
+#ifdef PSX_PC
+/* PC-PORT: absolute PS1 addresses go through the emulated PS1 RAM / scratchpad (port/pc/pc_compat.h) */
+extern unsigned char pc_psxram[];
+#define PC_RAM(a) ((int)(pc_psxram + ((unsigned int)(a) & 0x1FFFFF)))
+#else
+#define PC_RAM(a) a
+#endif
+#endif
+#ifndef PC_SCRATCH
+#ifdef PSX_PC
+extern unsigned char pc_scratchpad[];
+#define PC_SCRATCH(a) ((int)(pc_scratchpad + ((a) - 0x1F800000)))
+#else
+#define PC_SCRATCH(a) a
+#endif
+#endif
 
 /* ---- types ---- */
 typedef struct { int a[99]; } CARI;
@@ -529,14 +546,22 @@ int func_00024370();
 int func_00024418();
 void func_000244B0();
 void func_000244B8();
+#ifdef PSX_PC
+void d1_main(void);  /* PC: the game's main(); port/pc/pc_main.c owns the process main() */
+#else
 void main();
+#endif
 
 /* ---------------- func_00022168 (src/pilot/func_00022168.c) ---------------- */
 void func_00022168(void)
 {
     /* gcc must see a small object here (la, not a split %hi/%lo pair); the rest of the
        file uses the real array, declared after this function */
+#ifndef PSX_PC
     extern int car_data;
+#else
+    extern CAR_DATA car_data[];
+#endif
     unsigned char *p;
     CARI *car;
     int idx;
@@ -673,9 +698,9 @@ void LoadGameLevel(void)
     func_000511EC(0);
     sector = D_000BE0A4[D_00096834].v[0] / 2048;
     nsectors = D_000BE0A4[D_00096834].v[1] / 2048;
-    loadsectors(0xD8600, sector, nsectors);
+    loadsectors(PC_RAM(0xD8600), sector, nsectors);
     sector += nsectors;
-    func_00022344(0xD8608, nsectors << 11);
+    func_00022344(PC_RAM(0xD8608), nsectors << 11);
     func_00051ADC(&sector);
     s2 = D_00097098;
     sector = D_000BE0A4[D_00096834].v[4] / 2048;
@@ -746,7 +771,7 @@ void func_00022818(void)
     *(short *)&D_00096A68 = 0;
 
     if (D_000967BC != 0) {
-        D_00097098 = 0x114600;
+        D_00097098 = PC_RAM(0x114600);
         *(int *)&D_0009724C = D_00097098;
         D_00097098 += 0x1000;
         func_000505E0();
@@ -817,12 +842,12 @@ void func_00022818(void)
 
     if (D_000967BC != 0) {
         if (D_00096834 == 2 || D_00096834 == 6) {
-            Loadfile("IVIEW.BIN", 0x1E0000);
+            Loadfile("IVIEW.BIN", PC_RAM(0x1E0000));
         } else if (D_00096800 == 1) {
-            Loadfile("CRED.BIN", 0x1E0000);
+            Loadfile("CRED.BIN", PC_RAM(0x1E0000));
             func_1E06B8();
         }
-        Loadfile(D_00086F00[D_00096834], 0x1F8BBC);
+        Loadfile(D_00086F00[D_00096834], PC_RAM(0x1F8BBC));
         LoadGameLevel();
         D_000967BE = 1;
         if (D_00096834 != 2 && D_00096804 == 0)
@@ -976,7 +1001,7 @@ void func_000230B0(void)
     if (D_00096899 != 0 && **(int **)&ReplayParameterPtr - 2 < CameraCnt)
         pauseflag = 1;
 
-    D_00097064 = func_00079AF0(0x1F8003E8);
+    D_00097064 = func_00079AF0(PC_SCRATCH(0x1F8003E8));
 
     steer = D_000A8014[8] - 0x80;
 
@@ -1417,7 +1442,11 @@ void func_000244B8(int a0, int a1) {
 /* ---------------- main (src/pilot/main.c) ---------------- */
 /* Driver 2: main */
 /* gcc inserts the __main() call itself because the function is named main */
+#ifdef PSX_PC
+void d1_main(void)
+#else
 void main(void)
+#endif
 {
     int i;
     int ev;
@@ -1468,14 +1497,14 @@ void main(void)
     }
     ShowLoadingScreen("GFX\\REF.TIM", 2, 1);
     SetDispMask(0);
-    Loadfile("MCARD.BIN", 0xE6600);
+    Loadfile("MCARD.BIN", PC_RAM(0xE6600));
     func_EC89C();
     ev = func_00079AE0();
     D_000967F8 = 0;
     PlayRender(0);
     func_00079AF0(ev);
     ReInitSystem();
-    Loadfile("FRONTEND.BIN", 0x1C0000);
+    Loadfile("FRONTEND.BIN", PC_RAM(0x1C0000));
     func_1C0AE8();
 }
 
@@ -1597,7 +1626,9 @@ extern void func_0005347C();
 extern void func_00053644();
 extern void func_000543D8();
 extern void DrawPercentageBar();
+#ifndef PSX_PC
 extern void SetTextColour();
+#endif
 extern void PrintString();
 extern void func_0005DB30();
 extern void func_000669B8();
@@ -1814,7 +1845,7 @@ void func_00024754(void)
         D_00096899 = 0;
         D_00096898 = 0;
         func_00024F1C();
-        Loadfile("FRONTEND.BIN", 0x1C0000);
+        Loadfile("FRONTEND.BIN", PC_RAM(0x1C0000));
         D_00096898 = 0;
         func_0006EB48();
         SetDispMask(1);
@@ -1837,7 +1868,7 @@ void func_00024754(void)
             D_00096834 = 2;
             func_00024F1C();
             D_000967F4 = 0;
-            Loadfile("FRONTEND.BIN", 0x1C0000);
+            Loadfile("FRONTEND.BIN", PC_RAM(0x1C0000));
             D_00096854 = 0;
             D_0009709C = 0;
         } else {
@@ -2162,7 +2193,9 @@ void func_00024F1C(void)
     SetDispMask(1);
 }
 
+#ifndef PSX_PC
 extern MISSION D_000C6F04;
+#endif
 
 #undef D_000C6F04
 
@@ -2182,8 +2215,8 @@ void ReInitFrontend(void)
     func_000359BC();
     p = D_000BDFA4;
     func_0004E348();
-    Loadfile("FRONTEND.BIN", 0x1C0000);
-    Loadfile("MCARD.BIN", 0xE6600);
+    Loadfile("FRONTEND.BIN", PC_RAM(0x1C0000));
+    Loadfile("MCARD.BIN", PC_RAM(0xE6600));
     func_1C2DAC(0x280);
     DrawSync(0);
     func_00051374();

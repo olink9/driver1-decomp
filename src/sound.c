@@ -700,7 +700,11 @@ int GetFreeChannel(void)
 #define MIN(a,b) ((a) < (b) ? (a) : (b))
 void func_0004E5E4(int idx) {
     int v, r;
+#ifdef PSX_PC
+    v = func_0004E67C(idx); /* PC-PORT: the PS1 call relies on idx still being in a0 */
+#else
     v = func_0004E67C();
+#endif
     v = MIN(10000, MAX(0, v + 10000));
     r = v + (v >> 1); r += v >> 3; r += v >> 7;
     r = (r * D_00096C7C) >> 14;

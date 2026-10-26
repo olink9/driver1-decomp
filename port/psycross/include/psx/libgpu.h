@@ -719,7 +719,8 @@ typedef struct {
 	u_short tpage;		/* texture page */
 	u_char	dtd;		/* dither flag (0:off, 1:on) */
 	u_char	dfe;		/* flag to draw on display area (0:off 1:on) */
-	u_char	drt;		
+	/* Driver 1 port: PsyCross had an unused `u_char drt;` here; removed for the real PsyQ layout (0x5C bytes),
+	 * which the game's draw buffers address by offset */
 	u_char	isbg;		/* enable to auto-clear */
 	u_char	r0, g0, b0;	/* initital background color */
 	DR_ENV	dr_env;		/* reserved */

@@ -14,6 +14,9 @@
 /* maspsx: gp_allow_offset=1 sbss_align8=0 abs=D_0009725C,D_000972CC */
 /* maspsx: abs=D_00097320,D_0009731C,D_0009730C,D_00097314,current_region,D_0009733C,D_00096A24,D_00096834,D_00097524,current,D_00097560,D_00096C88,D_00097324,D_00096884,D_00097344,D_000970E0,D_000970D4,D_00097108,D_00097350,D_00097098,FastForward,D_00097534 */
 #include "common.h"
+#ifdef PSX_PC
+extern void PC_Break(const char *file, int line); /* port/pc/pc_main.c: logs and aborts (PS1: break 1024) */
+#endif
 
 /* ---- types ---- */
 typedef struct {
@@ -1532,8 +1535,12 @@ void func_00035558()
         }
     } else {
         printf("Ulp!!! error\n");
+#ifdef PSX_PC
+        PC_Break(__FILE__, __LINE__);
+#else
         while (*(volatile int *)&D_00097534 != 0x78654321)
             __asm__ volatile("break 1024");
+#endif
     }
 }
 #undef OUT

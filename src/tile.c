@@ -209,12 +209,6 @@ unsigned long D_0008905C[16] = {
     0x1112100F, 0xD110C10, 0xE0D0A0C, 0x150E0B0A, 0x14131112, 0x18140D11, 0x17180E0D, 0x1617150E
 };
 
-#ifdef PSX_PC
-/* PC-PORT: backing store for PC_SCRATCH (PS1 scratchpad is 1 KB; 4 KB leaves room for overruns). Move to port/pc. */
-unsigned char pc_scratchpad[4096] __attribute__((aligned(16)));
-/* PC-PORT: emulated 2 MB PS1 main RAM for absolute buffer addresses (PC_RAM). Move to port/pc. */
-unsigned char pc_psxram[0x200000] __attribute__((aligned(16)));
-#endif
 /* .sdata 0x96938-0x96953: scratchpad (0x1F800000) work areas */
 DVECTOR *D_00096938 = (DVECTOR *)PC_SCRATCH(0x1F80005C);
 int *D_0009693C = (int *)PC_SCRATCH(0x1F80005C);

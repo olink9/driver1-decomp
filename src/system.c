@@ -34,6 +34,27 @@
 /* maspsx: abs=D_00097520,D_00096804,D_00096834 */
 
 #include "common.h"
+#ifdef PSX_PC
+extern void PC_Break(const char *file, int line); /* port/pc/pc_main.c: logs and aborts (PS1: break 1024) */
+extern int PC_OverlayLoad(const char *name, int addr, int *size);
+#endif
+#ifndef PC_RAM
+#ifdef PSX_PC
+/* PC-PORT: absolute PS1 addresses go through the emulated PS1 RAM / scratchpad (port/pc/pc_compat.h) */
+extern unsigned char pc_psxram[];
+#define PC_RAM(a) ((int)(pc_psxram + ((unsigned int)(a) & 0x1FFFFF)))
+#else
+#define PC_RAM(a) a
+#endif
+#endif
+#ifndef PC_SCRATCH
+#ifdef PSX_PC
+extern unsigned char pc_scratchpad[];
+#define PC_SCRATCH(a) ((int)(pc_scratchpad + ((a) - 0x1F800000)))
+#else
+#define PC_SCRATCH(a) a
+#endif
+#endif
 
 /* ---- types ---- */
 typedef struct { int a, b; } P2;
@@ -163,7 +184,7 @@ void func_000503F4(void)
     int i, j;
     int *base;
 
-    base = (int *)0xD0208;
+    base = (int *)PC_RAM(0xD0208);
     CdInit();
     for (i = 0; i < 8; i++) {
         sz[i] = 0;
@@ -175,7 +196,7 @@ void func_000503F4(void)
         if (sz[i] != 0) {
             func_0007A580(sz[i], file);
             CdControl(2, file, 0);
-            CdRead(1, 0xD0200, 0x80);
+            CdRead(1, PC_RAM(0xD0200), 0x80);
             while (CdReadSync(0, name + 0x80) != 0)
                 ;
             for (j = 0; j < 4; j++) {
@@ -315,12 +336,12 @@ void ShowLoadingScreen(char *screen_name, int effect)
     PutDispEnv(&D_000BDF80);
     PutDrawEnv(&D_000BDF24);
 
-    Loadfile(screen_name, (char *)0xD0200);
-    LoadClut((u_long *)0xD0214, 320, 511);
+    Loadfile(screen_name, (char *)PC_RAM(0xD0200));
+    LoadClut((u_long *)PC_RAM(0xD0214), 320, 511);
     DrawSync(0);
 
     setRECT(&dest, 320, 0, 160, 511);
-    func_00074404(&dest, (char *)0xD0420);
+    func_00074404(&dest, (char *)PC_RAM(0xD0420));
     DrawSync(0);
 
     done = 0;
@@ -451,6 +472,24 @@ void CloseShutters(int speed, int width, int height)
 const S9 D_00010920 = { "\\DRIVER\\" };
 
 /* ---------------- Loadfile (src/pilot/Loadfile.c) ---------------- */
+#ifdef PSX_PC
+/* PC-PORT: the PS1 version strcat()s into a 9-byte S9 and runs on into `pad`, which follows it on the PS1
+ * stack only; here the buffer is one array. Code overlays and NFMV.EXE go through PC_OverlayLoad (pc_main.c):
+ * overlays load for real (their data is used in place) and get their pointer fixups; NFMV.EXE is skipped. */
+int Loadfile(char *name, int mode) {
+    char path[sizeof(S9) + 0x6c];
+    int ev;
+    int r;
+    if (PC_OverlayLoad(name, mode, &r))
+        return r;
+    *(S9 *)path = D_00010920;
+    func_0007E8EC(path, name);
+    func_0007E8EC(path, ";1");
+    r = func_0007E8FC(path, mode, 0);
+    while (CdReadSync(0, &ev)) ;
+    return r;
+}
+#else
 int Loadfile(char *name, int mode) {
     S9 path = D_00010920;
     char pad[0x6c];
@@ -462,6 +501,7 @@ int Loadfile(char *name, int mode) {
     while (CdReadSync(0, &ev)) ;
     return r;
 }
+#endif
 
 /* ---------------- LoadfileSeg (src/pilot/LoadfileSeg.c) ---------------- */
 /* Driver 2: LoadfileSeg */
@@ -490,8 +530,12 @@ int LoadfileSeg(char *name, char *addr, int offset, int loadsize)
         r = CdSearchFile(D_000BE1A4, namebuffer);
         if (r == 0 || r == -1) {
             printf("can't load %s\n", namebuffer);
+#ifdef PSX_PC
+            PC_Break(__FILE__, __LINE__);
+#else
             while (D_00097534 != 0x78654321)
                 __asm__ volatile("break 1024");
+#endif
         }
     }
     sector = offset / 2048;
@@ -520,8 +564,12 @@ int LoadfileSeg(char *name, char *addr, int offset, int loadsize)
     if (nsectors != 0) {
         if ((int)addr & 3) {
             printf("\naddress invalid %s \n", namebuffer);
+#ifdef PSX_PC
+            PC_Break(__FILE__, __LINE__);
+#else
             while (D_00097534 != 0x78654321)
                 __asm__ volatile("break 1024");
+#endif
         }
         func_0007A580(sector, pos);
         CdControl(2, pos, 0);
@@ -633,8 +681,12 @@ void func_000513D4(void)
     a = current->a;
     if (c + lim < a) {
         printf("you need to allocate at least %d bytes for primbuffers\n", c - (a - lim));
+#ifdef PSX_PC
+        PC_Break(__FILE__, __LINE__);
+#else
         while (D_00097534 != 0x78654321)
             __asm__ volatile("break 1024");
+#endif
     }
     current->a = current->c;
     func_00074684(D_00097524->ot + 0x41FC);
@@ -671,12 +723,12 @@ void func_00051540(void)
     B(0xA7) = 1;
     H(0x7A) = 240;
     H(0xFA) = 240;
-    W(8) = 0xD8600;
-    *(unsigned long *)(p - 0x10) = 0xD8600;
-    W(0x88) = 0xF6600;
-    W(0x80) = 0xF6600;
-    W(4) = 0xD0200;
-    W(0x84) = 0xD4400;
+    W(8) = PC_RAM(0xD8600);
+    *(unsigned long *)(p - 0x10) = PC_RAM(0xD8600);
+    W(0x88) = PC_RAM(0xF6600);
+    W(0x80) = PC_RAM(0xF6600);
+    W(4) = PC_RAM(0xD0200);
+    W(0x84) = PC_RAM(0xD4400);
     setTile(&D_000BDF94);
     D_000BDF94.x0 = 0;
     D_000BDF94.y0 = 0;
