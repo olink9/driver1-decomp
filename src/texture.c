@@ -22,6 +22,16 @@
 /* maspsx: sbss_align8=0 abs=D_00097584,D_00097598,D_00096804,D_0009683C,D_00097098,D_000970F0,D_000974B4,D_0009712C,D_00097370,D_00096834 */
 
 #include "structs.h"
+#ifndef PC_RAM
+#ifdef PSX_PC
+/* PC-PORT: absolute PS1 RAM addresses (free-RAM buffers 0xD0200+, level/overlay load areas, KSEG0 0x80xxxxxx) map into
+ * an emulated 2 MB main-RAM block, offset = physical address. pc_psxram[] is defined in tile.c for now. */
+extern unsigned char pc_psxram[];
+#define PC_RAM(a) ((int)(pc_psxram + ((unsigned int)(a) & 0x1FFFFF)))
+#else
+#define PC_RAM(a) a
+#endif
+#endif
 
 /* ---- types ---- */
 typedef struct { short x, y, w, h; } RECT;
@@ -166,8 +176,8 @@ int func_000516E4(short *a0, short *a1, int a2, int *a3)
     r[1] = a0[1];
     r[2] = a0[2];
     r[3] = 0x100;
-    func_00035B5C(0xD0200, a3);
-    func_00074404(r, 0xD0200);
+    func_00035B5C(PC_RAM(0xD0200), a3);
+    func_00074404(r, PC_RAM(0xD0200));
     texture_pages[a2] = GetTPage(0, 0, a0[0], a0[1]);
     a0[0] += 0x40;
     if (a0[0] == 0x400) {
@@ -416,8 +426,8 @@ void func_00052198(void)
     func_000511EC(0);
     a = D_000975F0;
     b = D_00097598;
-    loadsectors(0xD8600, D_00097580, *(int *)&D_00097584);
-    func_000516E4(&a, &b, D_00097588, 0xD8600);
+    loadsectors(PC_RAM(0xD8600), D_00097580, *(int *)&D_00097584);
+    func_000516E4(&a, &b, D_00097588, PC_RAM(0xD8600));
     func_000511EC(1);
 }
 

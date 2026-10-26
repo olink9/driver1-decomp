@@ -15,6 +15,9 @@
  * (uses current, texture_pages and the 0x3DF94 asm), probably cars.c's head, not map.c.
  */
 #include "structs.h"
+#ifdef PSX_PC
+extern void PC_Break(const char *file, int line); /* port/pc/pc_main.c: logs and aborts (PS1: break 1024) */
+#endif
 
 /* ---- types ---- */
 typedef struct {
@@ -161,8 +164,12 @@ void func_000394E0(char *p)
     if (*(int *)&D_000967A8 > 422) {
         printf("MAX_ROADS = %d NumRoads = %d, guess what you gotta do!\n", 422, *(int *)&D_000967A8);
         magic = *(int *)&D_00097534;
+#ifdef PSX_PC
+        PC_Break(__FILE__, __LINE__);
+#else
         while (magic != 0x78654321)
             __asm__ volatile("break 1024");   /* aspsx encodes break n as n << 6 */
+#endif
     }
     p += 4;
     *(char **)&D_00097044 = p;
@@ -195,8 +202,12 @@ void func_000395D8(char *p)
     if (*(int *)&D_000967A8 > 422) {
         printf("MAX_ROADS = %d NumRoads = %d, guess what you gotta do!\n", 422, *(int *)&D_000967A8);
         magic = *(int *)&D_00097534;
+#ifdef PSX_PC
+        PC_Break(__FILE__, __LINE__);
+#else
         while (magic != 0x78654321)
             __asm__ volatile("break 1024");   /* aspsx encodes break n as n << 6 */
+#endif
     }
     p += 4;
     *(char **)&D_0009704C = p;

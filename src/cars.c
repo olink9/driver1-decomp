@@ -24,6 +24,58 @@
 #include "gte.h"
 
 #include "structs.h"
+#ifndef PC_SCRATCH
+#ifdef PSX_PC
+/* PC-PORT: the PS1 scratchpad (0x1F800000, 1 KB) is a static buffer on PC (REDRIVER2 _scratchData approach, but a
+ * link-time array so file-scope initialisers stay constant). pc_scratchpad[] is defined in tile.c for now. */
+extern unsigned char pc_scratchpad[];
+#define PC_SCRATCH(a) ((int)(pc_scratchpad + ((a) - 0x1F800000)))
+#else
+#define PC_SCRATCH(a) a
+#endif
+#endif
+#ifdef PSX_PC
+/* PC-PORT: GTE shim - PsyCross software GTE (MTC2/CTC2/MFC2/CFC2/doCOP2) in place of this file's MIPS
+ * gte macros (those are #ifndef PSX_PC below). Statement-safe (do/while), unlike inline_c.h's {...};
+ * same register/offset semantics as the lwc2/swc2/ctc2 originals. Same shim in every GTE file of src/. */
+extern void MTC2(unsigned int value, int reg);
+extern void CTC2(unsigned int value, int reg);
+extern unsigned int MFC2(int reg);
+extern unsigned int CFC2(int reg);
+extern int doCOP2(int op);
+#define PCGTE_W(p, o) (*(unsigned int *)((char *)(p) + (o)))
+#define PCGTE_H(p, o) (*(unsigned short *)((char *)(p) + (o)))
+#undef gte_SetRotMatrix
+#define gte_SetRotMatrix(r0) do { CTC2(PCGTE_W(r0,0), 0); CTC2(PCGTE_W(r0,4), 1); CTC2(PCGTE_W(r0,8), 2); CTC2(PCGTE_W(r0,12), 3); CTC2(PCGTE_W(r0,16), 4); } while (0)
+#undef gte_SetTransVec0
+#define gte_SetTransVec0(r0) do { CTC2(PCGTE_W(r0,0), 5); CTC2(PCGTE_W(r0,4), 6); CTC2(PCGTE_W(r0,8), 7); } while (0)
+#undef gte_avsz4
+#define gte_avsz4() (doCOP2(0x168002E))
+#undef gte_ldv0
+#define gte_ldv0(r0) do { MTC2(PCGTE_W(r0,0), 0); MTC2(PCGTE_W(r0,4), 1); } while (0)
+#undef gte_ldv3
+#define gte_ldv3(r0, r1, r2) do { MTC2(PCGTE_W(r0,0), 0); MTC2(PCGTE_W(r0,4), 1); MTC2(PCGTE_W(r1,0), 2); MTC2(PCGTE_W(r1,4), 3); MTC2(PCGTE_W(r2,0), 4); MTC2(PCGTE_W(r2,4), 5); } while (0)
+#undef gte_nclip
+#define gte_nclip() (doCOP2(0x1400006))
+#undef gte_rtps
+#define gte_rtps() (doCOP2(0x0180001))
+#undef gte_rtpt
+#define gte_rtpt() (doCOP2(0x0280030))
+#undef gte_rtv0
+#define gte_rtv0() (doCOP2(0x0486012))
+#undef gte_stopz
+#define gte_stopz(r0) do { PCGTE_W(r0,0) = MFC2(24); } while (0)
+#undef gte_stotz
+#define gte_stotz(r0) do { PCGTE_W(r0,0) = MFC2(7); } while (0)
+#undef gte_stsv
+#define gte_stsv(r0) do { PCGTE_H(r0,0) = (short)MFC2(9); PCGTE_H(r0,2) = (short)MFC2(10); PCGTE_H(r0,4) = (short)MFC2(11); } while (0)
+#undef gte_stsxy0
+#define gte_stsxy0(r0) do { PCGTE_W(r0,0) = MFC2(12); } while (0)
+#undef gte_stsxy1
+#define gte_stsxy1(r0) do { PCGTE_W(r0,0) = MFC2(13); } while (0)
+#undef gte_stsxy2
+#define gte_stsxy2(r0) do { PCGTE_W(r0,0) = MFC2(14); } while (0)
+#endif /* PSX_PC */
 
 /* ---- types ---- */
 typedef struct { int m[8]; } MAT8;
@@ -461,13 +513,17 @@ done:
 /* ---------------- func_0003B168 (src/pilot/func_0003B168.c) ---------------- */
 void func_0003B168(int a0, int a1, int *a2, int *a3)
 {
+#ifdef PSX_PC
+    CTC2(a2[0], 5); CTC2(a2[1], 6); CTC2(a2[2], 7); /* TRX/TRY/TRZ = a2[0..2] */
+#else
     register int t4 __asm__("$12") = a2[0];
     register int t5 __asm__("$13") = a2[1];
     register int t6 __asm__("$14") = a2[2];
     __asm__ volatile("ctc2 %0, $5; ctc2 %1, $6; ctc2 %2, $7" : : "r"(t4), "r"(t5), "r"(t6));
+#endif
     SetRotMatrix(a1);
     if (*(int *)&D_00096834 != 3) {
-        D_000973AC = func_00079AF0(0x1F800308);
+        D_000973AC = func_00079AF0(PC_SCRATCH(0x1F800308));
     }
     func_0003A45C(a0, *(int *)&D_00096978);
     if (*(int *)&D_00096834 != 3) {
@@ -482,11 +538,13 @@ extern int pauseflag;
 #define gCleanWheelModelPtr (*(MODEL **)&D_000970AC)
 #define gFastWheelModelPtr (*(MODEL **)&D_000970C0)
 #define gDamWheelModelPtr (*(MODEL **)&D_000970C4)
+#ifndef PSX_PC
 #define gte_rtv0() __asm__ volatile ( \
     "nop;" "nop;" "mvmva 1, 0, 0, 3, 0")
 #define gte_stsv(r0) __asm__ volatile ( \
     "mfc2  $12, $9;" "mfc2  $13, $10;" "mfc2  $14, $11;" \
     "sh    $12, 0( %0 );" "sh    $13, 2( %0 );" "sh    $14, 4( %0 )" : : "r"(r0) : "$12", "$13", "$14", "memory")
+#endif
 void DrawCarWheels(int car, MATRIX *RearMatrix, VECTOR *pos, int unused, int cosIdx)
 {
     MATRIX FrontMatrix;
@@ -610,8 +668,10 @@ void DrawCarWheels(int car, MATRIX *RearMatrix, VECTOR *pos, int unused, int cos
 #undef gCleanWheelModelPtr
 #undef gDamWheelModelPtr
 #undef gFastWheelModelPtr
+#ifndef PSX_PC
 #undef gte_rtv0
 #undef gte_stsv
+#endif
 #undef pauseflag
 
 /* ---------------- DrawWheelObject (src/pilot/DrawWheelObject.c) ---------------- */
@@ -620,6 +680,7 @@ extern int current;
 #define current (*(DB **)&current)
 extern int combointensity;
 #define combointensity (*(unsigned int *)&combointensity)
+#ifndef PSX_PC
 #define gte_ldv3(r0, r1, r2) __asm__ volatile ( \
     "lwc2  $0, 0( %0 );" "lwc2  $1, 4( %0 );" "lwc2  $2, 0( %1 );" \
     "lwc2  $3, 4( %1 );" "lwc2  $4, 0( %2 );" "lwc2  $5, 4( %2 )" : : "r"(r0), "r"(r1), "r"(r2))
@@ -633,6 +694,7 @@ extern int combointensity;
 #define gte_stsxy0(r0) __asm__ volatile ("swc2  $12, 0( %0 )" : : "r"(r0) : "memory")
 #define gte_stsxy1(r0) __asm__ volatile ("swc2  $13, 0( %0 )" : : "r"(r0) : "memory")
 #define gte_stsxy2(r0) __asm__ volatile ("swc2  $14, 0( %0 )" : : "r"(r0) : "memory")
+#endif
 #define setaddr(_p, _addr) (((P_TAG *)(_p))->addr = (unsigned long)(_addr))
 #define getaddr(_p) (unsigned long)(((P_TAG *)(_p))->addr)
 #define addPrim(ot, p) setaddr(p, getaddr(ot)), setaddr(ot, p)
@@ -702,6 +764,7 @@ void DrawWheelObject(MODEL *model, SVECTOR *verts, int transparent)
 #undef combointensity
 #undef current
 #undef getaddr
+#ifndef PSX_PC
 #undef gte_avsz4
 #undef gte_ldv0
 #undef gte_ldv3
@@ -713,6 +776,7 @@ void DrawWheelObject(MODEL *model, SVECTOR *verts, int transparent)
 #undef gte_stsxy0
 #undef gte_stsxy1
 #undef gte_stsxy2
+#endif
 #undef setaddr
 #undef setlen
 
@@ -732,6 +796,7 @@ void func_0003B994(S *s, int x) {
 }
 
 /* ---------------- func_0003BA7C (src/pilot/func_0003BA7C.c) ---------------- */
+#ifndef PSX_PC
 #define gte_ldv0(r0) __asm__ volatile ( \
     "lwc2  $0, 0( %0 );" "lwc2  $1, 4( %0 )" : : "r"(r0))
 #define gte_rtv0() __asm__ volatile ( \
@@ -739,6 +804,7 @@ void func_0003B994(S *s, int x) {
 #define gte_stsv(r0) __asm__ volatile ( \
     "mfc2  $12, $9;" "mfc2  $13, $10;" "mfc2  $14, $11;" \
     "sh    $12, 0( %0 );" "sh    $13, 2( %0 );" "sh    $14, 4( %0 )" : : "r"(r0) : "$12", "$13", "$14", "memory")
+#endif
 void func_0003BA7C(int car, unsigned char *out)
 {
     SVECTOR v;
@@ -750,8 +816,8 @@ void func_0003BA7C(int car, unsigned char *out)
     x = (car_data[car].pos.vx >> 8) & 0x3F;
     z = -(car_data[car].pos.vz >> 8) & 0x3F;
     sv = (SVECTOR *)D_000A1AB0[0]->point_normals;
-    InvertMatrix(&car_data[car].where, (MATRIX *)0x1F800344);
-    SetRotMatrix((MATRIX *)0x1F800344);
+    InvertMatrix(&car_data[car].where, (MATRIX *)PC_SCRATCH(0x1F800344));
+    SetRotMatrix((MATRIX *)PC_SCRATCH(0x1F800344));
     for (i = 0; i < D_000A1AB0[0]->num_point_normals; i++) {
         gte_ldv0(&sv[i]);
         gte_rtv0();
@@ -759,12 +825,14 @@ void func_0003BA7C(int car, unsigned char *out)
         out[i * 2] = (-v.vx + 4096) / 128 + x;
         out[i * 2 + 1] = (-v.vz + 4096) / 128 + z;
     }
-    *(unsigned char **)0x1F800038 = out;
+    *(unsigned char **)PC_SCRATCH(0x1F800038) = out;
 }
+#ifndef PSX_PC
 #undef gte_ldv0
 #undef gte_rtv0
 #undef gte_stsv
 
+#endif
 /* ---------------- func_0003BBF8 (src/pilot/func_0003BBF8.c) ---------------- */
 /* no Driver 2 counterpart */
 void func_0003BBF8(void)

@@ -84,6 +84,76 @@
  */
 
 #include "structs.h"
+#ifndef PC_SCRATCH
+#ifdef PSX_PC
+/* PC-PORT: the PS1 scratchpad (0x1F800000, 1 KB) is a static buffer on PC (REDRIVER2 _scratchData approach, but a
+ * link-time array so file-scope initialisers stay constant). pc_scratchpad[] is defined in tile.c for now. */
+extern unsigned char pc_scratchpad[];
+#define PC_SCRATCH(a) ((int)(pc_scratchpad + ((a) - 0x1F800000)))
+#else
+#define PC_SCRATCH(a) a
+#endif
+#endif
+#ifdef PSX_PC
+/* PC-PORT: GTE shim - PsyCross software GTE (MTC2/CTC2/MFC2/CFC2/doCOP2) in place of this file's MIPS
+ * gte macros (those are #ifndef PSX_PC below). Statement-safe (do/while), unlike inline_c.h's {...};
+ * same register/offset semantics as the lwc2/swc2/ctc2 originals. Same shim in every GTE file of src/. */
+extern void MTC2(unsigned int value, int reg);
+extern void CTC2(unsigned int value, int reg);
+extern unsigned int MFC2(int reg);
+extern unsigned int CFC2(int reg);
+extern int doCOP2(int op);
+#define PCGTE_W(p, o) (*(unsigned int *)((char *)(p) + (o)))
+#define PCGTE_H(p, o) (*(unsigned short *)((char *)(p) + (o)))
+#undef B35_LDV1
+#define B35_LDV1(r0) do { MTC2(PCGTE_W(r0,0), 0); MTC2(PCGTE_W(r0,4), 1); doCOP2(0x0180001); } while (0)
+#undef B35_LDV3
+#define B35_LDV3(r0) do { MTC2(PCGTE_W(r0,0), 0); MTC2(PCGTE_W(r0,4), 1); MTC2(PCGTE_W(r0,8), 2); MTC2(PCGTE_W(r0,12), 3); MTC2(PCGTE_W(r0,16), 4); MTC2(PCGTE_W(r0,20), 5); doCOP2(0x0280030); } while (0)
+#undef B35_ST1
+#define B35_ST1(r0) do { PCGTE_W(r0,0) = MFC2(14); } while (0)
+#undef B35_ST3
+#define B35_ST3(r0) do { PCGTE_W(r0,0) = MFC2(12); PCGTE_W(r0,4) = MFC2(13); PCGTE_W(r0,8) = MFC2(14); } while (0)
+#undef B35_STSZ
+#define B35_STSZ(r0) do { PCGTE_W(r0,0) = MFC2(17); PCGTE_W(r0,4) = MFC2(18); PCGTE_W(r0,8) = MFC2(19); } while (0)
+#undef B57_LDV1
+#define B57_LDV1(r0) do { MTC2(PCGTE_W(r0,0), 0); MTC2(PCGTE_W(r0,4), 1); doCOP2(0x0180001); } while (0)
+#undef B57_LDV3
+#define B57_LDV3(r0) do { MTC2(PCGTE_W(r0,0), 0); MTC2(PCGTE_W(r0,4), 1); MTC2(PCGTE_W(r0,8), 2); MTC2(PCGTE_W(r0,12), 3); MTC2(PCGTE_W(r0,16), 4); MTC2(PCGTE_W(r0,20), 5); doCOP2(0x0280030); } while (0)
+#undef B57_ST1
+#define B57_ST1(r0) do { PCGTE_W(r0,0) = MFC2(14); } while (0)
+#undef B57_ST3
+#define B57_ST3(r0) do { PCGTE_W(r0,0) = MFC2(12); PCGTE_W(r0,4) = MFC2(13); PCGTE_W(r0,8) = MFC2(14); } while (0)
+#undef B57_STSZ
+#define B57_STSZ(r0) do { PCGTE_W(r0,0) = MFC2(17); PCGTE_W(r0,4) = MFC2(18); PCGTE_W(r0,8) = MFC2(19); } while (0)
+#undef B57_STSZ1
+#define B57_STSZ1(r0) do { PCGTE_W(r0,0) = MFC2(19); } while (0)
+#undef B76_LDV1
+#define B76_LDV1(r0) do { MTC2(PCGTE_W(r0,0), 0); MTC2(PCGTE_W(r0,4), 1); doCOP2(0x0180001); } while (0)
+#undef B76_LDV3
+#define B76_LDV3(r0) do { MTC2(PCGTE_W(r0,0), 0); MTC2(PCGTE_W(r0,4), 1); MTC2(PCGTE_W(r0,8), 2); MTC2(PCGTE_W(r0,12), 3); MTC2(PCGTE_W(r0,16), 4); MTC2(PCGTE_W(r0,20), 5); doCOP2(0x0280030); } while (0)
+#undef B76_ST1
+#define B76_ST1(r0) do { PCGTE_W(r0,0) = MFC2(14); } while (0)
+#undef B76_ST3
+#define B76_ST3(r0) do { PCGTE_W(r0,0) = MFC2(12); PCGTE_W(r0,4) = MFC2(13); PCGTE_W(r0,8) = MFC2(14); } while (0)
+#undef B76_STSZ
+#define B76_STSZ(r0) do { PCGTE_W(r0,0) = MFC2(17); PCGTE_W(r0,4) = MFC2(18); PCGTE_W(r0,8) = MFC2(19); } while (0)
+#undef B76_STSZ1
+#define B76_STSZ1(r0) do { PCGTE_W(r0,0) = MFC2(19); } while (0)
+#undef B85_LDV1
+#define B85_LDV1(r0) do { MTC2(PCGTE_W(r0,0), 0); MTC2(PCGTE_W(r0,4), 1); doCOP2(0x0180001); } while (0)
+#undef B85_LDV3
+#define B85_LDV3(r0) do { MTC2(PCGTE_W(r0,0), 0); MTC2(PCGTE_W(r0,4), 1); MTC2(PCGTE_W(r0,8), 2); MTC2(PCGTE_W(r0,12), 3); MTC2(PCGTE_W(r0,16), 4); MTC2(PCGTE_W(r0,20), 5); doCOP2(0x0280030); } while (0)
+#undef B85_ST1
+#define B85_ST1(r0) do { PCGTE_W(r0,0) = MFC2(14); } while (0)
+#undef B85_ST3
+#define B85_ST3(r0) do { PCGTE_W(r0,0) = MFC2(12); PCGTE_W(r0,4) = MFC2(13); PCGTE_W(r0,8) = MFC2(14); } while (0)
+#undef gte_ldsxy3
+#define gte_ldsxy3(r0, r1, r2) do { MTC2((unsigned int)(r0), 12); MTC2((unsigned int)(r2), 14); MTC2((unsigned int)(r1), 13); } while (0)
+#undef gte_nclip
+#define gte_nclip() (doCOP2(0x1400006))
+#undef gte_stopz
+#define gte_stopz(r0) do { PCGTE_W(r0,0) = MFC2(24); } while (0)
+#endif /* PSX_PC */
 
 /* ---- types ---- */
 typedef struct { unsigned char v; char pad[7]; } B8;
@@ -139,14 +209,20 @@ unsigned long D_0008905C[16] = {
     0x1112100F, 0xD110C10, 0xE0D0A0C, 0x150E0B0A, 0x14131112, 0x18140D11, 0x17180E0D, 0x1617150E
 };
 
+#ifdef PSX_PC
+/* PC-PORT: backing store for PC_SCRATCH (PS1 scratchpad is 1 KB; 4 KB leaves room for overruns). Move to port/pc. */
+unsigned char pc_scratchpad[4096] __attribute__((aligned(16)));
+/* PC-PORT: emulated 2 MB PS1 main RAM for absolute buffer addresses (PC_RAM). Move to port/pc. */
+unsigned char pc_psxram[0x200000] __attribute__((aligned(16)));
+#endif
 /* .sdata 0x96938-0x96953: scratchpad (0x1F800000) work areas */
-DVECTOR *D_00096938 = (DVECTOR *)0x1F80005C;
-int *D_0009693C = (int *)0x1F80005C;
-unsigned char *D_00096940 = (unsigned char *)0x1F8000C0;
-unsigned short *D_00096944 = (unsigned short *)0x1F8000F2;
-DVECTOR *D_00096948 = (DVECTOR *)0x1F800124;
-UVPAIR *D_0009694C = (UVPAIR *)0x1F800134;
-unsigned long *D_00096950 = (unsigned long *)0x1F8001F0;
+DVECTOR *D_00096938 = (DVECTOR *)PC_SCRATCH(0x1F80005C);
+int *D_0009693C = (int *)PC_SCRATCH(0x1F80005C);
+unsigned char *D_00096940 = (unsigned char *)PC_SCRATCH(0x1F8000C0);
+unsigned short *D_00096944 = (unsigned short *)PC_SCRATCH(0x1F8000F2);
+DVECTOR *D_00096948 = (DVECTOR *)PC_SCRATCH(0x1F800124);
+UVPAIR *D_0009694C = (UVPAIR *)PC_SCRATCH(0x1F800134);
+unsigned long *D_00096950 = (unsigned long *)PC_SCRATCH(0x1F8001F0);
 
 /* .sbss 0x97130-0x9715F (D_00097139/3A and D_00097151/52 are byte labels inside D_00097138/D_00097150) */
 unsigned long D_00097130;
@@ -195,9 +271,9 @@ void func_000270D4(int num)
     int ots[3];
     CELL_OBJECT **list;
 
-    list = (CELL_OBJECT **)0x1F800200;
-    col = (unsigned int *)0x1F8001F0;
-    save = (int *)0x1F800000;
+    list = (CELL_OBJECT **)PC_SCRATCH(0x1F800200);
+    col = (unsigned int *)PC_SCRATCH(0x1F8001F0);
+    save = (int *)PC_SCRATCH(0x1F800000);
     prev = -1;
 
     if (D_00096AA8[0] == 0 && *(int *)&gNight == 0) {
@@ -297,6 +373,7 @@ void func_000270D4(int num)
 #undef current
 
 /* ---------------- func_00027620 (src/pilot/func_00027620.c) ---------------- */
+#ifndef PSX_PC
 #define B35_LDV3(p) __asm__ volatile ( \
     "lwc2 $0, 0(%0);" "lwc2 $1, 4(%0);" "lwc2 $2, 8(%0);" "lwc2 $3, 12(%0);" \
     "lwc2 $4, 16(%0);" "lwc2 $5, 20(%0);" "nop;" "nop;" "rtpt" : : "r"(p))
@@ -307,6 +384,7 @@ void func_000270D4(int num)
 #define B35_STSZ(p) __asm__ volatile ( \
     "swc2 $17, 0(%0);" "swc2 $18, 4(%0);" "swc2 $19, 8(%0)" : : "r"(p) : "memory")
 #define B35_ST1(p) __asm__ volatile ("swc2 $14, 0(%0)" : : "r"(p) : "memory")
+#endif
 void func_00027620(unsigned int a0, SVECTOR *a1)
 {
     short step[3];
@@ -353,14 +431,17 @@ void func_00027620(unsigned int a0, SVECTOR *a1)
     B35_LDV1(&D_000A1B00[k]);
     B35_ST1(D_0009693C + k);
 }
+#ifndef PSX_PC
 #undef B35_LDV1
 #undef B35_LDV3
 #undef B35_ST1
 #undef B35_ST3
 #undef B35_STSZ
 
+#endif
 /* ---------------- func_000277D4 (src/pilot/func_000277D4.c) ---------------- */
 /* Sibling of func_00027620 (subdivided quad + UVs, then RotTransPers). */
+#ifndef PSX_PC
 #define B57_LDV3(p) __asm__ volatile ( \
     "lwc2 $0, 0(%0);" "lwc2 $1, 4(%0);" "lwc2 $2, 8(%0);" "lwc2 $3, 12(%0);" \
     "lwc2 $4, 16(%0);" "lwc2 $5, 20(%0);" "nop;" "nop;" "rtpt" : : "r"(p))
@@ -372,6 +453,7 @@ void func_00027620(unsigned int a0, SVECTOR *a1)
     "swc2 $17, 0(%0);" "swc2 $18, 4(%0);" "swc2 $19, 8(%0)" : : "r"(p) : "memory")
 #define B57_ST1(p) __asm__ volatile ("swc2 $14, 0(%0)" : : "r"(p) : "memory")
 #define B57_STSZ1(p) __asm__ volatile ("swc2 $19, 0(%0)" : : "r"(p) : "memory")
+#endif
 void func_000277D4(unsigned int verts, unsigned int uv, unsigned int uv2, SVECTOR *v)
 {
     short step[3];
@@ -440,6 +522,7 @@ void func_000277D4(unsigned int verts, unsigned int uv, unsigned int uv2, SVECTO
     B57_STSZ1(sz);
     D_00096944[k] = sz[0];
 }
+#ifndef PSX_PC
 #undef B57_LDV1
 #undef B57_LDV3
 #undef B57_ST1
@@ -447,8 +530,10 @@ void func_000277D4(unsigned int verts, unsigned int uv, unsigned int uv2, SVECTO
 #undef B57_STSZ
 #undef B57_STSZ1
 
+#endif
 /* ---------------- func_00027A4C (src/pilot/func_00027A4C.c) ---------------- */
 /* Sibling of func_000277D4: 4x4-subdivided quad (5x5 grid + UVs), then RotTransPers. */
+#ifndef PSX_PC
 #define B76_LDV3(p) __asm__ volatile ( \
     "lwc2 $0, 0(%0);" "lwc2 $1, 4(%0);" "lwc2 $2, 8(%0);" "lwc2 $3, 12(%0);" \
     "lwc2 $4, 16(%0);" "lwc2 $5, 20(%0);" "nop;" "nop;" "rtpt" : : "r"(p))
@@ -460,6 +545,7 @@ void func_000277D4(unsigned int verts, unsigned int uv, unsigned int uv2, SVECTO
     "swc2 $17, 0(%0);" "swc2 $18, 4(%0);" "swc2 $19, 8(%0)" : : "r"(p) : "memory")
 #define B76_ST1(p) __asm__ volatile ("swc2 $14, 0(%0)" : : "r"(p) : "memory")
 #define B76_STSZ1(p) __asm__ volatile ("swc2 $19, 0(%0)" : : "r"(p) : "memory")
+#endif
 void func_00027A4C(unsigned int verts, unsigned int uv, unsigned int uv2, SVECTOR *v)
 {
     short step[4];
@@ -549,6 +635,7 @@ void func_00027A4C(unsigned int verts, unsigned int uv, unsigned int uv2, SVECTO
     B76_STSZ1(sz);
     D_00096944[k] = sz[0];
 }
+#ifndef PSX_PC
 #undef B76_LDV1
 #undef B76_LDV3
 #undef B76_ST1
@@ -556,6 +643,7 @@ void func_00027A4C(unsigned int verts, unsigned int uv, unsigned int uv2, SVECTO
 #undef B76_STSZ
 #undef B76_STSZ1
 
+#endif
 /* ---------------- func_00027E08 (src/pilot/func_00027E08.c) ---------------- */
 /* no Driver 2 counterpart: draws textured quads (POLY_FT4) from packed vertex indices, clipping via func_00028FA4 */
 extern CUR current__cur __asm__("current"); /* view: current as a struct (lw, no long long) */
@@ -711,10 +799,12 @@ void func_00028340(unsigned long col, int n, unsigned long *ot)
 
 /* ---------------- func_000287A4 (src/pilot/func_000287A4.c) ---------------- */
 /* func_000287A4: draw a subdivided model's polygons (per-poly mode from a packed 3-bit stream). */
+#ifndef PSX_PC
 #define gte_ldsxy3(r0, r1, r2) __asm__ volatile ( \
     "mtc2 %0, $12;" "mtc2 %2, $14;" "mtc2 %1, $13" : : "r"(r0), "r"(r1), "r"(r2))
 #define gte_nclip() __asm__ volatile ("nop;" "nop;" "nclip")
 #define gte_stopz(r0) __asm__ volatile ("swc2 $24, 0(%0)" : : "r"(r0) : "memory")
+#endif
 void func_000287A4(MODEL *model)
 {
     int opz;
@@ -731,10 +821,10 @@ void func_000287A4(MODEL *model)
     int idx;
 
     uv1 = uv0 = 0;
-    clut = (int *)0x1F8001F0;
+    clut = (int *)PC_SCRATCH(0x1F8001F0);
     mode = uv1;
     i = 0;
-    scratch = (int *)0x1F800000;
+    scratch = (int *)PC_SCRATCH(0x1F800000);
     modes = ((unsigned int *)model)[9];
     modes >>= 2;
     poly = (int *)model->poly_block;
@@ -799,10 +889,12 @@ void func_000287A4(MODEL *model)
         poly = (int *)((char *)poly + D_00089F1C[*(unsigned char *)poly]);
     }
 }
+#ifndef PSX_PC
 #undef gte_ldsxy3
 #undef gte_nclip
 #undef gte_stopz
 
+#endif
 /* ---------------- func_00028AF8 (src/pilot/func_00028AF8.c) ---------------- */
 /* Clips the screen-space edge a->b against x = -128 / 640 and appends the
    surviving vertices (with interpolated uv) to D_000A1BC8 (count D_00097158) */
@@ -994,6 +1086,7 @@ void func_00028FA4(unsigned int *ot)
    C form found (pointer/inline-helper/loop/type/tail-duplication variants all broke other allocation).
    History: r3-14 94.48, r4-13 99.84 (sibling giv forms), r4-13b 100.0 with this hint. */
 /* Sibling of func_00027A4C: 4x4-subdivided bilinear quad (5x5 grid + UVs), then RotTransPers. */
+#ifndef PSX_PC
 #define B85_LDV3(p) __asm__ volatile ( \
     "lwc2 $0, 0(%0);" "lwc2 $1, 4(%0);" "lwc2 $2, 8(%0);" "lwc2 $3, 12(%0);" \
     "lwc2 $4, 16(%0);" "lwc2 $5, 20(%0);" "nop;" "nop;" "rtpt" : : "r"(p))
@@ -1002,6 +1095,7 @@ void func_00028FA4(unsigned int *ot)
 #define B85_ST3(p) __asm__ volatile ( \
     "swc2 $12, 0(%0);" "swc2 $13, 4(%0);" "swc2 $14, 8(%0)" : : "r"(p) : "memory")
 #define B85_ST1(p) __asm__ volatile ("swc2 $14, 0(%0)" : : "r"(p) : "memory")
+#endif
 void func_00029448(unsigned int verts, unsigned int uv, unsigned int uv2, SVECTOR *v)
 {
     short step[4];
@@ -1100,11 +1194,13 @@ void func_00029448(unsigned int verts, unsigned int uv, unsigned int uv2, SVECTO
     B85_LDV1(&D_000A1B00[k]);
     B85_ST1(D_0009693C + k);
 }
+#ifndef PSX_PC
 #undef B85_LDV1
 #undef B85_LDV3
 #undef B85_ST1
 #undef B85_ST3
 
+#endif
 /* ---------------- func_000298B0 (src/pilot/func_000298B0.c; was shadow.c's head) ---------------- */
 void func_000298B0(int x)
 {

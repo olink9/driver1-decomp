@@ -54,6 +54,16 @@
 /* maspsx: abs=tracking_car,D_0009B19C,D_00096A60,D_00096A58,current */
 #include "common.h"
 #include "structs.h"
+#ifndef PC_RAM
+#ifdef PSX_PC
+/* PC-PORT: absolute PS1 RAM addresses (free-RAM buffers 0xD0200+, level/overlay load areas, KSEG0 0x80xxxxxx) map into
+ * an emulated 2 MB main-RAM block, offset = physical address. pc_psxram[] is defined in tile.c for now. */
+extern unsigned char pc_psxram[];
+#define PC_RAM(a) ((int)(pc_psxram + ((unsigned int)(a) & 0x1FFFFF)))
+#else
+#define PC_RAM(a) a
+#endif
+#endif
 
 /* ---- types ---- */
 typedef struct { int a, b, c, d; } E16;
@@ -195,9 +205,9 @@ void func_0006DD3C(int x)
 	*(char *)&tracking_car = 0;
 	*(char *)&cameraview = 5;
 	sprintf(buf, "FB\\%d\\FB%d.FB", q, x);
-	p = (int *)0xD0204;
-	Loadfile(buf, 0xD0200);
-	D_00096F84 = *(unsigned char *)0xD0200;
+	p = (int *)PC_RAM(0xD0204);
+	Loadfile(buf, PC_RAM(0xD0200));
+	D_00096F84 = *(unsigned char *)PC_RAM(0xD0200);
 	for (i = 0; i < D_00096F84; i++) {
 		D_000C71EC[i].a = *p++;
 		D_000C71EC[i].b = *p++;

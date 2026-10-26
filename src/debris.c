@@ -39,6 +39,77 @@
 /* maspsx: abs=D_0009688C,D_0009717C,pauseflag,gNight,D_00096834,D_00096854,D_00096CD0,D_00096804,D_0009744E,D_00097450,D_0009746E,D_00097470,D_0009697C,D_000971C0,D_00097128,D_001E4038,D_001E40A0,D_000967F4,D_00096C48,D_00096C4A,gLightsOn,FastForward,CameraCnt,current,D_000971B4,D_00096980 */
 #include "gte.h"
 #include "structs.h"
+#ifndef PC_SCRATCH
+#ifdef PSX_PC
+/* PC-PORT: the PS1 scratchpad (0x1F800000, 1 KB) is a static buffer on PC (REDRIVER2 _scratchData approach, but a
+ * link-time array so file-scope initialisers stay constant). pc_scratchpad[] is defined in tile.c for now. */
+extern unsigned char pc_scratchpad[];
+#define PC_SCRATCH(a) ((int)(pc_scratchpad + ((a) - 0x1F800000)))
+#else
+#define PC_SCRATCH(a) a
+#endif
+#endif
+#ifdef PSX_PC
+/* PC-PORT: GTE shim - PsyCross software GTE (MTC2/CTC2/MFC2/CFC2/doCOP2) in place of this file's MIPS
+ * gte macros (those are #ifndef PSX_PC below). Statement-safe (do/while), unlike inline_c.h's {...};
+ * same register/offset semantics as the lwc2/swc2/ctc2 originals. Same shim in every GTE file of src/. */
+extern void MTC2(unsigned int value, int reg);
+extern void CTC2(unsigned int value, int reg);
+extern unsigned int MFC2(int reg);
+extern unsigned int CFC2(int reg);
+extern int doCOP2(int op);
+#define PCGTE_W(p, o) (*(unsigned int *)((char *)(p) + (o)))
+#define PCGTE_H(p, o) (*(unsigned short *)((char *)(p) + (o)))
+/* SetRotMatrix: the local MIPS macro is the libgte function inlined; PC calls PsyCross SetRotMatrix() */
+#undef SetTransVec
+#define SetTransVec(r0) do { CTC2(PCGTE_W(r0,0), 5); CTC2(PCGTE_W(r0,4), 6); CTC2(PCGTE_W(r0,8), 7); } while (0)
+#undef gte_SetRotMatrix
+#define gte_SetRotMatrix(r0) do { CTC2(PCGTE_W(r0,0), 0); CTC2(PCGTE_W(r0,4), 1); CTC2(PCGTE_W(r0,8), 2); CTC2(PCGTE_W(r0,12), 3); CTC2(PCGTE_W(r0,16), 4); } while (0)
+#undef gte_SetTransVec0
+#define gte_SetTransVec0(r0) do { CTC2(PCGTE_W(r0,0), 5); CTC2(PCGTE_W(r0,4), 6); CTC2(PCGTE_W(r0,8), 7); } while (0)
+#undef gte_SetTransVector
+#define gte_SetTransVector(r0) do { CTC2(PCGTE_W(r0,0), 5); CTC2(PCGTE_W(r0,4), 6); CTC2(PCGTE_W(r0,8), 7); } while (0)
+#undef gte_ldv0
+#define gte_ldv0(r0) do { MTC2(PCGTE_W(r0,0), 0); MTC2(PCGTE_W(r0,4), 1); } while (0)
+#undef gte_ldv3
+#define gte_ldv3(r0, r1, r2) do { MTC2(PCGTE_W(r0,0), 0); MTC2(PCGTE_W(r0,4), 1); MTC2(PCGTE_W(r1,0), 2); MTC2(PCGTE_W(r1,4), 3); MTC2(PCGTE_W(r2,0), 4); MTC2(PCGTE_W(r2,4), 5); } while (0)
+#undef gte_ldv3c
+#define gte_ldv3c(r0) do { MTC2(PCGTE_W(r0,0), 0); MTC2(PCGTE_W(r0,4), 1); MTC2(PCGTE_W(r0,8), 2); MTC2(PCGTE_W(r0,12), 3); MTC2(PCGTE_W(r0,16), 4); MTC2(PCGTE_W(r0,20), 5); } while (0)
+#undef gte_rtps
+#define gte_rtps() (doCOP2(0x0180001))
+#undef gte_rtpt
+#define gte_rtpt() (doCOP2(0x0280030))
+#undef gte_rtv0tr
+#define gte_rtv0tr() (doCOP2(0x0480012))
+#undef gte_stlvnl
+#define gte_stlvnl(r0) do { PCGTE_W(r0,0) = MFC2(25); PCGTE_W(r0,4) = MFC2(26); PCGTE_W(r0,8) = MFC2(27); } while (0)
+#undef gte_stsv
+#define gte_stsv(r0) do { PCGTE_H(r0,0) = (short)MFC2(9); PCGTE_H(r0,2) = (short)MFC2(10); PCGTE_H(r0,4) = (short)MFC2(11); } while (0)
+#undef gte_stsxy
+#define gte_stsxy(r0) do { PCGTE_W(r0,0) = MFC2(14); } while (0)
+#undef gte_stsxy3
+#define gte_stsxy3(r0, r1, r2) do { PCGTE_W(r0,0) = MFC2(12); PCGTE_W(r1,0) = MFC2(13); PCGTE_W(r2,0) = MFC2(14); } while (0)
+#undef gte_stsz
+#define gte_stsz(r0) do { PCGTE_W(r0,0) = MFC2(19); } while (0)
+#undef gte_stsz3
+#define gte_stsz3(r0, r1, r2) do { PCGTE_W(r0,0) = MFC2(17); PCGTE_W(r1,0) = MFC2(18); PCGTE_W(r2,0) = MFC2(19); } while (0)
+#undef ldv0
+#define ldv0(r0) do { MTC2(PCGTE_W(r0,0), 0); MTC2(PCGTE_W(r0,4), 1); } while (0)
+#undef ldv3
+#define ldv3() do { MTC2(*(unsigned int *)&vert[0].vx, 0); MTC2(*(unsigned int *)&vert[0].vz, 1); MTC2(*(unsigned int *)&vert[1].vx, 2); MTC2(*(unsigned int *)&vert[1].vz, 3); MTC2(*(unsigned int *)&vert[2].vx, 4); MTC2(*(unsigned int *)&vert[2].vz, 5); } while (0)
+#undef ldv3c
+#define ldv3c(r0) do { MTC2(PCGTE_W(r0,0), 0); MTC2(PCGTE_W(r0,4), 1); MTC2(PCGTE_W(r0,8), 2); MTC2(PCGTE_W(r0,12), 3); MTC2(PCGTE_W(r0,16), 4); MTC2(PCGTE_W(r0,20), 5); } while (0)
+#undef rtps
+#define rtps() (doCOP2(0x0180001))
+#undef rtpt
+#define rtpt() (doCOP2(0x0280030))
+#undef stsxy
+#define stsxy(r0) do { PCGTE_W(r0,0) = MFC2(14); } while (0)
+#undef stsxy3
+#define stsxy3(a, b, c) do { PCGTE_W(a,0) = MFC2(12); PCGTE_W(b,0) = MFC2(13); PCGTE_W(c,0) = MFC2(14); } while (0)
+#undef stsz
+#define stsz(r0) do { PCGTE_W(r0,0) = MFC2(19); } while (0)
+#endif /* PSX_PC */
 
 /* ---- types ---- */
 typedef struct { unsigned char r, g, b, pad; } RGB;
@@ -658,6 +729,7 @@ void AddRainDrops();
 /* PlacePoolForCar (Driver 2 DEBRIS.C): car headlight / brake light pools */
 extern int current;
 #define current (*(DB **)&current)
+#ifndef PSX_PC
 #define gte_SetTransVector(r0) __asm__ volatile ( \
     "lw    $12, 0( %0 );" "lw    $13, 4( %0 );" "lw    $14, 8( %0 );" \
     "ctc2  $12, $5;" "ctc2  $13, $6;" "ctc2  $14, $7" : : "r"(r0) : "$12", "$13", "$14")
@@ -673,6 +745,7 @@ extern int current;
 #define gte_stsv(r0) __asm__ volatile ( \
     "mfc2  $12, $9;" "mfc2  $13, $10;" "mfc2  $14, $11;" \
     "sh    $12, 0( %0 );" "sh    $13, 2( %0 );" "sh    $14, 4( %0 )" : : "r"(r0) : "$12", "$13", "$14", "memory")
+#endif
 #define ABS(x) ((x) < 0 ? -(x) : (x))
 void PlacePoolForCar(int idx, CVECTOR *col, int front)
 {
@@ -867,6 +940,7 @@ void PlacePoolForCar(int idx, CVECTOR *col, int front)
 }
 #undef ABS
 #undef current
+#ifndef PSX_PC
 #undef gte_SetTransVector
 #undef gte_ldv3c
 #undef gte_rtps
@@ -876,6 +950,7 @@ void PlacePoolForCar(int idx, CVECTOR *col, int front)
 #undef gte_stsxy3
 #undef gte_stsz
 #define gte_stsz(r) __asm__ volatile("swc2 $19, 0(%0)" : : "r"(r) : "memory")
+#endif
 /* ---------------- func_000412D4 (src/pilot/func_000412D4.c) ---------------- */
 /* spawn ground debris/dust particles around a car */
 void func_000412D4(int car, short height, int type)
@@ -968,6 +1043,7 @@ void func_0004157C(int *pos, int n)
 /* particle sprites (no Driver 2 counterpart) */
 extern int current;
 #define current (*(DB **)&current)
+#ifndef PSX_PC
 #define gte_stsxy3(r0, r1, r2) __asm__ volatile ( \
     "swc2  $12, 0( %0 );" "swc2  $13, 0( %1 );" "swc2  $14, 0( %2 )" : : "r"(r0), "r"(r1), "r"(r2) : "memory")
 #define gte_stsxy(r0) __asm__ volatile ("swc2  $14, 0( %0 )" : : "r"(r0) : "memory")
@@ -976,6 +1052,7 @@ extern int current;
     "lwc2  $3, 12( %0 );" "lwc2  $4, 16( %0 );" "lwc2  $5, 20( %0 )" : : "r"(r0))
 #define gte_rtpt() __asm__ volatile ("nop;" "nop;" "rtpt")
 #define gte_rtps() __asm__ volatile ("nop;" "nop;" "rtps")
+#endif
 #define setaddr(_p, _addr) (((P_TAG *)(_p))->addr = (unsigned long)(_addr))
 #define getaddr(_p) (unsigned long)(((P_TAG *)(_p))->addr)
 #define addPrim(ot, p) setaddr(p, getaddr(ot)), setaddr(ot, p)
@@ -1091,11 +1168,13 @@ void func_00041690(void)
 #undef addPrim
 #undef current
 #undef getaddr
+#ifndef PSX_PC
 #undef gte_ldv3c
 #undef gte_rtps
 #undef gte_rtpt
 #undef gte_stsxy
 #undef gte_stsxy3
+#endif
 #undef setaddr
 
 /* ---------------- func_00041AC4 (src/pilot/func_00041AC4.c) ---------------- */
@@ -1447,7 +1526,7 @@ void func_0004287C(void)
         if (func_0002C5F0(&pos, model->bounding_sphere) == -1)
             continue;
         if (model->shape_flags & 0x4000) {
-            int *sp = (int *)0x1F8001F0;
+            int *sp = (int *)PC_SCRATCH(0x1F8001F0);
             int lv;
             lv = *(int *)&D_00097128;
             c = lv << 16 | lv << 8 | lv;
@@ -1978,6 +2057,7 @@ void func_00043FDC(SVECTOR *pos, int car, CVECTOR *col, short size, int arg4, in
 /* ShowLight1 (Driver 2) */
 extern int current;
 #define current (*(DB_ShowLight1 **)&current)
+#ifndef PSX_PC
 #define ldv3() __asm__ volatile("lwc2 $0,%0;lwc2 $1,%1;lwc2 $2,%2;lwc2 $3,%3;lwc2 $4,%4;lwc2 $5,%5" : : "m"(vert[0].vx),"m"(vert[0].vz),"m"(vert[1].vx),"m"(vert[1].vz),"m"(vert[2].vx),"m"(vert[2].vz))
 #define rtpt() __asm__ volatile("nop;nop;rtpt")
 #define rtps() __asm__ volatile("nop;nop;rtps")
@@ -1985,6 +2065,7 @@ extern int current;
 #define stsxy(a) __asm__ volatile("swc2 $14,0(%0)" : : "r"(a) : "memory")
 #define stsz(a) __asm__ volatile("swc2 $19,0(%0)" : : "r"(a) : "memory")
 #define ldv0(r0) __asm__ volatile("lwc2 $0,0(%0);lwc2 $1,4(%0)" : : "r"(r0))
+#endif
 void ShowLight1(void *v1, unsigned char *col, short size, TEXTURE_DETAILS *texture) {
     SVECTOR vert[4];
     int z;
@@ -2034,6 +2115,7 @@ void ShowLight1(void *v1, unsigned char *col, short size, TEXTURE_DETAILS *textu
     }
 }
 #undef current
+#ifndef PSX_PC
 #undef ldv0
 #undef ldv3
 #undef rtps
@@ -2042,11 +2124,13 @@ void ShowLight1(void *v1, unsigned char *col, short size, TEXTURE_DETAILS *textu
 #undef stsxy3
 #undef stsz
 
+#endif
 /* ---------------- ShowLight (src/pilot/ShowLight.c) ---------------- */
 /* ShowLight (Driver 2) */
 extern int current;
 #define current (*(DB_ShowLight **)&current)
 #define FrameCnt (*(volatile int *)&(*(long long *)&D_00097534))
+#ifndef PSX_PC
 #define SetTransVec(r0) __asm__ volatile ( \
     "lw    $12, 0( %0 );" "lw    $13, 4( %0 );" "lw    $14, 8( %0 );" \
     "ctc2  $12, $5;" "ctc2  $13, $6;" "ctc2  $14, $7" : : "r"(r0) : "$12", "$13", "$14")
@@ -2061,6 +2145,7 @@ extern int current;
 #define stsxy(a) __asm__ volatile("swc2 $14,0(%0)" : : "r"(a) : "memory")
 #define stsz(a) __asm__ volatile("swc2 $19,0(%0)" : : "r"(a) : "memory")
 #define ldv0(r0) __asm__ volatile("lwc2 $0,0(%0);lwc2 $1,4(%0)" : : "r"(r0))
+#endif
 #define addPrimZ(p) \
     ((P_TAG *)(p))->addr = ((P_TAG *)&current->ot[z])->addr; ((P_TAG *)&current->ot[z])->addr = (unsigned)(p)
 void ShowLight(void *v1, CVECTOR *col, short size, TEXTURE_DETAILS *texture) {
@@ -2274,10 +2359,13 @@ void ShowLight(void *v1, CVECTOR *col, short size, TEXTURE_DETAILS *texture) {
     }
 }
 #undef FrameCnt
+#ifndef PSX_PC
 #undef SetRotMatrix
 #undef SetTransVec
+#endif
 #undef addPrimZ
 #undef current
+#ifndef PSX_PC
 #undef ldv0
 #undef ldv3c
 #undef rtps
@@ -2286,10 +2374,12 @@ void ShowLight(void *v1, CVECTOR *col, short size, TEXTURE_DETAILS *texture) {
 #undef stsxy3
 #undef stsz
 
+#endif
 /* ---------------- RoundShadow (src/pilot/RoundShadow.c) ---------------- */
 /* Driver 2: RoundShadow (DEBRIS.C) */
 extern int current;
 #define current (*(DB **)&current)
+#ifndef PSX_PC
 #define gte_stsxy3(r0, r1, r2) __asm__ volatile ( \
     "swc2  $12, 0( %0 );" "swc2  $13, 0( %1 );" "swc2  $14, 0( %2 )" : : "r"(r0), "r"(r1), "r"(r2) : "memory")
 #define gte_stsxy(r0) __asm__ volatile ("swc2  $14, 0( %0 )" : : "r"(r0) : "memory")
@@ -2301,6 +2391,7 @@ extern int current;
     "lwc2  $3, 12( %0 );" "lwc2  $4, 16( %0 );" "lwc2  $5, 20( %0 )" : : "r"(r0))
 #define gte_rtpt() __asm__ volatile ("nop;" "nop;" "rtpt")
 #define gte_rtps() __asm__ volatile ("nop;" "nop;" "rtps")
+#endif
 #define setaddr(_p, _addr) (((P_TAG *)(_p))->addr = (unsigned long)(_addr))
 #define getaddr(_p) (unsigned long)(((P_TAG *)(_p))->addr)
 #define addPrim(ot, p) setaddr(p, getaddr(ot)), setaddr(ot, p)
@@ -2367,18 +2458,21 @@ void RoundShadow(VECTOR *v1, CVECTOR *col, short size)
 #undef addPrim
 #undef current
 #undef getaddr
+#ifndef PSX_PC
 #undef gte_ldv3
 #undef gte_ldv3c
 #undef gte_rtps
 #undef gte_rtpt
 #undef gte_stsxy
 #undef gte_stsxy3
+#endif
 #undef setaddr
 
 /* ---------------- ShowGroundLight (src/pilot/ShowGroundLight.c) ---------------- */
 /* Driver 2: ShowGroundLight (DEBRIS.C) */
 extern int current;
 #define current (*(DB **)&current)
+#ifndef PSX_PC
 #define gte_stsxy3(r0, r1, r2) __asm__ volatile ( \
     "swc2  $12, 0( %0 );" "swc2  $13, 0( %1 );" "swc2  $14, 0( %2 )" : : "r"(r0), "r"(r1), "r"(r2) : "memory")
 #define gte_stsxy(r0) __asm__ volatile ("swc2  $14, 0( %0 )" : : "r"(r0) : "memory")
@@ -2390,6 +2484,7 @@ extern int current;
     "lwc2  $3, 12( %0 );" "lwc2  $4, 16( %0 );" "lwc2  $5, 20( %0 )" : : "r"(r0))
 #define gte_rtpt() __asm__ volatile ("nop;" "nop;" "rtpt")
 #define gte_rtps() __asm__ volatile ("nop;" "nop;" "rtps")
+#endif
 #define setaddr(_p, _addr) (((P_TAG *)(_p))->addr = (unsigned long)(_addr))
 #define getaddr(_p) (unsigned long)(((P_TAG *)(_p))->addr)
 #define addPrim(ot, p) setaddr(p, getaddr(ot)), setaddr(ot, p)
@@ -2456,18 +2551,21 @@ void ShowGroundLight(VECTOR *v1, CVECTOR *col, short size)
 #undef addPrim
 #undef current
 #undef getaddr
+#ifndef PSX_PC
 #undef gte_ldv3
 #undef gte_ldv3c
 #undef gte_rtps
 #undef gte_rtpt
 #undef gte_stsxy
 #undef gte_stsxy3
+#endif
 #undef setaddr
 
 /* ---------------- ShowFlare (src/pilot/ShowFlare.c) ---------------- */
 /* Driver 2: ShowFlare (DEBRIS.C) */
 extern int current;
 #define current (*(DB **)&current)
+#ifndef PSX_PC
 #define gte_stsxy3(r0, r1, r2) __asm__ volatile ( \
     "swc2  $12, 0( %0 );" "swc2  $13, 0( %1 );" "swc2  $14, 0( %2 )" : : "r"(r0), "r"(r1), "r"(r2) : "memory")
 #define gte_stsxy(r0) __asm__ volatile ("swc2  $14, 0( %0 )" : : "r"(r0) : "memory")
@@ -2479,6 +2577,7 @@ extern int current;
     "lwc2  $3, 12( %0 );" "lwc2  $4, 16( %0 );" "lwc2  $5, 20( %0 )" : : "r"(r0))
 #define gte_rtpt() __asm__ volatile ("nop;" "nop;" "rtpt")
 #define gte_rtps() __asm__ volatile ("nop;" "nop;" "rtps")
+#endif
 #define setaddr(_p, _addr) (((P_TAG *)(_p))->addr = (unsigned long)(_addr))
 #define getaddr(_p) (unsigned long)(((P_TAG *)(_p))->addr)
 #define addPrim(ot, p) setaddr(p, getaddr(ot)), setaddr(ot, p)
@@ -2567,18 +2666,21 @@ void ShowFlare(VECTOR *v1, CVECTOR *col, short size, int rotation)
 #undef addPrim
 #undef current
 #undef getaddr
+#ifndef PSX_PC
 #undef gte_ldv3
 #undef gte_ldv3c
 #undef gte_rtps
 #undef gte_rtpt
 #undef gte_stsxy
 #undef gte_stsxy3
+#endif
 #undef setaddr
 
 /* ---------------- DisplayWater (src/pilot/DisplayWater.c) ---------------- */
 /* Driver 2: DisplayWater (DEBRIS.C) */
 extern int current;
 #define current (*(DB **)&current)
+#ifndef PSX_PC
 #define gte_stsxy3(r0, r1, r2) __asm__ volatile ( \
     "swc2  $12, 0( %0 );" "swc2  $13, 0( %1 );" "swc2  $14, 0( %2 )" : : "r"(r0), "r"(r1), "r"(r2) : "memory")
 #define gte_stsz3(r0, r1, r2) __asm__ volatile ( \
@@ -2589,6 +2691,7 @@ extern int current;
     "lwc2  $3, 12( %0 );" "lwc2  $4, 16( %0 );" "lwc2  $5, 20( %0 )" : : "r"(r0))
 #define gte_rtpt() __asm__ volatile ("nop;" "nop;" "rtpt")
 #define gte_rtps() __asm__ volatile ("nop;" "nop;" "rtps")
+#endif
 #define setaddr(_p, _addr) (((P_TAG *)(_p))->addr = (unsigned long)(_addr))
 #define getaddr(_p) (unsigned long)(((P_TAG *)(_p))->addr)
 #define addPrim(ot, p) setaddr(p, getaddr(ot)), setaddr(ot, p)
@@ -2666,24 +2769,28 @@ void DisplayWater(SMOKE *smoke)
 #undef addPrim
 #undef current
 #undef getaddr
+#ifndef PSX_PC
 #undef gte_ldv3c
 #undef gte_rtps
 #undef gte_rtpt
 #undef gte_stsxy
 #undef gte_stsxy3
 #undef gte_stsz3
+#endif
 #undef setaddr
 
 /* ---------------- DisplaySpark (src/pilot/DisplaySpark.c) ---------------- */
 /* Driver 2: DisplaySpark (DEBRIS.C) */
 extern int current;
 #define current (*(DB **)&current)
+#ifndef PSX_PC
 #define gte_stsxy3(r0, r1, r2) __asm__ volatile ( \
     "swc2  $12, 0( %0 );" "swc2  $13, 0( %1 );" "swc2  $14, 0( %2 )" : : "r"(r0), "r"(r1), "r"(r2) : "memory")
 #define gte_ldv3c(r0) __asm__ volatile ( \
     "lwc2  $0, 0( %0 );" "lwc2  $1, 4( %0 );" "lwc2  $2, 8( %0 );" \
     "lwc2  $3, 12( %0 );" "lwc2  $4, 16( %0 );" "lwc2  $5, 20( %0 )" : : "r"(r0))
 #define gte_rtpt() __asm__ volatile ("nop;" "nop;" "rtpt")
+#endif
 #define setaddr(_p, _addr) (((P_TAG *)(_p))->addr = (unsigned long)(_addr))
 #define getaddr(_p) (unsigned long)(((P_TAG *)(_p))->addr)
 #define addPrim(ot, p) setaddr(p, getaddr(ot)), setaddr(ot, p)
@@ -2772,9 +2879,11 @@ void DisplaySpark(SMOKE *spark)
 #undef addPrim
 #undef current
 #undef getaddr
+#ifndef PSX_PC
 #undef gte_ldv3c
 #undef gte_rtpt
 #undef gte_stsxy3
+#endif
 #undef setaddr
 
 /* ---------------- func_00046000 (src/pilot/func_00046000.c) ---------------- */
@@ -3090,8 +3199,10 @@ extern int current;
 #define gTimeOfDay (*(int *)&gNight)
 #define GameLevel (*(int *)&D_00096834)
 /* u0 read through a second name for the same object: keeps its %hi out of the hoisted &D_000B9110 */
+#ifndef PSX_PC
 #define gte_stsxy(r0) __asm__ volatile ("swc2  $14, 0( %0 )" : : "r"(r0) : "memory")
 #define gte_rtps() __asm__ volatile ("nop;" "nop;" "rtps")
+#endif
 #define setaddr(_p, _addr) (((P_TAG *)(_p))->addr = (unsigned long)(_addr))
 #define getaddr(_p) (unsigned long)(((P_TAG *)(_p))->addr)
 #define addPrim(ot, p) setaddr(p, getaddr(ot)), setaddr(ot, p)
@@ -3236,8 +3347,10 @@ void DrawLensFlare(void)
 #undef current
 #undef gTimeOfDay
 #undef getaddr
+#ifndef PSX_PC
 #undef gte_rtps
 #undef gte_stsxy
+#endif
 #undef setaddr
 
 /* ---------------- DisplaySun (src/pilot/DisplaySun.c) ---------------- */
@@ -3616,6 +3729,7 @@ void func_00047FA4(VECTOR *pos, VECTOR *vel, int count, unsigned char type)
 /* DisplayDebris: Driver 2 DisplayDebris (DEBRIS_DisplayDebris.C) */
 extern int current;
 #define current (*(DB **)&current)
+#ifndef PSX_PC
 #define gte_ldv3(r0, r1, r2) __asm__ volatile ( \
     "lwc2 $0, 0(%0);" "lwc2 $1, 4(%0);" "lwc2 $2, 0(%1);" "lwc2 $3, 4(%1);" \
     "lwc2 $4, 0(%2);" "lwc2 $5, 4(%2)" : : "r"(r0), "r"(r1), "r"(r2))
@@ -3628,6 +3742,7 @@ extern int current;
     "swc2 $12, 0(%0);" "swc2 $13, 0(%1);" "swc2 $14, 0(%2)" : : "r"(r0), "r"(r1), "r"(r2) : "memory")
 #define gte_stsxy(r0) __asm__ volatile ("swc2 $14, 0(%0)" : : "r"(r0) : "memory")
 #define gte_stsz(r0) __asm__ volatile ("swc2 $19, 0(%0)" : : "r"(r0) : "memory")
+#endif
 #define setaddr(_p, _addr) (((P_TAG *)(_p))->addr = (unsigned long)(_addr))
 #define getaddr(_p) (unsigned long)(((P_TAG *)(_p))->addr)
 #define addPrim(ot, p) setaddr(p, getaddr(ot)), setaddr(ot, p)
@@ -3738,6 +3853,7 @@ void DisplayDebris(DEBRIS_DisplayDebris *debris, unsigned char type)
 #undef addPrim
 #undef current
 #undef getaddr
+#ifndef PSX_PC
 #undef gte_ldv3
 #undef gte_ldv3c
 #undef gte_rtps
@@ -3746,6 +3862,7 @@ void DisplayDebris(DEBRIS_DisplayDebris *debris, unsigned char type)
 #undef gte_stsxy3
 #undef gte_stsz
 #define gte_stsz(r) __asm__ volatile("swc2 $19, 0(%0)" : : "r"(r) : "memory")
+#endif
 #undef setaddr
 #undef setlen
 
@@ -3986,6 +4103,7 @@ extern int current;
 extern int gNight;
 #define gTimeOfDay (*(int *)&D_00096834)
 #define gNight (*(int *)&gNight)
+#ifndef PSX_PC
 #define gte_SetTransVector(r0) __asm__ volatile ( \
     "lw    $12, 0( %0 );" "lw    $13, 4( %0 );" "lw    $14, 8( %0 );" \
     "ctc2  $12, $5;" "ctc2  $13, $6;" "ctc2  $14, $7" : : "r"(r0) : "$12", "$13", "$14")
@@ -3998,6 +4116,7 @@ extern int gNight;
 #define gte_stsxy(r0) __asm__ volatile ("swc2  $14, 0( %0 )" : : "r"(r0) : "memory")
 #define gte_stsxy3(r0, r1, r2) __asm__ volatile ( \
     "swc2  $12, 0( %0 );" "swc2  $13, 0( %1 );" "swc2  $14, 0( %2 )" : : "r"(r0), "r"(r1), "r"(r2) : "memory")
+#endif
 void DisplaySmoke(SMOKE *smoke)
 {
     VECTOR v;
@@ -4144,6 +4263,7 @@ void DisplaySmoke(SMOKE *smoke)
 #undef current
 #undef gNight
 #undef gTimeOfDay
+#ifndef PSX_PC
 #undef gte_SetTransVector
 #undef gte_ldv3c
 #undef gte_rtps
@@ -4152,6 +4272,7 @@ void DisplaySmoke(SMOKE *smoke)
 #undef gte_stsxy3
 #undef gte_stsz
 #define gte_stsz(r) __asm__ volatile("swc2 $19, 0(%0)" : : "r"(r) : "memory")
+#endif
 /* ---------------- add_haze (src/pilot/add_haze.c) ---------------- */
 #define setcode(p, _code) (((P_TAG *)(p))->code = (unsigned char)(_code))
 #define getcode(p) (((P_TAG *)(p))->code)
@@ -4223,12 +4344,14 @@ void SetupRain(void) {
 /* Driver 2: DrawRainDrops (DEBRIS.C) */
 extern int current;
 #define current (*(DB **)&current)
+#ifndef PSX_PC
 #define gte_SetTransVector(r0) __asm__ volatile ( \
     "lw    $12, 0( %0 );" "lw    $13, 4( %0 );" "lw    $14, 8( %0 );" \
     "ctc2  $12, $5;" "ctc2  $13, $6;" "ctc2  $14, $7" : : "r"(r0) : "$12", "$13", "$14")
 #define gte_rtps() __asm__ volatile ("nop;" "nop;" "rtps")
 #define gte_stsxy(r0) __asm__ volatile ("swc2  $14, 0( %0 )" : : "r"(r0) : "memory")
 #define gte_stsz(r0) __asm__ volatile ("swc2  $19, 0( %0 )" : : "r"(r0) : "memory")
+#endif
 #define setaddr(_p, _addr) (((P_TAG *)(_p))->addr = (unsigned long)(_addr))
 #define getaddr(_p) (unsigned long)(((P_TAG *)(_p))->addr)
 #define addPrim(ot, p) setaddr(p, getaddr(ot)), setaddr(ot, p)
@@ -4330,11 +4453,13 @@ void DrawRainDrops(void)
 #undef addPrim
 #undef current
 #undef getaddr
+#ifndef PSX_PC
 #undef gte_SetTransVector
 #undef gte_rtps
 #undef gte_stsxy
 #undef gte_stsz
 #define gte_stsz(r) __asm__ volatile("swc2 $19, 0(%0)" : : "r"(r) : "memory")
+#endif
 #undef setaddr
 
 /* ---------------- func_00049914 (src/pilot/func_00049914.c) ---------------- */
@@ -4342,9 +4467,11 @@ void DrawRainDrops(void)
 #define setaddr(_p, _addr) (((P_TAG *)(_p))->addr = (unsigned long)(_addr))
 #define getaddr(_p) (unsigned long)(((P_TAG *)(_p))->addr)
 #define addPrim(ot, p) setaddr(p, getaddr(ot)), setaddr(ot, p)
+#ifndef PSX_PC
 #define gte_rtps() __asm__ volatile ("nop;" "nop;" "rtps")
 #define gte_stsxy(r0) __asm__ volatile ("swc2  $14, 0( %0 )" : : "r"(r0) : "memory")
 #define gte_stsz(r0) __asm__ volatile ("swc2  $19, 0( %0 )" : : "r"(r0) : "memory")
+#endif
 extern int current;
 #define current (*(DB **)&current)
 static inline void ReleaseRainDrop_f49914(int RainIndex)
@@ -4458,10 +4585,12 @@ void func_00049914(void)
 #undef addPrim
 #undef current
 #undef getaddr
+#ifndef PSX_PC
 #undef gte_rtps
 #undef gte_stsxy
 #undef gte_stsz
 #define gte_stsz(r) __asm__ volatile("swc2 $19, 0(%0)" : : "r"(r) : "memory")
+#endif
 #undef setaddr
 
 /* ---------------- AddRainDrops (src/pilot/AddRainDrops.c) ---------------- */
@@ -4670,6 +4799,7 @@ typedef struct {
 /* Driver 2: DisplayLightReflections (DEBRIS.C) */
 extern int current;
 #define current (*(DB **)&current)
+#ifndef PSX_PC
 #define gte_stsxy3(r0, r1, r2) __asm__ volatile ( \
     "swc2  $12, 0( %0 );" "swc2  $13, 0( %1 );" "swc2  $14, 0( %2 )" : : "r"(r0), "r"(r1), "r"(r2) : "memory")
 #define gte_stsxy(r0) __asm__ volatile ("swc2  $14, 0( %0 )" : : "r"(r0) : "memory")
@@ -4678,6 +4808,7 @@ extern int current;
     "lwc2  $3, 12( %0 );" "lwc2  $4, 16( %0 );" "lwc2  $5, 20( %0 )" : : "r"(r0))
 #define gte_rtpt() __asm__ volatile ("nop;" "nop;" "rtpt")
 #define gte_rtps() __asm__ volatile ("nop;" "nop;" "rtps")
+#endif
 #define setaddr(_p, _addr) (((P_TAG *)(_p))->addr = (unsigned long)(_addr))
 #define getaddr(_p) (unsigned long)(((P_TAG *)(_p))->addr)
 #define addPrim(ot, p) setaddr(p, getaddr(ot)), setaddr(ot, p)
@@ -4755,11 +4886,13 @@ void DisplayLightReflections(VECTOR *v1, CVECTOR *col, int size, TEXTURE_DETAILS
 #undef addPrim
 #undef current
 #undef getaddr
+#ifndef PSX_PC
 #undef gte_ldv3c
 #undef gte_rtps
 #undef gte_rtpt
 #undef gte_stsxy
 #undef gte_stsxy3
+#endif
 #undef setaddr
 
 #undef POLY_FT4

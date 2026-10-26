@@ -31,6 +31,71 @@
  */
 #include "gte.h"
 #include "structs.h"
+#ifndef PC_SCRATCH
+#ifdef PSX_PC
+/* PC-PORT: the PS1 scratchpad (0x1F800000, 1 KB) is a static buffer on PC (REDRIVER2 _scratchData approach, but a
+ * link-time array so file-scope initialisers stay constant). pc_scratchpad[] is defined in tile.c for now. */
+extern unsigned char pc_scratchpad[];
+#define PC_SCRATCH(a) ((int)(pc_scratchpad + ((a) - 0x1F800000)))
+#else
+#define PC_SCRATCH(a) a
+#endif
+#endif
+#ifdef PSX_PC
+extern void PC_Break(const char *file, int line); /* port/pc/pc_main.c: logs and aborts (PS1: break 1024) */
+#endif
+#ifdef PSX_PC
+/* PC-PORT: GTE shim - PsyCross software GTE (MTC2/CTC2/MFC2/CFC2/doCOP2) in place of this file's MIPS
+ * gte macros (those are #ifndef PSX_PC below). Statement-safe (do/while), unlike inline_c.h's {...};
+ * same register/offset semantics as the lwc2/swc2/ctc2 originals. Same shim in every GTE file of src/. */
+extern void MTC2(unsigned int value, int reg);
+extern void CTC2(unsigned int value, int reg);
+extern unsigned int MFC2(int reg);
+extern unsigned int CFC2(int reg);
+extern int doCOP2(int op);
+#define PCGTE_W(p, o) (*(unsigned int *)((char *)(p) + (o)))
+#define PCGTE_H(p, o) (*(unsigned short *)((char *)(p) + (o)))
+#undef gte_ReadTransZ
+#define gte_ReadTransZ(r0) do { PCGTE_W(r0,0) = CFC2(7); } while (0)
+#undef gte_SetColorMatrix
+#define gte_SetColorMatrix(r0) do { CTC2(PCGTE_W(r0,0), 16); CTC2(PCGTE_W(r0,4), 17); CTC2(PCGTE_W(r0,8), 18); CTC2(PCGTE_W(r0,12), 19); CTC2(PCGTE_W(r0,16), 20); } while (0)
+#undef gte_SetLightMatrix
+#define gte_SetLightMatrix(r0) do { CTC2(PCGTE_W(r0,0), 8); CTC2(PCGTE_W(r0,4), 9); CTC2(PCGTE_W(r0,8), 10); CTC2(PCGTE_W(r0,12), 11); CTC2(PCGTE_W(r0,16), 12); } while (0)
+#undef gte_SetRotMatrix
+#define gte_SetRotMatrix(r0) do { CTC2(PCGTE_W(r0,0), 0); CTC2(PCGTE_W(r0,4), 1); CTC2(PCGTE_W(r0,8), 2); CTC2(PCGTE_W(r0,12), 3); CTC2(PCGTE_W(r0,16), 4); } while (0)
+#undef gte_SetTransVector
+#define gte_SetTransVector(r0) do { CTC2(PCGTE_W(r0,0), 5); CTC2(PCGTE_W(r0,4), 6); CTC2(PCGTE_W(r0,8), 7); } while (0)
+#undef gte_avsz3
+#define gte_avsz3() (doCOP2(0x158002D))
+#undef gte_avsz4
+#define gte_avsz4() (doCOP2(0x168002E))
+#undef gte_ldv0
+#define gte_ldv0(r0) do { MTC2(PCGTE_W(r0,0), 0); MTC2(PCGTE_W(r0,4), 1); } while (0)
+#undef gte_ldv3
+#define gte_ldv3(r0, r1, r2) do { MTC2(PCGTE_W(r0,0), 0); MTC2(PCGTE_W(r0,4), 1); MTC2(PCGTE_W(r1,0), 2); MTC2(PCGTE_W(r1,4), 3); MTC2(PCGTE_W(r2,0), 4); MTC2(PCGTE_W(r2,4), 5); } while (0)
+#undef gte_ldv3c
+#define gte_ldv3c(r0) do { MTC2(PCGTE_W(r0,0), 0); MTC2(PCGTE_W(r0,4), 1); MTC2(PCGTE_W(r0,8), 2); MTC2(PCGTE_W(r0,12), 3); MTC2(PCGTE_W(r0,16), 4); MTC2(PCGTE_W(r0,20), 5); } while (0)
+#undef gte_rtps
+#define gte_rtps() (doCOP2(0x0180001))
+#undef gte_rtpt
+#define gte_rtpt() (doCOP2(0x0280030))
+#undef gte_stotz
+#define gte_stotz(r0) do { PCGTE_W(r0,0) = MFC2(7); } while (0)
+#undef gte_stsxy
+#define gte_stsxy(r0) do { PCGTE_W(r0,0) = MFC2(14); } while (0)
+#undef gte_stsxy2
+#define gte_stsxy2(r0) do { PCGTE_W(r0,0) = MFC2(14); } while (0)
+#undef gte_stsxy3
+#define gte_stsxy3(r0, r1, r2) do { PCGTE_W(r0,0) = MFC2(12); PCGTE_W(r1,0) = MFC2(13); PCGTE_W(r2,0) = MFC2(14); } while (0)
+#undef gte_stsxy3_f4
+#define gte_stsxy3_f4(r0) do { PCGTE_W(r0,8) = MFC2(12); PCGTE_W(r0,12) = MFC2(13); PCGTE_W(r0,16) = MFC2(14); } while (0)
+#undef gte_stsxy3c
+#define gte_stsxy3c(r0) do { PCGTE_W(r0,0) = MFC2(12); PCGTE_W(r0,4) = MFC2(13); PCGTE_W(r0,8) = MFC2(14); } while (0)
+#undef gte_stsz
+#define gte_stsz(r0) do { PCGTE_W(r0,0) = MFC2(19); } while (0)
+#undef gte_stsz3
+#define gte_stsz3(r0, r1, r2) do { PCGTE_W(r0,0) = MFC2(17); PCGTE_W(r1,0) = MFC2(18); PCGTE_W(r2,0) = MFC2(19); } while (0)
+#endif /* PSX_PC */
 
 /* ---- types ---- */
 typedef struct { unsigned addr:24; unsigned len:8; } P_TAG;
@@ -119,7 +184,11 @@ extern int func_00030464;
 extern int func_00030718;
 extern int func_000307E8;
 extern int func_00030F60;
+#ifdef PSX_PC
+extern void L00030520(void); /* port/pc/asm_mdraw.c: second entry of func_00030474 */
+#else
 extern long long L00030520 __asm__(".L00030520");
+#endif
 extern int D_00096898;
 extern int D_00097368;
 extern int D_00097398;
@@ -192,7 +261,7 @@ int D_00096988 = 0, D_0009698C = 0;   /* unreferenced */
 int D_00096990 = 0;
 int D_00096994 = 0xFF;   /* unreferenced */
 int D_00096998 = 0;
-int D_0009699C = 0x1F800238, D_000969A0 = 0x207825, D_000969A4 = 0xA;   /* unreferenced */
+int D_0009699C = PC_SCRATCH(0x1F800238), D_000969A0 = 0x207825, D_000969A4 = 0xA;   /* unreferenced */
 int D_000969A8 = 0x7494A0;
 int D_000969AC = 0x607486;
 int D_000969B0 = 0x303434;
@@ -232,8 +301,10 @@ extern long long func_00031048_d __asm__("func_00031048");
 /* rcossin prologue (run2-r3): five loads are written as *(short *)((int)D_0008EAAA + i*4 [- 2]) (scalar MEMs, so they
  * conflict with the D_00096998 = 0 store and pin its position); leftcos stays an array ref (MEM_IN_STRUCT, free). */
 /* DrawMapPSX: Driver 1 DrawMapPSX (Driver 2: DrawMapPSX, draw.c) - row/column walk of the visible cells */
+#ifndef PSX_PC
 #define gte_ReadTransZ(r0) __asm__ volatile ( \
     "cfc2  $12, $7;" "nop;" "sw    $12, 0( %0 )" : : "r"(r0) : "$12", "memory")
+#endif
 extern int current;
 #define current (*(DB **)&current)
 #define cells_across (*(int *)&D_00096A24)
@@ -279,8 +350,8 @@ void DrawMapPSX(void)
     int *p;
     int *q;
 
-    blist = (CELL_OBJECT **)0x1F800170;
-    slist = (CELL_OBJECT **)0x1F800200;
+    blist = (CELL_OBJECT **)PC_SCRATCH(0x1F800170);
+    slist = (CELL_OBJECT **)PC_SCRATCH(0x1F800200);
 
     rightcos = *(short *)((int)D_0008EAAA + ((*(short *)&D_00096C4A - D_000971B4 / 2) & 0xfff) * 4);
     rightsin = *(short *)((int)D_0008EAAA + ((*(short *)&D_00096C4A - D_000971B4 / 2) & 0xfff) * 4 - 2);
@@ -448,7 +519,7 @@ void DrawMapPSX(void)
         func_0002C598((char *)((CELL_OBJECT **)D_000A76AC) + boff, blist, (nbuild & 0x1f) * 4);
 
     if (nspr) {
-        q = (int *)0x1F800000;
+        q = (int *)PC_SCRATCH(0x1F800000);
         q[8] = (int)(char *)&func_00026F28_20 + 0x20;
         q[9] = (int)&func_00026F28;
         q[10] = (int)&func_00026DD0;
@@ -462,8 +533,8 @@ void DrawMapPSX(void)
         if (*(int *)&D_00096804 == 1) {
             func_1CC894(((CELL_OBJECT **)D_000A76AC), nbuild);
         } else {
-            *(unsigned int *)0x1F800000 = current->ot[0x107E] & 0xFFFFFF;
-            p = (int *)0x1F800024;
+            *(unsigned int *)PC_SCRATCH(0x1F800000) = current->ot[0x107E] & 0xFFFFFF;
+            p = (int *)PC_SCRATCH(0x1F800024);
             if (*(unsigned char *)&D_00096AA8 == 0 && *(int *)&gNight == 0) {
                 p[0] = 0x808080;
                 p[1] = 0x707070;
@@ -483,7 +554,7 @@ void DrawMapPSX(void)
                 p[6] = ambient + 0x20202;
                 p[7] = ambient + 0x10101;
             }
-            p = (int *)0x1F800080;
+            p = (int *)PC_SCRATCH(0x1F800080);
             p[0] = (int)&func_00030380;
             p[1] = (int)&func_000303E8;
             p[2] = (int)&L00030520;
@@ -496,12 +567,12 @@ void DrawMapPSX(void)
             p[9] = (int)&func_00031048_d;
             p[10] = (int)&func_000307E8;
             p[11] = (int)&func_00030F60;
-            p = (int *)0x1F8001AC;
+            p = (int *)PC_SCRATCH(0x1F8001AC);
             if (*(int *)&D_00096834 == 1 || *(int *)&D_00096834 == 5)
                 p[0] = (int)current->ot + 0xC8;
             else
                 p[0] = (int)current->ot;
-            p = (int *)0x1F8001B0;
+            p = (int *)PC_SCRATCH(0x1F8001B0);
             p[0] = 0x1C609D8E;
             p[1] = 0x1F3C596;
             p[2] = 0x3D8B1B2C;
@@ -531,7 +602,9 @@ void DrawMapPSX(void)
 #undef cells_down
 #undef current
 #undef frame
+#ifndef PSX_PC
 #undef gte_ReadTransZ
+#endif
 #undef region
 #undef rsel
 #undef rx_
@@ -547,7 +620,7 @@ void func_0002D79C(void)
 /* ---------------- func_0002D7C4 (src/pilot/func_0002D7C4.c) ---------------- */
 void func_0002D7C4(int *ox, int *oz, int *col)
 {
-    int *scr = (int *)0x1F8001F0;
+    int *scr = (int *)PC_SCRATCH(0x1F8001F0);
     unsigned char mode = *(unsigned char *)&D_00096898;
     int i;
     int cx, cz, q1, q2, rx, v;
@@ -577,8 +650,8 @@ void func_0002D7C4(int *ox, int *oz, int *col)
     else
         *scr = *col | 0x2C000000;
     func_0002DBB4();
-    *(MATRIX *)0x1F800000 = D_000AF9C0;
-    gte_SetRotMatrix((MATRIX *)0x1F800000);
+    *(MATRIX *)PC_SCRATCH(0x1F800000) = D_000AF9C0;
+    gte_SetRotMatrix((MATRIX *)PC_SCRATCH(0x1F800000));
 }
 
 /* ---------------- InitFrustrumMatrix (src/pilot/InitFrustrumMatrix.c) ---------------- */
@@ -647,6 +720,7 @@ void func_0002DC24(void) {
 /* ---------------- func_0002DCAC (src/pilot/func_0002DCAC.c) ---------------- */
 /* func_0002DCAC: transform a model's vertices into scratchpad (screen XY + z/8), then
  * draw its polygons through the per-type function table. */
+#ifndef PSX_PC
 #define gte_ldv3(r0, r1, r2) __asm__ volatile ( \
     "lwc2 $0, 0(%0);" "lwc2 $1, 4(%0);" "lwc2 $2, 0(%1);" "lwc2 $3, 4(%1);" \
     "lwc2 $4, 0(%2);" "lwc2 $5, 4(%2)" : : "r"(r0), "r"(r1), "r"(r2))
@@ -658,6 +732,7 @@ void func_0002DC24(void) {
     "swc2 $17, 0(%0);" "swc2 $18, 0(%1);" "swc2 $19, 0(%2)" : : "r"(r0), "r"(r1), "r"(r2) : "memory")
 #define gte_stsxy(r0) __asm__ volatile ("swc2 $14, 0(%0)" : : "r"(r0) : "memory")
 #define gte_stsz(r0) __asm__ volatile ("swc2 $19, 0(%0)" : : "r"(r0) : "memory")
+#endif
 void func_0002DCAC(MODEL *model)
 {
     char pad[0x60];
@@ -672,8 +747,8 @@ void func_0002DCAC(MODEL *model)
     int n;
     int type;
 
-    sxy = (long *)0x1F800044;
-    zbuf = (short *)0x1F800240;
+    sxy = (long *)PC_SCRATCH(0x1F800044);
+    zbuf = (short *)PC_SCRATCH(0x1F800240);
     verts = (SVECTOR *)model->vertices;
     i = 0;
     for (n = model->num_vertices / 3; n > 0; ) {
@@ -720,15 +795,16 @@ void func_0002DCAC(MODEL *model)
         break;
     }
     poly = (unsigned char *)model->poly_block;
-    *(MODEL **)0x1F800018 = model;
-    *(short **)0x1F80001C = zbuf;
+    *(MODEL **)PC_SCRATCH(0x1F800018) = model;
+    *(short **)PC_SCRATCH(0x1F80001C) = zbuf;
     for (i = 0; i < model->num_polys; i++) {
         type = *poly & 0x1F;
-        *(unsigned char **)0x1F80003C = poly;
+        *(unsigned char **)PC_SCRATCH(0x1F80003C) = poly;
         D_00089FFC[type](0);
         poly += D_00089F1C[type];
     }
 }
+#ifndef PSX_PC
 #undef gte_ldv3
 #undef gte_rtps
 #undef gte_rtpt
@@ -738,6 +814,7 @@ void func_0002DCAC(MODEL *model)
 #define gte_stsz(r) __asm__ volatile("swc2 $19, 0(%0)" : : "r"(r) : "memory")
 #undef gte_stsz3
 
+#endif
 /* ---------------- ProcessMapLump (src/pilot/ProcessMapLump.c) ---------------- */
 /* FAKEMATCH: empty __asm__ used as a compiler hint (no instruction emitted) */
 /* Driver 2: ProcessMapLump (approx.) */
@@ -781,13 +858,21 @@ void ProcessMapLump(char *lump)
 
     if (num_regions > 350) {
         printf("MAX_REGIONS is too small , allocate at least %d !\n", num_regions);
+#ifdef PSX_PC
+        PC_Break(__FILE__, __LINE__);
+#else
         while (*(volatile int *)&D_00097534 != 0x78654321)
             __asm__ volatile("break 1024");
+#endif
     }
     if (*(int *)&D_00096A2C != 3000) {
         printf("Error LevEdit cellsize %d whilst PSX cellsize %d\n", ((int **)&D_0009708C)[0][2], 3000);
+#ifdef PSX_PC
+        PC_Break(__FILE__, __LINE__);
+#else
         while (*(volatile int *)&D_00097534 != 0x78654321)
             __asm__ volatile("break 1024");
+#endif
     }
     *(int *)&D_00097350 = *(int *)lump;
     lump += 4;
@@ -798,6 +883,7 @@ void ProcessMapLump(char *lump)
 /* ---------------- func_0002E230 (src/pilot/func_0002E230.c) ---------------- */
 /* func_0002E230: like func_0002DCAC but with its own rotation/translation and a z bias:
  * transform a model's vertices into scratchpad, then draw its polygons. */
+#ifndef PSX_PC
 #define gte_SetTransVector(r0) __asm__ volatile ( \
     "lw $12, 0(%0);" "lw $13, 4(%0);" "lw $14, 8(%0);" \
     "ctc2 $12, $5;" "ctc2 $13, $6;" "ctc2 $14, $7" : : "r"(r0) : "$12", "$13", "$14")
@@ -812,6 +898,7 @@ void ProcessMapLump(char *lump)
     "swc2 $17, 0(%0);" "swc2 $18, 0(%1);" "swc2 $19, 0(%2)" : : "r"(r0), "r"(r1), "r"(r2) : "memory")
 #define gte_stsxy(r0) __asm__ volatile ("swc2 $14, 0(%0)" : : "r"(r0) : "memory")
 #define gte_stsz(r0) __asm__ volatile ("swc2 $19, 0(%0)" : : "r"(r0) : "memory")
+#endif
 void func_0002E230(MODEL *model, MATRIX *rot, VECTOR_NOPAD *trans, int zbias)
 {
     char pad[0x20];
@@ -826,8 +913,8 @@ void func_0002E230(MODEL *model, MATRIX *rot, VECTOR_NOPAD *trans, int zbias)
     int i;
     int n;
 
-    sxy = (long *)0x1F800044;
-    zbuf = (short *)0x1F800240;
+    sxy = (long *)PC_SCRATCH(0x1F800044);
+    zbuf = (short *)PC_SCRATCH(0x1F800240);
     gte_SetTransVector(trans);
     MulMatrix0(&inv_camera_matrix, rot, &m);
     SetRotMatrix(&m);
@@ -877,11 +964,11 @@ void func_0002E230(MODEL *model, MATRIX *rot, VECTOR_NOPAD *trans, int zbias)
         break;
     }
     poly = (unsigned char *)model->poly_block;
-    *(MODEL **)0x1F800018 = model;
-    *(short **)0x1F80001C = zbuf;
+    *(MODEL **)PC_SCRATCH(0x1F800018) = model;
+    *(short **)PC_SCRATCH(0x1F80001C) = zbuf;
     if (D_00096990) {
         for (i = 0; i < model->num_polys; i++) {
-            *(unsigned char **)0x1F80003C = poly;
+            *(unsigned char **)PC_SCRATCH(0x1F80003C) = poly;
             if (D_0008A1BC[*poly & 7])
                 D_0008A1BC[*poly & 7](D_00096858.v);
             poly += D_00089F1C[*poly];
@@ -889,7 +976,7 @@ void func_0002E230(MODEL *model, MATRIX *rot, VECTOR_NOPAD *trans, int zbias)
         }
     } else {
         for (i = 0; i < model->num_polys; i++) {
-            *(unsigned char **)0x1F80003C = poly;
+            *(unsigned char **)PC_SCRATCH(0x1F80003C) = poly;
             if (D_00089FFC[*poly])
                 D_00089FFC[*poly](1);
             poly += D_00089F1C[*poly];
@@ -898,6 +985,7 @@ void func_0002E230(MODEL *model, MATRIX *rot, VECTOR_NOPAD *trans, int zbias)
     }
     D_00096978 = 0;
 }
+#ifndef PSX_PC
 #undef gte_SetTransVector
 #undef gte_ldv3
 #undef gte_rtps
@@ -908,9 +996,11 @@ void func_0002E230(MODEL *model, MATRIX *rot, VECTOR_NOPAD *trans, int zbias)
 #define gte_stsz(r) __asm__ volatile("swc2 $19, 0(%0)" : : "r"(r) : "memory")
 #undef gte_stsz3
 
+#endif
 /* ---------------- func_0002E6B8 (src/pilot/func_0002E6B8.c) ---------------- */
 /* func_0002E6B8: like func_0002E230, but z-sorts the model by its average depth:
  * returns 0 if too far, else shifts the z values and draws the polygons. */
+#ifndef PSX_PC
 #define gte_SetTransVector(r0) __asm__ volatile ( \
     "lw $12, 0(%0);" "lw $13, 4(%0);" "lw $14, 8(%0);" \
     "ctc2 $12, $5;" "ctc2 $13, $6;" "ctc2 $14, $7" : : "r"(r0) : "$12", "$13", "$14")
@@ -925,6 +1015,7 @@ void func_0002E230(MODEL *model, MATRIX *rot, VECTOR_NOPAD *trans, int zbias)
     "swc2 $17, 0(%0);" "swc2 $18, 0(%1);" "swc2 $19, 0(%2)" : : "r"(r0), "r"(r1), "r"(r2) : "memory")
 #define gte_stsxy(r0) __asm__ volatile ("swc2 $14, 0(%0)" : : "r"(r0) : "memory")
 #define gte_stsz(r0) __asm__ volatile ("swc2 $19, 0(%0)" : : "r"(r0) : "memory")
+#endif
 int func_0002E6B8(MODEL *model, MATRIX *rot, VECTOR_NOPAD *trans)
 {
     char pad[0x20];
@@ -940,8 +1031,8 @@ int func_0002E6B8(MODEL *model, MATRIX *rot, VECTOR_NOPAD *trans)
     int n;
     int sum;
 
-    sxy = (long *)0x1F800044;
-    zbuf = (short *)0x1F800240;
+    sxy = (long *)PC_SCRATCH(0x1F800044);
+    zbuf = (short *)PC_SCRATCH(0x1F800240);
     sum = 0;
     gte_SetTransVector(trans);
     MulMatrix0(&inv_camera_matrix, rot, &m);
@@ -1006,10 +1097,10 @@ int func_0002E6B8(MODEL *model, MATRIX *rot, VECTOR_NOPAD *trans)
             zbuf[i] += 0xDC4 - sum;
     }
     poly = (unsigned char *)model->poly_block;
-    *(MODEL **)0x1F800018 = model;
-    *(short **)0x1F80001C = zbuf;
+    *(MODEL **)PC_SCRATCH(0x1F800018) = model;
+    *(short **)PC_SCRATCH(0x1F80001C) = zbuf;
     for (i = 0; i < model->num_polys; i++) {
-        *(unsigned char **)0x1F80003C = poly;
+        *(unsigned char **)PC_SCRATCH(0x1F80003C) = poly;
         if (D_00089FFC[*poly])
             D_00089FFC[*poly](1);
         poly += D_00089F1C[*poly];
@@ -1017,6 +1108,7 @@ int func_0002E6B8(MODEL *model, MATRIX *rot, VECTOR_NOPAD *trans)
     }
     return 1;
 }
+#ifndef PSX_PC
 #undef gte_SetTransVector
 #undef gte_ldv3
 #undef gte_rtps
@@ -1027,6 +1119,7 @@ int func_0002E6B8(MODEL *model, MATRIX *rot, VECTOR_NOPAD *trans)
 #define gte_stsz(r) __asm__ volatile("swc2 $19, 0(%0)" : : "r"(r) : "memory")
 #undef gte_stsz3
 
+#endif
 /* ---------------- func_0002EB94 (src/pilot/func_0002EB94.c) ---------------- */
 /* NOTE b113: 99.99 - only diff is row 202 "addiu v0, s3, %lo(D_1F80000C)" (target reloc to a splat label) vs "addiu v0, s3, 0xc": byte-identical. */
 /* func_0002EB94: draws a shadow-like textured tri/quad (+ flat underlay) per object in a list,
@@ -1036,6 +1129,7 @@ int func_0002E6B8(MODEL *model, MATRIX *rot, VECTOR_NOPAD *trans)
 #define addPrim(ot, p) setaddr(p, getaddr(ot)), setaddr(ot, p)
 extern int current;
 #define current (*(DB **)&current)
+#ifndef PSX_PC
 #define gte_ldv3c(r0) __asm__ volatile ( \
     "lwc2  $0, 0( %0 );" "lwc2  $1, 4( %0 );" "lwc2  $2, 8( %0 );" \
     "lwc2  $3, 12( %0 );" "lwc2  $4, 16( %0 );" "lwc2  $5, 20( %0 )" : : "r"(r0))
@@ -1047,6 +1141,7 @@ extern int current;
 #define gte_stsxy2(r0) __asm__ volatile ("swc2  $14, 0( %0 )" : : "r"(r0) : "memory")
 #define gte_stsxy3c(r0) __asm__ volatile ( \
     "swc2  $12, 0( %0 );" "swc2  $13, 4( %0 );" "swc2  $14, 8( %0 )" : : "r"(r0) : "memory")
+#endif
 void func_0002EB94(int count)
 {
     int z;
@@ -1063,9 +1158,9 @@ void func_0002EB94(int count)
     UVW *uv;
     UVBASE *uvbase;
 
-    uv = (UVW *)0x1F800040;
-    uvbase = (UVBASE *)0x1F800060;
-    sxy = (DVECTOR *)0x1F800000;
+    uv = (UVW *)PC_SCRATCH(0x1F800040);
+    uvbase = (UVBASE *)PC_SCRATCH(0x1F800060);
+    sxy = (DVECTOR *)PC_SCRATCH(0x1F800000);
     list = D_0009719C;
     clut = 0;
     tpage = 0;
@@ -1181,6 +1276,7 @@ void func_0002EB94(int count)
 #undef addPrim
 #undef current
 #undef getaddr
+#ifndef PSX_PC
 #undef gte_avsz3
 #undef gte_avsz4
 #undef gte_ldv3c
@@ -1189,6 +1285,7 @@ void func_0002EB94(int count)
 #undef gte_stotz
 #undef gte_stsxy2
 #undef gte_stsxy3c
+#endif
 #undef setaddr
 
 /* ---------------- func_0002F444 (src/pilot/func_0002F444.c) ---------------- */
@@ -1196,6 +1293,7 @@ void func_0002EB94(int count)
  * SVECTORs and draw flat quads/triangles (POLY_F4) between them. */
 extern int current;
 #define current (*(DB **)&current)
+#ifndef PSX_PC
 #define gte_SetTransVector(r0) __asm__ volatile ( \
     "lw $12, 0(%0);" "lw $13, 4(%0);" "lw $14, 8(%0);" \
     "ctc2 $12, $5;" "ctc2 $13, $6;" "ctc2 $14, $7" : : "r"(r0) : "$12", "$13", "$14")
@@ -1207,6 +1305,7 @@ extern int current;
 #define gte_stsxy3_f4(r0) __asm__ volatile ( \
     "swc2 $12, 8(%0);" "swc2 $13, 12(%0);" "swc2 $14, 16(%0)" : : "r"(r0) : "memory")
 #define gte_stsxy(r0) __asm__ volatile ("swc2 $14, 0(%0)" : : "r"(r0) : "memory")
+#endif
 static inline void DrawQuad(SVECTOR *a, SVECTOR *b, SVECTOR *c, SVECTOR *d, int col)
 {
     PF4 *p;
@@ -1324,6 +1423,7 @@ void func_0002F444(void)
     }
 }
 #undef current
+#ifndef PSX_PC
 #undef gte_SetTransVector
 #undef gte_ldv3
 #undef gte_rtps
@@ -1332,6 +1432,7 @@ void func_0002F444(void)
 #undef gte_stsxy3_f4
 
 
+#endif
 /* ---------------- func_00030198 (src/pilot/func_00030198.c) ---------------- */
 extern unsigned char *D_00097254;
 extern unsigned short *D_000972AC;

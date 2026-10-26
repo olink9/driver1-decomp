@@ -17,6 +17,19 @@
  *   views, reached with %hi/%lo); abs= D_000976A6 (its own) and the other files' small globals (the old
  *   `extern long long`). .bss stays extern (.comm).
  */
+#ifndef PC_RAM
+#ifdef PSX_PC
+/* PC-PORT: absolute PS1 RAM addresses (free-RAM buffers 0xD0200+, level/overlay load areas, KSEG0 0x80xxxxxx) map into
+ * an emulated 2 MB main-RAM block, offset = physical address. pc_psxram[] is defined in tile.c for now. */
+extern unsigned char pc_psxram[];
+#define PC_RAM(a) ((int)(pc_psxram + ((unsigned int)(a) & 0x1FFFFF)))
+#else
+#define PC_RAM(a) a
+#endif
+#endif
+#ifdef PSX_PC
+extern void PC_Break(const char *file, int line); /* port/pc/pc_main.c: logs and aborts (PS1: break 1024) */
+#endif
 
 /* ---- types ---- */
 /* maspsx: abs=D_000976A6,D_00097098,D_00097534,D_000967E8,current */
@@ -175,9 +188,13 @@ void func_0005C68C(void)
         ;
     if (D_00097688 >= 0xA5) {
         printf("too many lines!\n");
+#ifdef PSX_PC
+        PC_Break(__FILE__, __LINE__);
+#else
         while (*(volatile int *)&D_00097534 != 0x78654321) {
             __asm__ volatile("break 1024");
         }
+#endif
     }
     for (i = 0; i < D_00097688; i++) {
         D_000BF7EC[i] = (char *)p;
@@ -270,9 +287,9 @@ void LoadFont(void)
 	W16 *d;
 	W16 *s;
 
-	Loadfile("GFX\\FONT2.FNT", 0xF8600);
-	file = (char *)0xF8604;
-	nchars = *(int *)0xF8600;
+	Loadfile("GFX\\FONT2.FNT", PC_RAM(0xF8600));
+	file = (char *)PC_RAM(0xF8604);
+	nchars = *(int *)PC_RAM(0xF8600);
 	nchars <<= 3;
 	func_00079DB0(D_000BF2EC, file, nchars);
 	file += nchars;
@@ -742,8 +759,12 @@ void func_0005D89C(int a, int n)
     p[1] = D_0008B704[D_000976AC];
     D_000976AC++;
     if (D_000976AC == 8) {
+#ifdef PSX_PC
+        PC_Break(__FILE__, __LINE__);
+#else
         while (*(volatile int *)&D_00097534 != 0x78654321)
             __asm__ volatile("break 1024");
+#endif
     }
     *(int *)&D_00097098 = *(int *)&D_00097098 + n;
 }

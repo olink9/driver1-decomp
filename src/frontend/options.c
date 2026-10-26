@@ -11,6 +11,16 @@
 
 /* ---- types ---- */
 #include "frontend.h"
+#ifndef PC_RAM
+#ifdef PSX_PC
+/* PC-PORT: absolute PS1 RAM addresses (free-RAM buffers 0xD0200+, level/overlay load areas, KSEG0 0x80xxxxxx) map into
+ * an emulated 2 MB main-RAM block, offset = physical address. pc_psxram[] is defined in tile.c for now. */
+extern unsigned char pc_psxram[];
+#define PC_RAM(a) ((int)(pc_psxram + ((unsigned int)(a) & 0x1FFFFF)))
+#else
+#define PC_RAM(a) a
+#endif
+#endif
 typedef struct { char s[12]; } NAME12;
 typedef struct { char pad[0xC]; short x, y; } SCR;
 typedef struct { short xmin, ymin, xmax, ymax; } LIM;
@@ -160,8 +170,8 @@ void func_001C37BC(void)
     func_00051374();
     DrawSync(i);
     VSync(i);
-    Loadfile(&name, 0xD0200);
-    func_00074404(&rect, 0xD0214);
+    Loadfile(&name, PC_RAM(0xD0200));
+    func_00074404(&rect, PC_RAM(0xD0214));
     DrawSync(i);
     func_000514E0();
     do {
@@ -171,7 +181,7 @@ void func_001C37BC(void)
         i++;
     } while (!(*(volatile unsigned short *)&D_00097538 & 0x40));
     SetDispMask(0);
-    Loadfile("MCARD.BIN", 0xE6600);
+    Loadfile("MCARD.BIN", PC_RAM(0xE6600));
     func_000E6D60("gfx\\font1.bnk", "DRFONT1", 0, -2);
     func_000E6D60("gfx\\font1.bnk", "DRFONT2", 1, -2);
     func_000E6D60("gfx\\font3.bnk", "DRFONT3", 2, -2);
@@ -313,15 +323,15 @@ void func_001C3FD0(void)
     r.h = 0x100;
     for (file = 0; file < 2; file++) {
         sprintf(name, D_001C030C, file + 1);
-        LoadfileSeg(name, (char *)0xD8600, 4, 0x8000);
-        buf = (unsigned char *)0xD8600;
+        LoadfileSeg(name, (char *)PC_RAM(0xD8600), 4, 0x8000);
+        buf = (unsigned char *)PC_RAM(0xD8600);
         sector = *buf;
         for (j = 0; j < counts.n[file] - 1; j++) {
             if (file == 1 && (j < 3 || j > 6)) {
                 sector += 0x8000;
                 k++;
             } else {
-                LoadfileSeg(name, (char *)0xD8600, sector, 0x8000);
+                LoadfileSeg(name, (char *)PC_RAM(0xD8600), sector, 0x8000);
                 r.x = (k % 11) * 64 + 0x140;
                 r.y = (k / 11) << 8;
                 tp = ((r.y & 0x100) >> 4) | ((r.x & 0x3ff) >> 6) | ((r.y & 0x200) << 2);

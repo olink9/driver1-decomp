@@ -20,6 +20,34 @@
 #include "gte.h"
 
 #include "structs.h"
+#ifdef PSX_PC
+/* PC-PORT: GTE shim - PsyCross software GTE (MTC2/CTC2/MFC2/CFC2/doCOP2) in place of this file's MIPS
+ * gte macros (those are #ifndef PSX_PC below). Statement-safe (do/while), unlike inline_c.h's {...};
+ * same register/offset semantics as the lwc2/swc2/ctc2 originals. Same shim in every GTE file of src/. */
+extern void MTC2(unsigned int value, int reg);
+extern void CTC2(unsigned int value, int reg);
+extern unsigned int MFC2(int reg);
+extern unsigned int CFC2(int reg);
+extern int doCOP2(int op);
+#define PCGTE_W(p, o) (*(unsigned int *)((char *)(p) + (o)))
+#define PCGTE_H(p, o) (*(unsigned short *)((char *)(p) + (o)))
+#undef gte_SetRotMatrix
+#define gte_SetRotMatrix(r0) do { CTC2(PCGTE_W(r0,0), 0); CTC2(PCGTE_W(r0,4), 1); CTC2(PCGTE_W(r0,8), 2); CTC2(PCGTE_W(r0,12), 3); CTC2(PCGTE_W(r0,16), 4); } while (0)
+#undef gte_SetTransVector
+#define gte_SetTransVector(r0) do { CTC2(PCGTE_W(r0,0), 5); CTC2(PCGTE_W(r0,4), 6); CTC2(PCGTE_W(r0,8), 7); } while (0)
+#undef gte_ldv3c
+#define gte_ldv3c(r0) do { MTC2(PCGTE_W(r0,0), 0); MTC2(PCGTE_W(r0,4), 1); MTC2(PCGTE_W(r0,8), 2); MTC2(PCGTE_W(r0,12), 3); MTC2(PCGTE_W(r0,16), 4); MTC2(PCGTE_W(r0,20), 5); } while (0)
+#undef gte_rtpt
+#define gte_rtpt() (doCOP2(0x0280030))
+#undef gte_stsxy
+#define gte_stsxy(r0) do { PCGTE_W(r0,0) = MFC2(14); } while (0)
+#undef gte_stsxy0
+#define gte_stsxy0(r0) do { PCGTE_W(r0,0) = MFC2(12); } while (0)
+#undef gte_stsxy3
+#define gte_stsxy3(r0, r1, r2) do { PCGTE_W(r0,0) = MFC2(12); PCGTE_W(r1,0) = MFC2(13); PCGTE_W(r2,0) = MFC2(14); } while (0)
+#undef gte_stsz
+#define gte_stsz(r0) do { PCGTE_W(r0,0) = MFC2(19); } while (0)
+#endif /* PSX_PC */
 
 /* ---- types ---- */
 typedef struct {
@@ -274,9 +302,11 @@ void func_00066224(void)
 /* func_000669B8 - no Driver 2 counterpart */
 extern int current;
 #define current (*(DB **)&current)
+#ifndef PSX_PC
 #define gte_SetTransVector(r0) __asm__ volatile ( \
     "lw    $12, 0( %0 );" "lw    $13, 4( %0 );" "lw    $14, 8( %0 );" \
     "ctc2  $12, $5;" "ctc2  $13, $6;" "ctc2  $14, $7" : : "r"(r0) : "$12", "$13", "$14")
+#endif
 void func_000669B8(void)
 {
     VECTOR pos;
@@ -324,8 +354,10 @@ void func_000669B8(void)
     }
 }
 #undef current
+#ifndef PSX_PC
 #undef gte_SetTransVector
 
+#endif
 /* ---------------- func_00066CCC (src/pilot/func_00066CCC.c) ---------------- */
 void func_00066CCC(void)
 {
@@ -363,6 +395,7 @@ extern int current;
 #define current (*(DB **)&current)
 extern int CameraCnt;
 #define CameraCnt (*(int *)&CameraCnt)
+#ifndef PSX_PC
 #define gte_SetTransVector(r0) __asm__ volatile ( \
     "lw    $12, 0( %0 );" "lw    $13, 4( %0 );" "lw    $14, 8( %0 );" \
     "ctc2  $12, $5;" "ctc2  $13, $6;" "ctc2  $14, $7" : : "r"(r0) : "$12", "$13", "$14")
@@ -374,6 +407,7 @@ extern int CameraCnt;
 #define gte_stsxy0(r0) __asm__ volatile ("swc2  $12, 0( %0 )" : : "r"(r0) : "memory")
 #define gte_stsxy3(r0, r1, r2) __asm__ volatile ( \
     "swc2  $12, 0( %0 );" "swc2  $13, 0( %1 );" "swc2  $14, 0( %2 )" : : "r"(r0), "r"(r1), "r"(r2) : "memory")
+#endif
 void DrawExplosion(int time)
 {
     int i, j;
@@ -565,9 +599,12 @@ void DrawExplosion(int time)
 }
 #undef CameraCnt
 #undef current
+#ifndef PSX_PC
 #undef gte_SetTransVector
 #undef gte_ldv3c
 #undef gte_rtpt
 #undef gte_stsxy
 #undef gte_stsxy0
 #undef gte_stsxy3
+
+#endif

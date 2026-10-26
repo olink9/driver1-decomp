@@ -12,6 +12,9 @@
  * "Model %s was not found"); func_00031AE0/func_00032088 drive the D_00089E84 path objects, which
  * D2 keeps elsewhere, so the name is a guess for the second half.
  */
+#ifdef PSX_PC
+extern void PC_Break(const char *file, int line); /* port/pc/pc_main.c: logs and aborts (PS1: break 1024) */
+#endif
 /* maspsx: abs=D_00096800,D_00096808,D_00097534,D_00097120,D_00096834 */
 /* MKTU CONFLICTS (first spelling active, others commented at their place below):
  * decl D_00089E84:
@@ -201,8 +204,12 @@ void func_0003181C(int idx, int load)
             o->model = func_000396A8(o->key);
             if (o->model == 0) {
                 printf("Model %s was not found\n", o->key);
+#ifdef PSX_PC
+                PC_Break(__FILE__, __LINE__);
+#else
                 while (*(int *)&D_00097534 != 0x78654321)
                     __asm__ volatile("break 1024");
+#endif
             } else {
                 i = 0;
                 while (o->model != modelpointers[i])

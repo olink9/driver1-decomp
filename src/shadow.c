@@ -27,6 +27,58 @@
 #include "gte.h"
 
 #include "structs.h"
+#ifndef PC_SCRATCH
+#ifdef PSX_PC
+/* PC-PORT: the PS1 scratchpad (0x1F800000, 1 KB) is a static buffer on PC (REDRIVER2 _scratchData approach, but a
+ * link-time array so file-scope initialisers stay constant). pc_scratchpad[] is defined in tile.c for now. */
+extern unsigned char pc_scratchpad[];
+#define PC_SCRATCH(a) ((int)(pc_scratchpad + ((a) - 0x1F800000)))
+#else
+#define PC_SCRATCH(a) a
+#endif
+#endif
+#ifdef PSX_PC
+/* PC-PORT: GTE shim - PsyCross software GTE (MTC2/CTC2/MFC2/CFC2/doCOP2) in place of this file's MIPS
+ * gte macros (those are #ifndef PSX_PC below). Statement-safe (do/while), unlike inline_c.h's {...};
+ * same register/offset semantics as the lwc2/swc2/ctc2 originals. Same shim in every GTE file of src/. */
+extern void MTC2(unsigned int value, int reg);
+extern void CTC2(unsigned int value, int reg);
+extern unsigned int MFC2(int reg);
+extern unsigned int CFC2(int reg);
+extern int doCOP2(int op);
+#define PCGTE_W(p, o) (*(unsigned int *)((char *)(p) + (o)))
+#define PCGTE_H(p, o) (*(unsigned short *)((char *)(p) + (o)))
+#undef gte_SetRotMatrix
+#define gte_SetRotMatrix(r0) do { CTC2(PCGTE_W(r0,0), 0); CTC2(PCGTE_W(r0,4), 1); CTC2(PCGTE_W(r0,8), 2); CTC2(PCGTE_W(r0,12), 3); CTC2(PCGTE_W(r0,16), 4); } while (0)
+#undef gte_SetTransVec0
+#define gte_SetTransVec0(r0) do { CTC2(PCGTE_W(r0,0), 5); CTC2(PCGTE_W(r0,4), 6); CTC2(PCGTE_W(r0,8), 7); } while (0)
+#undef gte_SetTransVector
+#define gte_SetTransVector(r0) do { CTC2(PCGTE_W(r0,0), 5); CTC2(PCGTE_W(r0,4), 6); CTC2(PCGTE_W(r0,8), 7); } while (0)
+#undef gte_ldv0
+#define gte_ldv0(r0) do { MTC2(PCGTE_W(r0,0), 0); MTC2(PCGTE_W(r0,4), 1); } while (0)
+#undef gte_ldv3
+#define gte_ldv3(r0, r1, r2) do { MTC2(PCGTE_W(r0,0), 0); MTC2(PCGTE_W(r0,4), 1); MTC2(PCGTE_W(r1,0), 2); MTC2(PCGTE_W(r1,4), 3); MTC2(PCGTE_W(r2,0), 4); MTC2(PCGTE_W(r2,4), 5); } while (0)
+#undef gte_ldv3c
+#define gte_ldv3c(r0) do { MTC2(PCGTE_W(r0,0), 0); MTC2(PCGTE_W(r0,4), 1); MTC2(PCGTE_W(r0,8), 2); MTC2(PCGTE_W(r0,12), 3); MTC2(PCGTE_W(r0,16), 4); MTC2(PCGTE_W(r0,20), 5); } while (0)
+#undef gte_rtps
+#define gte_rtps() (doCOP2(0x0180001))
+#undef gte_rtpt
+#define gte_rtpt() (doCOP2(0x0280030))
+#undef gte_stsxy
+#define gte_stsxy(r0) do { PCGTE_W(r0,0) = MFC2(14); } while (0)
+#undef gte_stsxy3
+#define gte_stsxy3(r0, r1, r2) do { PCGTE_W(r0,0) = MFC2(12); PCGTE_W(r1,0) = MFC2(13); PCGTE_W(r2,0) = MFC2(14); } while (0)
+#undef gte_stsxy3_g3
+#define gte_stsxy3_g3(r0) do { PCGTE_W(r0,8) = MFC2(12); PCGTE_W(r0,16) = MFC2(13); PCGTE_W(r0,24) = MFC2(14); } while (0)
+#undef gte_stsxy3_g4
+#define gte_stsxy3_g4(r0) do { PCGTE_W(r0,8) = MFC2(12); PCGTE_W(r0,16) = MFC2(13); PCGTE_W(r0,24) = MFC2(14); } while (0)
+#undef gte_stsz
+#define gte_stsz(r0) do { PCGTE_W(r0,0) = MFC2(19); } while (0)
+#undef gte_stsz3
+#define gte_stsz3(r0, r1, r2) do { PCGTE_W(r0,0) = MFC2(17); PCGTE_W(r1,0) = MFC2(18); PCGTE_W(r2,0) = MFC2(19); } while (0)
+#undef gte_stsz3c
+#define gte_stsz3c(r0) do { PCGTE_W(r0,0) = MFC2(17); PCGTE_W(r0,4) = MFC2(18); PCGTE_W(r0,8) = MFC2(19); } while (0)
+#endif /* PSX_PC */
 
 /* ---- types ---- */
 typedef struct { int x, y, z; } V3;
@@ -174,8 +226,8 @@ int D_000890BC[8] = { 0x1000, 0, 0x1000, 0, 0x1000, 0, 0, 0 };   /* MATRIX (iden
 extern char D_00096954[];
 char D_00096954[8] = "CARSHAD";
 /* unreferenced words after the name (scratchpad addresses) */
-unsigned long D_0009695C = 0x1F800020, D_00096960 = 0x1F800080, D_00096964 = 0x1F800100, D_00096968 = 0x1F800000;
-unsigned long D_0009696C = 0x1F800040, D_00096970 = 0x1F800040, D_00096974 = 0;
+unsigned long D_0009695C = PC_SCRATCH(0x1F800020), D_00096960 = PC_SCRATCH(0x1F800080), D_00096964 = PC_SCRATCH(0x1F800100), D_00096968 = PC_SCRATCH(0x1F800000);
+unsigned long D_0009696C = PC_SCRATCH(0x1F800040), D_00096970 = PC_SCRATCH(0x1F800040), D_00096974 = 0;
 
 /* .sbss 0x97160-0x9718B */
 int D_00097160;
@@ -359,6 +411,7 @@ void func_00029C00(int player)
 /* DrawTyreTracks (Driver 2 name) */
 extern int current;
 #define current (*(DB **)&current)
+#ifndef PSX_PC
 #define gte_SetTransVector(r0) __asm__ volatile ( \
     "lw    $12, 0( %0 );" "lw    $13, 4( %0 );" "lw    $14, 8( %0 );" \
     "ctc2  $12, $5;" "ctc2  $13, $6;" "ctc2  $14, $7" : : "r"(r0) : "$12", "$13", "$14")
@@ -370,6 +423,7 @@ extern int current;
 #define gte_stsxy(r0) __asm__ volatile ("swc2  $14, 0( %0 )" : : "r"(r0) : "memory")
 #define gte_stsxy3(r0, r1, r2) __asm__ volatile ( \
     "swc2  $12, 0( %0 );" "swc2  $13, 0( %1 );" "swc2  $14, 0( %2 )" : : "r"(r0), "r"(r1), "r"(r2) : "memory")
+#endif
 void DrawTyreTracks(void)
 {
     VECTOR p[4];
@@ -493,6 +547,7 @@ void DrawTyreTracks(void)
     }
 }
 #undef current
+#ifndef PSX_PC
 #undef gte_SetTransVector
 #undef gte_ldv3c
 #undef gte_rtps
@@ -500,6 +555,7 @@ void DrawTyreTracks(void)
 #undef gte_stsxy
 #undef gte_stsxy3
 
+#endif
 /* ---------------- func_0002A5CC (src/pilot/func_0002A5CC.c) ---------------- */
 /* 95.17 with fnscore defaults; MATCH 100.0 with --aspsx 2.69 (only difference: gp_allow_offset=False,
    so the .comm D_00097174 is $gp-relative at +0 but lui/%lo at +1..+3, as in the target). */
@@ -700,6 +756,7 @@ void SubdivShadow(int z0, int z1, int z2, int z3, FT4 *sps)
 /* Driver 2: PlaceShadowForCar (SHADOW.C) */
 extern int current;
 #define current (*(DB **)&current)
+#ifndef PSX_PC
 #define gte_stsxy3(r0, r1, r2) __asm__ volatile ( \
     "swc2  $12, 0( %0 );" "swc2  $13, 0( %1 );" "swc2  $14, 0( %2 )" : : "r"(r0), "r"(r1), "r"(r2) : "memory")
 #define gte_stsxy(r0) __asm__ volatile ("swc2  $14, 0( %0 )" : : "r"(r0) : "memory")
@@ -710,6 +767,7 @@ extern int current;
     "lwc2  $3, 12( %0 );" "lwc2  $4, 16( %0 );" "lwc2  $5, 20( %0 )" : : "r"(r0))
 #define gte_rtpt() __asm__ volatile ("nop;" "nop;" "rtpt")
 #define gte_rtps() __asm__ volatile ("nop;" "nop;" "rtps")
+#endif
 #define setaddr(_p, _addr) (((P_TAG *)(_p))->addr = (unsigned long)(_addr))
 #define getaddr(_p) (unsigned long)(((P_TAG *)(_p))->addr)
 #define addPrim(ot, p) setaddr(p, getaddr(ot)), setaddr(ot, p)
@@ -788,12 +846,14 @@ void PlaceShadowForCar(int slot)
 #undef addPrim
 #undef current
 #undef getaddr
+#ifndef PSX_PC
 #undef gte_ldv3c
 #undef gte_rtps
 #undef gte_rtpt
 #undef gte_stsxy
 #undef gte_stsxy3
 #undef gte_stsz3
+#endif
 #undef setaddr
 #undef sp
 
@@ -869,6 +929,7 @@ extern int current;
 #define current (*(DB **)&current)
 extern int LightSortCorrect;
 #define LightSortCorrect (*(int *)&LightSortCorrect)
+#ifndef PSX_PC
 #define gte_ldv3(r0, r1, r2) __asm__ volatile ( \
     "lwc2  $0, 0( %0 );" "lwc2  $1, 4( %0 );" "lwc2  $2, 0( %1 );" \
     "lwc2  $3, 4( %1 );" "lwc2  $4, 0( %2 );" "lwc2  $5, 4( %2 )" : : "r"(r0), "r"(r1), "r"(r2))
@@ -877,6 +938,7 @@ extern int LightSortCorrect;
     "swc2  $12, 8( %0 );" "swc2  $13, 16( %0 );" "swc2  $14, 24( %0 )" : : "r"(r0) : "memory")
 #define gte_stsz3c(r0) __asm__ volatile ( \
     "swc2  $17, 0( %0 );" "swc2  $18, 4( %0 );" "swc2  $19, 8( %0 )" : : "r"(r0) : "memory")
+#endif
 void clippedPoly(void)
 {
     int i;
@@ -968,15 +1030,18 @@ void clippedPoly(void)
 }
 #undef LightSortCorrect
 #undef current
+#ifndef PSX_PC
 #undef gte_ldv3
 #undef gte_rtpt
 #undef gte_stsxy3_g3
 #undef gte_stsz3c
 
+#endif
 /* ---------------- sQuad (src/pilot/sQuad.c) ---------------- */
 /* sQuad (Driver 2 SHADOW.C) */
 extern int current;
 #define current (*(DB **)&current)
+#ifndef PSX_PC
 #define gte_ldv3(r0, r1, r2) __asm__ volatile ( \
     "lwc2  $0, 0( %0 );" "lwc2  $1, 4( %0 );" "lwc2  $2, 0( %1 );" \
     "lwc2  $3, 4( %1 );" "lwc2  $4, 0( %2 );" "lwc2  $5, 4( %2 )" : : "r"(r0), "r"(r1), "r"(r2))
@@ -989,6 +1054,7 @@ extern int current;
     "swc2  $12, 8( %0 );" "swc2  $13, 16( %0 );" "swc2  $14, 24( %0 )" : : "r"(r0) : "memory")
 #define gte_stsz3c(r0) __asm__ volatile ( \
     "swc2  $17, 0( %0 );" "swc2  $18, 4( %0 );" "swc2  $19, 8( %0 )" : : "r"(r0) : "memory")
+#endif
 void sQuad(SVECTOR *v0, SVECTOR *v1, SVECTOR *v2, SVECTOR *v3)
 {
     int z1;
@@ -1069,6 +1135,7 @@ void sQuad(SVECTOR *v0, SVECTOR *v1, SVECTOR *v2, SVECTOR *v3)
     }
 }
 #undef current
+#ifndef PSX_PC
 #undef gte_ldv0
 #undef gte_ldv3
 #undef gte_rtps
@@ -1077,3 +1144,5 @@ void sQuad(SVECTOR *v0, SVECTOR *v1, SVECTOR *v2, SVECTOR *v3)
 #undef gte_stsxy3_g4
 #undef gte_stsz
 #undef gte_stsz3c
+
+#endif

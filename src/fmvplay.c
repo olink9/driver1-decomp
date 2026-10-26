@@ -4,6 +4,16 @@
  * Step 4: no .data/.sdata/.sbss of its own; "NFMV\\NFMV.EXE" (.rodata 0x11630) is a C literal.
  * extern long long -> int + maspsx abs= (3).
  */
+#ifndef PC_RAM
+#ifdef PSX_PC
+/* PC-PORT: absolute PS1 RAM addresses (free-RAM buffers 0xD0200+, level/overlay load areas, KSEG0 0x80xxxxxx) map into
+ * an emulated 2 MB main-RAM block, offset = physical address. pc_psxram[] is defined in tile.c for now. */
+extern unsigned char pc_psxram[];
+#define PC_RAM(a) ((int)(pc_psxram + ((unsigned int)(a) & 0x1FFFFF)))
+#else
+#define PC_RAM(a) a
+#endif
+#endif
 
 /* maspsx: abs=D_000970E4,D_00096C94,D_00096C90 */
 /* ---- externs ---- */
@@ -61,9 +71,9 @@ void PlayRender(int a0) {
     func_0004E170();
     func_0004E348();
     SpuQuit();
-    Loadfile("NFMV\\NFMV.EXE", 0x800FF800);
+    Loadfile("NFMV\\NFMV.EXE", PC_RAM(0x800FF800));
     func_0007EC78();
     func_0007EBE8();
     func_0007EB34();
-    func_0007EB24(0x800FF810, 1, a0);
+    func_0007EB24(PC_RAM(0x800FF810), 1, a0);
 }

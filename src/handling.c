@@ -31,6 +31,28 @@
 #include "common.h"
 #include "gte.h"
 #include "structs.h"
+#ifdef PSX_PC
+/* PC-PORT: GTE shim - PsyCross software GTE (MTC2/CTC2/MFC2/CFC2/doCOP2) in place of this file's MIPS
+ * gte macros (those are #ifndef PSX_PC below). Statement-safe (do/while), unlike inline_c.h's {...};
+ * same register/offset semantics as the lwc2/swc2/ctc2 originals. Same shim in every GTE file of src/. */
+extern void MTC2(unsigned int value, int reg);
+extern void CTC2(unsigned int value, int reg);
+extern unsigned int MFC2(int reg);
+extern unsigned int CFC2(int reg);
+extern int doCOP2(int op);
+#define PCGTE_W(p, o) (*(unsigned int *)((char *)(p) + (o)))
+#define PCGTE_H(p, o) (*(unsigned short *)((char *)(p) + (o)))
+#undef gte_SetRotMatrix
+#define gte_SetRotMatrix(r0) do { CTC2(PCGTE_W(r0,0), 0); CTC2(PCGTE_W(r0,4), 1); CTC2(PCGTE_W(r0,8), 2); CTC2(PCGTE_W(r0,12), 3); CTC2(PCGTE_W(r0,16), 4); } while (0)
+#undef gte_SetTransVec0
+#define gte_SetTransVec0(r0) do { CTC2(PCGTE_W(r0,0), 5); CTC2(PCGTE_W(r0,4), 6); CTC2(PCGTE_W(r0,8), 7); } while (0)
+#undef gte_ldv0
+#define gte_ldv0(r0) do { MTC2(PCGTE_W(r0,0), 0); MTC2(PCGTE_W(r0,4), 1); } while (0)
+#undef gte_rtv0tr
+#define gte_rtv0tr() (doCOP2(0x0480012))
+#undef gte_stlvnl
+#define gte_stlvnl(r0) do { PCGTE_W(r0,0) = MFC2(25); PCGTE_W(r0,4) = MFC2(26); PCGTE_W(r0,8) = MFC2(27); } while (0)
+#endif /* PSX_PC */
 
 /* ---- types ---- */
 typedef struct {
@@ -856,7 +878,11 @@ void GlobalTimeStep(void)
 
                                 if (cp->id == 0 || c1->id == 0) {
                                     if (*(int *)&D_00096854)
+#ifdef PSX_PC
+                                        { extern int D_001E3358; D_001E3358 = 1; } /* IVIEW overlay variable (0x1E3358) */
+#else
                                         *(int *)0x1E3358 = 1;
+#endif
                                     func_00047FA4(collisionpoint, &velocity, 6, 0);
                                     func_00035B50(1);
                                 }

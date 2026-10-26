@@ -19,6 +19,16 @@
  * main-exe libgpu/polygon header.
  */
 #include "structs.h"
+#ifndef PC_SCRATCH
+#ifdef PSX_PC
+/* PC-PORT: the PS1 scratchpad (0x1F800000, 1 KB) is a static buffer on PC (REDRIVER2 _scratchData approach, but a
+ * link-time array so file-scope initialisers stay constant). pc_scratchpad[] is defined in tile.c for now. */
+extern unsigned char pc_scratchpad[];
+#define PC_SCRATCH(a) ((int)(pc_scratchpad + ((a) - 0x1F800000)))
+#else
+#define PC_SCRATCH(a) a
+#endif
+#endif
 
 /* ---- types ---- */
 typedef struct { unsigned addr:24; unsigned len:8; } P_TAG;
@@ -443,9 +453,9 @@ void func_00035BC8(void)
     PF3 *prims;
     int z;
 
-    src = *(POLYF3SRC **)0x1F80003C;
-    outlongs = (int *)0x1F800044;
-    zbuff = *(short **)0x1F80001C;
+    src = *(POLYF3SRC **)PC_SCRATCH(0x1F80003C);
+    outlongs = (int *)PC_SCRATCH(0x1F800044);
+    zbuff = *(short **)PC_SCRATCH(0x1F80001C);
     prims = (PF3 *)current->primptr;
 
     if (NormalClip(outlongs[src->a], outlongs[src->b], outlongs[src->c]) > 0) {
@@ -480,9 +490,9 @@ void func_00035DA8(void)
     PF4 *prims;
     int z;
 
-    src = *(POLYF4SRC **)0x1F80003C;
-    outlongs = (int *)0x1F800044;
-    zbuff = *(short **)0x1F80001C;
+    src = *(POLYF4SRC **)PC_SCRATCH(0x1F80003C);
+    outlongs = (int *)PC_SCRATCH(0x1F800044);
+    zbuff = *(short **)PC_SCRATCH(0x1F80001C);
     prims = (PF4 *)current->primptr;
 
     if (NormalClip(outlongs[src->v0], outlongs[src->v1], outlongs[src->v2]) > 0) {
@@ -517,9 +527,9 @@ void func_00035FF4(void)
     PG3 *prims;
     int z;
 
-    src = *(POLYFG3 **)0x1F80003C;
-    outlongs = (int *)0x1F800044;
-    zbuff = *(short **)0x1F80001C;
+    src = *(POLYFG3 **)PC_SCRATCH(0x1F80003C);
+    outlongs = (int *)PC_SCRATCH(0x1F800044);
+    zbuff = *(short **)PC_SCRATCH(0x1F80001C);
     prims = (PG3 *)current->primptr;
 
     if (NormalClip(outlongs[src->v0], outlongs[src->v1], outlongs[src->v2]) > 0) {
@@ -554,9 +564,9 @@ void func_00036218(void)
     PG4 *prims;
     int z;
 
-    src = *(POLYFG4 **)0x1F80003C;
-    outlongs = (int *)0x1F800044;
-    zbuff = *(short **)0x1F80001C;
+    src = *(POLYFG4 **)PC_SCRATCH(0x1F80003C);
+    outlongs = (int *)PC_SCRATCH(0x1F800044);
+    zbuff = *(short **)PC_SCRATCH(0x1F80001C);
     prims = (PG4 *)current->primptr;
 
     if (NormalClip(outlongs[src->v0], outlongs[src->v1], outlongs[src->v2]) > 0) {
@@ -596,9 +606,9 @@ void func_00036490(void)
     PFT3 *prims;
     int z;
 
-    src = *(POLYFT3 **)0x1F80003C;
-    outlongs = (int *)0x1F800044;
-    zbuff = *(short **)0x1F80001C;
+    src = *(POLYFT3 **)PC_SCRATCH(0x1F80003C);
+    outlongs = (int *)PC_SCRATCH(0x1F800044);
+    zbuff = *(short **)PC_SCRATCH(0x1F80001C);
     prims = (PFT3 *)current->primptr;
 
     if (NormalClip(outlongs[src->v0], outlongs[src->v1], outlongs[src->v2]) > 0) {
@@ -642,9 +652,9 @@ void func_00036724(void)
     PFT4 *prims;
     int z;
 
-    src = *(POLYFT4SRC **)0x1F80003C;
-    outlongs = (int *)0x1F800044;
-    zbuff = *(short **)0x1F80001C;
+    src = *(POLYFT4SRC **)PC_SCRATCH(0x1F80003C);
+    outlongs = (int *)PC_SCRATCH(0x1F800044);
+    zbuff = *(short **)PC_SCRATCH(0x1F80001C);
     prims = (PFT4 *)current->primptr;
 
     if (NormalClip(outlongs[src->v0], outlongs[src->v1], outlongs[src->v2]) > 0) {
@@ -691,9 +701,9 @@ void func_00036A18(void)
     PGT3 *prims;
     int z;
 
-    src = *(POLYGT3SRC **)0x1F80003C;
-    outlongs = (int *)0x1F800044;
-    zbuff = *(short **)0x1F80001C;
+    src = *(POLYGT3SRC **)PC_SCRATCH(0x1F80003C);
+    outlongs = (int *)PC_SCRATCH(0x1F800044);
+    zbuff = *(short **)PC_SCRATCH(0x1F80001C);
     prims = (PGT3 *)current->primptr;
 
     if (NormalClip(outlongs[src->v0], outlongs[src->v1], outlongs[src->v2]) > 0) {
@@ -736,9 +746,9 @@ void func_00036CB4(void)
     PGT4 *prims;
     int z;
 
-    src = *(POLYGT4SRC **)0x1F80003C;
-    outlongs = (int *)0x1F800044;
-    zbuff = *(short **)0x1F80001C;
+    src = *(POLYGT4SRC **)PC_SCRATCH(0x1F80003C);
+    outlongs = (int *)PC_SCRATCH(0x1F800044);
+    zbuff = *(short **)PC_SCRATCH(0x1F80001C);
     prims = (PGT4 *)current->primptr;
 
     if (NormalClip(outlongs[src->v0], outlongs[src->v1], outlongs[src->v2]) > 0) {
@@ -791,9 +801,9 @@ void func_00036FB4(void)
     PFT3_36FB4 *tp;
     int z;
 
-    src = *(POLYF3SRC_36FB4 **)0x1F80003C;
-    outlongs = (int *)0x1F800044;
-    zbuff = *(short **)0x1F80001C;
+    src = *(POLYF3SRC_36FB4 **)PC_SCRATCH(0x1F80003C);
+    outlongs = (int *)PC_SCRATCH(0x1F800044);
+    zbuff = *(short **)PC_SCRATCH(0x1F80001C);
     prims = (PF3 *)current->primptr;
 
     if (NormalClip(outlongs[src->v0], outlongs[src->v1], outlongs[src->v2]) > 0) {
@@ -851,9 +861,9 @@ void func_00037274(void)
     PF4 *prims;
     int z;
 
-    src = *(POLYF4SRC_37274 **)0x1F80003C;
-    outlongs = (int *)0x1F800044;
-    zbuff = *(short **)0x1F80001C;
+    src = *(POLYF4SRC_37274 **)PC_SCRATCH(0x1F80003C);
+    outlongs = (int *)PC_SCRATCH(0x1F800044);
+    zbuff = *(short **)PC_SCRATCH(0x1F80001C);
     prims = (PF4 *)current->primptr;
 
     if (NormalClip(outlongs[src->v0], outlongs[src->v1], outlongs[src->v2]) > 0) {
@@ -893,9 +903,9 @@ void func_000374C0(void)
     PG3_374C0 *prims;
     int z;
 
-    src = *(POLYG3SRC **)0x1F80003C;
-    outlongs = (int *)0x1F800044;
-    zbuff = *(short **)0x1F80001C;
+    src = *(POLYG3SRC **)PC_SCRATCH(0x1F80003C);
+    outlongs = (int *)PC_SCRATCH(0x1F800044);
+    zbuff = *(short **)PC_SCRATCH(0x1F80001C);
     prims = (PG3_374C0 *)current->primptr;
 
     if (NormalClip(outlongs[src->v0], outlongs[src->v1], outlongs[src->v2]) > 0) {
@@ -941,9 +951,9 @@ void func_0003772C(void)
     PG4_3772C *prims;
     int z;
 
-    src = *(POLYG4SRC **)0x1F80003C;
-    outlongs = (int *)0x1F800044;
-    zbuff = *(short **)0x1F80001C;
+    src = *(POLYG4SRC **)PC_SCRATCH(0x1F80003C);
+    outlongs = (int *)PC_SCRATCH(0x1F800044);
+    zbuff = *(short **)PC_SCRATCH(0x1F80001C);
     prims = (PG4_3772C *)current->primptr;
 
     if (NormalClip(outlongs[src->v0], outlongs[src->v1], outlongs[src->v2]) > 0) {
@@ -993,9 +1003,9 @@ void func_00037A04(void)
     PFT3 *prims;
     int z;
 
-    src = *(POLYFT3 **)0x1F80003C;
-    outlongs = (int *)0x1F800044;
-    zbuff = *(short **)0x1F80001C;
+    src = *(POLYFT3 **)PC_SCRATCH(0x1F80003C);
+    outlongs = (int *)PC_SCRATCH(0x1F800044);
+    zbuff = *(short **)PC_SCRATCH(0x1F80001C);
     prims = (PFT3 *)current->primptr;
 
     if (NormalClip(outlongs[src->v0], outlongs[src->v1], outlongs[src->v2]) > 0) {
@@ -1040,9 +1050,9 @@ void func_00037C9C(void)
     unsigned int tpage;
     int z;
 
-    src = *(POLYFT4 **)0x1F80003C;
-    outlongs = (int *)0x1F800044;
-    zbuff = *(short **)0x1F80001C;
+    src = *(POLYFT4 **)PC_SCRATCH(0x1F80003C);
+    outlongs = (int *)PC_SCRATCH(0x1F800044);
+    zbuff = *(short **)PC_SCRATCH(0x1F80001C);
     prims = (PFT4_37C9C *)current->primptr;
 
     if (NormalClip(outlongs[src->v0], outlongs[src->v1], outlongs[src->v2]) > 0) {
@@ -1083,9 +1093,9 @@ void wjmDraw3(void)
     unsigned int tpage;
     int z;
 
-    src = *(POLYFT3_wjmDraw3 **)0x1F80003C;
-    outlongs = (int *)0x1F800044;
-    zbuff = *(short **)0x1F80001C;
+    src = *(POLYFT3_wjmDraw3 **)PC_SCRATCH(0x1F80003C);
+    outlongs = (int *)PC_SCRATCH(0x1F800044);
+    zbuff = *(short **)PC_SCRATCH(0x1F80001C);
     prims = (PGT3_wjmDraw3 *)current->primptr;
 
     if (NormalClip(outlongs[src->v0], outlongs[src->v1], outlongs[src->v2]) > 0) {
@@ -1124,9 +1134,9 @@ void func_0003811C(void)
     unsigned int tpage;
     int z;
 
-    src = *(POLYGT4 **)0x1F80003C;
-    outlongs = (int *)0x1F800044;
-    zbuff = *(short **)0x1F80001C;
+    src = *(POLYGT4 **)PC_SCRATCH(0x1F80003C);
+    outlongs = (int *)PC_SCRATCH(0x1F800044);
+    zbuff = *(short **)PC_SCRATCH(0x1F80001C);
     prims = (PGT4_3811C *)current->primptr;
 
     if (NormalClip(outlongs[src->v0], outlongs[src->v1], outlongs[src->v2]) > 0) {
@@ -1169,11 +1179,11 @@ void func_0003837C(unsigned char col)
     int z;
     int t;
 
-    src = *(SRC **)0x1F80003C;
-    outlongs = (short *)0x1F800044;
-    zbuff = *(short **)0x1F80001C;
+    src = *(SRC **)PC_SCRATCH(0x1F80003C);
+    outlongs = (short *)PC_SCRATCH(0x1F800044);
+    zbuff = *(short **)PC_SCRATCH(0x1F80001C);
     prims = (PFT3_3837C *)current->primptr;
-    uvs = *(unsigned char **)0x1F800038;
+    uvs = *(unsigned char **)PC_SCRATCH(0x1F800038);
 
     if (NormalClip(((int *)outlongs)[src->v0], ((int *)outlongs)[src->v1], ((int *)outlongs)[src->v2]) > 0) {
         *(int *)&prims->r0 = *(int *)&combointensity;
@@ -1242,11 +1252,11 @@ void func_0003881C(unsigned char col)
     int z;
     int ts;
 
-    src = *(POLYFT4SRC_3881C **)0x1F80003C;
-    outlongs = (int *)0x1F800044;
-    zbuff = *(short **)0x1F80001C;
+    src = *(POLYFT4SRC_3881C **)PC_SCRATCH(0x1F80003C);
+    outlongs = (int *)PC_SCRATCH(0x1F800044);
+    zbuff = *(short **)PC_SCRATCH(0x1F80001C);
     prims = (PFT4_3881C *)current->primptr;
-    uvtab = *(unsigned char **)0x1F800038;
+    uvtab = *(unsigned char **)PC_SCRATCH(0x1F800038);
 
     if (NormalClip(outlongs[src->v0], outlongs[src->v1], outlongs[src->v2]) > 0) {
         *(int *)&prims->r0 = *(int *)&combointensity;
@@ -1325,9 +1335,9 @@ void func_00038DA4(void)
     unsigned char off;
     int z;
 
-    src = *(POLYFT3_38DA4 **)0x1F80003C;
-    outlongs = (short *)0x1F800044;
-    zbuff = *(short **)0x1F80001C;
+    src = *(POLYFT3_38DA4 **)PC_SCRATCH(0x1F80003C);
+    outlongs = (short *)PC_SCRATCH(0x1F800044);
+    zbuff = *(short **)PC_SCRATCH(0x1F80001C);
     prims = (PGT3_38DA4 *)current->primptr;
 
     if (NormalClip(((int *)outlongs)[src->v0], ((int *)outlongs)[src->v1], ((int *)outlongs)[src->v2]) > 0) {
@@ -1376,9 +1386,9 @@ void func_000390C8(void)
     int z;
     int col;
 
-    src = *(POLYFT4_390C8 **)0x1F80003C;
-    outlongs = (short *)0x1F800044;
-    zbuff = *(short **)0x1F80001C;
+    src = *(POLYFT4_390C8 **)PC_SCRATCH(0x1F80003C);
+    outlongs = (short *)PC_SCRATCH(0x1F800044);
+    zbuff = *(short **)PC_SCRATCH(0x1F80001C);
     prims = (PGT4_390C8 *)current->primptr;
 
     if (NormalClip(((int *)outlongs)[src->v0], ((int *)outlongs)[src->v1], ((int *)outlongs)[src->v2]) > 0) {

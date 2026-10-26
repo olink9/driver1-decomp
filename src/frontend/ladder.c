@@ -10,6 +10,16 @@
 
 /* ---- types ---- */
 #include "frontend.h"
+#ifndef PC_RAM
+#ifdef PSX_PC
+/* PC-PORT: absolute PS1 RAM addresses (free-RAM buffers 0xD0200+, level/overlay load areas, KSEG0 0x80xxxxxx) map into
+ * an emulated 2 MB main-RAM block, offset = physical address. pc_psxram[] is defined in tile.c for now. */
+extern unsigned char pc_psxram[];
+#define PC_RAM(a) ((int)(pc_psxram + ((unsigned int)(a) & 0x1FFFFF)))
+#else
+#define PC_RAM(a) a
+#endif
+#endif
 
 /* ---- externs ---- */
 extern int D_001CEF58;
@@ -225,7 +235,7 @@ int func_001C9404(void)
         func_000513D4();
         func_000513D4();
         DrawSync(0);
-        Loadfile("MCARD.BIN", 0xE6600);
+        Loadfile("MCARD.BIN", PC_RAM(0xE6600));
         func_000EC280(1);
         func_000E7508(4, D_000868DC, 0x1E00);
         SetDispMask(0);

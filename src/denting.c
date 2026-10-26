@@ -18,6 +18,16 @@
 /* maspsx: abs=D_00096804,D_00096834,D_0009683C,pauseflag,D_000970CC */
 
 #include "structs.h"
+#ifndef PC_RAM
+#ifdef PSX_PC
+/* PC-PORT: absolute PS1 RAM addresses (free-RAM buffers 0xD0200+, level/overlay load areas, KSEG0 0x80xxxxxx) map into
+ * an emulated 2 MB main-RAM block, offset = physical address. pc_psxram[] is defined in tile.c for now. */
+extern unsigned char pc_psxram[];
+#define PC_RAM(a) ((int)(pc_psxram + ((unsigned int)(a) & 0x1FFFFF)))
+#else
+#define PC_RAM(a) a
+#endif
+#endif
 
 /* ---- types ---- */
 typedef struct {
@@ -33,10 +43,10 @@ typedef struct {
 
 /* ---- denting.c's own data (Step 4), in address order ---- */
 /* .data 0x8A6BC-0x8A73C: per-level addresses of the dent tables (indexed by D_00096834) */
-int D_0008A6BC[] = { 0x1F8BC0, 0x1F8BC0, 0x1F8BC0, 0x1F8BC0, 0x1F8BC0, 0x1F8BC0, 0x1F8BC0, 0x1F8BC0 };
-int D_0008A6DC[] = { 0x1F919C, 0x1F919C, 0x1F919C, 0x1F919C, 0x1F919C, 0x1F919C, 0x1F919C, 0x1F919C };
-int D_0008A6FC[] = { 0x1F964C, 0x1F964C, 0x1F964C, 0x1F964C, 0x1F964C, 0x1F964C, 0x1F964C, 0x1F964C };
-int D_0008A71C[] = { 0x1F9E80, 0x1F9E80, 0x1F9E80, 0x1F9E80, 0x1F9E80, 0x1F9E80, 0x1F9E80, 0x1F9E80 };
+int D_0008A6BC[] = { PC_RAM(0x1F8BC0), PC_RAM(0x1F8BC0), PC_RAM(0x1F8BC0), PC_RAM(0x1F8BC0), PC_RAM(0x1F8BC0), PC_RAM(0x1F8BC0), PC_RAM(0x1F8BC0), PC_RAM(0x1F8BC0) };
+int D_0008A6DC[] = { PC_RAM(0x1F919C), PC_RAM(0x1F919C), PC_RAM(0x1F919C), PC_RAM(0x1F919C), PC_RAM(0x1F919C), PC_RAM(0x1F919C), PC_RAM(0x1F919C), PC_RAM(0x1F919C) };
+int D_0008A6FC[] = { PC_RAM(0x1F964C), PC_RAM(0x1F964C), PC_RAM(0x1F964C), PC_RAM(0x1F964C), PC_RAM(0x1F964C), PC_RAM(0x1F964C), PC_RAM(0x1F964C), PC_RAM(0x1F964C) };
+int D_0008A71C[] = { PC_RAM(0x1F9E80), PC_RAM(0x1F9E80), PC_RAM(0x1F9E80), PC_RAM(0x1F9E80), PC_RAM(0x1F9E80), PC_RAM(0x1F9E80), PC_RAM(0x1F9E80), PC_RAM(0x1F9E80) };
 
 /* .sbss 0x973D0-0x973F0 (D_000973D8/E8/EC fill the gaps) */
 unsigned char (*D_000973D0)[6][70];

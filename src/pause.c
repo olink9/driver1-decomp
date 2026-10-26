@@ -59,6 +59,16 @@
 
 /* maspsx: abs=D_000977B4,D_000977B8,D_0009709C,pauseflag,D_00096874,D_000967CC,D_000967F4,D_0009763C,D_00097670,current,D_00097524,D_00096834,D_000967E0,D_000977E8,D_00096F90,D_000977EC,D_000967E8,D_00097538,D_00096CB0,D_0009752C,D_00096C94,D_00096C90,D_00097534,D_000967D4,D_00096808,D_000970A4,D_00096A08 */
 #include "structs.h"
+#ifndef PC_RAM
+#ifdef PSX_PC
+/* PC-PORT: absolute PS1 RAM addresses (free-RAM buffers 0xD0200+, level/overlay load areas, KSEG0 0x80xxxxxx) map into
+ * an emulated 2 MB main-RAM block, offset = physical address. pc_psxram[] is defined in tile.c for now. */
+extern unsigned char pc_psxram[];
+#define PC_RAM(a) ((int)(pc_psxram + ((unsigned int)(a) & 0x1FFFFF)))
+#else
+#define PC_RAM(a) a
+#endif
+#endif
 
 /* ---- types ---- */
 typedef struct {
@@ -721,7 +731,7 @@ int func_0006C1E4(void)
     func_000513D4();
     func_000513D4();
     DrawSync(0);
-    Loadfile("MCARD.BIN", 0xE6600);
+    Loadfile("MCARD.BIN", PC_RAM(0xE6600));
     func_EC280(1);
     a = D_000BDFA4;
     b = a + 0x20;
@@ -758,7 +768,7 @@ int func_0006C2BC(void)
     D_000868DC[0] = *(int *)&D_000967E0;
     D_000868DC[2] = *(int *)&D_00096F90;
     D_000868DC[3] = *(int *)&D_000977E8;
-    Loadfile("MCARD.BIN", 0xE6600);
+    Loadfile("MCARD.BIN", PC_RAM(0xE6600));
     func_EC280(1);
     current->primptr = current->primtab;
     last->primptr = last->primtab;

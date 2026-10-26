@@ -12,6 +12,30 @@
 
 #include "structs.h"
 #include "frontend.h"
+#ifdef PSX_PC
+/* PC-PORT: GTE shim - PsyCross software GTE (MTC2/CTC2/MFC2/CFC2/doCOP2) in place of this file's MIPS
+ * gte macros (those are #ifndef PSX_PC below). Statement-safe (do/while), unlike inline_c.h's {...};
+ * same register/offset semantics as the lwc2/swc2/ctc2 originals. Same shim in every GTE file of src/. */
+extern void MTC2(unsigned int value, int reg);
+extern void CTC2(unsigned int value, int reg);
+extern unsigned int MFC2(int reg);
+extern unsigned int CFC2(int reg);
+extern int doCOP2(int op);
+#define PCGTE_W(p, o) (*(unsigned int *)((char *)(p) + (o)))
+#define PCGTE_H(p, o) (*(unsigned short *)((char *)(p) + (o)))
+#undef gte_SetRotMatrix
+#define gte_SetRotMatrix(r0) do { CTC2(PCGTE_W(r0,0), 0); CTC2(PCGTE_W(r0,4), 1); CTC2(PCGTE_W(r0,8), 2); CTC2(PCGTE_W(r0,12), 3); CTC2(PCGTE_W(r0,16), 4); } while (0)
+#undef gte_SetTransVec0
+#define gte_SetTransVec0(r0) do { CTC2(PCGTE_W(r0,0), 5); CTC2(PCGTE_W(r0,4), 6); CTC2(PCGTE_W(r0,8), 7); } while (0)
+#undef gte_ldv0
+#define gte_ldv0(r0) do { MTC2(PCGTE_W(r0,0), 0); MTC2(PCGTE_W(r0,4), 1); } while (0)
+#undef gte_rtps
+#define gte_rtps() (doCOP2(0x0180001))
+#undef gte_stsxy
+#define gte_stsxy(r0) do { PCGTE_W(r0,0) = MFC2(14); } while (0)
+#undef gte_stsz
+#define gte_stsz(r0) do { PCGTE_W(r0,0) = MFC2(19); } while (0)
+#endif /* PSX_PC */
 
 /* ---- types (CAR_DATA, VECTOR/SVECTOR/MATRIX, VECTOR_NOPAD, SXY, DB, TEXTURE_DETAILS from structs.h; P_TAG,
  * POLY_FT4, POLY_GT4, LINE_F2 from frontend.h) ---- */
@@ -1041,8 +1065,10 @@ void func_001E22F4(void)
 /* ---------------- func_001E232C (src/pilot/iview/func_001E232C.c) ---------------- */
 /* FAKEMATCH: unused local 'SVECTOR pad[2]' only reserves sp+0x10..0x1F so c0/c1/z land at 0x20/0x28/0x30 */
 /* Probably a fading trail/ribbon renderer (40 entries of 0x38 B at D_001E3758) */
+#ifndef PSX_PC
 #define gte_rtps() __asm__ volatile ("nop;" "nop;" "rtps")
 #define gte_stsxy(r0) __asm__ volatile ("swc2  $14, 0( %0 )" : : "r"(r0) : "memory")
+#endif
 void func_001E232C(void)
 {
     SVECTOR v[2];
@@ -1164,9 +1190,11 @@ void func_001E232C(void)
         }
     }
 }
+#ifndef PSX_PC
 #undef gte_rtps
 #undef gte_stsxy
 
+#endif
 /* ---------------- func_001E282C (src/pilot/iview/func_001E282C.c) ---------------- */
 void func_001E282C(void)
 {

@@ -20,8 +20,10 @@
 
 /* maspsx: abs=D_00097374 */
 /* include_asm.h's INCLUDE_ASM minus its .include of labels.inc (the build pipeline prepends macro.inc) */
+#ifndef PSX_PC /* PC: pc_compat.h's empty INCLUDE_ASM; the routine comes from port/pc */
 #define INCLUDE_ASM(FOLDER, NAME) \
     __asm__(".section .text\n.set noat\n.set noreorder\n.include \"" FOLDER "/" #NAME ".s\"\n.set reorder\n.set at\n")
+#endif
 
 /* ---- types ---- */
 typedef struct { unsigned short key; char b; } N;

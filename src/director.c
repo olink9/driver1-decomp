@@ -37,6 +37,16 @@
  */
 /* maspsx: abs=D_00097654,D_00096898,D_00096899,D_000BEED8,CameraCnt,cameraview,D_0009688C,D_00096A60,D_00096A64,D_00096A6C,D_00096878,pauseflag,D_00096800,vblcounter,D_00096F1C,AttractMode,D_0009752C,D_0009709C,D_00096834,D_00097534,D_000967A0,D_00097374,D_0009737C,D_00096888,D_000967F4,current,D_00097524 */
 #include "structs.h"
+#ifndef PC_RAM
+#ifdef PSX_PC
+/* PC-PORT: absolute PS1 RAM addresses (free-RAM buffers 0xD0200+, level/overlay load areas, KSEG0 0x80xxxxxx) map into
+ * an emulated 2 MB main-RAM block, offset = physical address. pc_psxram[] is defined in tile.c for now. */
+extern unsigned char pc_psxram[];
+#define PC_RAM(a) ((int)(pc_psxram + ((unsigned int)(a) & 0x1FFFFF)))
+#else
+#define PC_RAM(a) a
+#endif
+#endif
 
 /* ---- types ---- */
 struct E_589B4 { unsigned short a; unsigned char b; unsigned char c; };
@@ -329,7 +339,7 @@ int FirstCamera();
 #define B99 (*(unsigned char *)&D_00096899)
 void func_00058814(void)
 {
-    int base = 0x1FABBC;
+    int base = PC_RAM(0x1FABBC);
     int i;
     int m = B98;
     unsigned char c;
@@ -1446,7 +1456,7 @@ void ControlReplay(void)
                 func_000513D4();
                 func_000513D4();
                 DrawSync(0);
-                Loadfile("MCARD.BIN", 0xE6600);
+                Loadfile("MCARD.BIN", PC_RAM(0xE6600));
                 func_EC280(1);
                 current = &D_000BDFA4[0];
                 last = &D_000BDFA4[1];
@@ -2039,8 +2049,8 @@ int func_0005C318(int a, int b) {
         i++;
     }
     if (D_0008B6D8[i] != 0xFF) {
-        if (func_0005C3D0("REPLAYS\\REPLAY.BLK", i * 20 + b, 0xD8600, D_00096DE0)) {
-            func_00079DB0(D_0009766C, 0xD8600, D_00096DE0);
+        if (func_0005C3D0("REPLAYS\\REPLAY.BLK", i * 20 + b, PC_RAM(0xD8600), D_00096DE0)) {
+            func_00079DB0(D_0009766C, PC_RAM(0xD8600), D_00096DE0);
             return 1;
         }
     }

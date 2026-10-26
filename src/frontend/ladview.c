@@ -14,6 +14,62 @@
 
 /* ---- types ---- */
 #include "frontend.h"
+#ifndef PC_RAM
+#ifdef PSX_PC
+/* PC-PORT: absolute PS1 RAM addresses (free-RAM buffers 0xD0200+, level/overlay load areas, KSEG0 0x80xxxxxx) map into
+ * an emulated 2 MB main-RAM block, offset = physical address. pc_psxram[] is defined in tile.c for now. */
+extern unsigned char pc_psxram[];
+#define PC_RAM(a) ((int)(pc_psxram + ((unsigned int)(a) & 0x1FFFFF)))
+#else
+#define PC_RAM(a) a
+#endif
+#endif
+#ifndef PC_SCRATCH
+#ifdef PSX_PC
+/* PC-PORT: the PS1 scratchpad (0x1F800000, 1 KB) is a static buffer on PC (REDRIVER2 _scratchData approach, but a
+ * link-time array so file-scope initialisers stay constant). pc_scratchpad[] is defined in tile.c for now. */
+extern unsigned char pc_scratchpad[];
+#define PC_SCRATCH(a) ((int)(pc_scratchpad + ((a) - 0x1F800000)))
+#else
+#define PC_SCRATCH(a) a
+#endif
+#endif
+#ifdef PSX_PC
+/* PC-PORT: GTE shim - PsyCross software GTE (MTC2/CTC2/MFC2/CFC2/doCOP2) in place of this file's MIPS
+ * gte macros (those are #ifndef PSX_PC below). Statement-safe (do/while), unlike inline_c.h's {...};
+ * same register/offset semantics as the lwc2/swc2/ctc2 originals. Same shim in every GTE file of src/. */
+extern void MTC2(unsigned int value, int reg);
+extern void CTC2(unsigned int value, int reg);
+extern unsigned int MFC2(int reg);
+extern unsigned int CFC2(int reg);
+extern int doCOP2(int op);
+#define PCGTE_W(p, o) (*(unsigned int *)((char *)(p) + (o)))
+#define PCGTE_H(p, o) (*(unsigned short *)((char *)(p) + (o)))
+#undef gte_SetRotMatrix
+#define gte_SetRotMatrix(r0) do { CTC2(PCGTE_W(r0,0), 0); CTC2(PCGTE_W(r0,4), 1); CTC2(PCGTE_W(r0,8), 2); CTC2(PCGTE_W(r0,12), 3); CTC2(PCGTE_W(r0,16), 4); } while (0)
+#undef gte_SetTransVector
+#define gte_SetTransVector(r0) do { CTC2(PCGTE_W(r0,0), 5); CTC2(PCGTE_W(r0,4), 6); CTC2(PCGTE_W(r0,8), 7); } while (0)
+#undef gte_ldv0
+#define gte_ldv0(r0) do { MTC2(PCGTE_W(r0,0), 0); MTC2(PCGTE_W(r0,4), 1); } while (0)
+#undef gte_ldv3
+#define gte_ldv3(r0, r1, r2) do { MTC2(PCGTE_W(r0,0), 0); MTC2(PCGTE_W(r0,4), 1); MTC2(PCGTE_W(r1,0), 2); MTC2(PCGTE_W(r1,4), 3); MTC2(PCGTE_W(r2,0), 4); MTC2(PCGTE_W(r2,4), 5); } while (0)
+#undef gte_nclip
+#define gte_nclip() (doCOP2(0x1400006))
+#undef gte_rtps
+#define gte_rtps() (doCOP2(0x0180001))
+#undef gte_rtpt
+#define gte_rtpt() (doCOP2(0x0280030))
+#undef gte_stopz
+#define gte_stopz(r0) do { PCGTE_W(r0,0) = MFC2(24); } while (0)
+#undef gte_stsxy
+#define gte_stsxy(r0) do { PCGTE_W(r0,0) = MFC2(14); } while (0)
+#undef gte_stsxy3c
+#define gte_stsxy3c(r0) do { PCGTE_W(r0,0) = MFC2(12); PCGTE_W(r0,4) = MFC2(13); PCGTE_W(r0,8) = MFC2(14); } while (0)
+#undef gte_stsz
+#define gte_stsz(r0) do { PCGTE_W(r0,0) = MFC2(19); } while (0)
+#undef gte_stsz3c
+#define gte_stsz3c(r0) do { PCGTE_W(r0,0) = MFC2(17); PCGTE_W(r0,4) = MFC2(18); PCGTE_W(r0,8) = MFC2(19); } while (0)
+#endif /* PSX_PC */
 typedef struct { int a, b, c, d; } E;
 typedef struct { unsigned char pad0, a; unsigned short b; unsigned char idx[4]; unsigned char p[8]; } T;
 typedef struct { unsigned short x, y, z, w; } SRC;
@@ -107,6 +163,9 @@ extern int D_001CF33C[];
 extern int D_001CF348[];
 extern int D_00089F1C[];
 extern int D_1F800010[];
+#ifdef PSX_PC
+#define D_1F800010 ((int *)PC_SCRATCH(0x1F800010)) /* splat label inside the scratchpad */
+#endif
 extern MATRIX CompoundMatrix[];
 extern VECTOR camera_position;
 extern MODEL *modelpointers[];
@@ -174,7 +233,7 @@ void func_001CB290(void)
     func_00073F88(1);
     func_00079800(0);
     ShowLoadingScreen(nm, 1, 0x17);
-    Loadfile("MCARD.BIN", 0xE6600);
+    Loadfile("MCARD.BIN", PC_RAM(0xE6600));
     s = D_00096834;
     D_00096834 = 4;
     func_00022818();
@@ -438,6 +497,7 @@ void func_001CBD08(T *t)
 }
 
 /* ---------------- func_001CBE30 (src/pilot/frontend/func_001CBE30.c) ---------------- */
+#ifndef PSX_PC
 #define gte_ldv3(r0, r1, r2) __asm__ volatile ( \
     "lwc2  $0, 0( %0 );" "lwc2  $1, 4( %0 );" "lwc2  $2, 0( %1 );" \
     "lwc2  $3, 4( %1 );" "lwc2  $4, 0( %2 );" "lwc2  $5, 4( %2 )" : : "r"(r0), "r"(r1), "r"(r2))
@@ -448,6 +508,7 @@ void func_001CBD08(T *t)
     "swc2  $12, 0( %0 );" "swc2  $13, 4( %0 );" "swc2  $14, 8( %0 )" : : "r"(r0) : "memory")
 #define gte_stsz3c(r0) __asm__ volatile ( \
     "swc2  $17, 0( %0 );" "swc2  $18, 4( %0 );" "swc2  $19, 8( %0 )" : : "r"(r0) : "memory")
+#endif
 int func_001CBE30(unsigned char *p)
 {
     int flag;
@@ -462,6 +523,7 @@ int func_001CBE30(unsigned char *p)
     gte_stsz3c(D_001CF324);
     return 0;
 }
+#ifndef PSX_PC
 #undef gte_ldv3
 #undef gte_nclip
 #undef gte_rtpt
@@ -469,6 +531,7 @@ int func_001CBE30(unsigned char *p)
 #undef gte_stsxy3c
 #undef gte_stsz3c
 
+#endif
 /* ---------------- func_001CBEFC (src/pilot/frontend/func_001CBEFC.c) ---------------- */
 int func_001CBEFC(int n)
 {
@@ -518,6 +581,7 @@ int func_001CBEFC(int n)
 }
 
 /* ---------------- func_001CC1D0 (src/pilot/frontend/func_001CC1D0.c) ---------------- */
+#ifndef PSX_PC
 #define gte_ldv0(r0) __asm__ volatile ( \
     "lwc2  $0, 0( %0 );" "lwc2  $1, 4( %0 )" : : "r"(r0))
 #define gte_ldv3(r0, r1, r2) __asm__ volatile ( \
@@ -533,6 +597,7 @@ int func_001CBEFC(int n)
     "swc2  $12, 0( %0 );" "swc2  $13, 4( %0 );" "swc2  $14, 8( %0 )" : : "r"(r0) : "memory")
 #define gte_stsz3c(r0) __asm__ volatile ( \
     "swc2  $17, 0( %0 );" "swc2  $18, 4( %0 );" "swc2  $19, 8( %0 )" : : "r"(r0) : "memory")
+#endif
 /* func_001CBE30, inlined (renamed: the TU also defines func_001CBE30) */
 static inline int func_001CBE30_inl(unsigned char *p)
 {
@@ -622,6 +687,7 @@ void func_001CC1D0(unsigned char *p)
     ((P_TAG *)&current->ot[z])->addr = (unsigned)t;
     current->primptr += sizeof(POLY_FT4);
 }
+#ifndef PSX_PC
 #undef gte_ldv0
 #undef gte_ldv3
 #undef gte_nclip
@@ -633,6 +699,7 @@ void func_001CC1D0(unsigned char *p)
 #undef gte_stsz
 #undef gte_stsz3c
 
+#endif
 /* ---------------- func_001CC76C (src/pilot/frontend/func_001CC76C.c) ---------------- */
 /* func_001CC76C: pp[i * 2] giv (its reduced reg is born after the hoisted luis); t->a re-read into a local after the clut store
    (lo_sum globals count as varying addresses, so the int stores conflict with t->a / texture_pages loads). */
@@ -665,6 +732,7 @@ void func_001CC76C(T *t)
  * FAKEMATCH: char pad[16] only sizes the 0x58 frame (probably a second 16-byte local in the original). */
 /* scratchpad plot table end (0x1F800000 + 0x10), splat's label */
 /* scratchpad 0x1F800000 + 0x10: splat's label for the plot table end */
+#ifndef PSX_PC
 #define gte_SetRotMatrix(r0) __asm__ volatile ( \
     "lw    $12, 0( %0 );" "lw    $13, 4( %0 );" "ctc2  $12, $0;" "ctc2  $13, $1;" \
     "lw    $12, 8( %0 );" "lw    $13, 12( %0 );" "lw    $14, 16( %0 );" \
@@ -672,6 +740,7 @@ void func_001CC76C(T *t)
 #define gte_SetTransVector(r0) __asm__ volatile ( \
     "lw $12, 0(%0);" "lw $13, 4(%0);" "lw $14, 8(%0);" \
     "ctc2 $12, $5;" "ctc2 $13, $6;" "ctc2 $14, $7" : : "r"(r0) : "$12", "$13", "$14")
+#endif
 #define addPrim(ot, p) (((P_TAG *)(p))->addr = ((P_TAG *)(ot))->addr, ((P_TAG *)(ot))->addr = (unsigned)(p))
 #define copy_words(D, S, N) { int n = (N); int *d = (D) + (N); do { d--; n--; *d = (S)[n]; } while (n); }
 void func_001CC894(CELL_OBJECT **objs, int count)
@@ -687,7 +756,7 @@ void func_001CC894(CELL_OBJECT **objs, int count)
     int k;
     POLY_G4 *g4;
     POLY_GT4 *gt4;
-    int *plot = (int *)0x1F800000;
+    int *plot = (int *)PC_SCRATCH(0x1F800000);
 
     copy_words(D_001CF308, D_001CF338, 1);
     copy_words(plot, D_001CF328, 4);
@@ -764,6 +833,9 @@ void func_001CC894(CELL_OBJECT **objs, int count)
 }
 #undef addPrim
 #undef copy_words
+#ifndef PSX_PC
 #undef gte_SetRotMatrix
 #undef gte_SetTransVector
 
+
+#endif

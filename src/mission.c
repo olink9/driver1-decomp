@@ -267,6 +267,19 @@ extern char D_00010FAC[];   /* message strings (.rodata 0x10FAC-0x1100F, pointed
 /* script opcode lengths (func_000687D4) */
 signed char D_0008BCE4[116] = { 0, 4, -8, 8, 0x1C, 0, 0, 4, 4, 8, 4, 4, 8, 8, 8, 8, 0xC, 0xC, 0, 0xC, -8, 4, -12, 0, 8, 0x10, 4, 4, 4, 4, 4, 4, 0, 0x28, 8, 8, 4, 4, 8, 4, 4, 8, 0, 0, 0, 0, 0, 0, 4, 4, 4, 8, 8, 8, 0x1C, 4, 4, 8, 4, 8, 8, 4, 0, 4, 8, 8, 4, 8, 8, 0x14, -12, 0x18, 0, 0, 8, 0, 0, 4, 4, 0, 0x20, 0, 0x18, 0xC, 8, 0x10, -4, 4, 4, 4, 4, 4, 0xC, 0x10, -4, 0x14, 0xC, 0xC, 0x10, 4, 4, 4, 4, 0x10, -8, 8, 8, 4, 8, 0x10, 8, 8, 0x10, 0xC, 8, 0 };
 /* the 73 script variables/events: D_0008BDF8 in the original's %hi/%lo is &D_0008BD58[10] */
+#ifdef PSX_PC
+/* PC-PORT: this table holds raw PS1 addresses of fields. On PC each is its owning object + offset (owner from
+ * build/slus_008.42.map: mission.o's D_000C6F04 MISSION, felony.o's D_000C4690 PURSUER[5]); the three in .bss that no
+ * C file defines (absolute-symbol only) go through PC_RAM - valid if the link maps those into pc_psxram at their
+ * PS1 offsets (see port request). */
+extern PURSUER D_000C4690[];
+extern unsigned char pc_psxram[];
+#define MREF(a, sym, off) ((int *)((char *)&(sym) + (off)))
+#define MABS(a) ((int *)(pc_psxram + (a)))
+#else
+#define MREF(a, sym, off) (int *)a
+#define MABS(a) (int *)a
+#endif
 E D_0008BD58[73] = {
     { 1, 0, 0, 0 },
     { 3, (int *)&D_00097708, 0, 5 },
@@ -300,47 +313,47 @@ E D_0008BD58[73] = {
     { 3, 0, 0, -1 },
     { 3, (int *)&D_0009686C, 0, 0 },
     { 3, (int *)&D_00096E78, 0, 0x64 },
-    { 3, (int *)0xC71C4, 0, 0 },
-    { 3, (int *)0xC71C8, 0, 0 },
-    { 3, (int *)0xC71CC, 0, 0 },
+    { 3, MREF(0xC71C4, D_000C6F04, 0x2C0), 0, 0 },
+    { 3, MREF(0xC71C8, D_000C6F04, 0x2C4), 0, 0 },
+    { 3, MREF(0xC71CC, D_000C6F04, 0x2C8), 0, 0 },
     { 3, (int *)&D_000C71C0, 0, 0 },
     { 1, 0, (int *)&D_00010FAC, 0 },
     { 3, (int *)&D_000971DC, 0, 0 },
-    { 3, (int *)0xC71D0, 0, 0 },
+    { 3, MREF(0xC71D0, D_000C6F04, 0x2CC), 0, 0 },
     { 3, (int *)&D_00096854, 0, 0 },
     { 3, (int *)&D_00096858, 0, 0 },
-    { 3, (int *)0xC71D4, 0, 0 },
+    { 3, MREF(0xC71D4, D_000C6F04, 0x2D0), 0, 0 },
     { 3, (int *)&D_00097740, 0, 0x1000 },
     { 3, (int *)&D_00097700, 0, 0x1000 },
     { 3, (int *)&D_00096E68, 0, 0 },
-    { 3, (int *)0xC71D8, 0, 1 },
+    { 3, MREF(0xC71D8, D_000C6F04, 0x2D4), 0, 1 },
     { 3, (int *)&D_00097714, 0, 0 },
     { 3, (int *)&D_000C4C7C, 0, 0x333 },
-    { 3, (int *)0xC4C80, 0, 0x333 },
+    { 3, MREF(0xC4C80, D_000C4690, 0x5F0), 0, 0x333 },
     { 3, (int *)&D_000C4C84, 0, 0x800 },
-    { 3, (int *)0x99140, 0, 0 },
-    { 3, (int *)0xC4C88, 0, 0xC00 },
+    { 3, MABS(0x99140), 0, 0 },
+    { 3, MREF(0xC4C88, D_000C4690, 0x5F8), 0, 0xC00 },
     { 3, (int *)&D_000975EC, 0, 1 },
     { 3, (int *)&D_000C4C8C, 0, 0 },
-    { 3, (int *)0x9894C, 0, 0x800 },
-    { 3, (int *)0xC6FD8, 0, 0 },
+    { 3, MABS(0x9894C), 0, 0x800 },
+    { 3, MREF(0xC6FD8, D_000C6F04, 0xD4), 0, 0 },
     { 3, (int *)&D_000BE9DC, 0, 0 },
     { 3, (int *)&D_000C4C90, 0, 0x666 },
-    { 3, (int *)0xC6FD4, 0, 0 },
-    { 3, (int *)0xC6F58, 0, 0 },
-    { 3, (int *)0xC6F4C, 0, 0x78 },
-    { 3, (int *)0xC6F50, 0, 0x96 },
-    { 3, (int *)0xC6FE4, 0, 0 },
-    { 3, (int *)0xC6FE8, 0, 0 },
+    { 3, MREF(0xC6FD4, D_000C6F04, 0xD0), 0, 0 },
+    { 3, MREF(0xC6F58, D_000C6F04, 0x54), 0, 0 },
+    { 3, MREF(0xC6F4C, D_000C6F04, 0x48), 0, 0x78 },
+    { 3, MREF(0xC6F50, D_000C6F04, 0x4C), 0, 0x96 },
+    { 3, MREF(0xC6FE4, D_000C6F04, 0xE0), 0, 0 },
+    { 3, MREF(0xC6FE8, D_000C6F04, 0xE4), 0, 0 },
     { 1, 0, 0, 0 },
     { 1, 0, 0, 0 },
-    { 3, (int *)0xBE9B0, 0, 1 },
+    { 3, MABS(0xBE9B0), 0, 1 },
     { 3, (int *)&D_00096E60, 0, 0 },
-    { 3, (int *)0xC4C94, 0, 0x200 },
+    { 3, MREF(0xC4C94, D_000C4690, 0x604), 0, 0x200 },
     { 3, (int *)&D_0009779C, 0, 0 },
     { 3, (int *)&D_00097798, 0, 0x1770 },
-    { 3, (int *)0xC700C, 0, 0 },
-    { 3, (int *)0xC71DC, 0, 0x17 }
+    { 3, MREF(0xC700C, D_000C6F04, 0x108), 0, 0 },
+    { 3, MREF(0xC71DC, D_000C6F04, 0x2D8), 0, 0x17 }
 };
 /* mission number -> MISSION.BLK segment (func_000686BC); the record after it (0x8C218) is overlay.c's */
 E_686BC D_0008C1E8[12] = { { 0x2C, 0x2B }, { 0x40, 0x37 }, { 0x49, 0x3B }, { 0x57, 0x43 }, { 0x61, 0x4B }, { 0x67, 0x4F }, { 0x75, 0x57 }, { 0x7F, 0x5F }, { 0x8B, 0x69 }, { 0x9E, 0x71 }, { 0xAE, 0x76 }, { 0xB7, 0x7A } };
@@ -1871,8 +1884,15 @@ int func_0006B450(struct Q *p, int n) {
     return r;
 }
 
+#ifdef PSX_PC
+/* PC: GCC 13 rejects a short-parameter prototype after the block-scope K&R int declarations above (promotion
+ * mismatch); keep K&R here - i386 cdecl passes short args in int slots, so calls stay compatible with pres.c. */
+extern int PrintString();
+extern int PrintDigit();
+#else
 extern int PrintString(char *string, short x, short y);
 extern int PrintDigit(short x, short y, char *string);
+#endif
 
 /* ---------------- func_0006B4AC (src/pilot/func_0006B4AC.c) ---------------- */
 /* func_0006B4AC - no Driver 2 counterpart: mission HUD (timers/messages). */

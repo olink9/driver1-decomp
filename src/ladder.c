@@ -5,6 +5,16 @@
  * 0x977E0-0x977F4; its three strings are C literals (.rodata 0x11650-0x116A8 is one block with its jump table).
  * extern long long -> int + maspsx abs= (8).
  */
+#ifndef PC_RAM
+#ifdef PSX_PC
+/* PC-PORT: absolute PS1 RAM addresses (free-RAM buffers 0xD0200+, level/overlay load areas, KSEG0 0x80xxxxxx) map into
+ * an emulated 2 MB main-RAM block, offset = physical address. pc_psxram[] is defined in tile.c for now. */
+extern unsigned char pc_psxram[];
+#define PC_RAM(a) ((int)(pc_psxram + ((unsigned int)(a) & 0x1FFFFF)))
+#else
+#define PC_RAM(a) a
+#endif
+#endif
 /* MKTU CONFLICTS (first spelling active, others commented at their place below):
  * decl D_00011650:
  *     extern int D_00011650[];    <- func_0006EACC
@@ -91,10 +101,10 @@ ITEM16 *func_0006EEC4();
 /* ---------------- func_0006EACC (src/pilot/func_0006EACC.c) ---------------- */
 /* FAKEMATCH: empty asm on r keeps the return value 1 in a pseudo set early (target loads v0=1 mid-function, temps avoid v0) */
 int func_0006EACC(void) {
-    int *p = (int *)0x1FE000;
+    int *p = (int *)PC_RAM(0x1FE000);
     int r;
-    Loadfile("data\\mladder.psx", 0x1FE000);
-    D_000977F0 = (CMD *)0x1FE004;
+    Loadfile("data\\mladder.psx", PC_RAM(0x1FE000));
+    D_000977F0 = (CMD *)PC_RAM(0x1FE004);
     r = 1;
     __asm__("" : "=r"(r) : "0"(r));
     D_000977E8 = 0;
@@ -108,7 +118,7 @@ int func_0006EACC(void) {
 /* ---------------- func_0006EB48 (src/pilot/func_0006EB48.c) ---------------- */
 void func_0006EB48(void)
 {
-    Loadfile("data\\mladder.psx", 0x1FE000);
+    Loadfile("data\\mladder.psx", PC_RAM(0x1FE000));
 }
 
 /* ---------------- func_0006EB74 (src/pilot/func_0006EB74.c) ---------------- */
@@ -247,14 +257,14 @@ ITEM16 *func_0006EEC4(ENTRY *p) {
                     func_0006F728();
             }
             SetDispMask(0);
-            Loadfile("data\\mladder.psx", 0x1FE000);
+            Loadfile("data\\mladder.psx", PC_RAM(0x1FE000));
             return &D_000977F0[p->val];
         }
     }
     for (;;) {
         *(int *)&D_00096834 = D_00096F90;
-        Loadfile("FRONTEND.BIN", 0x1C0000);
-        Loadfile("MCARD.BIN", 0xE6600);
+        Loadfile("FRONTEND.BIN", PC_RAM(0x1C0000));
+        Loadfile("MCARD.BIN", PC_RAM(0xE6600));
         sel = func_1C9048(&copy);
         if (sel >= 0) {
             found = 0;
@@ -275,7 +285,7 @@ ITEM16 *func_0006EEC4(ENTRY *p) {
                         if (*(short *)&D_00097538)
                             func_0006F728();
                     }
-                    Loadfile("data\\mladder.psx", 0x1FE000);
+                    Loadfile("data\\mladder.psx", PC_RAM(0x1FE000));
                     found = 1;
                 }
             }
@@ -285,7 +295,7 @@ ITEM16 *func_0006EEC4(ENTRY *p) {
                 func_00079AF0(save);
                 ReInitSystem();
             }
-            Loadfile("data\\mladder.psx", 0x1FE000);
+            Loadfile("data\\mladder.psx", PC_RAM(0x1FE000));
             return &D_000977F0[ENT(p, sel)->val];
         }
         if (sel == -1)

@@ -13,6 +13,42 @@
 /* maspsx: abs=current */
 
 #include "structs.h"
+#ifdef PSX_PC
+/* PC-PORT: GTE shim - PsyCross software GTE (MTC2/CTC2/MFC2/CFC2/doCOP2) in place of this file's MIPS
+ * gte macros (those are #ifndef PSX_PC below). Statement-safe (do/while), unlike inline_c.h's {...};
+ * same register/offset semantics as the lwc2/swc2/ctc2 originals. Same shim in every GTE file of src/. */
+extern void MTC2(unsigned int value, int reg);
+extern void CTC2(unsigned int value, int reg);
+extern unsigned int MFC2(int reg);
+extern unsigned int CFC2(int reg);
+extern int doCOP2(int op);
+#define PCGTE_W(p, o) (*(unsigned int *)((char *)(p) + (o)))
+#define PCGTE_H(p, o) (*(unsigned short *)((char *)(p) + (o)))
+#undef gte_ldv0
+#define gte_ldv0(r0) do { MTC2(PCGTE_W(r0,0), 0); MTC2(PCGTE_W(r0,4), 1); } while (0)
+#undef gte_ldv3
+#define gte_ldv3(r0, r1, r2) do { MTC2(PCGTE_W(r0,0), 0); MTC2(PCGTE_W(r0,4), 1); MTC2(PCGTE_W(r1,0), 2); MTC2(PCGTE_W(r1,4), 3); MTC2(PCGTE_W(r2,0), 4); MTC2(PCGTE_W(r2,4), 5); } while (0)
+#undef gte_ldv3c
+#define gte_ldv3c(r0) do { MTC2(PCGTE_W(r0,0), 0); MTC2(PCGTE_W(r0,4), 1); MTC2(PCGTE_W(r0,8), 2); MTC2(PCGTE_W(r0,12), 3); MTC2(PCGTE_W(r0,16), 4); MTC2(PCGTE_W(r0,20), 5); } while (0)
+#undef gte_rtps
+#define gte_rtps() (doCOP2(0x0180001))
+#undef gte_rtpt
+#define gte_rtpt() (doCOP2(0x0280030))
+#undef gte_stsxy0
+#define gte_stsxy0(r0) do { PCGTE_W(r0,0) = MFC2(12); } while (0)
+#undef gte_stsxy1
+#define gte_stsxy1(r0) do { PCGTE_W(r0,0) = MFC2(13); } while (0)
+#undef gte_stsxy2
+#define gte_stsxy2(r0) do { PCGTE_W(r0,0) = MFC2(14); } while (0)
+#undef gte_stsxy3
+#define gte_stsxy3(r0, r1, r2) do { PCGTE_W(r0,0) = MFC2(12); PCGTE_W(r1,0) = MFC2(13); PCGTE_W(r2,0) = MFC2(14); } while (0)
+#undef gte_stsxy3c
+#define gte_stsxy3c(r0) do { PCGTE_W(r0,0) = MFC2(12); PCGTE_W(r0,4) = MFC2(13); PCGTE_W(r0,8) = MFC2(14); } while (0)
+#undef gte_stsz
+#define gte_stsz(r0) do { PCGTE_W(r0,0) = MFC2(19); } while (0)
+#undef gte_stsz3c
+#define gte_stsz3c(r0) do { PCGTE_W(r0,0) = MFC2(17); PCGTE_W(r0,4) = MFC2(18); PCGTE_W(r0,8) = MFC2(19); } while (0)
+#endif /* PSX_PC */
 
 /* ---- types ---- */
 
@@ -54,6 +90,7 @@ void func_0002C29C();
 /* textured quad (POLY_FT4) split into two halves with midpoint vertices */
 extern int current;
 #define current (*(DB **)&current)
+#ifndef PSX_PC
 #define gte_ldv3c(r0) __asm__ volatile ( \
     "lwc2  $0, 0( %0 );" "lwc2  $1, 4( %0 );" "lwc2  $2, 8( %0 );" \
     "lwc2  $3, 12( %0 );" "lwc2  $4, 16( %0 );" "lwc2  $5, 20( %0 )" : : "r"(r0))
@@ -62,6 +99,7 @@ extern int current;
     "swc2  $12, 0( %0 );" "swc2  $13, 4( %0 );" "swc2  $14, 8( %0 )" : : "r"(r0) : "memory")
 #define gte_stsz3c(r0) __asm__ volatile ( \
     "swc2  $17, 0( %0 );" "swc2  $18, 4( %0 );" "swc2  $19, 8( %0 )" : : "r"(r0) : "memory")
+#endif
 void func_0002BDB0(POLYFT4SRC *src, short *verts)
 {
     SVECTOR v[6];
@@ -141,15 +179,18 @@ void func_0002BDB0(POLYFT4SRC *src, short *verts)
     current->primptr = (char *)prim;
 }
 #undef current
+#ifndef PSX_PC
 #undef gte_ldv3c
 #undef gte_rtpt
 #undef gte_stsxy3c
 #undef gte_stsz3c
 
+#endif
 /* ---------------- func_0002C29C (src/pilot/func_0002C29C.c) ---------------- */
 /* semi-transparent textured quad (POLY_FT4) from 4 model vertices */
 extern int current;
 #define current (*(DB **)&current)
+#ifndef PSX_PC
 #define gte_ldv3(r0, r1, r2) __asm__ volatile ( \
     "lwc2  $0, 0( %0 );" "lwc2  $1, 4( %0 );" "lwc2  $2, 0( %1 );" \
     "lwc2  $3, 4( %1 );" "lwc2  $4, 0( %2 );" "lwc2  $5, 4( %2 )" : : "r"(r0), "r"(r1), "r"(r2))
@@ -162,6 +203,7 @@ extern int current;
 #define gte_stsxy2(r0) __asm__ volatile ("swc2  $14, 0( %0 )" : : "r"(r0) : "memory")
 #define gte_stsxy3(r0, r1, r2) __asm__ volatile ( \
     "swc2  $12, 0( %0 );" "swc2  $13, 0( %1 );" "swc2  $14, 0( %2 )" : : "r"(r0), "r"(r1), "r"(r2) : "memory")
+#endif
 void func_0002C29C(POLYFT4SRC *src, short *verts)
 {
     SVECTOR v[4];
@@ -214,6 +256,7 @@ void func_0002C29C(POLYFT4SRC *src, short *verts)
     gte_stsxy3(&prims->xy0, &prims->xy1, &prims->xy2);
 }
 #undef current
+#ifndef PSX_PC
 #undef gte_ldv0
 #undef gte_ldv3
 #undef gte_rtps
@@ -224,3 +267,5 @@ void func_0002C29C(POLYFT4SRC *src, short *verts)
 #undef gte_stsxy3
 #undef gte_stsz
 
+
+#endif

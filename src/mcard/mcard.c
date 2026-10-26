@@ -13,10 +13,25 @@
  */
 
 /* include_asm.h's INCLUDE_ASM minus its .include of labels.inc (the build pipeline prepends macro.inc) */
+#ifndef PSX_PC /* PC: pc_compat.h's empty INCLUDE_ASM; the routine comes from port/pc */
 #define INCLUDE_ASM(FOLDER, NAME) \
     __asm__(".section .text\n.set noat\n.set noreorder\n.include \"" FOLDER "/" #NAME ".s\"\n.set reorder\n.set at\n")
+#endif
 
 #include "mcard.h"
+#ifndef PC_RAM
+#ifdef PSX_PC
+/* PC-PORT: absolute PS1 RAM addresses (free-RAM buffers 0xD0200+, level/overlay load areas, KSEG0 0x80xxxxxx) map into
+ * an emulated 2 MB main-RAM block, offset = physical address. pc_psxram[] is defined in tile.c for now. */
+extern unsigned char pc_psxram[];
+#define PC_RAM(a) ((int)(pc_psxram + ((unsigned int)(a) & 0x1FFFFF)))
+#else
+#define PC_RAM(a) a
+#endif
+#endif
+#ifdef PSX_PC
+extern void PC_Break(const char *file, int line); /* port/pc/pc_main.c: logs and aborts (PS1: break 1024) */
+#endif
 
 /* ---- types (records shared with other code are in include/mcard.h, frontend.h, structs.h) ---- */
 /* PsyQ libapi card directory entry (firstfile/nextfile) */
@@ -263,14 +278,14 @@ void func_000E6D60(char *file, char *name, unsigned char idx, short val)
     MC_FONT_FILE *pal;
     int i;
 
-    Loadfile(file, (char *)0xD0200);
+    Loadfile(file, (char *)PC_RAM(0xD0200));
     func_001C334C(name, &tex);
     D_000ED8B0[idx].r[0].u = tex.u0;
     D_000ED8B0[idx].r[0].v = tex.v0;
     D_000ED8B0[idx].r[0].tpage = tex.tpage;
     D_000ED8B0[idx].r[0].clut = tex.clut;
     D_000ED8B0[idx].val = val;
-    pal = (MC_FONT_FILE *)0xD0200;
+    pal = (MC_FONT_FILE *)PC_RAM(0xD0200);
     if (idx < 2) {
         D_000ED8B0[idx].r[0].hi = 0x7F;
         D_000ED8B0[idx].r[1].lo = 0x80;
@@ -661,7 +676,7 @@ int func_000E806C(int port, char *name, char *title, char *data, int size)
     if (D_000EF144 == 3 || D_000EF144 == 6) {
         unsigned char *buf;
         unsigned char *q;
-        buf = (unsigned char *)0x10E600;
+        buf = (unsigned char *)PC_RAM(0x10E600);
         n = 999;
         r[0] = 0;
         r[1] = 0;
@@ -700,7 +715,7 @@ ok1:
         unsigned char *buf;
         unsigned char *q;
         err = 0;
-        buf = (unsigned char *)0x110600;
+        buf = (unsigned char *)PC_RAM(0x110600);
         n = 999;
         r[0] = 0;
         r[1] = 0;
@@ -2080,7 +2095,7 @@ void func_000EC280(int noinit)
     int *buf;
     int n, i, y, h;
 
-    buf = (int *)0xD0200;
+    buf = (int *)PC_RAM(0xD0200);
     SetDispMask(0);
     SetTextColour(0xD6, 0x5C, 0);
     if (noinit == 0) {
@@ -2174,7 +2189,7 @@ void func_000EC550(int n, int slot)
     short tp;
 
     sprintf(name, D_000E6C0C, n);
-    Loadfile(name, (char *)0xD0200);
+    Loadfile(name, (char *)PC_RAM(0xD0200));
     r.w = 0x40;
     r.h = 0x100;
     r.x = (slot % 11) * 64 + 0x140;
@@ -2183,7 +2198,7 @@ void func_000EC550(int n, int slot)
     D_000EFC08[n].tpage = tp;
     D_000EFC08[n].slot = slot;
     D_000EFC08[n].used = 1;
-    func_00074404(&r, (char *)0xD0200);
+    func_00074404(&r, (char *)PC_RAM(0xD0200));
     DrawSync(0);
     p = D_000EFC08;
     for (i = 0; i < 32; i++) {
@@ -2227,8 +2242,12 @@ void func_000EC6BC(char *name, TEXINFO *out)
         }
     }
     printf(D_000E6C20, name);
+#ifdef PSX_PC
+    PC_Break(__FILE__, __LINE__);
+#else
     for (;;)
         __asm__ volatile("break 1024");
+#endif
 }
 
 /* ---------------- func_000EC89C (src/pilot/mcard/func_000EC89C.c) ---------------- */
@@ -2260,11 +2279,11 @@ void func_000EC89C(void)
     res = 0;
     D_000ED7D0 = 1;
     func_000EC280(0);
-    D_000BDFA4[0].primptr = D_000BDFA4[0].primtab = (char *)0xD8600;
+    D_000BDFA4[0].primptr = D_000BDFA4[0].primtab = (char *)PC_RAM(0xD8600);
     current = (DB *)D_000BDFA4;
-    D_000BDFA4[1].primptr = D_000BDFA4[1].primtab = (char *)0xF6600;
-    D_000BDFA4[0].ot = (unsigned long *)0xD0200;
-    D_000BDFA4[1].ot = (unsigned long *)0xD4400;
+    D_000BDFA4[1].primptr = D_000BDFA4[1].primtab = (char *)PC_RAM(0xF6600);
+    D_000BDFA4[0].ot = (unsigned long *)PC_RAM(0xD0200);
+    D_000BDFA4[1].ot = (unsigned long *)PC_RAM(0xD4400);
     D_00097524 = (DB *)(D_000BDFA4 + 1);
     func_00051374();
     func_000EC6BC(D_000E6C44, &tex);

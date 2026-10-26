@@ -19,6 +19,9 @@
 /* maspsx: abs=D_00096834,D_00097050,D_00097054,gLightsOn,D_00097704,D_00097708,D_00096808,D_00096878,CameraCnt,D_00097128 */
 
 #include "structs.h"
+#ifdef PSX_PC
+extern void CTC2(unsigned int value, int reg); /* PsyCross software GTE */
+#endif
 
 /* ---- types ---- */
 typedef struct {
@@ -427,7 +430,11 @@ void func_0005347C(void)
 			SetRotMatrix(inv_camera_matrix);
 			func_0004EAC0(vec);
 			MulMatrix0(inv_camera_matrix, mat, mat);
+#ifdef PSX_PC
+			CTC2(((int *)(vec))[0], 5); CTC2(((int *)(vec))[1], 6); CTC2(((int *)(vec))[2], 7); /* gte_SetTransVector(vec) */
+#else
 			__asm__ volatile("lw $12, 0(%0); lw $13, 4(%0); lw $14, 8(%0); ctc2 $12, $5; ctc2 $13, $6; ctc2 $14, $7" : : "r"(vec) : "$12", "$13", "$14");
+#endif
 			SetRotMatrix(mat);
 			func_0002DCAC(modelpointers[D_000BE754.cop->type]);
 		}
@@ -463,7 +470,11 @@ void func_00053644(void)
 			func_0004EAC0(vec);
 			func_0004E948(mat, ang);
 			MulMatrix0(inv_camera_matrix, mat, mat);
+#ifdef PSX_PC
+			CTC2(((int *)(vec))[0], 5); CTC2(((int *)(vec))[1], 6); CTC2(((int *)(vec))[2], 7); /* gte_SetTransVector(vec) */
+#else
 			__asm__ volatile("lw $12, 0(%0); lw $13, 4(%0); lw $14, 8(%0); ctc2 $12, $5; ctc2 $13, $6; ctc2 $14, $7" : : "r"(vec) : "$12", "$13", "$14");
+#endif
 			SetRotMatrix(mat);
 			func_0002DCAC(modelpointers[D_00096D18]);
 		}

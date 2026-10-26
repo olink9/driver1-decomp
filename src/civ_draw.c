@@ -18,6 +18,48 @@
 
 #include "gte.h"
 #include "structs.h"
+#ifndef PC_SCRATCH
+#ifdef PSX_PC
+/* PC-PORT: the PS1 scratchpad (0x1F800000, 1 KB) is a static buffer on PC (REDRIVER2 _scratchData approach, but a
+ * link-time array so file-scope initialisers stay constant). pc_scratchpad[] is defined in tile.c for now. */
+extern unsigned char pc_scratchpad[];
+#define PC_SCRATCH(a) ((int)(pc_scratchpad + ((a) - 0x1F800000)))
+#else
+#define PC_SCRATCH(a) a
+#endif
+#endif
+#ifdef PSX_PC
+/* PC-PORT: GTE shim - PsyCross software GTE (MTC2/CTC2/MFC2/CFC2/doCOP2) in place of this file's MIPS
+ * gte macros (those are #ifndef PSX_PC below). Statement-safe (do/while), unlike inline_c.h's {...};
+ * same register/offset semantics as the lwc2/swc2/ctc2 originals. Same shim in every GTE file of src/. */
+extern void MTC2(unsigned int value, int reg);
+extern void CTC2(unsigned int value, int reg);
+extern unsigned int MFC2(int reg);
+extern unsigned int CFC2(int reg);
+extern int doCOP2(int op);
+#define PCGTE_W(p, o) (*(unsigned int *)((char *)(p) + (o)))
+#define PCGTE_H(p, o) (*(unsigned short *)((char *)(p) + (o)))
+#undef gte_SetRotMatrix
+#define gte_SetRotMatrix(r0) do { CTC2(PCGTE_W(r0,0), 0); CTC2(PCGTE_W(r0,4), 1); CTC2(PCGTE_W(r0,8), 2); CTC2(PCGTE_W(r0,12), 3); CTC2(PCGTE_W(r0,16), 4); } while (0)
+#undef gte_SetTransVec0
+#define gte_SetTransVec0(r0) do { CTC2(PCGTE_W(r0,0), 5); CTC2(PCGTE_W(r0,4), 6); CTC2(PCGTE_W(r0,8), 7); } while (0)
+#undef gte_ldv0
+#define gte_ldv0(r0) do { MTC2(PCGTE_W(r0,0), 0); MTC2(PCGTE_W(r0,4), 1); } while (0)
+#undef gte_ldv3c
+#define gte_ldv3c(r0) do { MTC2(PCGTE_W(r0,0), 0); MTC2(PCGTE_W(r0,4), 1); MTC2(PCGTE_W(r0,8), 2); MTC2(PCGTE_W(r0,12), 3); MTC2(PCGTE_W(r0,16), 4); MTC2(PCGTE_W(r0,20), 5); } while (0)
+#undef gte_rtpt
+#define gte_rtpt() (doCOP2(0x0280030))
+#undef gte_rtv0
+#define gte_rtv0() (doCOP2(0x0486012))
+#undef gte_stlvnl
+#define gte_stlvnl(r0) do { PCGTE_W(r0,0) = MFC2(25); PCGTE_W(r0,4) = MFC2(26); PCGTE_W(r0,8) = MFC2(27); } while (0)
+#undef gte_stsxy3c
+#define gte_stsxy3c(r0) do { PCGTE_W(r0,0) = MFC2(12); PCGTE_W(r0,4) = MFC2(13); PCGTE_W(r0,8) = MFC2(14); } while (0)
+#undef gte_stsz
+#define gte_stsz(r0) do { PCGTE_W(r0,0) = MFC2(19); } while (0)
+#undef gte_stsz3c
+#define gte_stsz3c(r0) do { PCGTE_W(r0,0) = MFC2(17); PCGTE_W(r0,4) = MFC2(18); PCGTE_W(r0,8) = MFC2(19); } while (0)
+#endif /* PSX_PC */
 
 /* ---- types ---- */
 typedef struct { char c[4]; } S4;
@@ -206,6 +248,7 @@ void func_0005DB30(void) {
 #define addPrim(ot, p) setaddr(p, getaddr(ot)), setaddr(ot, p)
 extern int current;
 #define current (*(DB **)&current)
+#ifndef PSX_PC
 #define gte_ldv3c(r0) __asm__ volatile ( \
     "lwc2  $0, 0( %0 );" "lwc2  $1, 4( %0 );" "lwc2  $2, 8( %0 );" \
     "lwc2  $3, 12( %0 );" "lwc2  $4, 16( %0 );" "lwc2  $5, 20( %0 )" : : "r"(r0))
@@ -215,6 +258,7 @@ extern int current;
     "swc2  $12, 0( %0 );" "swc2  $13, 4( %0 );" "swc2  $14, 8( %0 )" : : "r"(r0) : "memory")
 #define gte_stsz3c(r0) __asm__ volatile ( \
     "swc2  $17, 0( %0 );" "swc2  $18, 4( %0 );" "swc2  $19, 8( %0 )" : : "r"(r0) : "memory")
+#endif
 #define FIX(x) (((x) + 0x800) >> 12)
 #define RotYXZ(R, M) { \
     int cx, sx, cy, sy, cz, sz, stmp, tt; \
@@ -264,14 +308,14 @@ void DrawCiv(PEDESTRIAN *p, int idx)
     int size;
     int phase;
 
-    sxy = (long *)0x1F800010;
-    sxy2 = (long *)0x1F800010;
-    zb = (long *)0x1F800210;
+    sxy = (long *)PC_SCRATCH(0x1F800010);
+    sxy2 = (long *)PC_SCRATCH(0x1F800010);
+    zb = (long *)PC_SCRATCH(0x1F800210);
     head = 0;
-    lerp = (SVECTOR *)0x1F800090;
+    lerp = (SVECTOR *)PC_SCRATCH(0x1F800090);
     j = 0;
     bl = p->bones;
-    out = (SVECTOR *)0x1F800090;
+    out = (SVECTOR *)PC_SCRATCH(0x1F800090);
 
     pos.vx = p->pos.vx - camera_position.vx;
     pos.vy = p->pos.vy - camera_position.vy;
@@ -508,9 +552,11 @@ void DrawCiv(PEDESTRIAN *p, int idx)
 #undef addPrim
 #undef current
 #undef getaddr
+#ifndef PSX_PC
 #undef gte_ldv3c
 #undef gte_rtpt
 #undef gte_rtv0
 #undef gte_stsxy3c
 #undef gte_stsz3c
+#endif
 #undef setaddr

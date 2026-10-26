@@ -41,6 +41,38 @@
 #include "gte.h"
 
 #include "structs.h"
+#ifdef PSX_PC
+/* PC-PORT: GTE shim - PsyCross software GTE (MTC2/CTC2/MFC2/CFC2/doCOP2) in place of this file's MIPS
+ * gte macros (those are #ifndef PSX_PC below). Statement-safe (do/while), unlike inline_c.h's {...};
+ * same register/offset semantics as the lwc2/swc2/ctc2 originals. Same shim in every GTE file of src/. */
+extern void MTC2(unsigned int value, int reg);
+extern void CTC2(unsigned int value, int reg);
+extern unsigned int MFC2(int reg);
+extern unsigned int CFC2(int reg);
+extern int doCOP2(int op);
+#define PCGTE_W(p, o) (*(unsigned int *)((char *)(p) + (o)))
+#define PCGTE_H(p, o) (*(unsigned short *)((char *)(p) + (o)))
+#undef b048_gte_stsz
+#define b048_gte_stsz(r0) do { PCGTE_W(r0,0) = MFC2(19); } while (0)
+#undef b062_ldv0
+#define b062_ldv0(r0) do { MTC2(PCGTE_W(r0,0), 0); MTC2(PCGTE_W(r0,4), 1); } while (0)
+#undef b062_ldv1
+#define b062_ldv1(r0) do { MTC2(PCGTE_W(r0,0), 2); MTC2(PCGTE_W(r0,4), 3); } while (0)
+#undef b062_ldv2
+#define b062_ldv2(r0) do { MTC2(PCGTE_W(r0,0), 4); MTC2(PCGTE_W(r0,4), 5); } while (0)
+#undef b062_rtpt
+#define b062_rtpt() (doCOP2(0x0280030))
+#undef b062_stsxy3
+#define b062_stsxy3(r0, r1, r2) do { PCGTE_W(r0,0) = MFC2(12); PCGTE_W(r1,0) = MFC2(13); PCGTE_W(r2,0) = MFC2(14); } while (0)
+#undef b062_stsz
+#define b062_stsz(r0) do { PCGTE_W(r0,0) = MFC2(19); } while (0)
+#undef gte_SetRotMatrix
+#define gte_SetRotMatrix(r0) do { CTC2(PCGTE_W(r0,0), 0); CTC2(PCGTE_W(r0,4), 1); CTC2(PCGTE_W(r0,8), 2); CTC2(PCGTE_W(r0,12), 3); CTC2(PCGTE_W(r0,16), 4); } while (0)
+#undef gte_SetTransVec0
+#define gte_SetTransVec0(r0) do { CTC2(PCGTE_W(r0,0), 5); CTC2(PCGTE_W(r0,4), 6); CTC2(PCGTE_W(r0,8), 7); } while (0)
+#undef gte_stsz
+#define gte_stsz(r0) do { PCGTE_W(r0,0) = MFC2(19); } while (0)
+#endif /* PSX_PC */
 
 /* ---- types ---- */
 typedef struct {
@@ -1478,6 +1510,7 @@ void func_0005674C(void)
 /* func_00056754: draw a model as flat red POLY_F3s (GTE rtpt per triangle) */
 extern int current;
 #define current (*(DB **)&current)
+#ifndef PSX_PC
 #define b062_ldv0(r0) __asm__ volatile ("lwc2  $0, 0( %0 );" "lwc2  $1, 4( %0 )" : : "r"(r0))
 #define b062_ldv1(r0) __asm__ volatile ("lwc2  $2, 0( %0 );" "lwc2  $3, 4( %0 )" : : "r"(r0))
 #define b062_ldv2(r0) __asm__ volatile ("lwc2  $4, 0( %0 );" "lwc2  $5, 4( %0 )" : : "r"(r0))
@@ -1485,6 +1518,7 @@ extern int current;
 #define b062_stsxy3(r0, r1, r2) __asm__ volatile ( \
     "swc2  $12, 0( %0 );" "swc2  $13, 0( %1 );" "swc2  $14, 0( %2 )" : : "r"(r0), "r"(r1), "r"(r2) : "memory")
 #define b062_stsz(r0) __asm__ volatile ("swc2  $19, 0( %0 )" : : "r"(r0) : "memory")
+#endif
 /* camera_position */
 void func_00056754(MDL_b062 *m, VECTOR *pos, int flag)
 {
@@ -1540,12 +1574,14 @@ void func_00056754(MDL_b062 *m, VECTOR *pos, int flag)
     if (!flag)
         DrawStopZone(pos);
 }
+#ifndef PSX_PC
 #undef b062_ldv0
 #undef b062_ldv1
 #undef b062_ldv2
 #undef b062_rtpt
 #undef b062_stsxy3
 #undef b062_stsz
+#endif
 #undef current
 
 /* ---------------- func_00056A18 (src/pilot/func_00056A18.c) ---------------- */
@@ -1821,8 +1857,10 @@ void func_00057458(char *base) {
 }
 
 /* ---------------- func_00057510 (src/pilot/func_00057510.c) ---------------- */
+#ifndef PSX_PC
 #define b048_gte_stsz(r0) __asm__ volatile ( \
     "swc2  $19, 0( %0 )" : : "r"(r0) : "memory")
+#endif
 extern int current;
 #define current (*(DB **)&current)
 void func_00057510(VECTOR *pos)
@@ -1885,7 +1923,9 @@ void func_00057510(VECTOR *pos)
     current->ot[oz] = (current->ot[oz] & 0xFF000000) | ((unsigned int)poly & 0xFFFFFF);
     current->primptr += 0x1C;
 }
+#ifndef PSX_PC
 #undef b048_gte_stsz
+#endif
 #undef current
 
 /* ---------------- DrawStopZone (src/pilot/DrawStopZone.c) ---------------- */

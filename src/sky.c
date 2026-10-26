@@ -89,6 +89,44 @@
 /* maspsx: abs=D_00097090 */
 /* maspsx: sbss_align8=0 abs=D_000974E0,D_00096C48,D_00096C4C,D_00096834,gNight,D_00097098,D_000977A4,D_000977A8,D_00097118,D_00096C4A,CameraCnt,D_000967FC,current */
 #include "structs.h"
+#ifndef PC_RAM
+#ifdef PSX_PC
+/* PC-PORT: absolute PS1 RAM addresses (free-RAM buffers 0xD0200+, level/overlay load areas, KSEG0 0x80xxxxxx) map into
+ * an emulated 2 MB main-RAM block, offset = physical address. pc_psxram[] is defined in tile.c for now. */
+extern unsigned char pc_psxram[];
+#define PC_RAM(a) ((int)(pc_psxram + ((unsigned int)(a) & 0x1FFFFF)))
+#else
+#define PC_RAM(a) a
+#endif
+#endif
+#ifndef PC_SCRATCH
+#ifdef PSX_PC
+/* PC-PORT: the PS1 scratchpad (0x1F800000, 1 KB) is a static buffer on PC (REDRIVER2 _scratchData approach, but a
+ * link-time array so file-scope initialisers stay constant). pc_scratchpad[] is defined in tile.c for now. */
+extern unsigned char pc_scratchpad[];
+#define PC_SCRATCH(a) ((int)(pc_scratchpad + ((a) - 0x1F800000)))
+#else
+#define PC_SCRATCH(a) a
+#endif
+#endif
+#ifdef PSX_PC
+/* PC-PORT: GTE shim - PsyCross software GTE (MTC2/CTC2/MFC2/CFC2/doCOP2) in place of this file's MIPS
+ * gte macros (those are #ifndef PSX_PC below). Statement-safe (do/while), unlike inline_c.h's {...};
+ * same register/offset semantics as the lwc2/swc2/ctc2 originals. Same shim in every GTE file of src/. */
+extern void MTC2(unsigned int value, int reg);
+extern void CTC2(unsigned int value, int reg);
+extern unsigned int MFC2(int reg);
+extern unsigned int CFC2(int reg);
+extern int doCOP2(int op);
+#define PCGTE_W(p, o) (*(unsigned int *)((char *)(p) + (o)))
+#define PCGTE_H(p, o) (*(unsigned short *)((char *)(p) + (o)))
+#undef b075_ldv3c
+#define b075_ldv3c(r0) do { MTC2(PCGTE_W(r0,0), 0); MTC2(PCGTE_W(r0,4), 1); MTC2(PCGTE_W(r0,8), 2); MTC2(PCGTE_W(r0,12), 3); MTC2(PCGTE_W(r0,16), 4); MTC2(PCGTE_W(r0,20), 5); } while (0)
+#undef b075_rtpt
+#define b075_rtpt() (doCOP2(0x0280030))
+#undef b075_stsxy3c
+#define b075_stsxy3c(r0) do { PCGTE_W(r0,0) = MFC2(12); PCGTE_W(r0,4) = MFC2(13); PCGTE_W(r0,8) = MFC2(14); } while (0)
+#endif /* PSX_PC */
 
 /* ---- types ---- */
 typedef struct { short x, y, w, h; } RECT;
@@ -357,7 +395,7 @@ void func_0004ED34(void)
     int i, j, y, x;
     unsigned short p;
 
-    buf = (unsigned short *)0xD1200;
+    buf = (unsigned short *)PC_RAM(0xD1200);
     crect = &D_000974E0;
     rect.x = 0x200;
     rect.y = 0;
@@ -395,11 +433,11 @@ void func_0004ED34(void)
             D_000974EC += 1;
     }
 
-    bmp = (unsigned char *)0xF8600;
+    bmp = (unsigned char *)PC_RAM(0xF8600);
     D_00097090 = D_0008AA58[D_000974EC];
     offs = *(int **)&D_00097098;
     LoadfileSeg("DATA\\SKY.BIN", offs, D_000974EC * 48, 0x34);
-    LoadfileSeg("DATA\\SKY.BIN", 0xF8600, offs[0], offs[12] - offs[0]);
+    LoadfileSeg("DATA\\SKY.BIN", PC_RAM(0xF8600), offs[0], offs[12] - offs[0]);
 
     dv.vx = D_000BE708[D_000BE278[D_000BDCE8.d]].vx;
     dv.vy = D_000BE708[D_000BE278[D_000BDCE8.d]].vy;
@@ -486,8 +524,8 @@ void PlotSkyPoly(int skytexnum)
     DVECTOR *outpoints;
     PFT4 *poly;
 
-    src = *(POLYFT4 **)0x1F80003C;
-    outpoints = (DVECTOR *)0x1F800044;
+    src = *(POLYFT4 **)PC_SCRATCH(0x1F80003C);
+    outpoints = (DVECTOR *)PC_SCRATCH(0x1F800044);
     poly = (PFT4 *)current->primptr;
 
     if ((outpoints[src->v0].vy > -1 || outpoints[src->v1].vy > -1 || outpoints[src->v2].vy > -1 || outpoints[src->v3].vy > -1) &&
@@ -550,8 +588,8 @@ int func_0004F7C8(MODEL *model, int base)
     unsigned int idx;
     int z;
 
-    sxy = (DVEC *)0x1F800044;
-    depth = (short *)0x1F800240;
+    sxy = (DVEC *)PC_SCRATCH(0x1F800044);
+    depth = (short *)PC_SCRATCH(0x1F800240);
     verts = (SVECTOR *)model->vertices;
     for (i = 0; i < model->num_vertices + 3; i += 3) {
         z = 0x1080 - RotTransPers3(&verts[i], &verts[i + 1], &verts[i + 2],
@@ -584,10 +622,10 @@ int func_0004F7C8(MODEL *model, int base)
         }
     }
     poly = (unsigned char *)model->poly_block;
-    *(MODEL **)0x1F800018 = model;
-    *(short **)0x1F80001C = depth;
+    *(MODEL **)PC_SCRATCH(0x1F800018) = model;
+    *(short **)PC_SCRATCH(0x1F80001C) = depth;
     for (i = 0; i < model->num_polys; i++) {
-        *(unsigned char **)0x1F80003C = poly;
+        *(unsigned char **)PC_SCRATCH(0x1F80003C) = poly;
         PlotSkyPoly(D_0008AA8C[base + i]);
         poly += D_00089F1C[*poly];
     }
@@ -656,11 +694,13 @@ void Getlong(char *dest, char *source)
 /* ---------------- func_0004FBA0 (src/pilot/func_0004FBA0.c) ---------------- */
 extern int current;
 #define current (*(DB **)&current)
+#ifndef PSX_PC
 #define b075_ldv3c(r0) __asm__ volatile ( \
     "lwc2 $0, 0(%0);lwc2 $1, 4(%0);lwc2 $2, 8(%0);lwc2 $3, 12(%0);lwc2 $4, 16(%0);lwc2 $5, 20(%0)" : : "r"(r0))
 #define b075_rtpt() __asm__ volatile ("nop;nop;.word 0x4A280030")
 #define b075_stsxy3c(r0) __asm__ volatile ( \
     "swc2 $12, 0(%0);swc2 $13, 4(%0);swc2 $14, 8(%0)" : : "r"(r0) : "memory")
+#endif
 void func_0004FBA0(MODEL *m, int idx)
 {
     unsigned short *sxy16;
@@ -675,14 +715,14 @@ void func_0004FBA0(MODEL *m, int idx)
     unsigned char *poly;
     int n;
 
-    sxy16 = (unsigned short *)0x1F800044;
-    sxy32 = (int *)0x1F800044;
+    sxy16 = (unsigned short *)PC_SCRATCH(0x1F800044);
+    sxy32 = (int *)PC_SCRATCH(0x1F800044);
     tex = D_0008AABC[idx];
     v = (SVECTOR *)m->vertices;
     for (i = 0; i < m->num_vertices; i += 3) {
         b075_ldv3c(&v[i]);
         b075_rtpt();
-        b075_stsxy3c(&((int *)0x1F800044)[i]);
+        b075_stsxy3c(&((int *)PC_SCRATCH(0x1F800044))[i]);
     }
     r = D_000974F0 - 20;
     g = D_000974F4 - 20;
@@ -718,9 +758,11 @@ void func_0004FBA0(MODEL *m, int idx)
     }
     current->primptr = (char *)prim;
 }
+#ifndef PSX_PC
 #undef b075_ldv3c
 #undef b075_rtpt
 #undef b075_stsxy3c
+#endif
 #undef current
 
 /* ---------------- func_0004FF4C (src/pilot/func_0004FF4C.c) ---------------- */

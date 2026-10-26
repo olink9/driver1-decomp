@@ -58,8 +58,10 @@
 
 #include "common.h"
 /* include_asm.h's INCLUDE_ASM minus its .include of labels.inc (the build pipeline prepends macro.inc) */
+#ifndef PSX_PC /* PC: pc_compat.h's empty INCLUDE_ASM; the routine comes from port/pc */
 #define INCLUDE_ASM(FOLDER, NAME) \
     __asm__(".section .text\n.set noat\n.set noreorder\n.include \"" FOLDER "/" #NAME ".s\"\n.set reorder\n.set at\n")
+#endif
 
 /* ---- types ---- (RECT16 TILE P_TAG SPRT DR_MODE POLY_FT4 come from common.h/libgpu.h; DB and TEXTURE_DETAILS
  * from structs.h) */
@@ -222,7 +224,11 @@ void func_001E0B0C(int x, int y)
 
     p = (TILE *)current->primptr;
     for (i = 0; i < 4; i++) {
+#ifdef PSX_PC
+        setlen(p, 3); /* PsyCross prim header (tag/len layout differs) */
+#else
         ((unsigned char *)&p->tag)[3] = 3;
+#endif
         p->code = 0x60;
         p->r0 = 0xFA;
         p->g0 = 0xFA;

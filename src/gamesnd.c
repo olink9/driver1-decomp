@@ -22,6 +22,16 @@
  */
 /* maspsx: abs=D_000974CC,D_00096840,D_000967F4,D_00096858,D_000BD97C,D_0009779C,D_00097708,D_00097298,D_00096C88,D_00096888,D_00097080,D_00096770,D_00096834,cameraview,D_000967BC,D_00096C78,D_00096C8C,D_00097098 */
 #include "structs.h"
+#ifndef PC_RAM
+#ifdef PSX_PC
+/* PC-PORT: absolute PS1 RAM addresses (free-RAM buffers 0xD0200+, level/overlay load areas, KSEG0 0x80xxxxxx) map into
+ * an emulated 2 MB main-RAM block, offset = physical address. pc_psxram[] is defined in tile.c for now. */
+extern unsigned char pc_psxram[];
+#define PC_RAM(a) ((int)(pc_psxram + ((unsigned int)(a) & 0x1FFFFF)))
+#else
+#define PC_RAM(a) a
+#endif
+#endif
 
 /* ---- types ---- */
 typedef struct { int lowidl_ws, low_ws, hi_ws, ratio_ac, ratio_id; } GEAR_DESC;
@@ -190,8 +200,8 @@ static inline void ld(int i, int mode)
         LoadfileSeg(h, t, 0, 0x2C);
     len = D_0008A988[i + 1] - D_0008A988[i];
     off = D_0008A988[i];
-    LoadfileSeg(h, 0x80100000, off, len);
-    LoadSoundBank(0x80100000, len, mode);
+    LoadfileSeg(h, PC_RAM(0x80100000), off, len);
+    LoadSoundBank(PC_RAM(0x80100000), len, mode);
 }
 void func_0004C29C(int arg)
 {

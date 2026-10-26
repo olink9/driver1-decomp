@@ -12,11 +12,26 @@
  */
 
 /* include_asm.h's INCLUDE_ASM minus its .include of labels.inc (the build pipeline prepends macro.inc) */
+#ifndef PSX_PC /* PC: pc_compat.h's empty INCLUDE_ASM; the routine comes from port/pc */
 #define INCLUDE_ASM(FOLDER, NAME) \
     __asm__(".section .text\n.set noat\n.set noreorder\n.include \"" FOLDER "/" #NAME ".s\"\n.set reorder\n.set at\n")
+#endif
 
 /* ---- types ---- */
 #include "frontend.h"
+#ifndef PC_RAM
+#ifdef PSX_PC
+/* PC-PORT: absolute PS1 RAM addresses (free-RAM buffers 0xD0200+, level/overlay load areas, KSEG0 0x80xxxxxx) map into
+ * an emulated 2 MB main-RAM block, offset = physical address. pc_psxram[] is defined in tile.c for now. */
+extern unsigned char pc_psxram[];
+#define PC_RAM(a) ((int)(pc_psxram + ((unsigned int)(a) & 0x1FFFFF)))
+#else
+#define PC_RAM(a) a
+#endif
+#endif
+#ifdef PSX_PC
+extern void PC_Break(const char *file, int line); /* port/pc/pc_main.c: logs and aborts (PS1: break 1024) */
+#endif
 typedef struct { int n[3]; } N3;
 
 /* ---- externs ---- */
@@ -119,8 +134,8 @@ void func_001C1B4C(void)
 {
     char buf[128];
     func_0004D5F8(0);
-    D_00097098 = 0x114600;
-    LoadSoundBank(D_00097098, Loadfile("SOUND\\FESAMPS.SBK", 0x114600), 0);
+    D_00097098 = PC_RAM(0x114600);
+    LoadSoundBank(D_00097098, Loadfile("SOUND\\FESAMPS.SBK", PC_RAM(0x114600)), 0);
     SetMasterVolume(D_00096C94);
     func_0004E08C();
     func_0006F2DC(0, -1);
@@ -412,9 +427,9 @@ void func_001C2DAC(int unused)
     db[0].disp.screen.y = t[7];
     db[0].disp.screen.h = t[5];
     current = (DB *)&db[0];
-    db[0].primtab = (char *)0xD8600;
-    db[0].primptr = (char *)0xD8600;
-    db[0].ot = (unsigned long *)0xD0200;
+    db[0].primtab = (char *)PC_RAM(0xD8600);
+    db[0].primptr = (char *)PC_RAM(0xD8600);
+    db[0].ot = (unsigned long *)PC_RAM(0xD0200);
     db[1].draw.isbg = 0;
     db[1].disp.isinter = 1;
     db[1].draw.dfe = 0;
@@ -422,9 +437,9 @@ void func_001C2DAC(int unused)
     D_00097524 = (DB *)&db[1];
     db[1].disp.screen.y = t[7];
     db[1].disp.screen.h = t[5];
-    db[1].primtab = (char *)0xF6600;
-    db[1].primptr = (char *)0xF6600;
-    db[1].ot = (unsigned long *)0xD4400;
+    db[1].primtab = (char *)PC_RAM(0xF6600);
+    db[1].primptr = (char *)PC_RAM(0xF6600);
+    db[1].ot = (unsigned long *)PC_RAM(0xD4400);
     PutDispEnv(&db[0].disp);
     PutDrawEnv(&((DB_ENV *)current)->draw);
 }
@@ -474,8 +489,8 @@ void func_001C2F78(void)
     r.h = 256;
     for (j = 0; j < 3; j++) {
         sprintf(name, "FRNT\\FRNT.B%d", j + 1);
-        Loadfile(name, 0xD8600);
-        p = (unsigned char *)0xD8600;
+        Loadfile(name, PC_RAM(0xD8600));
+        p = (unsigned char *)PC_RAM(0xD8600);
         p += *p;
         for (i = 0; i < counts.n[j]; i++) {
             r.x = (k % 11) * 64 + 320;
@@ -491,9 +506,9 @@ void func_001C2F78(void)
         func_000505E0();
         k--;
     }
-    Loadfile("MCARD.BIN", 0xE6600);
+    Loadfile("MCARD.BIN", PC_RAM(0xE6600));
     func_000505E0();
-    buf = (int *)0xD0200;
+    buf = (int *)PC_RAM(0xD0200);
     Loadfile("frnt\\feclut.clt", buf);
     e = (short *)buf;
     n = *(int *)e;
@@ -552,7 +567,11 @@ void func_001C334C(char *name, TEXINFO *out)
         }
     }
     printf("(details) couldn't find texture %s\n", name);
+#ifdef PSX_PC
+    PC_Break(__FILE__, __LINE__);
+#else
     for (;;)
         __asm__ volatile("break 1024");
+#endif
 }
 
