@@ -426,7 +426,8 @@ int main(int argc, char **argv)
     printf("[driver1] data: %s\n", s_datadir);
     load_main_image();
 
-    PsyX_Initialise("Driver", 640, 480, 0);
+    /* D1_FULLSCREEN=1: borderless fullscreen (the Steam / Game Mode launcher sets it) */
+    PsyX_Initialise("Driver", 640, 480, getenv("D1_FULLSCREEN") && atoi(getenv("D1_FULLSCREEN")) ? 1 : 0);
     install_crash_handler();
 
     getcontext(&s_game_ctx);
