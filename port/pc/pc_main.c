@@ -22,6 +22,7 @@
 #include <limits.h>
 #include <signal.h>
 #include <execinfo.h>
+#include <pthread.h>
 
 #include "common.h"            /* PsyQ types (DISPENV, RECT16) */
 #include "PsyX/PsyX_public.h"
@@ -29,6 +30,9 @@
 
 extern unsigned char pc_psxram[];          /* = 0, port/pc/pc_syms.ld */
 unsigned char pc_scratchpad[4096] __attribute__((aligned(16)));   /* PS1: 1 KB; the rest catches overruns */
+/* stands in for PS1 kernel RAM 0x0-0xFFFF where the game dereferences NULL (the PS1 just reads/writes the kernel's
+ * garbage area there; on PC page 0 can't be mapped): used explicitly at those sites (iview.c) */
+unsigned char pc_lowram[0x10000] __attribute__((aligned(16)));
 
 extern void d1_main(void);                 /* src/main.c: the game's main() */
 extern int PC_CdFileSize(const char *name);
@@ -178,104 +182,206 @@ extern DISPENV activeDispEnv;                  /* LIBGPU.C */
 extern void PsyX_EndScene(void);
 extern int StoreImage(RECT16 *rect, u_long *p);
 
-/* debugging aids (environment): D1_SHOT=n1,n2,.. writes the displayed VRAM area at those vblank counts to
- * shot_<n>.ppm; D1_QUIT=n exits after n vblanks */
-static void debug_hooks(int vbl)
+/* debugging aids (environment): D1_SHOT=n1,n2,.. writes the displayed VRAM area (shot_<n>.ppm) and the window
+ * (gl_<n>.ppm, grabbed just before a frame is presented) at those vblank counts; D1_QUIT=n exits after n vblanks.
+ * Counts are real vblanks (PsyCross's 60 Hz counter), so they mean the same in the frontend (VSync(0) per frame)
+ * and in game (the loop polls VSync(-1)). */
+static const char *s_shots;
+static int s_quit = -1, s_shot_last;   /* s_shot_last: shots up to this count are done */
+
+static int shot_due(int vbl)           /* the first listed count in (s_shot_last, vbl], or 0 */
 {
-    static const char *shots = (const char *)1;
-    static int quit = -1;
-    if (shots == (const char *)1) {
-        const char *q = getenv("D1_QUIT");
-        shots = getenv("D1_SHOT");
-        quit = q ? atoi(q) : -1;
+    const char *p = s_shots;
+    int best = 0;
+    while (p && *p) {
+        int n = atoi(p);
+        if (n > s_shot_last && n <= vbl && (!best || n < best))
+            best = n;
+        p = strchr(p, ',');
+        p = p ? p + 1 : NULL;
     }
-    if (shots) {
-        const char *p = shots;
-        while (p && *p) {
-            if (atoi(p) == vbl) {
-                RECT16 r = activeDispEnv.disp;
-                int rgb24 = activeDispEnv.isrgb24, w = rgb24 ? r.w * 2 / 3 : r.w;
-                unsigned short *px;
-                char name[64];
-                FILE *f;
-                int i;
-                if (rgb24)
-                    r.w = (r.w * 3 / 2 + 1) & ~1;   /* 24-bit display: w pixels take w*3/2 VRAM halfwords */
-                px = malloc(r.w * r.h * 2);
-                StoreImage(&r, (u_long *)px);
-                snprintf(name, sizeof(name), "shot_%d.ppm", vbl);
-                f = fopen(name, "wb");
-                fprintf(f, "P6 %d %d 255\n", rgb24 ? r.w * 2 / 3 : r.w, r.h);
-                for (i = 0; i < r.h; i++) {
-                    if (rgb24) {
-                        fwrite((unsigned char *)(px + i * r.w), 1, r.w * 2 / 3 * 3, f);
-                    } else {
-                        int x;
-                        for (x = 0; x < r.w; x++) {
-                            unsigned short c = px[i * r.w + x];
-                            unsigned char rgb[3] = { (c & 31) << 3, (c >> 5 & 31) << 3, (c >> 10 & 31) << 3 };
-                            fwrite(rgb, 1, 3, f);
-                        }
-                    }
-                }
-                (void)w;
-                fclose(f);
-                free(px);
-                printf("[driver1] vblank %d: %s (%dx%d at %d,%d)\n", vbl, name, r.w, r.h, r.x, r.y);
+    return best;
+}
+
+static void shot_vram(int n)
+{
+    RECT16 r = activeDispEnv.disp;
+    int rgb24 = activeDispEnv.isrgb24;
+    unsigned short *px;
+    char name[64];
+    FILE *f;
+    int i;
+    if (rgb24)
+        r.w = (r.w * 3 / 2 + 1) & ~1;   /* 24-bit display: w pixels take w*3/2 VRAM halfwords */
+    px = malloc(r.w * r.h * 2);
+    StoreImage(&r, (u_long *)px);
+    snprintf(name, sizeof(name), "shot_%d.ppm", n);
+    f = fopen(name, "wb");
+    fprintf(f, "P6 %d %d 255\n", rgb24 ? r.w * 2 / 3 : r.w, r.h);
+    for (i = 0; i < r.h; i++) {
+        if (rgb24) {
+            fwrite((unsigned char *)(px + i * r.w), 1, r.w * 2 / 3 * 3, f);
+        } else {
+            int x;
+            for (x = 0; x < r.w; x++) {
+                unsigned short c = px[i * r.w + x];
+                unsigned char rgb[3] = { (c & 31) << 3, (c >> 5 & 31) << 3, (c >> 10 & 31) << 3 };
+                fwrite(rgb, 1, 3, f);
             }
-            p = strchr(p, ',');
-            p = p ? p + 1 : NULL;
         }
     }
-    if (quit >= 0 && vbl >= quit) {
+    fclose(f);
+    free(px);
+    printf("[driver1] vblank %d: %s (%dx%d at %d,%d)\n", n, name, r.w, r.h, r.x, r.y);
+}
+
+static void grab_window(int n)
+{
+    typedef void (*ReadPixels)(int, int, int, int, unsigned, unsigned, void *);
+    static ReadPixels rp;
+    int w = 640, h = 480, y;
+    unsigned char *px = malloc(w * h * 3);
+    char name[64];
+    FILE *f;
+    if (!rp)
+        rp = (ReadPixels)SDL_GL_GetProcAddress("glReadPixels");
+    rp(0, 0, w, h, 0x1907 /* GL_RGB */, 0x1401 /* GL_UNSIGNED_BYTE */, px);
+    snprintf(name, sizeof(name), "gl_%d.ppm", n);
+    f = fopen(name, "wb");
+    fprintf(f, "P6 %d %d 255\n", w, h);
+    for (y = h - 1; y >= 0; y--)
+        fwrite(px + y * w * 3, 1, w * 3, f);
+    fclose(f);
+    free(px);
+}
+
+static void debug_hooks(int vbl, int presenting)
+{
+    static int init;
+    int n;
+    if (!init) {
+        const char *q = getenv("D1_QUIT");
+        init = 1;
+        s_shots = getenv("D1_SHOT");
+        s_quit = q ? atoi(q) : -1;
+    }
+    /* wait up to 4 vblanks for a frame to be presented, so the window grab shows that count's frame */
+    if (s_shots && (n = shot_due(vbl)) != 0 && (presenting || vbl >= n + 4)) {
+        if (presenting)
+            grab_window(n);
+        shot_vram(n);
+        s_shot_last = n;
+    }
+    if (s_quit >= 0 && vbl >= s_quit) {
         printf("[driver1] D1_QUIT: exit at vblank %d\n", vbl);
         fflush(NULL);
         _exit(0);           /* skip PsyX_Shutdown (atexit): tearing SDL down from the game context crashes */
     }
 }
 
-/* D1_SHOT also grabs the window (what the player sees) just before it is presented: gl_<n>.ppm */
-static void grab_window(int vbl)
-{
-    typedef void (*ReadPixels)(int, int, int, int, unsigned, unsigned, void *);
-    static ReadPixels rp;
-    const char *shots = getenv("D1_SHOT"), *p = shots;
-    while (p && *p) {
-        if (atoi(p) == vbl) {
-            int w = 640, h = 480, y;
-            unsigned char *px = malloc(w * h * 3);
-            char name[64];
-            FILE *f;
-            if (!rp)
-                rp = (ReadPixels)SDL_GL_GetProcAddress("glReadPixels");
-            rp(0, 0, w, h, 0x1907 /* GL_RGB */, 0x1401 /* GL_UNSIGNED_BYTE */, px);
-            snprintf(name, sizeof(name), "gl_%d.ppm", vbl);
-            f = fopen(name, "wb");
-            fprintf(f, "P6 %d %d 255\n", w, h);
-            for (y = h - 1; y >= 0; y--)
-                fwrite(px + y * w * 3, 1, w * 3, f);
-            fclose(f);
-            free(px);
-        }
-        p = strchr(p, ',');
-        p = p ? p + 1 : NULL;
-    }
-}
+/* The game thread is the process's main thread (the game runs on a ucontext there). PsyCross runs the PS1
+ * VSyncCallback on its own interrupt thread, and Driver's callback calls VSync(1) itself (xmplay.c timing):
+ * that must stay a plain counter read - presenting, CD/MDEC service or the debug hooks there race the game. */
+static pthread_t s_game_thread;
 
 int __wrap_VSync(int mode)
 {
-    static int frames;
-    int r;
+    static int last_poll = -1;
+    int r, now, presenting;
+    if (!pthread_equal(pthread_self(), s_game_thread))
+        return __real_VSync(mode);
     PC_CdService();
     PC_DctService();
-    if (mode >= 0 && begin_scene_flag) {
-        grab_window(frames + 1);
+    /* present what was drawn since the last frame: the frontend ends each frame with VSync(0), the in-game loop
+     * (main.c func_0002360C) with DrawOTag then a VSync(-1) poll until 2 vblanks have passed */
+    presenting = begin_scene_flag != 0;
+    now = __real_VSync(-1);
+    if (presenting) {
+        debug_hooks(now, 1);
         PsyX_EndScene();
     }
     r = __real_VSync(mode);
-    if (mode >= 0)
-        debug_hooks(++frames);
+    if (mode < 0) {
+        /* a busy-wait poll: give the CPU back while the vblank count stands still */
+        if (r == last_poll)
+            usleep(200);
+        last_poll = r;
+    }
+    debug_hooks(r, 0);
     return r;
+}
+
+/* pc_compat.h: a game busy-wait on an interrupt-set flag (spool.c) - the CD/MDEC work it waits for runs here */
+void PC_WaitService(void)
+{
+    PC_CdService();
+    PC_DctService();
+}
+
+/* ---- pads ----
+ * PsyCross fills the PadInitDirect buffers in PsyX_UpdateInput(), which its own code only calls in _DEBUG builds
+ * (REDRIVER2 calls it from its pad reader), so the game's pad read (pad.c func_000357F0) calls PC_PadRead first.
+ * D1_PAD=<script> replaces pad 1 with scripted presses (headless testing; real input is ignored then):
+ *   entries "FROM[-TO]=BTN[+BTN..]" separated by commas, FROM/TO in vblanks (the D1_SHOT clock), a lone FROM
+ *   holds for 6 vblanks; BTN: up down left right x o tri sq l1 l2 r1 r2 start select.
+ *   e.g. D1_PAD=4100=start,4300=x,5000-9000=x  */
+extern void PsyX_UpdateInput(void);
+
+static unsigned pad_bit(const char *b, int n)
+{
+    static const struct { const char *name; unsigned bit; } t[] = {   /* the PADRAW buttons word, active low */
+        { "select", 0x1 }, { "l3", 0x2 }, { "r3", 0x4 }, { "start", 0x8 }, { "up", 0x10 }, { "right", 0x20 },
+        { "down", 0x40 }, { "left", 0x80 }, { "l2", 0x100 }, { "r2", 0x200 }, { "l1", 0x400 }, { "r1", 0x800 },
+        { "tri", 0x1000 }, { "o", 0x2000 }, { "x", 0x4000 }, { "sq", 0x8000 },
+    };
+    unsigned i;
+    for (i = 0; i < sizeof(t) / sizeof(t[0]); i++)
+        if ((int)strlen(t[i].name) == n && !strncasecmp(b, t[i].name, n))
+            return t[i].bit;
+    fprintf(stderr, "[driver1] D1_PAD: unknown button '%.*s'\n", n, b);
+    return 0;
+}
+
+static unsigned pad_script(int vbl)        /* buttons held at this vblank (active high) */
+{
+    const char *p = getenv("D1_PAD");
+    unsigned held = 0;
+    while (p && *p) {
+        char *e;
+        int from = strtol(p, &e, 10), to = from + 5;
+        unsigned m = 0;
+        if (*e == '-')
+            to = strtol(e + 1, &e, 10);
+        if (*e == '=') {
+            const char *b = e + 1;
+            for (;;) {
+                int n = strcspn(b, "+,");
+                m |= pad_bit(b, n);
+                b += n;
+                if (*b != '+')
+                    break;
+                b++;
+            }
+            e = (char *)b;
+        }
+        if (vbl >= from && vbl <= to)
+            held |= m;
+        p = strchr(e, ',');
+        p = p ? p + 1 : NULL;
+    }
+    return held;
+}
+
+void PC_PadRead(unsigned char *pad)
+{
+    PsyX_UpdateInput();
+    if (getenv("D1_PAD")) {
+        unsigned held = pad_script(__real_VSync(-1));
+        pad[0] = 0;          /* status: ok */
+        pad[1] = 0x41;       /* digital pad */
+        pad[2] = ~held & 0xFF;
+        pad[3] = ~held >> 8 & 0xFF;
+    }
 }
 
 /* crash report: the faulting address and a backtrace (addr2line -e driver1 <addr> resolves the frames) */
@@ -313,6 +419,7 @@ static void game_entry(void)
 
 int main(int argc, char **argv)
 {
+    s_game_thread = pthread_self();
     map_psxram();
     find_datadir(argc, argv);
     setvbuf(stdout, NULL, _IOLBF, 0);

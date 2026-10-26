@@ -78,7 +78,14 @@ int D_000976F4;
  * fills with this file's counter D_000976DC */
 struct T D_000C039C[64][64];
 unsigned char D_000C439C[0x18];
+#ifndef PSX_PC
 N *D_000C43B4[183];
+#else
+/* PC-PORT: func_00063114 fills 0x1F6 heap slots (0xC43B4-0xC4B8C), running on into felony.c's D_000C4690[0]
+ * as on the PS1 (whose .bss is contiguous). One object here keeps that overlap; felony.c only declares
+ * D_000C4690 on PC, pc_gendata.py binds it to D_000C43B4 + 0x2DC. */
+N *D_000C43B4[(0xC6CD8 - 0xC43B4) / 4];
+#endif
 
 /* ---- externs ---- */
 extern int D_00097374;

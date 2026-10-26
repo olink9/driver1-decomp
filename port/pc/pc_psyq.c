@@ -97,9 +97,11 @@ void SetLineF4(LINE_F4 *p)
 }
 
 /* ---- libsnd ---- */
+extern void PC_XaSetVolume(int left, int right); /* pc_xa.c */
 void SsSetSerialVol(short s_num, short voll, short volr)
 {
-    ONCE("SsSetSerialVol: CD/serial audio volume not emulated");
+    if (s_num == 0)
+        PC_XaSetVolume(voll, volr);
 }
 
 /* ---- libpress (MDEC) - used by CRED.BIN for the credits portraits. PC-PORT: no MDEC decoder yet: the

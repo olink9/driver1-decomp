@@ -42,7 +42,11 @@ typedef struct { int v; } I4;
 
 /* ---- .bss 0xC4690-0xC6CD8: the five pursuer records (D_000C4E38 = &[1]; D_000C4B8C.. D_000C4CA8 are names the
  * original gives inside [0]); the .bss tail is per file (pathfind.c before, job_fx.c after) ---- */
+#ifndef PSX_PC
 PURSUER D_000C4690[5];
+#else
+extern PURSUER D_000C4690[5]; /* PC-PORT: defined inside pathfind.c's D_000C43B4 (the A* heap overruns into [0]) */
+#endif
 
 /* ---- .data 0x8BB6C-0x8BC34: felony.c's own initialised data, in address order ---- */
 unsigned short D_0008BB6C[12] = { 0x18, 0, 0, 0, 0, 0, 0, 0, 0x18, 0, 0x18, 0 };

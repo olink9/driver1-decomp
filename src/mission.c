@@ -1553,7 +1553,11 @@ void func_0006A6C8(SNDOBJ *p)
             else if ((p->flags & 2) >> 1 && *(int *)&D_0009770C > 0 && *(int *)&D_00097708 > 0x292)
                 play = 1;
             if (play) {
+#ifdef PSX_PC
+                r = func_0004FFE8(p->flags); /* PC-PORT: leftover a0 = p->flags (lw a0,0x54) on the PS1 */
+#else
                 r = func_0004FFE8();
+#endif
                 PlaySpeech(D_000BC9BC, p->list[1 + r % p->list[0]]);
                 p->t.timer = RandTime(&p->t, r);
             }

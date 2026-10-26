@@ -85,8 +85,14 @@ void func_000357B4(void) {
 }
 
 /* ---------------- func_000357F0 (src/pilot/func_000357F0.c) ---------------- */
+#ifdef PSX_PC
+extern void PC_PadRead(unsigned char *pad); /* port/pc/pc_main.c: PsyCross pad update + D1_PAD script */
+#endif
 void func_000357F0(void)
 {
+#ifdef PSX_PC
+    PC_PadRead((unsigned char *)D_000A7FD0);
+#endif
     func_00035818(0, D_000A7FD0);
 }
 

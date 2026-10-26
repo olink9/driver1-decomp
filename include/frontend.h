@@ -155,6 +155,11 @@ typedef struct {
     unsigned char u0, v0, u1, v1, u2, v2, u3, v3; /* 0x0 */
     unsigned short tpage;           /* 0x8 */
     unsigned short clut;            /* 0xA */
+#ifdef PSX_PC
+    /* PC-PORT: func_001C334C fills a TEXINFO (idx/slot at 0xC) through every caller's TEX; on the PS1 those 2
+     * bytes land in the stack slot's padding (TEX gets 16 bytes there), on PC they hit the next local. */
+    unsigned char pc_idx_slot[2];
+#endif
 } TEX;
 typedef struct {
     unsigned char u0, v0, u1, v1, u2, v2, u3, v3; /* 0x0 */

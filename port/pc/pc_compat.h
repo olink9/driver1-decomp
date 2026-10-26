@@ -17,4 +17,8 @@ extern unsigned char pc_scratchpad[];
 extern unsigned char pc_psxram[];
 #define PC_SCRATCH(a) ((int)(pc_scratchpad + ((a) - 0x1F800000)))
 #define PC_RAM(a) ((int)(pc_psxram + ((unsigned int)(a) & 0x1FFFFF)))
+
+/* A PS1 busy-wait on a flag the CD/MDEC interrupt sets (`while (flag) ;`) calls this on PC: it runs the pending
+ * CD stream / MDEC callbacks there (port/pc/pc_main.c), which is where the interrupt would have come. */
+extern void PC_WaitService(void);
 #endif

@@ -798,11 +798,18 @@ void func_000595B0(void) {
 }
 
 /* ---------------- func_00059638 (src/pilot/func_00059638.c) ---------------- */
+#ifdef PSX_PC
+void func_00059638(int a, int b)
+{
+    func_0005C318(a, b); /* PC-PORT: the PS1 passes its own a0/a1 (main.c's two args) through untouched */
+}
+#else
 void func_00059638(void)
 {
     char pad[0x80];
     func_0005C318();
 }
+#endif
 
 /* ---------------- FindFreeCamera (src/pilot/FindFreeCamera.c) ---------------- */
 inline PLAYBACKCAMERA *FindFreeCamera(void) {

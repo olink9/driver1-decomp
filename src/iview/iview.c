@@ -582,8 +582,19 @@ void func_001E1008(void)
     D_001E4080 = 0;
     for (i = 0; i < 13; i++)
         D_001E404C[i] = 255;
+#ifdef PSX_PC
+    {
+        /* PC-PORT: D_001E4250 is never set (IVIEW.BIN has 0 there and no code stores to it), so the PS1 bumps
+         * bytes 9/0xB of the kernel's NULL "garbage area" (psx-spx: 0x0-0xF). PC: the same, in pc_lowram. */
+        extern unsigned char pc_lowram[];
+        OBJ *o = D_001E4250 ? D_001E4250 : (OBJ *)pc_lowram;
+        o->f9 += 2;
+        o->fB -= 2;
+    }
+#else
     D_001E4250->f9 += 2;
     D_001E4250->fB -= 2;
+#endif
     D_001E335C = 0;
     D_001E4278 = 0;
     D_00096A6C = 0x800;

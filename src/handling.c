@@ -2224,7 +2224,11 @@ void func_00020780(int i)
 {
     CAR_DATA *c = &car_data[i];
     int v, w = c->f10C;
+#ifdef PSX_PC
+    func_000299B8(i); /* PC-PORT: the PS1 call relies on i still being in a0 */
+#else
     func_000299B8();
+#endif
     if (c->wheelspin == 0 && abs(w) <= 0x3E80) {
         v = -1;
     } else {

@@ -871,7 +871,11 @@ void func_00013B80(int a, int b, int c)
         return;
     }
     if (b == 0 || a == 0) {
+#ifdef PSX_PC
+        if (p->f7) func_0004C8F8(a); /* PC-PORT: the PS1 call relies on a still being in a0 */
+#else
         if (p->f7) func_0004C8F8();
+#endif
         p->f2 = 1;
         p->f8 = 0;
         if (p->f5) {
@@ -884,7 +888,11 @@ void func_00013B80(int a, int b, int c)
         }
     } else {
         if (p->f2 == 1 || q->f2 == 1 || p->f5 || q->f5) {
+#ifdef PSX_PC
+            if (p->f7) func_0004C8F8(a); /* PC-PORT: leftover a0 = a on the PS1 */
+#else
             if (p->f7) func_0004C8F8();
+#endif
             if (q->f7) func_0004C8F8(b);
             p->f2 = 1; p->f8 = 0;
             q->f2 = 1; q->f8 = 0;

@@ -725,7 +725,11 @@ void SendTPage(void)
 void func_00033AF8(void)
 {
     while (D_000972D4 != 0)
+#ifdef PSX_PC
+        PC_WaitService();   /* the PS1 waits for the CD interrupt to finish the spool queue */
+#else
         ;
+#endif
 }
 
 /* ---------------- LoadInAreaTSets (src/pilot/LoadInAreaTSets.c) ---------------- */
@@ -828,7 +832,15 @@ void SendSBK(void)
     }
     SpuSetTransferMode(0);
     SpuSetTransferStartAddr(D_0009729C);
+#ifdef PSX_PC
+    {
+        /* PC-PORT: 0x7A794 (named SpuRead here) is SpuWrite - the bank is uploaded to SPU RAM (agent E) */
+        extern unsigned int SpuWrite(unsigned char *addr, unsigned int size);
+        SpuWrite((unsigned char *)address, (slength + 63) & -64);
+    }
+#else
     SpuRead(address, (slength + 63) & -64);
+#endif
     D_00097274++;
     D_0009729C += slength;
 }
@@ -1435,7 +1447,11 @@ void StartSpooling(void) {
     D_000972D4 = 1;
     UpdateSpool();
     v = *(unsigned char *)&FastForward;
+#ifdef PSX_PC
+loop: if (!v) return; PC_WaitService(); v = D_000972D4; goto loop;
+#else
 loop: if (!v) return; v = D_000972D4; goto loop;
+#endif
 }
 
 /* ---------------- func_0003542C (src/pilot/func_0003542C.c) ---------------- */
