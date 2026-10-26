@@ -3,6 +3,10 @@
  * check each against the target asm. */
 #ifndef GTE_H
 #define GTE_H
+#ifdef PSX_PC
+/* PC port: PsyCross software GTE */
+#include "psx/inline_c.h"
+#else
 
 #define gte_SetRotMatrix(r0) __asm__ volatile ( \
     "lw    $12, 0( %0 );" "lw    $13, 4( %0 );" "ctc2  $12, $0;" "ctc2  $13, $1;" \
@@ -32,7 +36,6 @@
 #define gte_stlvnl(r0) __asm__ volatile ( \
     "swc2  $25, 0( %0 );" "swc2  $26, 4( %0 );" "swc2  $27, 8( %0 )" : : "r"(r0) : "memory")
 
-#endif
 
 /* store SZ3 (from b048) */
 #define gte_stsz(r) __asm__ volatile("swc2 $19, 0(%0)" : : "r"(r) : "memory")
@@ -44,3 +47,5 @@
 /* square IR1-IR3 (hw-08) */
 #define gte_sqr0() __asm__ volatile ( \
     "nop;" "nop;" ".word 0x4AA00428")
+#endif /* PSX_PC */
+#endif /* GTE_H */
