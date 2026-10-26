@@ -469,6 +469,14 @@ static int decodeSound(u_char* iData, int soundSize, short* oData, int* loopStar
 			i += 2;
 		}
 
+		// Driver 1 port: the output buffer is SPU_REALMEMSIZE shorts; a sample without an end flag
+		// (or a bad start address) used to decode past it
+		if (k + 2 > SPU_REALMEMSIZE)
+		{
+			eprintf("SPU WARNING: sample has no end flag within the buffer, truncated\n");
+			return k;
+		}
+
 		sd = (int)iData[i] & 0xF;
 		oData[k++] = vagToPcm(sp, sd, &vagPrev1, &vagPrev2);
 

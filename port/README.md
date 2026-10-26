@@ -126,7 +126,9 @@ Identified for the port by BIOS call number (`li t2,0xA0/0xB0; li t1,n`), the fu
 | SsSetSerialVol, SetLineF2, SetLineF4 | (named) | missing in PsyCross | pc_psyq.c |
 
 ### PsyCross
-One source change: `include/psx/libgpu.h` DRAWENV loses PsyCross's unused `drt` byte, so DRAWENV has the real
+Source changes: (1) the two GCC 13 build fixes (PsyX_GPU.cpp prim_terminator cast, PsyX_main.cpp SDL_strcasecmp);
+(2) `src/audio/PsyX_SPUAL.cpp` decodeSound stops at the output buffer size (a sample without an end flag overran
+waveBuffer and crashed in attract mode); (3) `include/psx/libgpu.h` DRAWENV loses PsyCross's unused `drt` byte, so DRAWENV has the real
 PsyQ layout (0x5C bytes; Driver's draw buffers put DISPENV at DRAWENV + 0x5C and address fields by offset).
 Build notes (`port/CMakeLists.txt`): the PsyQ replacements are upper-case
 `src/psx/*.C`; gcc compiles `.C` as C++ (their headers have the `extern "C"` blocks for it), with `-fpermissive
