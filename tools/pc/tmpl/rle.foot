@@ -1,0 +1,2 @@
+/* ---- C-callable wrapper (src/texture.c) ---- */
+void *func_00035B5C(void *dst, void *src) { R.a0 = A(dst); R.a1 = A(src); F_35B5C(0); return (void *)(uintptr_t)R.v0; }

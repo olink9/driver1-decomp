@@ -1,0 +1,15 @@
+/* Driver 1 PC port - src/unpack_asm.s (func_00026140 + func_00026194) translated to C. The unpacker is RNC
+ * method 2: an 18-byte header ("RNC\2", unpacked size, packed size - little-endian in Driver 1's files, stock RNC
+ * is big-endian - 2 CRCs, leeway, block count; the unpacker reads none of it) then the bit stream at +0x12.
+ * Source: own translation (mechanical, mips2c.py, after replacing the literal
+ * address 0x26790 by D_00026790 below); D2 twin: REDRIVER2 Game/ASM/rnc_2.c (UnpackRNC/RNCunpack2). */
+#include "asm_pc.h"
+
+#define A(p) ((uint32_t)(uintptr_t)(p))
+
+/* D_0002613C: the word func_00026140 keeps (packed + 4: the header's unpacked-size word) */
+static uint32_t D_0002613C;
+/* the module's scratch words after the code (0x26760-0x26793): the unpacker stores the header word at 0x26790
+ * and a zero halfword at 0x2678E, then reads that halfword back as a trailing-literal count (always 0) */
+static uint32_t D_00026760[13];
+#define D_00026790 (D_00026760[12])

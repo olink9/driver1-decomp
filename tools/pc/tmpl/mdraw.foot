@@ -1,0 +1,9 @@
+/* ---- C-callable wrapper (DrawMapPSX in src/draw.c) ---- */
+/* draw n building models from list (CELL_OBJECT *[]); db = current DB (reads db->primptr at +0, db->ot at +4);
+ * returns the new prim pointer. Expects the scratchpad set up by DrawMapPSX (OT slot, colours, dispatch table). */
+int func_00030ED0(void *list, int n, void *db)
+{
+    R.a0 = A(list); R.a1 = n; R.a2 = A(db);
+    F_30ED0(0);
+    return (int)R.v0;
+}

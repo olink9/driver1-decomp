@@ -1,0 +1,28 @@
+/* ---- C-callable wrappers (callers in src/tile.c and src/draw.c use K&R declarations) ---- */
+/* Apply_InvCameraMatrixAndSetMatrix: TR = inv camera * (cop->pos - camera); RT = *matrix; returns TR.z */
+int func_00026794(void *cop, void *matrix) { R.a0 = A(cop); R.a1 = A(matrix); F_26794(0); return (int)R.v0; }
+
+/* Apply_InvCameraMatrixSetTrans: TR = inv camera * (cop->pos - camera); returns TR.z */
+int func_0002680C(void *cop) { R.a0 = A(cop); F_2680C(0); return (int)R.v0; }
+
+/* one textured quad (model with shape_flags & 0x20 - a sprite): writes a 0x28-byte POLY_FT4 at prim and links it
+ * into the OT slot at scratchpad + otofs */
+void func_000268FC(void *verts, void *polys, void *prim, int otofs)
+{
+    R.a0 = A(verts); R.a1 = A(polys); R.a2 = A(prim); R.a3 = otofs;
+    F_268FC(0);
+}
+
+/* near sprite model, subdivided 4x; returns the new prim pointer */
+char *func_000269D4(void *model, char *prim, int otofs)
+{
+    R.a0 = A(model); R.a1 = A(prim); R.a2 = otofs;
+    F_269D4(0);
+    return (char *)(uintptr_t)R.v0;
+}
+
+/* far building model: per-poly dispatch through the scratchpad table (0x1F800020 + type*4); returns new prim */
+char *func_00026FF0(void *model, char *prim) { R.a0 = A(model); R.a1 = A(prim); F_26FF0(0); return (char *)(uintptr_t)R.v0; }
+
+/* near building model, every poly through func_00026C38; returns new prim */
+char *func_00027098(void *model, char *prim) { R.a0 = A(model); R.a1 = A(prim); F_27098(0); return (char *)(uintptr_t)R.v0; }

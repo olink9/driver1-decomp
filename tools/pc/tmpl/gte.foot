@@ -1,0 +1,20 @@
+/* ---- C-callable wrappers (callers in src/ use K&R `extern int f();` declarations) ---- */
+/* SetCameraVector: TR = camera_position */
+void func_0002C53C(void) { F_2C53C(0); }
+
+/* Apply_Inv_CameraMatrix: v = colour matrix (the inverse camera matrix) * v, in place (16-bit IR inputs) */
+void func_0002C564(void *v) { R.a0 = A(v); F_2C564(0); }
+
+/* copy `bytes` (a multiple of 32, at least one block is always copied) from src to dst */
+void func_0002C598(void *dst, void *src, int bytes) { R.a0 = A(dst); R.a1 = A(src); R.a2 = bytes; F_2C598(0); }
+
+/* FrustrumCheck: 0 = visible, -1 = outside. Leaves pos - TR in t3-t5 for func_0002C6DC. */
+int func_0002C5F0(void *pos, int radius) { R.a0 = A(pos); R.a1 = radius; F_2C5F0(0); return (int)R.v0; }
+
+/* building/sprite prim emitter: uses t3-t5 left by the func_0002C5F0 call just before it (as on PS1) */
+int func_0002C6DC(void *model, void *prim, void *ot, int yang)
+{
+    R.a0 = A(model); R.a1 = A(prim); R.a2 = A(ot); R.a3 = yang;
+    F_2C6DC(0);
+    return (int)R.v0;
+}

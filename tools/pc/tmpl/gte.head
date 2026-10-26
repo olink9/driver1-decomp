@@ -1,0 +1,14 @@
+/* Driver 1 PC port - src/gte_asm.s (8 routines, 0x2C53C-0x2C8FC) translated to C on the PsyCross GTE.
+ * Small GTE/matrix helpers (set TR from the camera, inverse-camera rotate, frustum test, building prim emitter)
+ * and a 32-byte block copy. Source: own translation (mechanical, mips2c.py). D2 twins (same GTE
+ * sequence) of func_0002C53C / func_0002C564 / func_0002C5F0: SetCameraVector / Apply_Inv_CameraMatrix /
+ * FrustrumCheck in REDRIVER2 Game/ASM/rndrasm.c. See asm_pc.h for the model. */
+#include "asm_pc.h"
+
+#define A(p) ((uint32_t)(uintptr_t)(p))
+
+/* game data the routines read (declared as raw storage here; the real definitions live in src/) */
+extern int camera_position[];           /* VECTOR; D_0008A8F4/D_0008A8F8 are its .vy/.vz words */
+#define D_0008A8F4 (camera_position[1])
+#define D_0008A8F8 (camera_position[2])
+extern char D_000A5E1C[];               /* MATRIX (frustum matrix, see draw.c) */

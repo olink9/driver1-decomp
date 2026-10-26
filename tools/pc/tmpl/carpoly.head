@@ -1,0 +1,8 @@
+/* Driver 1 PC port - src/carpoly_asm.s (2 routines, 0x3DF94-0x3E540) translated to C on the PsyCross GTE.
+ * Car body poly builders called from cars.c: func_0003DF94 draws triangles (POLY_FT3 + optional shaded
+ * underlay), func_0003E244 quads (POLY_FT4 + optional POLY_GT4); rtpt/nclip/avsz pipelines. Source: own
+ * translation (mechanical, mips2c.py); closest REDRIVER2 relatives (not twins):
+ * plotCarPolyFT3 / plotCarPolyGT3 in Game/C/cars.c. */
+#include "asm_pc.h"
+
+#define A(p) ((uint32_t)(uintptr_t)(p))

@@ -1,0 +1,13 @@
+/* Driver 1 PC port - src/tile_asm.s (20 routines, 0x26794-0x270D4) translated to C on the PsyCross GTE.
+ * The building/tile renderer under DrawMapPSX and tile.c: GTE fragments that share state in registers, fall
+ * through into each other and are dispatched through the scratchpad table DrawMapPSX fills (0x1F800020..) - kept
+ * as such (see asm_pc.h). Source: own translation (mechanical, mips2c.py); D2 counterparts (DrawTILES /
+ * Apply_InvCameraMatrixAndSetMatrix in REDRIVER2 Game/ASM, Game/C/tile.c) differ in structure. */
+#include "asm_pc.h"
+
+#define A(p) ((uint32_t)(uintptr_t)(p))
+
+extern char D_0009714C[];               /* int (tile.c .sbss): model vertex/poly base used by the LOD path */
+/* .data 0x86F20 (asm/data/75B14.data.s): the 4 quad index words of the 4x subdivided face loop; only this
+ * module reads it, so a private copy */
+static uint32_t D_00086F20[4] = { 0x08040200, 0x0A080602, 0x0E0C0804, 0x100E0A08 };

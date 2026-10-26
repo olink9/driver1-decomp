@@ -1,0 +1,8 @@
+/* Driver 1 PC port - src/rle_asm.s (func_00035B5C) translated to C. Source: own translation (mechanical,
+ * mips2c.py); the readable equivalent is pc_rle_unpack_ref() in the comment below. */
+#include "asm_pc.h"
+
+#define A(p) ((uint32_t)(uintptr_t)(p))
+/* What it does: unpacks RLE data into dst[0..0x7FFF], writing BACKWARDS from dst + 0x7FFF down to dst.
+ * Each control byte n (signed): n < 0 -> the next byte repeated 2 - n times; n >= 0 -> n + 1 literal bytes.
+ * Stops once the write pointer has gone below dst; returns the source pointer after the last byte consumed. */

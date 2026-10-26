@@ -1,0 +1,9 @@
+/* ---- C-callable wrapper (src/overmap.c): unpack `packed` (RNC2 with header) to dst; returns the unpacked
+ * size from the header ---- */
+int func_00026140(void *packed, void *dst)
+{
+    pc_asm_enter();
+    R.a0 = A(packed); R.a1 = A(dst);
+    F_26140(0);
+    return (int)R.v0;
+}

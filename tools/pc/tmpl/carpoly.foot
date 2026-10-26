@@ -1,0 +1,18 @@
+/* ---- C-callable wrappers (src/cars.c): 6 arguments, the last two on the (fake) MIPS stack ---- */
+void func_0003DF94(int n, void *polys, void *verts, void *plot, int a4, int a5)
+{
+    pc_asm_enter();
+    R.a0 = n; R.a1 = A(polys); R.a2 = A(verts); R.a3 = A(plot);
+    SW(R.sp + 0x10, a4);
+    SW(R.sp + 0x14, a5);
+    F_3DF94(0);
+}
+
+void func_0003E244(int n, void *polys, void *verts, void *plot, int a4, int a5)
+{
+    pc_asm_enter();
+    R.a0 = n; R.a1 = A(polys); R.a2 = A(verts); R.a3 = A(plot);
+    SW(R.sp + 0x10, a4);
+    SW(R.sp + 0x14, a5);
+    F_3E244(0);
+}
