@@ -35,6 +35,10 @@ extern int PsyX_SPUAL_GetReverbState();
 extern u_int PsyX_SPUAL_SetReverbVoice(int on_off, u_int voice_bit);
 extern u_int PsyX_SPUAL_GetReverbVoice();
 
+// Driver 1 port
+extern void PsyX_SPUAL_SetReverbDepth(int left, int right);
+extern void PsyX_SPUAL_SetMasterVolume(int left, int right);
+
 #if defined(_LANGUAGE_C_PLUS_PLUS)||defined(__cplusplus)||defined(c_plusplus)
 }
 #endif

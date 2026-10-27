@@ -146,7 +146,10 @@ int SpuGetReverb(void)
 
 int SpuSetReverbModeParam(SpuReverbAttr* attr)
 {
-	PSYX_UNIMPLEMENTED();
+	// Driver 1 port: the EFX reverb stands in for every mode (Driver: Hall, 5 | SPU_REV_MODE_CLEAR_WA);
+	// its depth fields are applied like SpuSetReverbDepth
+	if (attr->mask == 0 || (attr->mask & (SPU_REV_DEPTHL | SPU_REV_DEPTHR)))
+		PsyX_SPUAL_SetReverbDepth(attr->depth.left, attr->depth.right);
 	return 0;
 }
 
@@ -157,7 +160,8 @@ void SpuGetReverbModeParam(SpuReverbAttr* attr)
 
 int SpuSetReverbDepth(SpuReverbAttr* attr)
 {
-	PSYX_UNIMPLEMENTED();
+	// Driver 1 port
+	PsyX_SPUAL_SetReverbDepth(attr->depth.left, attr->depth.right);
 	return 0;
 }
 
@@ -190,7 +194,15 @@ int SpuClearReverbWorkArea(int mode)
 
 void SpuSetCommonAttr(SpuCommonAttr* attr)
 {
-	PSYX_UNIMPLEMENTED();
+	// Driver 1 port: the master volume (Driver: 3FFFh both, mask 3); CD/ext attributes are not modelled
+	static short mvol[2] = { 0x3FFF, 0x3FFF };
+
+	if (attr->mask == 0 || (attr->mask & SPU_COMMON_MVOLL))
+		mvol[0] = attr->mvol.left;
+	if (attr->mask == 0 || (attr->mask & SPU_COMMON_MVOLR))
+		mvol[1] = attr->mvol.right;
+
+	PsyX_SPUAL_SetMasterVolume(mvol[0], mvol[1]);
 }
 
 int SpuInitMalloc(int num, char* top)

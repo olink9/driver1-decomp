@@ -40,10 +40,15 @@ int VSync(int mode)
 	{
 		PsyX_WaitForTimestep(1);
 	}
-	else if (mode > 0)
+	else if (mode > 1)
 	{
-		// FIXME: wait many times?
+		// Driver 1 port: VSync(n), n > 1, blocks until n vblanks have passed since the last VSync(0)/VSync(n)
+		// returned (PsyQ libetc), the same reference PsyX_WaitForTimestep keeps. Driver: xaplay.c's XA
+		// fade-out (func_0006F4D8: VSync(2) per volume step) ran in no time without it.
+		PsyX_WaitForTimestep(mode);
 	}
+	// mode 1 never blocks: it returns the time since that last VSync (PsyQ: in hblanks; here the vblank
+	// count, as before - Driver only uses it for xmplay.c's D_00096FA0 timing statistic, on the interrupt thread)
 
 	return PsyX_Sys_GetVBlankCount();
 }

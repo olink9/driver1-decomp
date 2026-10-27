@@ -6,6 +6,8 @@
 #include "PsyX_SPUAL.h"
 
 #include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <assert.h>
 #include <AL/al.h>
 #include <AL/alc.h>
@@ -15,7 +17,7 @@
 #include <AL/efx.h>
 #endif
 
-// TODO: implement XA, implement ADSR
+// TODO: XA via port/pc/pc_xa.c (PsyX_SPUAL_XAQueue); ADSR: Driver 1 port, see "ADSR envelope"
 
 static const char* getALCErrorString(int err)
 {
@@ -69,6 +71,12 @@ typedef struct
 } SPUMemory;
 
 static SPUMemory s_SpuMemory;
+
+// Driver 1 port: ADSR envelope (defined below)
+static Uint64	s_spuClockBase = 0;
+static SDL_Thread* s_envThread = NULL;
+static volatile int s_envThreadStop = 0;
+static int EnvThreadMain(void* data);
 static SDL_mutex* g_SpuMutex = NULL;
 static int g_spuInit = 0;
 static int s_spuMallocVal = 0;
@@ -81,6 +89,17 @@ typedef struct
 	ALuint alSource;
 	ushort sampledirty;
 	ushort reverb;
+
+	// Driver 1 port: the voice's ADSR envelope (see "ADSR envelope" below)
+	ushort adsr1, adsr2;	// the SPU registers 1F801C08h/0Ah, as libspu's SpuSetVoiceAttr builds them
+	int keyed;				// libspu's software key-on bit (SpuSetKey)
+	int envPhase;			// ENV_OFF .. ENV_RELEASE
+	int envLevel;			// ENVX, 0..7FFFh
+	int envWait;			// 44.1 kHz ticks until the next envelope step
+	double envTime;			// SPU clock (44.1 kHz ticks) the envelope has been advanced to
+	int envBaked;			// attack/decay are baked into the PCM head (fast envelopes)
+	int envScale;			// the level the baked head ends on: the AL gain is volGain * envLevel / envScale after it
+	float volGain;			// from the volume registers
 } SPUALVoice;
 
 const int s_spuVoiceCount = 24;
@@ -104,6 +123,7 @@ LPALEFFECTF alEffectf = NULL;
 LPALGENAUXILIARYEFFECTSLOTS alGenAuxiliaryEffectSlots = NULL;
 LPALDELETEAUXILIARYEFFECTSLOTS alDeleteAuxiliaryEffectSlots = NULL;
 LPALAUXILIARYEFFECTSLOTI alAuxiliaryEffectSloti = NULL;
+LPALAUXILIARYEFFECTSLOTF alAuxiliaryEffectSlotf = NULL;
 
 #endif // __EMSCRIPTEN__
 
@@ -124,6 +144,7 @@ static void InitOpenAlEffects()
 	alGenAuxiliaryEffectSlots = (LPALGENAUXILIARYEFFECTSLOTS)alGetProcAddress("alGenAuxiliaryEffectSlots");
 	alDeleteAuxiliaryEffectSlots = (LPALDELETEAUXILIARYEFFECTSLOTS)alGetProcAddress("alDeleteAuxiliaryEffectSlots");
 	alAuxiliaryEffectSloti = (LPALAUXILIARYEFFECTSLOTI)alGetProcAddress("alAuxiliaryEffectSloti");
+	alAuxiliaryEffectSlotf = (LPALAUXILIARYEFFECTSLOTF)alGetProcAddress("alAuxiliaryEffectSlotf");
 
 	int max_sends = 0;
 	alcGetIntegerv(g_ALCdevice, ALC_MAX_AUXILIARY_SENDS, 1, &max_sends);
@@ -250,10 +271,22 @@ int PsyX_SPUAL_InitSound()
 		alSourcei(voice->alSource, AL_SOURCE_RESAMPLER_SOFT, 2);	// Use cubic resampler
 #endif
 		alSourcei(voice->alSource, AL_SOURCE_RELATIVE, AL_TRUE);
+		alSourcef(voice->alSource, AL_MAX_GAIN, 64.0f);	// Driver 1 port: envelope gain past a baked head
+		alSourcef(voice->alSource, AL_GAIN, 0.0f);
 	}
 
 
 	InitOpenAlEffects();
+
+	// Driver 1 port: the ADSR envelope clock and thread
+	if (!s_spuClockBase)
+		s_spuClockBase = SDL_GetPerformanceCounter();
+
+	if (!s_envThread)
+	{
+		s_envThreadStop = 0;
+		s_envThread = SDL_CreateThread(EnvThreadMain, "SPU envelope", NULL);
+	}
 
 	return 1;
 }
@@ -266,6 +299,13 @@ static ALuint	s_xaBuffers[XA_NUM_BUFFERS];
 void PsyX_SPUAL_ShutdownSound()
 {
 	g_spuInit = 0;
+
+	if (s_envThread)		// Driver 1 port: the envelope thread
+	{
+		s_envThreadStop = 1;
+		SDL_WaitThread(s_envThread, NULL);
+		s_envThread = NULL;
+	}
 
 #ifndef __EMSCRIPTEN__
 	if (!g_ALCcontext)
@@ -527,6 +567,232 @@ static int decodeSound(u_char* iData, int soundSize, short* oData, int* loopStar
 	return soundSize;
 }
 
+//--------------------------------------------------------------------------------
+// Driver 1 port: ADSR envelope (psx-spx "SPU Voice Volume Envelope"; the rate/step rules as DuckStation's SPU).
+// Every voice runs the SPU's envelope state machine on a 44.1 kHz clock (real time, like the PsyCross vblank
+// clock): key-on starts the attack from 0, key-off starts the release, a voice whose envelope reaches 0 in
+// release is stopped. The AL source plays the decoded sample, so the envelope is applied as gain:
+//  - attack/decay phases that settle within ENV_BAKE_TICKS (the usual case, and every envelope Driver sets) are
+//    multiplied into the PCM at key-on (sample-accurate, mapped through the key-on pitch), so short ramps are
+//    exact instead of quantised to the gain updates;
+//  - everything slower (and sustain/release) is AL_GAIN, updated by the envelope thread every ENV_TICK_MS.
+// libspu's key status (SpuGetKeyStatus/SpuGetAllKeysStatus) is the software key-on bit plus ENVX != 0.
+
+enum { ENV_OFF = 0, ENV_ATTACK, ENV_DECAY, ENV_SUSTAIN, ENV_RELEASE };
+
+#define SPU_CLOCK_RATE		44100
+#define ENV_BAKE_TICKS		(SPU_CLOCK_RATE / 50)	// 20 ms
+#define ENV_RELEASE_CUT		(SPU_CLOCK_RATE / 500)	// a release this short (2 ms) stops the voice at once
+#define ENV_TICK_MS			4
+
+static double SpuClockNow()
+{
+	Uint64 c = SDL_GetPerformanceCounter() - s_spuClockBase;
+	return (double)c * SPU_CLOCK_RATE / (double)SDL_GetPerformanceFrequency();
+}
+
+typedef struct
+{
+	int phase, level, wait;
+} EnvState;
+
+// the rate/direction/mode of the current phase
+static void EnvPhaseParams(const SPUALVoice* v, int phase, int* rate, int* decr, int* expo)
+{
+	switch (phase)
+	{
+	case ENV_ATTACK:
+		*rate = (v->adsr1 >> 8) & 0x7F;  *decr = 0; *expo = (v->adsr1 >> 15) & 1;
+		break;
+	case ENV_DECAY:
+		*rate = ((v->adsr1 >> 4) & 0xF) << 2;  *decr = 1; *expo = 1;
+		break;
+	case ENV_SUSTAIN:
+		*rate = (v->adsr2 >> 6) & 0x7F;  *decr = (v->adsr2 >> 14) & 1; *expo = (v->adsr2 >> 15) & 1;
+		break;
+	default:	// release
+		*rate = (v->adsr2 & 0x1F) << 2;  *decr = 1; *expo = (v->adsr2 >> 5) & 1;
+		break;
+	}
+}
+
+static int EnvSustainLevel(const SPUALVoice* v)
+{
+	int sl = ((v->adsr1 & 0xF) + 1) << 11;
+	return sl > 0x7FFF ? 0x7FFF : sl;
+}
+
+// sustain that cannot move any more (or release at 0): nothing left to step
+static int EnvSettled(const SPUALVoice* v, const EnvState* e)
+{
+	if (e->phase == ENV_OFF)
+		return 1;
+
+	if (e->phase == ENV_SUSTAIN)
+	{
+		int rate, decr, expo;
+		EnvPhaseParams(v, ENV_SUSTAIN, &rate, &decr, &expo);
+		return decr ? e->level == 0 : e->level == 0x7FFF;
+	}
+	return 0;
+}
+
+// one envelope step: applies the step and returns the ticks until the next one
+static int EnvStep(const SPUALVoice* v, EnvState* e)
+{
+	int rate, decr, expo, shift, step, ticks;
+
+	EnvPhaseParams(v, e->phase, &rate, &decr, &expo);
+
+	shift = rate >> 2;
+	step = decr ? -8 + (rate & 3) : 7 - (rate & 3);
+
+	if (shift < 11)
+	{
+		step *= 1 << (11 - shift);
+		ticks = 1;
+	}
+	else
+		ticks = 1 << (shift - 11);
+
+	if (expo)
+	{
+		if (decr)
+			step = (step * e->level) >> 15;
+		else if (e->level >= 0x6000)
+		{
+			if (rate < 40)
+				step >>= 2;
+			else if (rate >= 44)
+				ticks <<= 2;
+			else
+			{
+				step >>= 1;
+				ticks <<= 1;
+			}
+		}
+	}
+
+	e->level += step;
+	if (e->level < 0)
+		e->level = 0;
+	if (e->level > 0x7FFF)
+		e->level = 0x7FFF;
+
+	switch (e->phase)
+	{
+	case ENV_ATTACK:
+		if (e->level >= 0x7FFF)
+			e->phase = ENV_DECAY;
+		break;
+	case ENV_DECAY:
+		if (e->level <= EnvSustainLevel(v))
+			e->phase = ENV_SUSTAIN;
+		break;
+	case ENV_RELEASE:
+		if (e->level == 0)
+			e->phase = ENV_OFF;
+		break;
+	}
+
+	return ticks;
+}
+
+// run the envelope for n ticks of the 44.1 kHz clock
+static void EnvAdvance(const SPUALVoice* v, EnvState* e, int n)
+{
+	while (n > 0 && !EnvSettled(v, e))
+	{
+		if (e->wait > n)
+		{
+			e->wait -= n;
+			return;
+		}
+		n -= e->wait;
+		e->wait = EnvStep(v, e);
+	}
+}
+
+static void VoiceEnvUpdate(SPUALVoice* voice, double now)
+{
+	EnvState e = { voice->envPhase, voice->envLevel, voice->envWait };
+	double dt = now - voice->envTime;
+	int n;
+
+	if (dt < 1.0)
+		return;
+
+	n = dt > 0x10000000 ? 0x10000000 : (int)dt;
+	voice->envTime += n;
+
+	EnvAdvance(voice, &e, n);
+
+	voice->envPhase = e.phase;
+	voice->envLevel = e.level;
+	voice->envWait = e.wait;
+}
+
+// the AL gain: volume x envelope (the baked head carries attack/decay itself) x SpuSetMute
+static void VoiceApplyGain(SPUALVoice* voice)
+{
+	float env;
+
+	if (voice->alSource == AL_NONE)
+		return;
+
+	if (voice->envBaked && (voice->envPhase == ENV_ATTACK || voice->envPhase == ENV_DECAY))
+		env = 1.0f;
+	else
+		env = (float)voice->envLevel / (float)voice->envScale;
+
+	alSourcef(voice->alSource, AL_GAIN, g_SPUMuted ? 0.0f : voice->volGain * env);
+}
+
+// key-on: the envelope restarts at 0. If attack + decay settle within ENV_BAKE_TICKS, returns the per-tick
+// envelope over that time in envOut (scaled to the level it settles on, which becomes envScale) and its length.
+static int VoiceEnvKeyOn(SPUALVoice* voice, double now, float* envOut, int maxTicks)
+{
+	EnvState e = { ENV_ATTACK, 0, 1 };
+	int t;
+
+	voice->envPhase = ENV_ATTACK;
+	voice->envLevel = 0;
+	voice->envWait = 1;
+	voice->envTime = now;
+	voice->envBaked = 0;
+	voice->envScale = 0x7FFF;
+
+	// simulate: where does the envelope stop changing fast?
+	for (t = 0; t < maxTicks; t++)
+	{
+		EnvAdvance(voice, &e, 1);
+		envOut[t] = (float)e.level;
+
+		if (e.phase == ENV_SUSTAIN || e.phase == ENV_OFF)
+		{
+			// a sustain that moves slower than full scale per bake window stays on the gain
+			int rate, decr, expo, shift, stepmag;
+			EnvPhaseParams(voice, ENV_SUSTAIN, &rate, &decr, &expo);
+			shift = rate >> 2;
+			stepmag = (8 << (shift < 11 ? 11 - shift : 0)) / (shift > 11 ? 1 << (shift - 11) : 1);
+
+			if (EnvSettled(voice, &e) || stepmag * maxTicks < 0x8000)
+			{
+				int i;
+				if (e.level <= 0)
+					return 0;
+
+				for (i = 0; i <= t; i++)
+					envOut[i] /= (float)e.level;
+
+				voice->envScale = e.level;
+				return t + 1;
+			}
+		}
+	}
+	return 0;
+}
+
 static void UpdateVoiceSample(SPUALVoice* voice)
 {
 	static short waveBuffer[SPU_REALMEMSIZE];
@@ -582,6 +848,33 @@ static void UpdateVoiceSample(SPUALVoice* voice)
 	}
 #endif
 
+	// Driver 1 port: key-on restarts the envelope; a fast attack/decay is multiplied into the head of the
+	// PCM. Source sample j plays at 44.1 kHz tick j * 4096 / pitch.
+	{
+		static float envHead[ENV_BAKE_TICKS];
+		int ticks = VoiceEnvKeyOn(voice, SpuClockNow(), envHead, ENV_BAKE_TICKS);
+
+		if (ticks > 0)
+		{
+			int pitch = voice->attr.pitch ? voice->attr.pitch : 0x1000;
+			int jEnd = (int)(((long long)ticks * pitch + 4095) / 4096);
+
+			voice->envBaked = 1;
+
+			// the looped part must stay unscaled: then the head plays at full gain, as before
+			if (jEnd <= count && (loopLen <= 0 || loopStart >= jEnd))
+			{
+				for (int j = 0; j < jEnd; j++)
+				{
+					int t = (int)((long long)j * 4096 / pitch);
+					if (t >= ticks)
+						break;
+					waveBuffer[j] = (short)(waveBuffer[j] * envHead[t]);
+				}
+			}
+		}
+	}
+
 	alSourcei(alSource, AL_BUFFER, 0);
 	alBufferData(alBuffer, AL_FORMAT_MONO16, waveBuffer, count * sizeof(short), 44100);
 
@@ -609,10 +902,24 @@ static void UpdateVoiceSample(SPUALVoice* voice)
 	alSourcei(alSource, AL_BUFFER, alBuffer);
 }
 
+// Driver 1 port: SPUCNT bit 14 mutes the SPU output; voices keep running (and can be keyed on) underneath,
+// the CD input (XA) is not affected (psx-spx "SPU Control Register").
 int PsyX_SPUAL_SetMute(int on_off)
 {
 	int old_state = g_SPUMuted;
+
+	if (!g_spuInit)
+	{
+		g_SPUMuted = on_off;
+		return old_state;
+	}
+
+	SDL_LockMutex(g_SpuMutex);
 	g_SPUMuted = on_off;
+	for (int i = 0; i < s_spuVoiceCount; i++)
+		VoiceApplyGain(&g_SpuVoices[i]);
+	SDL_UnlockMutex(g_SpuMutex);
+
 	return old_state;
 }
 
@@ -636,6 +943,9 @@ void PsyX_SPUAL_SetVoiceAttr(SpuVoiceAttr* psxAttrib)
 		return;
 
 	const float STEREO_FACTOR = 3.0f;
+
+	// Driver 1 port: mask 0 sets every attribute (libspu SpuSetVoiceAttr)
+	const u_int mask = psxAttrib->mask ? psxAttrib->mask : 0xFFFFFFFF;
 	
 	SDL_LockMutex(g_SpuMutex);
 
@@ -651,9 +961,9 @@ void PsyX_SPUAL_SetVoiceAttr(SpuVoiceAttr* psxAttrib)
 			continue;
 		
 		// update sample
-		if ((psxAttrib->mask & SPU_VOICE_WDSA) || (psxAttrib->mask & SPU_VOICE_LSAX))
+		if ((mask & SPU_VOICE_WDSA) || (mask & SPU_VOICE_LSAX))
 		{
-			if (psxAttrib->mask & SPU_VOICE_WDSA)
+			if (mask & SPU_VOICE_WDSA)
 			{
 				if (voice->attr.addr != psxAttrib->addr)
 					voice->sampledirty++;
@@ -661,7 +971,7 @@ void PsyX_SPUAL_SetVoiceAttr(SpuVoiceAttr* psxAttrib)
 				voice->attr.addr = psxAttrib->addr;
 			}
 			
-			if (psxAttrib->mask & SPU_VOICE_LSAX)
+			if (mask & SPU_VOICE_LSAX)
 			{
 				if(voice->attr.loop_addr != psxAttrib->loop_addr)
 					voice->sampledirty++;
@@ -671,16 +981,19 @@ void PsyX_SPUAL_SetVoiceAttr(SpuVoiceAttr* psxAttrib)
 		}
 
 		// update volume
-		if ((psxAttrib->mask & SPU_VOICE_VOLL) || (psxAttrib->mask & SPU_VOICE_VOLR))
+		if ((mask & SPU_VOICE_VOLL) || (mask & SPU_VOICE_VOLR))
 		{
-			if (psxAttrib->mask & SPU_VOICE_VOLL)
+			if (mask & SPU_VOICE_VOLL)
 				voice->attr.volume.left = psxAttrib->volume.left;
 
-			if (psxAttrib->mask & SPU_VOICE_VOLR)
+			if (mask & SPU_VOICE_VOLR)
 				voice->attr.volume.right = psxAttrib->volume.right;
 
-			float left_gain = (float)(voice->attr.volume.left) / (float)(16384);
-			float right_gain = (float)(voice->attr.volume.right) / (float)(16384);
+			// Driver 1 port: a negative volume is a phase-inverted side (xmplay.c DoDolbySS's surround
+			// channels: L = v, R = -v); mono AL sources can't invert one side, so take the magnitude. The
+			// signed average made those channels (nearly) silent.
+			float left_gain = fabsf((float)(voice->attr.volume.left)) / (float)(16384);
+			float right_gain = fabsf((float)(voice->attr.volume.right)) / (float)(16384);
 
 			if(left_gain > 1.0f)
 				left_gain = 1.0f;
@@ -692,11 +1005,13 @@ void PsyX_SPUAL_SetVoiceAttr(SpuVoiceAttr* psxAttrib)
 			pan = 2.0f * pan - 1.0f; // convert to [-1, 1]
 			pan = pan * 0.5f; // 0.5 = sin(30') for a +/- 30 degree arc
 			alSource3f(alSource, AL_POSITION, pan * STEREO_FACTOR, 0, -sqrtf(1.0f - pan * pan));
-			alSourcef(alSource, AL_GAIN, (left_gain+right_gain)*0.5f);
+
+			voice->volGain = (left_gain + right_gain) * 0.5f;
+			VoiceApplyGain(voice);
 		}
 
 		// update pitch
-		if (psxAttrib->mask & SPU_VOICE_PITCH)
+		if (mask & SPU_VOICE_PITCH)
 		{
 			ALint state;
 			alGetSourcei(alSource, AL_SOURCE_STATE, &state);
@@ -712,9 +1027,114 @@ void PsyX_SPUAL_SetVoiceAttr(SpuVoiceAttr* psxAttrib)
 			alSourcef(alSource, AL_PITCH, pitch);
 		}
 		
-		// TODO: ADSR and other stuff
+		// Driver 1 port: ADSR, built into the two registers exactly as libspu's SpuSetVoiceAttr does (Driver's
+		// copy at 0x7C984): raw ADSR1/ADSR2 first, then the fields; a mode only counts together with its
+		// rate (a_mode 5 = exponential attack; s_mode 1/3/5/7 = linear inc/dec, exp inc/dec, absent = linear
+		// dec; r_mode 7 = exponential release); rates/levels are clamped to their field widths.
+		if (mask & SPU_VOICE_ADSR_ADSR1)
+			voice->adsr1 = psxAttrib->adsr1;
+
+		if (mask & SPU_VOICE_ADSR_ADSR2)
+			voice->adsr2 = psxAttrib->adsr2;
+
+		if (mask & SPU_VOICE_ADSR_AR)
+		{
+			int ar = psxAttrib->ar > 0x7F ? 0x7F : psxAttrib->ar;
+			int m = ((mask & SPU_VOICE_ADSR_AMODE) && psxAttrib->a_mode == SPU_VOICE_EXPIncN) ? 0x80 : 0;
+			voice->adsr1 = (voice->adsr1 & 0xFF) | ((ar | m) << 8);
+		}
+
+		if (mask & SPU_VOICE_ADSR_DR)
+		{
+			int dr = psxAttrib->dr > 0xF ? 0xF : psxAttrib->dr;
+			voice->adsr1 = (voice->adsr1 & 0xFF0F) | (dr << 4);
+		}
+
+		if (mask & SPU_VOICE_ADSR_SR)
+		{
+			int sr = psxAttrib->sr > 0x7F ? 0x7F : psxAttrib->sr;
+			int m = 0x100;
+
+			if (mask & SPU_VOICE_ADSR_SMODE)
+			{
+				switch (psxAttrib->s_mode)
+				{
+				case SPU_VOICE_LINEARIncN:	m = 0x000; break;
+				case SPU_VOICE_EXPIncN:		m = 0x200; break;
+				case SPU_VOICE_EXPDec:		m = 0x300; break;
+				}
+			}
+			voice->adsr2 = (voice->adsr2 & 0x3F) | ((sr | m) << 6);
+		}
+
+		if (mask & SPU_VOICE_ADSR_RR)
+		{
+			int rr = psxAttrib->rr > 0x1F ? 0x1F : psxAttrib->rr;
+			int m = ((mask & SPU_VOICE_ADSR_RMODE) && psxAttrib->r_mode == SPU_VOICE_EXPDec) ? 0x20 : 0;
+			voice->adsr2 = (voice->adsr2 & 0xFFC0) | rr | m;
+		}
+
+		if (mask & SPU_VOICE_ADSR_SL)
+		{
+			int sl = psxAttrib->sl > 0xF ? 0xF : psxAttrib->sl;
+			voice->adsr1 = (voice->adsr1 & 0xFFF0) | sl;
+		}
 	}
 	SDL_UnlockMutex(g_SpuMutex);
+}
+
+// AL source still sounding? (a non-looping sample that played to its end stops by itself: on the SPU its end
+// flag forces the release, which ends the envelope)
+static int VoiceSourceAlive(SPUALVoice* voice)
+{
+	ALint state;
+	alGetSourcei(voice->alSource, AL_SOURCE_STATE, &state);
+	return state == AL_PLAYING || state == AL_PAUSED;
+}
+
+static void VoiceKeyOff(SPUALVoice* voice, double now)
+{
+	voice->keyed = 0;
+
+	if (voice->envPhase == ENV_OFF)
+	{
+		alSourceStop(voice->alSource);
+		return;
+	}
+
+	VoiceEnvUpdate(voice, now);
+
+	voice->envPhase = ENV_RELEASE;
+	voice->envWait = 1;
+
+	// a release that ends within ENV_RELEASE_CUT (Driver's are all 1-2 samples) ends the voice now
+	{
+		EnvState e = { ENV_RELEASE, voice->envLevel, 1 };
+		EnvAdvance(voice, &e, ENV_RELEASE_CUT);
+
+		if (e.phase == ENV_OFF)
+		{
+			voice->envPhase = ENV_OFF;
+			voice->envLevel = 0;
+			alSourceStop(voice->alSource);
+			return;
+		}
+	}
+
+	VoiceApplyGain(voice);
+}
+
+// Driver 1 port: D1_SPU_LOG=1 prints every key-on/off (time in 44.1 kHz ticks, voice, ADSR registers, the
+// baked attack length, volume, pitch) - for checking envelopes against a WAV capture
+static int SpuLogEnabled()
+{
+	static int s_log = -1;
+	if (s_log < 0)
+	{
+		const char* e = getenv("D1_SPU_LOG");
+		s_log = e && *e && *e != '0';
+	}
+	return s_log;
 }
 
 void PsyX_SPUAL_SetKey(int on_off, u_int voice_bit)
@@ -723,6 +1143,8 @@ void PsyX_SPUAL_SetKey(int on_off, u_int voice_bit)
 		return;
 
 	SDL_LockMutex(g_SpuMutex);
+	double now = SpuClockNow();
+
 	for (int i = 0; i < s_spuVoiceCount; i++)
 	{
 		if ((voice_bit & SPU_VOICECH(i)) == 0)
@@ -734,64 +1156,152 @@ void PsyX_SPUAL_SetKey(int on_off, u_int voice_bit)
 		if (alSource == AL_NONE)
 			continue;
 
-		if (on_off && !g_SPUMuted)
+		// Driver 1 port: a muted SPU still keys voices on (they play silently, SpuSetMute)
+		if (on_off)
 		{
 			alSourceStop(alSource);
-			UpdateVoiceSample(voice);
+			UpdateVoiceSample(voice);		// restarts the envelope
+			voice->keyed = 1;
+			VoiceApplyGain(voice);
 
-			alSourcePlay(alSource);
+			if (SpuLogEnabled())
+				printf("[spu] %.0f on  v%d adsr %04X %04X baked %d scale %d vol %d,%d pitch %04X addr %X\n", now, i,
+					voice->adsr1, voice->adsr2, voice->envBaked, voice->envScale, voice->attr.volume.left,
+					voice->attr.volume.right, voice->attr.pitch, voice->attr.addr);
+
+			// pitch 0 (XM_Pause) keeps a voice paused on PC; the envelope runs on regardless, as on the SPU
+			if (voice->attr.pitch != 0)
+				alSourcePlay(alSource);
+			else
+			{
+				alSourcePlay(alSource);
+				alSourcePause(alSource);
+			}
 		}
 		else
 		{
-			alSourceStop(alSource);
+			if (SpuLogEnabled() && voice->envPhase != ENV_OFF)
+				printf("[spu] %.0f off v%d phase %d level %d\n", now, i, voice->envPhase, voice->envLevel);
+
+			VoiceKeyOff(voice, now);
 		}
 	}
 	SDL_UnlockMutex(g_SpuMutex);
 }
 
+// libspu: key bit set -> SPU_ON (ENVX != 0) / SPU_ON_ENV_OFF; clear -> SPU_OFF_ENV_ON (still releasing) / SPU_OFF
+static int VoiceKeyStatus(SPUALVoice* voice, double now)
+{
+	int envOn;
+
+	if (voice->alSource == AL_NONE)
+		return SPU_OFF;
+
+	if (voice->envPhase != ENV_OFF)
+	{
+		if (!VoiceSourceAlive(voice))
+		{
+			voice->envPhase = ENV_OFF;
+			voice->envLevel = 0;
+		}
+		else
+			VoiceEnvUpdate(voice, now);
+	}
+
+	// right after key-on ENVX can still be 0: the voice is in its attack, count it as sounding
+	envOn = voice->envPhase != ENV_OFF;
+
+	if (voice->keyed)
+		return envOn ? SPU_ON : SPU_ON_ENV_OFF;
+
+	return envOn ? SPU_OFF_ENV_ON : SPU_OFF;
+}
+
 int PsyX_SPUAL_GetKeyStatus(u_int voice_bit)
 {
-	int state = AL_STOPPED;
+	int status = SPU_OFF;
+
+	if (!g_spuInit)
+		return SPU_OFF;
+
 	SDL_LockMutex(g_SpuMutex);
+	double now = SpuClockNow();
 
 	for (int i = 0; i < s_spuVoiceCount; i++)
 	{
 		if (voice_bit != SPU_VOICECH(i))
 			continue;
 
-		SPUALVoice* voice = &g_SpuVoices[i];
-		ALuint alSource = voice->alSource;
-
-		if (alSource == AL_NONE)
-			break; // SpuOff?
-
-		alGetSourcei(alSource, AL_SOURCE_STATE, &state);
+		status = VoiceKeyStatus(&g_SpuVoices[i], now);
 		break;
 	}
 
 	SDL_UnlockMutex(g_SpuMutex);
 
-	return (state == AL_PLAYING);	// simple as this?
+	return status;
 }
 
 void PsyX_SPUAL_GetAllKeysStatus(char* status)
 {
-	SDL_LockMutex(g_SpuMutex);
-	for (int i = 0; i < s_spuVoiceCount; i++)
+	if (!g_spuInit)
 	{
-		SPUALVoice* voice = &g_SpuVoices[i];
-		ALuint alSource = voice->alSource;
-		if (alSource == AL_NONE)
-		{
-			status[i] = 0; // SpuOff?
+		memset(status, 0, s_spuVoiceCount);
+		return;
+	}
+
+	SDL_LockMutex(g_SpuMutex);
+	double now = SpuClockNow();
+
+	for (int i = 0; i < s_spuVoiceCount; i++)
+		status[i] = VoiceKeyStatus(&g_SpuVoices[i], now);
+
+	SDL_UnlockMutex(g_SpuMutex);
+}
+
+// the envelope thread: advances every sounding voice's envelope and updates its gain
+static int EnvThreadMain(void* data)
+{
+	while (!s_envThreadStop)
+	{
+		SDL_Delay(ENV_TICK_MS);
+
+		if (!g_spuInit)
 			continue;
+
+		SDL_LockMutex(g_SpuMutex);
+		double now = SpuClockNow();
+
+		for (int i = 0; i < s_spuVoiceCount; i++)
+		{
+			SPUALVoice* voice = &g_SpuVoices[i];
+
+			if (voice->alSource == AL_NONE || voice->envPhase == ENV_OFF)
+				continue;
+
+			if (!VoiceSourceAlive(voice))
+			{
+				voice->envPhase = ENV_OFF;
+				voice->envLevel = 0;
+				continue;
+			}
+
+			int oldLevel = voice->envLevel, oldPhase = voice->envPhase;
+			VoiceEnvUpdate(voice, now);
+
+			if (voice->envPhase == ENV_OFF)
+			{
+				// release finished
+				alSourceStop(voice->alSource);
+				continue;
+			}
+
+			if (voice->envLevel != oldLevel || voice->envPhase != oldPhase)
+				VoiceApplyGain(voice);
 		}
 
-		int state;
-		alGetSourcei(alSource, AL_SOURCE_STATE, &state);
-		status[i] = (state == AL_PLAYING);
+		SDL_UnlockMutex(g_SpuMutex);
 	}
-	SDL_UnlockMutex(g_SpuMutex);
+	return 0;
 }
 
 int PsyX_SPUAL_SetReverb(int on_off)
@@ -962,5 +1472,41 @@ extern "C" void PsyX_SPUAL_XASetVolume(int left, int right)
 
 	SDL_LockMutex(g_SpuMutex);
 	alSourcef(s_xaSource, AL_GAIN, s_xaGain);
+	SDL_UnlockMutex(g_SpuMutex);
+}
+
+//--------------------------------------------------------------------------------
+// Driver 1 port: SpuSetReverbDepth -> the reverb slot's gain (the EFX reverb's own gain is tuned for a
+// half-scale depth, 4000h, which is what Driver sets with its Hall mode), SpuSetCommonAttr's master volume ->
+// the listener gain (3FFFh = 1; the CD input goes through the main volume too)
+
+extern "C" void PsyX_SPUAL_SetReverbDepth(int left, int right)
+{
+	float g = (float)(abs(left) > abs(right) ? abs(left) : abs(right)) / (float)0x4000;
+
+	if (g > 1.0f)
+		g = 1.0f;
+
+	if (!g_spuInit || !g_ALEffectsSupported)
+		return;
+#ifndef __EMSCRIPTEN__
+	SDL_LockMutex(g_SpuMutex);
+	alAuxiliaryEffectSlotf(g_ALEffectSlots[0], AL_EFFECTSLOT_GAIN, g);
+	SDL_UnlockMutex(g_SpuMutex);
+#endif
+}
+
+extern "C" void PsyX_SPUAL_SetMasterVolume(int left, int right)
+{
+	float g = (float)(abs(left) + abs(right)) / (float)(2 * 0x3FFF);
+
+	if (g > 1.0f)
+		g = 1.0f;
+
+	if (!g_spuInit || !g_ALCcontext)
+		return;
+
+	SDL_LockMutex(g_SpuMutex);
+	alListenerf(AL_GAIN, g);
 	SDL_UnlockMutex(g_SpuMutex);
 }
