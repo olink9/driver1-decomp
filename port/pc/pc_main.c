@@ -184,6 +184,7 @@ int PC_OverlayLoad(const char *name, int addr, int *size)
 extern int __real_VSync(int mode);
 extern void PC_CdService(void);
 extern void PC_DctService(void);
+extern void PC_TraceVSync(void *caller);
 
 /* The PS1 shows a frame by itself; PsyCross needs PsyX_EndScene() to present what was drawn (REDRIVER2 calls it
  * from its game code). Driver's frames all end in VSync(), so a drawn scene is presented there. */
@@ -300,6 +301,7 @@ int __wrap_VSync(int mode)
     int r, now, presenting;
     if (!pthread_equal(pthread_self(), s_game_thread))
         return __real_VSync(mode);
+    PC_TraceVSync(__builtin_return_address(0));   /* lockstep trace (pc_trace.c, D1_TRACE) */
     PC_CdService();
     PC_DctService();
     /* present what was drawn since the last frame: the frontend ends each frame with VSync(0), the in-game loop

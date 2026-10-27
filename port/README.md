@@ -72,6 +72,59 @@ re-copied on each entry since the overlay is reloaded) with the up/down ring ext
 driver (`func_001C2644`/`func_001C26E4`); the label is drawn by a hook at the end of the label drawer
 (`fecore.c func_001C1BD4` and its copy in `wips_pc.c func_001C2114`).
 
+## Lockstep comparison
+
+Proof that the PC build simulates what the PS1 game does: both run the attract-mode demos (the four disc replays,
+missions 0xB4-0xB7; no input needed), both write the same set of game variables once per game frame, and
+`tools/pc/compare/lockstep.py` compares them frame by frame and names the first word that differs.
+
+```
+tools/pc/compare/run.sh <pc build dir> <out dir> [pc vblanks=30000] [emulator vblanks=62000]
+```
+
+runs both sides (headless, silent, in the `build` distrobox, in parallel), then the diff. It needs
+`~/dev/driver1-work/emu/` (or `EMU_DIR`): `swanstation_libretro.so` (the DuckStation libretro core; copied from the
+RetroArch flatpak's cores), `system/scph5501.bin` (US BIOS, copied from the EmuDeck bios folder), and builds `lrhost`
+there from `tools/pc/compare/lrhost.c`; the disc is `~/dev/driver1-work/driver1.cue` (`D1_CUE`). The PC side defaults
+cover all four demos (they start at ~4400 vblanks and end at ~31000; the PC runs in real time, so ~9 min), the
+emulator side runs ~10x faster than real time but plays the intro FMVs first (demo 1 at ~18300 vblanks). Traces are
+~25 KB per game frame (~250 MB for the four demos). Output: per demo, `lockstep: N frames identical`, or
+`FIRST DIVERGENCE at frame F` with every differing word (region, field or PS1 symbol, PS1 address, both values).
+
+Pieces:
+- `tools/pc/compare/trace.spec` - what is traced (label, PS1 address, PC symbol, size): frame counter, CameraCnt,
+  the BIOS rand seed, camera position, Random2's table, car_data[20], felony.c's pursuer records, MISSION, the civ
+  slots, and all of .sdata/.sbss (`*`: a PS1 range the PC assembles from PC_RAM and the C-owned objects inside it),
+  plus `mask` lines: the words that legitimately differ, each with its reason (vblank clocks, saved stack pointers,
+  a string literal's address, CD-streaming progress, the XM player's interrupt-driven state, a speech-queue timer
+  that follows SPU playback). A new divergence is either a port bug or gets a mask line with its explanation.
+- PC: `port/pc/pc_trace.c`, `D1_TRACE=<spec>:<out>`. `__wrap_VSync` passes its return address; the first VSync call
+  per game frame from the in-game loop (main.c func_0002360C: the VSync(-1) wait right after ControlReplay) writes a
+  record. Symbols come from the exe's own ELF symbol table (so statics like pc_psyq.c's rand seed work); `*` ranges
+  read build/slus_008.42.map (`D1_TRACE_MAP` overrides).
+- Emulator: `tools/pc/compare/lrhost.c`, a ~600-line headless libretro frontend (no window, no audio, software
+  renderer, interpreter CPU, no memory cards; `--pad` takes the D1_PAD syntax, `--shot`, `--ramdump`,
+  `--zerocheck`). A libretro core only returns between vblanks and a game frame takes >= 2, so the host patches the
+  PS1 game in emulated RAM (not the disc) once SLUS_008.42 is loaded: `jal stub` at 0x24240, the same point as the
+  PC hook. The 31-instruction stub copies the spec's regions into a buffer at 0x1E5100 and bumps a sequence word;
+  the host collects the buffer after every vblank. 0x1E4E00-0x1ED800 is RAM nothing uses during boot, menus and
+  the demos (measured with `--zerocheck`; only CRED.BIN, the credits overlay, would cover it), and the host
+  reports if anything else writes there.
+- `lockstep.py info|diff|show`: games are runs of the frame counter (0,1,2..), paired in order and aligned on that
+  counter, never on vblanks. Pointers are compared by what they point at (`--pc-exe`: PC addresses of C-owned
+  objects, functions and the scratchpad are mapped back to PS1 addresses; Driver stores physical addresses).
+  `show TRACE GAME FRAME [label]` dumps a record; `--all` lists the first divergent frame per region.
+
+Result (2026-10-27, commit fb2b13f + this tool): all four demos (0xB4/0xB5 in city 0, 0xB6/0xB7 in city 1) are
+identical for their whole length - 2747 + 2292 + 1776 + 1674 = 8489 game frames, every traced byte outside the mask
+lines; the demos also end on the same frame. Divergences found and explained on the way: felony.c func_00065424's
+uninitialised stack VEC (vy/pad garbage in the pursuers' cur/prev, unread), pathfind's heap pointers to the sentinel
+cell (a PC address - same object), and the timing/platform words in the mask list. Sensitivity check: pairing two
+different demos diverges at frame 0 in 1051 words.
+
+To find the code behind a divergence on the PC side, watch the word with gdb in the build box (break on
+`PC_TraceVSync if D_00097534 == F-1`, then `watch` the PC address and print `bt` in its commands).
+
 ## How it fits together
 
 ### Memory: PS1 RAM lives at its PS1 addresses
