@@ -70,8 +70,16 @@ TextureID g_offscreenRTTexture = -1;
 TextureID g_whiteTexture = -1;
 TextureID g_lastBoundTexture = -1;
 
+// Driver 1 port: g_windowWidth/g_windowHeight are the size of the scene the PS1 display is rendered into (the
+// scene framebuffer, "Display" below); g_displayWidth/g_displayHeight are the window's.
 int g_windowWidth = 0;
 int g_windowHeight = 0;
+int g_displayWidth = 0;
+int g_displayHeight = 0;
+
+int g_cfg_displayMode = PSYX_DISPLAY_FIT;
+int g_cfg_displayFilter = 1;
+int g_cfg_renderScale = 0;
 
 int g_dbg_wireframeMode = 0;
 int g_dbg_texturelessMode = 0;
@@ -196,7 +204,7 @@ void PBO_Destroy(GrPBO* pbo)
 	pbo->nbytes = 0;
 }
 
-void PBO_Download(GrPBO* pbo)
+void PBO_Download(GrPBO* pbo, int nbytesUsed)
 {
 	unsigned char* ptr;
 	
@@ -224,7 +232,8 @@ void PBO_Download(GrPBO* pbo)
 		ptr = (unsigned char*)glMapBuffer(GL_PIXEL_PACK_BUFFER, GL_READ_ONLY);
 		if (NULL != ptr)
 		{
-			memcpy(pbo->pixels, ptr, pbo->nbytes);
+			// Driver 1 port: only the bytes the caller converts (was the whole VRAM-sized buffer, 2 MB per frame)
+			memcpy(pbo->pixels, ptr, nbytesUsed > 0 && nbytesUsed < pbo->nbytes ? nbytesUsed : pbo->nbytes);
 			glUnmapBuffer(GL_PIXEL_PACK_BUFFER);
 		}
 		else
@@ -267,6 +276,11 @@ GLuint		g_glVRAMFramebuffer;
 GLuint		g_glOffscreenFramebuffer;
 GrPBO		g_glOffscreenPBO;
 
+// Driver 1 port: the scene framebuffer (see "Display" below)
+GLuint		g_glSceneFramebuffer = 0;
+GLuint		g_glSceneColor = 0;
+GLuint		g_glSceneDepth = 0;
+
 #endif
 
 #if defined(RENDERER_OGL) || defined(RENDERER_OGLES)
@@ -278,7 +292,7 @@ int GR_InitialiseGLContext(char* windowName, int fullscreen)
 	windowFlags |= SDL_WINDOW_FULLSCREEN;
 #else
 	if (fullscreen)
-		windowFlags |= SDL_WINDOW_FULLSCREEN;
+		windowFlags |= SDL_WINDOW_FULLSCREEN_DESKTOP;	// Driver 1 port: was SDL_WINDOW_FULLSCREEN (a 640x480 mode)
 #endif
 
 	if(g_windowWidth <= 0 || g_windowHeight <= 0)
@@ -372,6 +386,18 @@ int GR_InitialiseGLExt()
 
 int GR_InitialiseRender(char* windowName, int width, int height, int fullscreen)
 {
+	// Driver 1 port: D1_WINDOW=WxH sets the window size (testing: SDL_VIDEODRIVER=offscreen windows of any size)
+	const char* winEnv = getenv("D1_WINDOW");
+	if (winEnv)
+	{
+		int w = 0, h = 0;
+		if (sscanf(winEnv, "%dx%d", &w, &h) == 2 && w > 0 && h > 0)
+		{
+			width = w;
+			height = h;
+		}
+	}
+
 	g_windowWidth = width;
 	g_windowHeight = height;
 
@@ -429,6 +455,11 @@ void GR_Shutdown()
 void GR_UpdateSwapIntervalState(int swapInterval)
 {
 #if defined(RENDERER_OGL)
+	// Driver 1 port: only on a change (PsyX_BeginScene calls this every frame)
+	static int current = -100;
+	if (swapInterval == current)
+		return;
+	current = swapInterval;
 	SDL_GL_SetSwapInterval(swapInterval);
 #endif
 }
@@ -436,6 +467,8 @@ void GR_UpdateSwapIntervalState(int swapInterval)
 void GR_BeginScene()
 {
 	g_lastBoundTexture = 0;
+
+	GR_UpdateDisplayLayout(0);	// Driver 1 port: window size / display options changed -> scene size
 
 #if USE_OPENGL
 #ifdef RENDERER_OGLES
@@ -481,6 +514,7 @@ static u_char rgLUT[LUT_WIDTH * LUT_HEIGHT * sizeof(u_int)];
 void GR_ResetDevice()
 {
 	GR_UpdateSwapIntervalState(0);
+	GR_UpdateDisplayLayout(1);	// Driver 1 port: the window was resized
 }
 
 typedef struct
@@ -957,6 +991,8 @@ void GR_InitRG8LUT()
 	}
 }
 
+extern "C" void PC_ModDisplayInit(void) __attribute__((weak));	// port/pc/pc_mods.c: PsyX_SetDisplayOptions from the ini
+
 int GR_InitialisePSX()
 {
 	SDL_memset(vram, 0, VRAM_WIDTH * VRAM_HEIGHT * sizeof(unsigned short));
@@ -997,7 +1033,7 @@ int GR_InitialisePSX()
 			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, 0, 0);
 			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_TEXTURE_2D, 0, 0);
 
-			glBindFramebuffer(GL_FRAMEBUFFER, 0);
+			glBindFramebuffer(GL_FRAMEBUFFER, g_glSceneFramebuffer);
 		}
 	}
 
@@ -1028,7 +1064,7 @@ int GR_InitialisePSX()
 			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, 0, 0);
 			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_TEXTURE_2D, 0, 0);
 
-			glBindFramebuffer(GL_FRAMEBUFFER, 0);
+			glBindFramebuffer(GL_FRAMEBUFFER, g_glSceneFramebuffer);
 		}
 	}
 
@@ -1063,7 +1099,7 @@ int GR_InitialisePSX()
 			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, 0, 0);
 			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_TEXTURE_2D, 0, 0);
 
-			glBindFramebuffer(GL_FRAMEBUFFER, 0);
+			glBindFramebuffer(GL_FRAMEBUFFER, g_glSceneFramebuffer);
 		}
 	}
 
@@ -1088,9 +1124,268 @@ int GR_InitialisePSX()
 #error
 #endif
 
+	// Driver 1 port: the game's saved display options (port/pc/pc_mods.c), before the first layout
+	if (PC_ModDisplayInit)
+		PC_ModDisplayInit();
+
 	GR_ResetDevice();
 
 	return 1;
+}
+
+//----------------------------------------------------------------------------------------
+// Driver 1 port: Display.
+// PsyCross drew the PS1 display straight into the window, stretched over all of it (a 4:3 picture filled a 16:10
+// panel), at the window's resolution. Now it is drawn into the scene framebuffer (g_glSceneFramebuffer, the
+// size of g_windowWidth x g_windowHeight; every bind of the default framebuffer in this file binds it instead), and
+// GR_PresentScene blits that into the window at present time:
+//   g_cfg_displayMode   PSYX_DISPLAY_FIT      4:3, as large as fits, centred (pillar/letterbox bars) - default
+//                       PSYX_DISPLAY_INTEGER  4:3 at the largest whole multiple of 320x240 that fits (1920x1200: 5x =
+//                                             1600x1200, the same as fit; 1280x800: 3x)
+//                       PSYX_DISPLAY_FILL     4:3 covering the whole window (the overhang is cropped)
+//                       PSYX_DISPLAY_STRETCH  the whole window (PsyCross's old behaviour)
+//   g_cfg_displayFilter 1 linear / 0 nearest, for that blit (no effect when the scene is the blit's size)
+//   g_cfg_renderScale   0 = the scene is rendered at the size it is shown at (sharpest; the default),
+//                       N = at N x the PS1 display mode (320x240, 512x240, 320x480 ...: 1 = the PS1's own pixel
+//                       grid), then scaled to the window; it follows display mode changes
+// The PS1 primitives are unaffected: PsyCross maps the display area onto whatever target it draws to (no PGXP:
+// the 2D vertices are scaled, nothing else depends on the target size), and the frame copied back into VRAM
+// (GR_StoreFrameBuffer) is scaled to the PS1 display size from any scene size, as it was from any window size.
+// The layout is recomputed on window resize and at the next frame after PsyX_SetDisplayOptions.
+
+static int g_displayLayoutDirty = 1;
+static int g_layoutDispW = 0, g_layoutDispH = 0;	// the PS1 display mode a render scale N layout was made for
+static int g_presentX = 0, g_presentY = 0, g_presentW = 0, g_presentH = 0;
+
+void PsyX_SetDisplayOptions(int mode, int filter, int renderScale)
+{
+	if (mode < PSYX_DISPLAY_FIT || mode > PSYX_DISPLAY_STRETCH)
+		mode = PSYX_DISPLAY_FIT;
+	if (renderScale < 0)
+		renderScale = 0;
+	if (renderScale > 8)
+		renderScale = 8;
+
+	g_cfg_displayMode = mode;
+	g_cfg_displayFilter = filter ? 1 : 0;
+	g_cfg_renderScale = renderScale;
+	g_displayLayoutDirty = 1;
+}
+
+static void GR_ComputePresentRect(int dw, int dh, int* x, int* y, int* w, int* h)
+{
+	int k;
+
+	switch (g_cfg_displayMode)
+	{
+	case PSYX_DISPLAY_STRETCH:
+		*x = 0; *y = 0; *w = dw; *h = dh;
+		return;
+	case PSYX_DISPLAY_INTEGER:
+		k = dw / 320 < dh / 240 ? dw / 320 : dh / 240;
+		if (k >= 1)
+		{
+			*w = 320 * k; *h = 240 * k;
+			*x = (dw - *w) / 2; *y = (dh - *h) / 2;
+			return;
+		}
+		break;		// smaller than 320x240: fit
+	case PSYX_DISPLAY_FILL:
+		if (dw * 3 > dh * 4)
+		{
+			*w = dw; *h = (dw * 3 + 2) / 4;
+		}
+		else
+		{
+			*h = dh; *w = (dh * 4 + 1) / 3;
+		}
+		*x = (dw - *w) / 2; *y = (dh - *h) / 2;
+		return;
+	}
+
+	// fit
+	if (dw * 3 > dh * 4)
+	{
+		*h = dh; *w = (dh * 4 + 1) / 3;
+	}
+	else
+	{
+		*w = dw; *h = (dw * 3 + 2) / 4;
+	}
+	*x = (dw - *w) / 2; *y = (dh - *h) / 2;
+}
+
+void GR_UpdateDisplayLayout(int force)
+{
+#if USE_OPENGL
+	int dw = 0, dh = 0;
+
+	if (!g_window)
+		return;
+
+	SDL_GL_GetDrawableSize(g_window, &dw, &dh);
+	if (dw <= 0 || dh <= 0)
+		return;
+
+	if (!force && !g_displayLayoutDirty && dw == g_displayWidth && dh == g_displayHeight &&
+		(g_cfg_renderScale == 0 || (activeDispEnv.disp.w == g_layoutDispW && activeDispEnv.disp.h == g_layoutDispH)))
+		return;
+
+	g_displayLayoutDirty = 0;
+	g_displayWidth = dw;
+	g_displayHeight = dh;
+
+	GR_ComputePresentRect(dw, dh, &g_presentX, &g_presentY, &g_presentW, &g_presentH);
+
+	int sw, sh;
+	if (g_cfg_renderScale > 0)
+	{
+		// N x the PS1 display mode (320x240, 512x240, 320x480 ...): 1 = the PS1's own pixel grid
+		const int pw = activeDispEnv.disp.w > 0 ? activeDispEnv.disp.w : 320;
+		const int ph = activeDispEnv.disp.h > 0 ? activeDispEnv.disp.h : 240;
+		sw = pw * g_cfg_renderScale;
+		sh = ph * g_cfg_renderScale;
+		g_layoutDispW = activeDispEnv.disp.w;
+		g_layoutDispH = activeDispEnv.disp.h;
+	}
+	else
+	{
+		sw = g_presentW;
+		sh = g_presentH;
+	}
+
+	GLint maxSize = 4096;
+	glGetIntegerv(GL_MAX_TEXTURE_SIZE, &maxSize);
+	if (sw > maxSize) sw = maxSize;
+	if (sh > maxSize) sh = maxSize;
+	if (sw < 1) sw = 1;
+	if (sh < 1) sh = 1;
+
+	if (!g_glSceneFramebuffer || sw != g_windowWidth || sh != g_windowHeight)
+	{
+		if (!g_glSceneFramebuffer)
+		{
+			glGenFramebuffers(1, &g_glSceneFramebuffer);
+			glGenTextures(1, &g_glSceneColor);
+			glGenRenderbuffers(1, &g_glSceneDepth);
+		}
+
+		glBindTexture(GL_TEXTURE_2D, g_glSceneColor);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, sw, sh, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+		glBindTexture(GL_TEXTURE_2D, 0);
+		g_lastBoundTexture = 0;
+
+		glBindRenderbuffer(GL_RENDERBUFFER, g_glSceneDepth);
+		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, sw, sh);
+		glBindRenderbuffer(GL_RENDERBUFFER, 0);
+
+		glBindFramebuffer(GL_FRAMEBUFFER, g_glSceneFramebuffer);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, g_glSceneColor, 0);
+		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, g_glSceneDepth);
+
+		if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+			eprinterr("scene framebuffer %dx%d incomplete\n", sw, sh);
+
+		// start from black (as a new window would)
+		if (g_PreviousScissorState)
+			glDisable(GL_SCISSOR_TEST);
+		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+		if (g_PreviousScissorState)
+			glEnable(GL_SCISSOR_TEST);
+
+		g_windowWidth = sw;
+		g_windowHeight = sh;
+	}
+
+	if (!g_PreviousOffscreenState)
+	{
+		glBindFramebuffer(GL_FRAMEBUFFER, g_glSceneFramebuffer);
+		GR_SetViewPort(0, 0, g_windowWidth, g_windowHeight);
+	}
+
+	eprintinfo("display %dx%d: picture %dx%d at %d,%d, scene %dx%d (mode %d, filter %s, render scale %d)\n",
+		dw, dh, g_presentW, g_presentH, g_presentX, g_presentY, g_windowWidth, g_windowHeight,
+		g_cfg_displayMode, g_cfg_displayFilter ? "linear" : "nearest", g_cfg_renderScale);
+#endif
+}
+
+// copies the scene into the window (before the swap). GR_ResumeScene (after the swap) binds the scene framebuffer
+// again, as PsyCross's GR_StoreFrameBuffer left the window's bound: Driver's frontend draws with dfe = 0, which
+// PsyCross treats as offscreen drawing, but after the first frame its draws land in whatever framebuffer is bound
+// (g_PreviousOffscreenState stays set) - that is how the title screen gets onto the screen. Kept as it was.
+static GLint g_savedViewport[4];
+
+void GR_PresentScene()
+{
+#if USE_OPENGL
+	if (!g_glSceneFramebuffer)
+		return;
+
+	glGetIntegerv(GL_VIEWPORT, g_savedViewport);
+
+	if (g_PreviousScissorState)
+		glDisable(GL_SCISSOR_TEST);
+
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, g_glSceneFramebuffer);
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+
+	glViewport(0, 0, g_displayWidth, g_displayHeight);
+	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	const int nearest = !g_cfg_displayFilter || (g_presentW == g_windowWidth && g_presentH == g_windowHeight);
+	glBlitFramebuffer(0, 0, g_windowWidth, g_windowHeight,
+		g_presentX, g_presentY, g_presentX + g_presentW, g_presentY + g_presentH,
+		GL_COLOR_BUFFER_BIT, nearest ? GL_NEAREST : GL_LINEAR);
+
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+#endif
+}
+
+// after the swap: draw into the scene again
+void GR_ResumeScene()
+{
+#if USE_OPENGL
+	if (!g_glSceneFramebuffer)
+		return;
+
+	glBindFramebuffer(GL_FRAMEBUFFER, g_glSceneFramebuffer);
+	glViewport(g_savedViewport[0], g_savedViewport[1], g_savedViewport[2], g_savedViewport[3]);
+
+	if (g_PreviousScissorState)
+		glEnable(GL_SCISSOR_TEST);
+#endif
+}
+
+// writes the window as presented (call between GR_PresentScene and the swap) to a binary PPM
+void GR_DumpWindow(const char* fileName)
+{
+#if USE_OPENGL
+	int w = g_displayWidth, h = g_displayHeight;
+	unsigned char* px = (unsigned char*)malloc(w * h * 3);
+	FILE* f;
+
+	if (!px)
+		return;
+
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+	glPixelStorei(GL_PACK_ALIGNMENT, 1);
+	glReadPixels(0, 0, w, h, GL_RGB, GL_UNSIGNED_BYTE, px);
+	glPixelStorei(GL_PACK_ALIGNMENT, 4);
+
+	f = fopen(fileName, "wb");
+	if (f)
+	{
+		fprintf(f, "P6 %d %d 255\n", w, h);
+		for (int y = h - 1; y >= 0; y--)
+			fwrite(px + y * w * 3, 1, w * 3, f);
+		fclose(f);
+	}
+	free(px);
+#endif
 }
 
 void GR_Ortho2D(float left, float right, float bottom, float top, float znear, float zfar)
@@ -1406,41 +1701,31 @@ void GR_CopyRGBAFramebufferToVRAM(u_int* src, int x, int y, int w, int h, int up
 	assert(x + w <= VRAM_WIDTH);
 	assert(y + h <= VRAM_WIDTH);
 
-	ushort* fb = (ushort*)malloc(w * h * sizeof(ushort));
-	uint* data_src = (uint*)src;
-	ushort* data_dst = (ushort*)fb;
-
-	for (int i = 0; i < h; i++)
-	{
-		for (int j = 0; j < w; j++)
-		{
-			uint c = *data_src++;
-
-			u_char b = ((c >> 3) & 0x1F);
-			u_char g = ((c >> 11) & 0x1F);
-			u_char r = ((c >> 19) & 0x1F);
-			//u_char a = ((c >> 24) & 0x1F);
-
-			int a = r == g == b == 0 ? 0 : 1;
-
-			*data_dst++ = r | (g << 5) | (b << 10) | (a << 15);
-		}
-	}
-
+	// Driver 1 port: one pass, no temporary buffer (this runs for every presented frame: it was the main thread's
+	// biggest CPU cost in game). Same result as PsyCross's two loops: row py of the source (flipped or not) to VRAM
+	// row y + fy, 8:8:8 -> 5:5:5, mask bit from the original expression.
 	ushort* ptr = (ushort*)vram + VRAM_WIDTH * y + x;
 
 	for (int fy = 0; fy < h; fy++)
 	{
-		int py = flip_y ? (h - fy - 1) : fy;
-		ushort* fb_ptr = fb + (h * py / h) * w;
+		const int py = flip_y ? (h - fy - 1) : fy;
+		const uint* data_src = (const uint*)src + py * w;
 
 		for (int fx = 0; fx < w; fx++)
-			ptr[fx] = fb_ptr[w * fx / w];
+		{
+			const uint c = data_src[fx];
+
+			const u_char b = ((c >> 3) & 0x1F);
+			const u_char g = ((c >> 11) & 0x1F);
+			const u_char r = ((c >> 19) & 0x1F);
+
+			const int a = r == g == b == 0 ? 0 : 1;
+
+			ptr[fx] = r | (g << 5) | (b << 10) | (a << 15);
+		}
 
 		ptr += VRAM_WIDTH;
 	}
-
-	free(fb);
 
 	if (update_vram)
 		vram_need_update = 1;
@@ -1466,7 +1751,7 @@ void GR_ReadFramebufferDataToVRAM()
 	if(g_glFramebufferPBO.pixels)
 	{
 		glBindTexture(GL_TEXTURE_2D, g_fbTexture);
-		PBO_Download(&g_glFramebufferPBO);
+		PBO_Download(&g_glFramebufferPBO, w * h * 4);
 		glBindTexture(GL_TEXTURE_2D, 0);
 		GR_CopyRGBAFramebufferToVRAM((u_int*)g_glFramebufferPBO.pixels, x, y, w, h, 0, 0);
 	}
@@ -1519,7 +1804,6 @@ void GR_SetOffscreenState(const RECT16* offscreenRect, int enable)
 
 	if (g_PreviousOffscreenState == enable)
 		return;
-
 	g_PreviousOffscreenState = enable;
 
 #if USE_OPENGL
@@ -1564,18 +1848,18 @@ void GR_SetOffscreenState(const RECT16* offscreenRect, int enable)
 								GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
 			// done, unbind
-			glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
-			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+			glBindFramebuffer(GL_READ_FRAMEBUFFER, g_glSceneFramebuffer);
+			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, g_glSceneFramebuffer);
 		}
 #endif
 		
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		glBindFramebuffer(GL_FRAMEBUFFER, g_glSceneFramebuffer);
 		// copy rendering results to VRAM texture
 		{
 			// reat the texture
 			glBindTexture(GL_TEXTURE_2D, g_offscreenRTTexture);
 			//glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-			PBO_Download(&g_glOffscreenPBO);
+			PBO_Download(&g_glOffscreenPBO, g_PreviousOffscreen.w * g_PreviousOffscreen.h * 4);
 			glBindTexture(GL_TEXTURE_2D, g_lastBoundTexture);
 
 			// Don't forcely update VRAM
@@ -1611,7 +1895,7 @@ void GR_StoreFrameBuffer(int x, int y, int w, int h)
 	// before drawing set source and target
 	{
 		// setup draw and read framebuffers
-		glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);					// source is backbuffer
+		glBindFramebuffer(GL_READ_FRAMEBUFFER, g_glSceneFramebuffer);					// source is backbuffer
 		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, g_glBlitFramebuffer);
 
 		glBlitFramebuffer(0, 0, g_windowWidth, g_windowHeight, x, y + h, x + w, y, GL_COLOR_BUFFER_BIT, GL_NEAREST);
@@ -1634,12 +1918,12 @@ void GR_StoreFrameBuffer(int x, int y, int w, int h)
 
 		
 		// done, unbind
-		glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
-		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+		glBindFramebuffer(GL_READ_FRAMEBUFFER, g_glSceneFramebuffer);
+		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, g_glSceneFramebuffer);
 	}
 
 	// after drawing
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glBindFramebuffer(GL_FRAMEBUFFER, g_glSceneFramebuffer);
 	glFlush();
 #endif
 

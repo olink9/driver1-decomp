@@ -160,36 +160,190 @@ int PsyX_Sys_GetVBlankCount()
 	return g_psxSysCounters[PsxCounter_VBLANK];
 }
 
+/* Driver 1 port: the vblank clock sleeps instead of spinning.
+ * PsyCross's interrupt thread busy-looped on gettimeofday (a whole core, ~100% CPU, all the time) and fired a vblank
+ * when more than a timestep had passed since the previous one, then restarted the interval from that moment
+ * (60 Hz, measured 60.000 Hz: the overshoot was a few us). Now: vblank n is due at base + n * timestep (no drift:
+ * exactly 60 Hz NTSC / 50 Hz PAL, as before), the thread sleeps on an absolute monotonic deadline (Linux:
+ * clock_nanosleep with 1 ns timer slack; measured: wakes 20-25 us late on average, < 0.2 ms at worst) and can spin
+ * for the last D1_VBL_SPIN_US microseconds (default 0: the spin cost ~1.5% CPU for no audible or visible gain),
+ * then runs the PS1 VSyncCallback (XM music) and bumps the counter as before. If the clock falls more
+ * than 4 vblanks behind (suspend, debugger) the missed ones are dropped, as the old loop did, instead of being
+ * fired in a burst. Waiters (VSync(0)/VSync(n) -> PsyX_WaitForTimestep, PsyX_Sys_WaitVBlankChange) block on a
+ * condition variable the thread signals after each count. D1_VBLSTAT=1 prints the timing every 10 s. */
+#if !defined(_WIN32) && !defined(__EMSCRIPTEN__)
+#include <time.h>
+#include <errno.h>
+#ifdef __linux__
+#include <sys/prctl.h>
+#endif
+#endif
+
+static SDL_mutex* g_vblMutex = NULL;
+static SDL_cond* g_vblCond = NULL;
+static volatile long long g_vblLastNs = 0;	// when the last vblank was counted (D1_VBLSTAT)
+extern char begin_scene_flag;
+static int g_sceneBeginVbl = 0;				// the vblank count when the pending scene began (PsyX_WaitPresentVBlank)
+
+static long long VblNowNs()
+{
+#if !defined(_WIN32) && !defined(__EMSCRIPTEN__)
+	struct timespec ts;
+	clock_gettime(CLOCK_MONOTONIC, &ts);
+	return (long long)ts.tv_sec * 1000000000LL + ts.tv_nsec;
+#else
+	static Uint64 freq = 0;
+	if (!freq)
+		freq = SDL_GetPerformanceFrequency();
+	Uint64 c = SDL_GetPerformanceCounter();
+	return (long long)(c / freq) * 1000000000LL + (long long)((c % freq) * 1000000000ULL / freq);
+#endif
+}
+
+static void VblSleepUntilNs(long long t)
+{
+#if !defined(_WIN32) && !defined(__EMSCRIPTEN__)
+	struct timespec ts;
+	ts.tv_sec = (time_t)(t / 1000000000LL);
+	ts.tv_nsec = (long)(t % 1000000000LL);
+	while (clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &ts, NULL) == EINTR)
+		;
+#else
+	long long d = t - VblNowNs();
+	if (d > 1000000)
+		SDL_Delay((Uint32)(d / 1000000));
+#endif
+}
+
+static inline void VblCpuRelax()
+{
+#if defined(__i386__) || defined(__x86_64__)
+	__builtin_ia32_pause();
+#endif
+}
+
 int intrThreadMain(void* data)
 {
 	Util_InitHPCTimer(&g_vblTimer);
 
+#ifdef __linux__
+	prctl(PR_SET_TIMERSLACK, 1UL, 0, 0, 0);	// wake on the deadline, not up to 50 us after it
+#endif
+	SDL_SetThreadPriority(SDL_THREAD_PRIORITY_HIGH);	// best effort (needs no privileges to fail quietly)
+
+	const char* spinEnv = getenv("D1_VBL_SPIN_US");
+	const long long spinNs = (spinEnv ? atoi(spinEnv) : 0) * 1000LL;
+	const int stats = getenv("D1_VBLSTAT") && atoi(getenv("D1_VBLSTAT"));
+
+	int mode = g_vmode;
+	double periodNs = 1e9 / (mode == MODE_NTSC ? VBLANK_FREQUENCY_NTSC : VBLANK_FREQUENCY_PAL);
+	long long base = VblNowNs();
+	long long n = 1;					// vblank n is due at base + n * periodNs
+
+	long long stStart = base, stLateSum = 0, stLateMax = 0, stOver1ms = 0, stCount = 0, stDropped = 0;
+
 	while (!g_stopIntrThread)
 	{
-		// step counters
+		if (g_vmode != mode)
 		{
-			const double timestep = g_vmode == MODE_NTSC ? FIXED_TIME_STEP_NTSC : FIXED_TIME_STEP_PAL;
-			const double vblDelta = Util_GetHPCTime(&g_vblTimer, 0);
+			// video mode change: the next vblank comes one new period after the last one
+			base += (long long)((n - 1) * periodNs);
+			n = 1;
+			mode = g_vmode;
+			periodNs = 1e9 / (mode == MODE_NTSC ? VBLANK_FREQUENCY_NTSC : VBLANK_FREQUENCY_PAL);
+		}
 
-			if (vblDelta > timestep)
+		const long long due = base + (long long)(n * periodNs);
+		long long now = VblNowNs();
+
+		if (now < due)
+		{
+			if (due - now > spinNs)
+				VblSleepUntilNs(due - spinNs);
+
+			while ((now = VblNowNs()) < due)
+				VblCpuRelax();
+		}
+
+		if (now - due > 4 * (long long)periodNs)
+		{
+			// fell behind (suspend/resume, a debugger stop): drop the missed vblanks, restart from now
+			stDropped += (long long)((now - due) / periodNs);
+			base = now;
+			n = 1;
+		}
+		else
+			n++;
+
+		SDL_LockMutex(g_intrMutex);
+
+		if (vsync_callback)
+			vsync_callback();
+
+		SDL_UnlockMutex(g_intrMutex);
+
+		// do vblank events
+		g_vblLastNs = now;
+		g_psxSysCounters[PsxCounter_VBLANK]++;
+
+		SDL_LockMutex(g_vblMutex);
+		SDL_CondBroadcast(g_vblCond);
+		SDL_UnlockMutex(g_vblMutex);
+
+		if (stats)
+		{
+			const long long late = now - due;
+			stLateSum += late;
+			if (late > stLateMax)
+				stLateMax = late;
+			if (late > 1000000)
+				stOver1ms++;
+			if (++stCount == 600)
 			{
-				SDL_LockMutex(g_intrMutex);
-				
-				if (vsync_callback)
-					vsync_callback();
-				
-				SDL_UnlockMutex(g_intrMutex);
-				
-				// do vblank events
-				g_psxSysCounters[PsxCounter_VBLANK]++;
-			
-				Util_GetHPCTime(&g_vblTimer, 1);
+				const long long t = VblNowNs();
+				eprintinfo("vblank clock: %.4f Hz, late avg %lld us max %lld us, >1 ms %lld, dropped %lld\n",
+					stCount * 1e9 / (double)(t - stStart), stLateSum / stCount / 1000, stLateMax / 1000, stOver1ms, stDropped);
+				stStart = t;
+				stLateSum = stLateMax = stOver1ms = stCount = stDropped = 0;
 			}
-			
 		}
 	}
 
 	return 0;
+}
+
+/* Driver 1 port: block until the vblank counter differs from `last` (or timeoutMs passed); returns the counter.
+ * For a game thread that polls VSync(-1) in a loop (pc_main.c __wrap_VSync). */
+int PsyX_Sys_WaitVBlankChange(int last, int timeoutMs)
+{
+#ifndef __EMSCRIPTEN__
+	if (g_vblMutex && !g_skipSwapInterval)
+	{
+		const Uint32 start = SDL_GetTicks();
+		SDL_LockMutex(g_vblMutex);
+		while (g_psxSysCounters[PsxCounter_VBLANK] == last && !g_stopIntrThread)
+		{
+			const Uint32 spent = SDL_GetTicks() - start;
+			if ((int)spent >= timeoutMs)
+				break;
+			SDL_CondWaitTimeout(g_vblCond, g_vblMutex, timeoutMs - spent);
+		}
+		SDL_UnlockMutex(g_vblMutex);
+	}
+#endif
+	return PsyX_Sys_GetVBlankCount();
+}
+
+/* Driver 1 port: frame pacing. A PS1 frame becomes visible at the vblank after the game flips to it; a scene
+ * presented as soon as it is drawn comes out at a varying time after the vblank (the game's work: 1.5-7 ms in
+ * Driver's in-game loop), so a compositor latching at a fixed phase sometimes shows it one refresh early or late.
+ * Called before presenting a pending scene: if the vblank count is still the one the scene began in, block until
+ * the next vblank (at most 50 ms); a scene that is already late is presented at once. Returns the vblank count. */
+int PsyX_WaitPresentVBlank(void)
+{
+	if (begin_scene_flag && g_psxSysCounters[PsxCounter_VBLANK] == g_sceneBeginVbl)
+		return PsyX_Sys_WaitVBlankChange(g_sceneBeginVbl, 50);
+	return PsyX_Sys_GetVBlankCount();
 }
 
 static int PsyX_Sys_InitialiseCore()
@@ -197,19 +351,21 @@ static int PsyX_Sys_InitialiseCore()
 #ifdef __EMSCRIPTEN__
 	Util_InitHPCTimer(&g_vblTimer);
 #else
+	// Driver 1 port: the mutexes before the thread that uses them
+	g_intrMutex = SDL_CreateMutex();
+	g_vblMutex = SDL_CreateMutex();
+	g_vblCond = SDL_CreateCond();
+	if (NULL == g_intrMutex || NULL == g_vblMutex || NULL == g_vblCond)
+	{
+		eprinterr("SDL_CreateMutex failed: %s\n", SDL_GetError());
+		return 0;
+	}
 
 	g_intrThread = SDL_CreateThread(intrThreadMain, "psyX_intr", NULL);
 
 	if (NULL == g_intrThread)
 	{
 		eprinterr("SDL_CreateThread failed: %s\n", SDL_GetError());
-		return 0;
-	}
-	
-	g_intrMutex = SDL_CreateMutex();
-	if (NULL == g_intrMutex)
-	{
-		eprinterr("SDL_CreateMutex failed: %s\n", SDL_GetError());
 		return 0;
 	}
 #endif
@@ -704,9 +860,8 @@ void PsyX_Sys_DoPollEvent()
 				switch (event.window.event)
 				{
 				case SDL_WINDOWEVENT_RESIZED:
-					g_windowWidth = event.window.data1;
-					g_windowHeight = event.window.data2;
-					GR_ResetDevice();
+				case SDL_WINDOWEVENT_SIZE_CHANGED:
+					GR_ResetDevice();	// Driver 1 port: the display layout follows the window (scene size, bars)
 					break;
 				case SDL_WINDOWEVENT_CLOSE:
 					PsyX_Exit();
@@ -734,7 +889,6 @@ void PsyX_Sys_DoPollEvent()
 
 						SDL_SetWindowFullscreen(g_window, fullscreen ? 0 : SDL_WINDOW_FULLSCREEN_DESKTOP);
 
-						SDL_GetWindowSize(g_window, &g_windowWidth, &g_windowHeight);
 						GR_ResetDevice();
 					}
 					break;
@@ -816,6 +970,7 @@ char PsyX_BeginScene()
 	}
 
 	begin_scene_flag = 1;
+	g_sceneBeginVbl = g_psxSysCounters[PsxCounter_VBLANK];
 
 	PsyX_Log_Flush();
 
@@ -823,6 +978,84 @@ char PsyX_BeginScene()
 }
 
 uint PsyX_CalcFPS();
+
+/* Driver 1 port, test aids at present time (environment):
+ *   D1_WINSHOT=n1,n2,..  writes win_<n>.ppm, the whole window as presented, at the first present at/after vblank n
+ *   D1_VBLSTAT=1         every 10 s: the vblank clock (intrThreadMain) and the present cadence - how many presents
+ *                        came 1, 2, 3, 4+ vblanks after the previous one, and how many shared a vblank with it */
+static void PsyX_PresentDebug(int swapped)
+{
+	static int init = 0, stats = 0, shotLast = -1;
+	static const char* shots = NULL;
+	static int lastVbl = -1, hist[6], count = 0;
+	static long long swapStart, swapSum, swapMax, latSum, latMax;
+
+	if (swapped)
+	{
+		if (stats)
+		{
+			const long long now = VblNowNs(), d = now - swapStart, lat = swapStart - g_vblLastNs;
+			swapSum += d;
+			if (d > swapMax)
+				swapMax = d;
+			latSum += lat;
+			if (lat > latMax)
+				latMax = lat;
+		}
+		return;
+	}
+
+	if (!init)
+	{
+		init = 1;
+		shots = getenv("D1_WINSHOT");
+		stats = getenv("D1_VBLSTAT") && atoi(getenv("D1_VBLSTAT"));
+	}
+
+	const int vbl = g_psxSysCounters[PsxCounter_VBLANK];
+
+	if (stats)
+		swapStart = VblNowNs();
+
+	if (shots)
+	{
+		int best = -1;
+		for (const char* p = shots; p && *p; )
+		{
+			const int n = atoi(p);
+			if (n > shotLast && n <= vbl && (best < 0 || n < best))
+				best = n;
+			p = strchr(p, ',');
+			p = p ? p + 1 : NULL;
+		}
+		if (best >= 0)
+		{
+			char name[64];
+			snprintf(name, sizeof(name), "win_%d.ppm", best);
+			GR_DumpWindow(name);
+			eprintinfo("vblank %d: %s (%dx%d)\n", vbl, name, g_displayWidth, g_displayHeight);
+			shotLast = best;
+		}
+	}
+
+	if (stats)
+	{
+		if (lastVbl >= 0)
+		{
+			int d = vbl - lastVbl;
+			hist[d < 0 ? 0 : d > 4 ? 5 : d]++;
+		}
+		lastVbl = vbl;
+		if (++count == 600)
+		{
+			eprintinfo("presents: same vblank %d, +1 %d, +2 %d, +3 %d, +4.. %d; vblank->present avg %lld max %lld us; swap avg %lld max %lld us\n",
+				hist[0], hist[1], hist[2], hist[3], hist[4] + hist[5], latSum / 600 / 1000, latMax / 1000, swapSum / 600 / 1000, swapMax / 1000);
+			memset(hist, 0, sizeof(hist));
+			count = 0;
+			swapSum = swapMax = latSum = latMax = 0;
+		}
+	}
+}
 
 void PsyX_EndScene()
 {
@@ -840,7 +1073,14 @@ void PsyX_EndScene()
 	
 	GR_StoreFrameBuffer(activeDispEnv.disp.x, activeDispEnv.disp.y, activeDispEnv.disp.w, activeDispEnv.disp.h);
 
+	// Driver 1 port: the scene goes into the window with the display options (PsyX_render.cpp "Display")
+	GR_PresentScene();
+	PsyX_PresentDebug(0);
+
 	GR_SwapWindow();
+	PsyX_PresentDebug(1);
+
+	GR_ResumeScene();
 	
 	SDL_Delay(0);
 }
@@ -848,6 +1088,7 @@ void PsyX_EndScene()
 #if !defined(__EMSCRIPTEN__) && !defined(__ANDROID__)
 void PsyX_TakeScreenshot()
 {
+	// Driver 1 port: the scene framebuffer (g_windowWidth x g_windowHeight) is bound between frames
 	u_char* pixels = (u_char*)malloc(g_windowWidth * g_windowHeight * 4);
 	
 #if defined(RENDERER_OGL)
@@ -993,15 +1234,21 @@ void PsyX_WaitForTimestep(int count)
 	{	
 		static int swapLastVbl = 0;
 
+#ifdef __EMSCRIPTEN__
 		int vbl;
 		do
 		{
-#ifdef __EMSCRIPTEN__
 			emscripten_sleep(0);
-#endif
 			vbl = PsyX_Sys_GetVBlankCount();
 		}
 		while (vbl - swapLastVbl < count);
+#else
+		// Driver 1 port: sleep on the vblank thread's signal instead of spinning (same condition)
+		SDL_LockMutex(g_vblMutex);
+		while (g_psxSysCounters[PsxCounter_VBLANK] - swapLastVbl < count && !g_stopIntrThread)
+			SDL_CondWaitTimeout(g_vblCond, g_vblMutex, 100);
+		SDL_UnlockMutex(g_vblMutex);
+#endif
 
 		swapLastVbl = PsyX_Sys_GetVBlankCount();
 	}
@@ -1009,13 +1256,27 @@ void PsyX_WaitForTimestep(int count)
 
 void PsyX_Exit()
 {
+	// SDL_QUIT (window close, Steam's "Exit game" / SIGTERM, which SDL turns into SDL_QUIT) from the game's event
+	// poll: exit() runs PsyX_Shutdown (atexit), now safe from the game context (Driver 1 port, see there)
 	exit(0);
 }
 
+extern "C" void PsyX_SPUAL_ShutdownSound();
+
 void PsyX_Shutdown()
 {
-	if (!g_window)
+	static int done = 0;
+
+	if (!g_window || done)
 		return;
+
+	done = 1;
+	fflush(NULL);
+
+	// Driver 1 port: an orderly teardown. It used to destroy the window first: SDL then unloaded the GL driver and
+	// GR_Shutdown's glDelete* calls jumped into unmapped memory (segfault on every window close / SIGTERM; D1_QUIT
+	// used _exit to avoid it). Now: stop the vblank thread (no VSyncCallback - the XM player - runs into the SPU
+	// while it goes away), close audio, free the GL objects while the context is current, then context and window.
 
 	// quit vblank thread
 	if (g_intrThread)
@@ -1024,14 +1285,23 @@ void PsyX_Shutdown()
 
 		int returnValue;
 		SDL_WaitThread(g_intrThread, &returnValue);
+		g_intrThread = NULL;
+	}
 
-		SDL_DestroyMutex(g_intrMutex);
+	PsyX_SPUAL_ShutdownSound();
+
+	GR_Shutdown();
+
+	SDL_GLContext ctx = SDL_GL_GetCurrentContext();
+	if (ctx)
+	{
+		SDL_GL_MakeCurrent(g_window, NULL);
+		SDL_GL_DeleteContext(ctx);
 	}
 
 	SDL_DestroyWindow(g_window);
 	g_window = NULL;
 
-	GR_Shutdown();
 	SDL_QuitSubSystem(SDL_INIT_GAMECONTROLLER);
 
 	SDL_Quit();

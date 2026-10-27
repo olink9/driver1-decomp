@@ -179,6 +179,14 @@ extern TextureID	g_vramTexture;
 
 extern void			GR_SwapWindow();
 
+/* Driver 1 port: display (PsyX_render.cpp "Display") */
+extern int				g_displayWidth;
+extern int				g_displayHeight;
+extern void			GR_UpdateDisplayLayout(int force);
+extern void			GR_PresentScene();
+extern void			GR_ResumeScene();
+extern void			GR_DumpWindow(const char* fileName);
+
 // PSX VRAM operations
 extern void			GR_SaveVRAM(const char* outputFileName, int x, int y, int width, int height, int bReadFromFrameBuffer);
 extern void			GR_CopyVRAM(unsigned short* src, int x, int y, int w, int h, int dst_x, int dst_y);

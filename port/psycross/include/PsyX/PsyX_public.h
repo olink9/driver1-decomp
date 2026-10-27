@@ -60,6 +60,15 @@ extern int							g_cfg_pgxpZBuffer;
 extern int							g_cfg_bilinearFiltering;
 extern int							g_cfg_pgxpTextureCorrection;
 
+/* Driver 1 port: display options (PsyX_render.cpp "Display"). Set them with PsyX_SetDisplayOptions. */
+#define PSYX_DISPLAY_FIT		0	/* 4:3, as large as fits, centred (bars) */
+#define PSYX_DISPLAY_INTEGER	1	/* 4:3 at a whole multiple of 320x240 */
+#define PSYX_DISPLAY_FILL		2	/* 4:3 covering the window, overhang cropped */
+#define PSYX_DISPLAY_STRETCH	3	/* the whole window */
+extern int							g_cfg_displayMode;
+extern int							g_cfg_displayFilter;	/* 1 linear, 0 nearest */
+extern int							g_cfg_renderScale;		/* 0 = output size, N = N x 320x240 */
+
 /* Debug inputs */
 extern GameDebugKeysHandlerFunc		g_dbg_gameDebugKeys;
 extern GameDebugMouseHandlerFunc	g_dbg_gameDebugMouse;
@@ -105,6 +114,17 @@ extern void PsyX_EnableSwapInterval(int enable);
 
 /* Changes swap interval interval interval */
 extern void PsyX_SetSwapInterval(int interval);
+
+/* Driver 1 port: display mode (PSYX_DISPLAY_*), upscale filter (1 linear, 0 nearest), render scale (0 = auto);
+ * applied at the next frame */
+extern void PsyX_SetDisplayOptions(int mode, int filter, int renderScale);
+
+/* Driver 1 port: blocks until the vblank counter is no longer `last` (at most timeoutMs); returns the counter */
+extern int PsyX_Sys_WaitVBlankChange(int last, int timeoutMs);
+
+/* Driver 1 port: before presenting a pending scene - waits for the next vblank if the scene began in the current
+ * one (presents then land on the vblank, as a PS1 flip does); returns the vblank count */
+extern int PsyX_WaitPresentVBlank(void);
 
 #if defined(_LANGUAGE_C_PLUS_PLUS)||defined(__cplusplus)||defined(c_plusplus)
 }
