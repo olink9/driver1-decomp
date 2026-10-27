@@ -149,6 +149,10 @@ void func_001C375C(void) { D_001CDF2C = 0; }
 /* ---------------- func_001C3768 (src/pilot/frontend/func_001C3768.c) ---------------- */
 int func_001C3768(void){ func_001C2114(0, D_001CDEE8, 0); func_001C3988(); func_001C2114(0, D_001CDEE8, 1); return 0; }
 
+#ifdef PSX_PC
+extern void PC_ShowDisplayVRAM(int first);
+extern void PC_LadderFrame(void);
+#endif
 /* ---------------- func_001C37BC (src/pilot/frontend/func_001C37BC.c) ---------------- */
 void func_001C37BC(void)
 {
@@ -178,6 +182,12 @@ void func_001C37BC(void)
         if (i == 2)
             SetDispMask(1);
         func_000514E0();
+#ifdef PSX_PC
+        /* port/pc: the loop draws nothing and never calls VSync - the PS1 scans PAD.TIM out of VRAM as it is.
+         * Draw the display area from VRAM and present it (paced like the ladder loops) */
+        PC_ShowDisplayVRAM(i == 0);
+        PC_LadderFrame();
+#endif
         i++;
     } while (!(*(volatile unsigned short *)&D_00097538 & 0x40));
     SetDispMask(0);

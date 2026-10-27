@@ -281,7 +281,7 @@ extern	int (*GPU_printf)(const char *fmt, ...);
 		((p)->code[1] = 0)
 
 #define setDrawMode(p, dfe, dtd, tpage, tw) 		\
-		setlen(p, 3),					\
+		setlen(p, 2),					\
 		((p)->code[0] = _get_mode(dfe, dtd, tpage)),	\
 		((p)->code[1] = _get_tw((RECT16 *)tw))
 

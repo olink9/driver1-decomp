@@ -49,7 +49,13 @@ void func_0006EA0C();
 
 /* ---------------- func_0006E39C (src/pilot/func_0006E39C.c) ---------------- */
 void func_0006E39C(unsigned *o, int t, unsigned *s) {
+#ifdef PSX_PC
+    /* Pursuit (0x14) / Getaway (0x15) have no score table: func_0006E418 returns NULL and the PS1 loads s[2]
+     * from the kernel's NULL garbage area (0x8) before the switch, then ignores it (no case) */
+    unsigned v = s ? s[2] : 0;
+#else
     unsigned v = s[2];
+#endif
     switch (t) {
     case 0x11:
         o[0] = v & 0x1FFFFFF;

@@ -10,6 +10,9 @@
 
 /* ---- types ---- */
 #include "frontend.h"
+#ifdef PSX_PC
+extern void PC_LadderFrame(void);
+#endif
 #ifndef PC_RAM
 #ifdef PSX_PC
 /* PC-PORT: absolute PS1 RAM addresses (free-RAM buffers 0xD0200+, level/overlay load areas, KSEG0 0x80xxxxxx) map into
@@ -201,6 +204,9 @@ int func_001C9404(void)
             func_001CB380();
             func_001CA298();
             func_001CB95C(D_001CEF30);
+#ifdef PSX_PC
+            PC_LadderFrame();   /* port/pc/pc_main.c: present + pace (this loop never calls VSync) */
+#endif
             DrawSync(0);
             func_000513D4();
         }
@@ -212,6 +218,9 @@ int func_001C9404(void)
             func_001CB380();
             func_001CA298();
             func_001CB95C(D_001CEF30);
+#ifdef PSX_PC
+            PC_LadderFrame();   /* port/pc/pc_main.c: present + pace (this loop never calls VSync) */
+#endif
             DrawSync(0);
             func_000513D4();
         }

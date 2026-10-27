@@ -1078,6 +1078,39 @@ static int ProcessGouraudLines(P_TAG* polyTag)
 	return 0;
 }
 
+
+// Driver 1 port: the GPU skips a polygon (each triangle of a quad separately) whose vertices are 1024 or more
+// apart horizontally or 512 or more vertically (psx-spx "GPU Render Polygon Commands"; coordinates are signed
+// 11-bit). Near-camera polygons the GTE projected far off screen were drawn stretched across the frame (training
+// Desert demo). The culled triangle is collapsed to a zero-area one, so the vertex/split bookkeeping is unchanged.
+static inline int GpuCoord11(short v)
+{
+	return ((v & 0x7FF) ^ 0x400) - 0x400;
+}
+
+static void CullOversizeTri(int index, VERTTYPE* p0, VERTTYPE* p1, VERTTYPE* p2)
+{
+	const int x0 = GpuCoord11(p0[0]), x1 = GpuCoord11(p1[0]), x2 = GpuCoord11(p2[0]);
+	const int y0 = GpuCoord11(p0[1]), y1 = GpuCoord11(p1[1]), y2 = GpuCoord11(p2[1]);
+	const int minX = x0 < x1 ? (x0 < x2 ? x0 : x2) : (x1 < x2 ? x1 : x2);
+	const int maxX = x0 > x1 ? (x0 > x2 ? x0 : x2) : (x1 > x2 ? x1 : x2);
+	const int minY = y0 < y1 ? (y0 < y2 ? y0 : y2) : (y1 < y2 ? y1 : y2);
+	const int maxY = y0 > y1 ? (y0 > y2 ? y0 : y2) : (y1 > y2 ? y1 : y2);
+
+	if (maxX - minX >= 1024 || maxY - minY >= 512)
+	{
+		g_vertexBuffer[index + 1] = g_vertexBuffer[index];
+		g_vertexBuffer[index + 2] = g_vertexBuffer[index];
+	}
+}
+
+// a quad after TriangulateQuad: triangles (v0,v1,v2) and (v1,v2,v3), as the GPU splits it
+static void CullOversizeQuad(int index, VERTTYPE* p0, VERTTYPE* p1, VERTTYPE* p2, VERTTYPE* p3)
+{
+	CullOversizeTri(index, p0, p1, p2);
+	CullOversizeTri(index + 3, p1, p2, p3);
+}
+
 static int ProcessFlatPoly(P_TAG* polyTag)
 {
 #if USE_PGXP && USE_EXTENDED_PRIM_POINTERS
@@ -1103,6 +1136,7 @@ static int ProcessFlatPoly(P_TAG* polyTag)
 		MakeTexcoordTriangleZero(firstVertex, 0);
 		MakeColourTriangle(firstVertex, shadeTexOn, &poly->r0, &poly->r0, &poly->r0);
 
+		CullOversizeTri(g_vertexIndex, &poly->x0, &poly->x1, &poly->x2);
 		g_vertexIndex += 3;
 
 #if defined(DEBUG_POLY_COUNT)
@@ -1125,6 +1159,7 @@ static int ProcessFlatPoly(P_TAG* polyTag)
 			MakeTexcoordTriangle(firstVertex, &poly->u0, &poly->u1, &poly->u2, poly->tpage, poly->clut, GET_TPAGE_DITHER(activeDrawEnv.tpage) || activeDrawEnv.dtd);
 			MakeColourTriangle(firstVertex, shadeTexOn, &poly->r0, &poly->r0, &poly->r0);
 
+			CullOversizeTri(g_vertexIndex, &poly->x0, &poly->x1, &poly->x2);
 			g_vertexIndex += 3;
 
 #if defined(DEBUG_POLY_COUNT)
@@ -1146,6 +1181,7 @@ static int ProcessFlatPoly(P_TAG* polyTag)
 
 		TriangulateQuad();
 
+		CullOversizeQuad(g_vertexIndex, &poly->x0, &poly->x1, &poly->x2, &poly->x3);
 		g_vertexIndex += 6;
 #if defined(DEBUG_POLY_COUNT)
 		polygon_count++;
@@ -1166,6 +1202,7 @@ static int ProcessFlatPoly(P_TAG* polyTag)
 
 		TriangulateQuad();
 
+		CullOversizeQuad(g_vertexIndex, &poly->x0, &poly->x1, &poly->x2, &poly->x3);
 		g_vertexIndex += 6;
 
 #if defined(DEBUG_POLY_COUNT)
@@ -1202,6 +1239,7 @@ static int ProcessGouraudPoly(P_TAG* polyTag)
 		MakeTexcoordTriangleZero(firstVertex, 1);
 		MakeColourTriangle(firstVertex, shadeTexOn, &poly->r0, &poly->r1, &poly->r2);
 
+		CullOversizeTri(g_vertexIndex, &poly->x0, &poly->x1, &poly->x2);
 		g_vertexIndex += 3;
 
 #if defined(DEBUG_POLY_COUNT)
@@ -1221,6 +1259,7 @@ static int ProcessGouraudPoly(P_TAG* polyTag)
 		MakeTexcoordTriangle(firstVertex, &poly->u0, &poly->u1, &poly->u2, poly->tpage, poly->clut, GET_TPAGE_DITHER(activeDrawEnv.tpage) || activeDrawEnv.dtd);
 		MakeColourTriangle(firstVertex, shadeTexOn, &poly->r0, &poly->r1, &poly->r2);
 
+		CullOversizeTri(g_vertexIndex, &poly->x0, &poly->x1, &poly->x2);
 		g_vertexIndex += 3;
 
 #if defined(DEBUG_POLY_COUNT)
@@ -1241,6 +1280,7 @@ static int ProcessGouraudPoly(P_TAG* polyTag)
 
 		TriangulateQuad();
 
+		CullOversizeQuad(g_vertexIndex, &poly->x0, &poly->x1, &poly->x2, &poly->x3);
 		g_vertexIndex += 6;
 
 #if defined(DEBUG_POLY_COUNT)
@@ -1262,6 +1302,7 @@ static int ProcessGouraudPoly(P_TAG* polyTag)
 
 		TriangulateQuad();
 
+		CullOversizeQuad(g_vertexIndex, &poly->x0, &poly->x1, &poly->x2, &poly->x3);
 		g_vertexIndex += 6;
 
 #if defined(DEBUG_POLY_COUNT)
@@ -1447,7 +1488,10 @@ static int ProcessDrawEnv(P_TAG* polyTag)
 			// DR_TPAGE
 			activeDrawEnv.tpage = (code & 0x1FF);
 			activeDrawEnv.dtd = (code >> 9) & 1;
-			activeDrawEnv.dfe = (code >> 10) & 1;
+			// Driver 1 port: bit 10 ("drawing to display area allowed") only matters to the PS1 GPU in interlaced
+			// modes; PsyCross reads dfe as "render on screen, not off screen", so a DR_MODE/DR_TPAGE with dfe = 0
+			// (credits: cred.c SetDrawMode(mode, 0, ...)) sent the rest of the frame off screen and the 3D view
+			// vanished. The render target stays what the DRAWENV (PutDrawEnv) chose.
 			break;
 		}
 		case 0x2:
@@ -1492,6 +1536,9 @@ static int ProcessDrawEnv(P_TAG* polyTag)
 			break;
 		}
 		case 0:
+			// Driver 1 port: a zero word is a GP0 NOP (DR_MODE's texture window word with tw == NULL) - skip it
+			if (code == 0)
+				break;
 			// proceed to next primitive tag
 			return processedLongs;
 		}

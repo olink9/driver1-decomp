@@ -137,8 +137,16 @@ void func_0006BD60();
 void func_0006BDA4();
 int func_0006BDAC();
 int func_0006BDD8();
-void func_0006BE14();
-void func_0006BE3C();
+#ifdef PSX_PC
+/* PC-PORT: pause-menu actions the C declares void but the original returns a value from (v0 at jr ra) - the menu
+ * loop (func_0006C4BC) uses it as the new selection: func_0006BE14/BE3C return D_00096F08 (their volatile read),
+ * func_0006C3FC and func_0006C490 return 1. On PC a void action left garbage there ("Show Map" crashed). */
+#define PAUSE_ACT int
+#else
+#define PAUSE_ACT void
+#endif
+PAUSE_ACT func_0006BE14();
+PAUSE_ACT func_0006BE3C();
 int func_0006BE58();
 int func_0006BF24();
 void func_0006BFC8();
@@ -149,9 +157,9 @@ int func_0006C078();
 int func_0006C12C();
 int func_0006C1E4();
 int func_0006C2BC();
-void func_0006C3FC();
+PAUSE_ACT func_0006C3FC();
 int func_0006C438();
-void func_0006C490();
+PAUSE_ACT func_0006C490();
 void func_0006C4A4();
 void func_0006C4AC();
 void func_0006C4B4();
@@ -582,7 +590,7 @@ int func_0006BDD8(void) {
 
 /* ---------------- func_0006BE14 (src/pilot/func_0006BE14.c) ---------------- */
 /* FAKEMATCH: empty __asm__ used as a compiler hint (no instruction emitted) */
-void func_0006BE14(void)
+PAUSE_ACT func_0006BE14(void)
 {
     int x;
     D_00096F04 = 1;
@@ -591,17 +599,23 @@ void func_0006BE14(void)
     __asm__ volatile("");
     x = *(volatile int *)&D_00096F08;
     *(int *)&pauseflag = 0;
+#ifdef PSX_PC
+    return x;
+#endif
 }
 
 /* ---------------- func_0006BE3C (src/pilot/func_0006BE3C.c) ---------------- */
 /* FAKEMATCH: empty __asm__ used as a compiler hint (no instruction emitted) */
-void func_0006BE3C(void)
+PAUSE_ACT func_0006BE3C(void)
 {
     int x;
     D_00096F04 = 1;
     __asm__ volatile("");
     x = *(volatile int *)&D_00096F08;
     *(int *)&pauseflag = 0;
+#ifdef PSX_PC
+    return x;
+#endif
 }
 
 /* ---------------- func_0006BE58 (src/pilot/func_0006BE58.c) ---------------- */
@@ -784,12 +798,15 @@ int func_0006C2BC(void)
 #undef last
 
 /* ---------------- func_0006C3FC (src/pilot/func_0006C3FC.c) ---------------- */
-void func_0006C3FC(void) {
+PAUSE_ACT func_0006C3FC(void) {
     if (D_00096F10 == 2)
         *(int *)&D_0009709C = D_00096F10;
     else if (D_00096F10 == 1)
         *(int *)&D_0009709C = 0;
     D_00096F04 = 1;
+#ifdef PSX_PC
+    return 1;
+#endif
 }
 
 /* ---------------- func_0006C438 (src/pilot/func_0006C438.c) ---------------- */
@@ -806,9 +823,12 @@ int func_0006C438(void) {
 }
 
 /* ---------------- func_0006C490 (src/pilot/func_0006C490.c) ---------------- */
-void func_0006C490(void)
+PAUSE_ACT func_0006C490(void)
 {
     *(int *)&D_000967E8 = 1;
+#ifdef PSX_PC
+    return 1;
+#endif
 }
 
 /* ---------------- func_0006C4A4 (src/pilot/func_0006C4A4.c) ---------------- */
