@@ -17,6 +17,10 @@ extern volatile short D_80126762;
 extern void StopPAD(void);
 extern volatile unsigned char D_80126942[34];
 
+#ifdef PSX_PC
+extern void PC_PadRead(unsigned char *pad);   /* port/pc/pc_main.c */
+#endif
+
 /* ---- functions defined in this file ---- */
 void func_80101D88();
 void func_80101DD8();
@@ -26,17 +30,28 @@ int func_80101F54(short mask);
 /* ---------------- func_80101D88 (src/pilot/nfmv/func_80101D88.c) ---------------- */
 void func_80101D88(void)
 {
+#ifdef PSX_PC
+    /* PC: PsyCross fills pad buffers registered with PadInitDirect (same layout as InitPAD's); read once so the
+     * connected check below sees the pad */
+    PadInitDirect((unsigned char *)D_80126920, (unsigned char *)D_80126920 + 0x22);
+    PadStartCom();
+    VSync(0);
+    PC_PadRead((unsigned char *)D_80126920);
+#else
     InitPAD(D_80126920, 0x22, (unsigned char *)D_80126920 + 0x22, 0x22);
     StartPAD();
     ChangeClearPad(0);
     VSync(0);
+#endif
     func_80101E00();
 }
 
 /* ---------------- func_80101DD8 (src/pilot/nfmv/func_80101DD8.c) ---------------- */
 void func_80101DD8(void)
 {
+#ifndef PSX_PC /* PC: the game's ReInitSystem re-registers its own pad buffers (PadInitDirect) */
     StopPAD();
+#endif
     D_80126760 = 0;
     D_80126762 = 0;
 }
@@ -64,6 +79,9 @@ void func_80101E00(void)
 int func_80101F54(short mask)
 {
     int r = 0;
+#ifdef PSX_PC
+    PC_PadRead((unsigned char *)D_80126920);  /* PsyCross polls on request; D1_PAD scripts apply here too */
+#endif
     if (*(unsigned short *)&D_80126760)
         if ((D_80126920[D_80126762].buttons & mask) == 0) r = 1;
     return r;

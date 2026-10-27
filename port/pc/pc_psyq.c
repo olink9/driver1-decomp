@@ -63,11 +63,13 @@ void func_0007EBE8(void)
 {
 }
 
-/* Exec: BIOS A(43h) - only fmvplay.c uses it, to run NFMV.EXE (the FMV player, not ported yet) */
+/* Exec: BIOS A(43h) - only fmvplay.c uses it, to run NFMV.EXE (the FMV player) with argc 1 and the movie number
+ * as argv: NFMV's main() is linked in (src/nfmv, port/pc/pc_fmv.c) and runs in-process */
+extern int PC_FmvExec(int argc, int movie);
 int func_0007EB24(void *exec, int argc, char **argv)
 {
-    ONCE("Exec(NFMV.EXE): FMV player not ported yet, movie skipped");
-    return 1;
+    (void)exec;
+    return PC_FmvExec(argc, (int)argv);
 }
 
 /* B(38h) per the PsyQ signature (exit) - sound.c calls it when SpuMalloc fails */
@@ -104,18 +106,21 @@ void SsSetSerialVol(short s_num, short voll, short volr)
         PC_XaSetVolume(voll, volr);
 }
 
-/* ---- libpress (MDEC) - used by CRED.BIN for the credits portraits. PC-PORT: no MDEC decoder yet: the
- * calls keep their control flow (the out-callback chain runs, so nothing waits forever), the image stays
- * whatever was in the buffer. ---- */
-static void (*s_dct_cb)(void);
-static int s_dct_busy, s_dct_pending;
+/* ---- libpress (MDEC) - CRED.BIN calls it by address for the credits portraits; the software MDEC is
+ * port/pc/pc_mdec.c (NFMV calls the same code by the PsyQ names) ---- */
+extern void PC_DecDCTReset(int mode);
+extern int PC_DecDCTvlc(const void *bs, void *buf);
+extern void PC_DecDCTin(const void *buf, int mode);
+extern void PC_DecDCTout(void *buf, int size);
+extern void (*PC_DecDCToutCallback(void (*func)(void)))(void);
 
 /* DecDCTReset(int mode) */
 void func_00073AC4(int mode)
 {
+    PC_DecDCTReset(mode);
 }
 
-/* DecDCTvlcBuild(DECDCTTAB table) */
+/* DecDCTvlcBuild(DECDCTTAB table): the Huffman lookup table DecDCTvlc's 3-argument form uses; pc_mdec.c has its own */
 void DecDCTvlcBuild(void *table)
 {
 }
@@ -123,40 +128,26 @@ void DecDCTvlcBuild(void *table)
 /* DecDCTvlc(u_long *bs, u_long *buf, DECDCTTAB table) */
 int func_000768E4(void *bs, void *buf, void *table)
 {
-    ONCE("DecDCTvlc: MDEC not emulated (credits portraits stay blank)");
-    return 0;
+    return PC_DecDCTvlc(bs, buf);
 }
 
 /* DecDCTin(u_long *buf, int mode) */
 void func_00073AF8(void *buf, int mode)
 {
+    PC_DecDCTin(buf, mode);
 }
 
-/* DecDCTout(u_long *buf, int size): the "DMA" completes at the next VSync (PC_DctService), where the callback
- * runs and may queue the next slice - as on PS1 the caller sets its busy flag after this returns */
+/* DecDCTout(u_long *buf, int size): decoded at once; the out callback runs at the next VSync/service point
+ * (PC_DctService, pc_mdec.c) - as on the PS1 the caller sets its busy flag after this returns */
 void func_00073B74(void *buf, int size)
 {
-    s_dct_pending = 1;
-}
-
-void PC_DctService(void)
-{
-    int guard = 0;
-    if (s_dct_busy)
-        return;
-    s_dct_busy = 1;
-    while (s_dct_pending && guard++ < 64) {
-        s_dct_pending = 0;
-        if (s_dct_cb)
-            s_dct_cb();
-    }
-    s_dct_busy = 0;
+    PC_DecDCTout(buf, size);
 }
 
 /* DecDCToutCallback(void (*func)()) */
 void func_00073B94(void (*func)(void))
 {
-    s_dct_cb = func;
+    PC_DecDCToutCallback(func);
 }
 
 /* ---- libmcrd: port/pc/pc_mcard.c (a raw .mcd card image) ---- */

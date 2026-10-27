@@ -27,6 +27,13 @@ extern void SsGetSerialVol(char, SNDVOL *);
 extern void SsSetSerialVol(short, short, short);
 extern int DecDCTvlc(u_long *bs, u_long *buf);
 
+#ifdef PSX_PC
+extern void PC_FmvPresent(DISPENV *d);  /* port/pc/pc_fmv.c */
+extern void PC_FmvSetLoc(CdlLOC *loc);
+extern void PC_FmvShadowLoad(RECT16 *r, const void *p);
+extern void PC_DctService(void);       /* port/pc/pc_mdec.c */
+#endif
+
 /* ---- functions defined in this file ---- */
 short func_8010127C();
 void func_801014C0();
@@ -85,6 +92,10 @@ short func_8010127C(MOVIE *m, short (*cb)())
             result = func_80101C3C(&vol);
         func_80101BB0();
         DrawSync(0);
+#ifdef PSX_PC
+        /* PsyCross shows only what is drawn: draw the just-decoded frame (the buffer PutDispEnv shows next) */
+        PC_FmvPresent(&D_801268A8.disp[D_801268A8.rectid]);
+#endif
         VSync(0);
         PutDispEnv(&D_801268A8.disp[D_801268A8.rectid]);
     }
@@ -104,6 +115,9 @@ void func_801014C0(void)
         }
     }
     LoadImage(&D_801268A8.slice, (u_long *)D_801268A8.imgbuf[D_801268A8.imgid]);
+#ifdef PSX_PC
+    PC_FmvShadowLoad(&D_801268A8.slice, (void *)D_801268A8.imgbuf[D_801268A8.imgid]);
+#endif
     D_801268A8.imgid ^= 1;
     D_801268A8.slice.x += D_801268A8.slice.w;
     if (D_801268A8.slice.x < D_801268A8.rect[D_801268A8.rectid].x + D_801268A8.rect[D_801268A8.rectid].w)
@@ -208,6 +222,9 @@ short func_801019C8(CdlLOC *loc)
         retry = 0;
         if (++n == 6)
             return 0;
+#ifdef PSX_PC
+        PC_FmvSetLoc(loc);      /* where CdRead2 starts (pc_cd.c does not track CdlSeekL) */
+#endif
         if (CdRead2(CdlModeStream | CdlModeSpeed | CdlModeRT))
             return 1;
     }
@@ -250,6 +267,9 @@ void func_80101BB0(void)
 {
     int cnt = 0x800000;
     while (!D_801268A8.isdone) {
+#ifdef PSX_PC
+        PC_DctService();        /* the MDEC out interrupt: runs the slice callback chain (func_801014C0) */
+#endif
         if (--cnt == 0)
             break;
     }

@@ -4,8 +4,10 @@
 
 #include "common.h"
 /* include_asm.h's INCLUDE_ASM minus its .include of labels.inc (the build pipeline prepends macro.inc) */
+#ifndef PSX_PC /* PC: pc_compat.h's empty INCLUDE_ASM; main() is the C below (nfmv_main) */
 #define INCLUDE_ASM(FOLDER, NAME) \
     __asm__(".section .text\n.set noat\n.set noreorder\n.include \"" FOLDER "/" #NAME ".s\"\n.set reorder\n.set at\n")
+#endif
 
 /* ---- types ---- */
 #include "nfmv.h"
@@ -36,6 +38,10 @@ extern void SsEnd(void);
 extern volatile int D_80126754;
 extern void func_80101E00();
 
+#ifdef PSX_PC
+extern void PC_FmvWaitVbl(int n);      /* port/pc/pc_fmv.c */
+#endif
+
 /* ---- functions defined in this file ---- */
 int main();
 void func_80100C80();
@@ -49,6 +55,41 @@ void func_801011C4();
 
 /* ---------------- main (WIP: still asm; the C draft is src/pilot/nfmv/main.wip.c) ---------------- */
 INCLUDE_ASM("asm_fn/nonmatchings/nfmv", main);
+#ifdef PSX_PC
+/* PC: NFMV runs in-process (port/pc/pc_fmv.c PC_FmvExec, called by the game's Exec). The C is the draft
+ * src/pilot/nfmv/main.wip.c (99.49%: one swapped instruction pair, same behaviour). argv is the movie number;
+ * movies 70 and 71 play RENDER73. */
+int nfmv_main(int argc, int movie)
+{
+    char buf[40];
+
+    func_80100E4C();
+    func_801011C4();
+    func_80100EA8(D_8012DB48);
+    func_80100C80();
+    PutDispEnv(&D_8012DB48[D_80126750].disp);
+    SetDispMask(1);
+    D_80126758 = movie;
+    D_80126750 ^= 1;
+    sprintf(buf, "\\DRIVER\\NFMV\\%d\\RENDER%d.STR;1", movie / 10, movie);
+    D_80112868.name = buf;
+    D_80112868.hires = 1;
+    D_80112868.clear = 1;
+    D_80112868.vol = 127;
+    D_80112868.endFrame = D_80126778[D_80126758] - 3;
+    if (D_80126758 != 70 && D_80126758 != 71)
+        func_8010127C(&D_80112868, func_80100DF8);
+    else {
+        sprintf(buf, "\\DRIVER\\NFMV\\7\\RENDER73.STR;1");
+        D_80112868.name = buf;
+        D_80112868.endFrame = D_80126778[73] - 3;
+        func_8010127C(&D_80112868, func_80100DF8);
+    }
+    DrawSync(0);
+    func_801010B4();
+    return 1;
+}
+#endif
 
 /* ---------------- func_80100C80 (src/pilot/nfmv/func_80100C80.c) ---------------- */
 /* last frame of each FMV (RENDER<n>.STR); 4305 by default */
@@ -176,7 +217,11 @@ void func_80100FB8(void)
     SsSetSerialVol(0, 127, 127);
     SsUtSetReverbType(3);
     func_801109F8();
+#ifdef PSX_PC
+    PC_FmvWaitVbl(75);  /* PsyCross VSync(n > 0) returns at once; the PS1 waits n vblanks */
+#else
     VSync(75);
+#endif
     SsUtSetReverbDepth(40, 40);
 }
 
@@ -191,7 +236,11 @@ void func_801010B4(void)
     SsUtSetReverbDepth(0, 0);
     SpuSetTransferStartAddr(0x66FFF);
     SpuWrite0(0x19000);
+#ifdef PSX_PC
+    PC_FmvWaitVbl(100);
+#else
     VSync(100);
+#endif
     SsEnd();
     StopCallback();
     func_80101DD8();

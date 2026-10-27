@@ -244,3 +244,53 @@ void PC_XaSetVolume(int left, int right)
 {
     PsyX_SPUAL_XASetVolume(left, right);
 }
+
+/* ---- STR movie audio (port/pc/pc_fmv.c, NFMV): the XA-ADPCM sectors interleaved in a .STR stream ----
+ * The FMV player's stream reader hands each raw sector here; on the PS1 the drive feeds the audio sectors of a
+ * CdlModeRT stream to the SPU exactly like an .XA file's. */
+int PC_XaReadRaw(int lba, unsigned char *dst)    /* any raw (2352-byte sector) file; 0 = not there */
+{
+    load_index();
+    if (s_active)                       /* an XA stream shares the reader: stop it (the PS1 drive reads one) */
+        PC_XaStop();
+    if (!read_raw(lba))
+        return 0;
+    memcpy(dst, s_raw, 2352);
+    return 1;
+}
+
+void PC_XaStrReset(void)                 /* a new movie: decoder history cleared */
+{
+    s_old[0] = s_old[1] = s_older[0] = s_older[1] = 0;
+}
+
+/* one audio sector (submode Audio+RealTime); lead_ms > 0 queues that much silence first, in the sector's own
+ * format (an OpenAL queue takes one format), so the stream has a cushion and never runs dry between reads */
+void PC_XaStrAudio(const unsigned char *raw, int lead_ms)
+{
+    if (lead_ms > 0) {
+        static short zero[2 * 2048];
+        int ci = raw[19], stereo = (ci & 3) == 1, rate = (ci & 4) ? 18900 : 37800;
+        int frames = rate * lead_ms / 1000;
+        while (frames > 0) {
+            int n = frames > 2048 ? 2048 : frames;
+            PsyX_SPUAL_XAQueue(zero, n, stereo, rate);
+            frames -= n;
+        }
+    }
+    memcpy(s_raw, raw, 2352);
+    decode_audio();
+}
+
+void PC_XaStrStop(void)
+{
+    PsyX_SPUAL_XAStop();
+}
+
+int PC_XaFileEnd(int lba)                /* first sector after the raw file holding lba (lba if none) */
+{
+    int i;
+    load_index();
+    i = find_file(lba);
+    return i < 0 ? lba : s_xf[i].lba + s_xf[i].nsect;
+}

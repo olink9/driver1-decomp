@@ -34,9 +34,11 @@ target_include_directories(psycross PUBLIC ${PSYCROSS_DIR}/include ${PSYCROSS_DI
 target_link_directories(psycross PUBLIC ${SDL2_LIBRARY_DIRS} ${OPENAL_LIBRARY_DIRS})
 target_link_libraries(psycross PUBLIC ${SDL2_LIBRARIES} ${OPENAL_LIBRARIES} dl m)
 
-# game: main exe TUs + all overlays as plain code (NFMV.EXE's own main() is folded in later, see PORT.md)
+# game: main exe TUs + all overlays as plain code, + NFMV.EXE (the FMV player; its main() is nfmv_main on PC,
+# run in-process by port/pc/pc_fmv.c)
 file(GLOB GAME_SRCS ${GAME_DIR}/src/*.c
-  ${GAME_DIR}/src/frontend/*.c ${GAME_DIR}/src/mcard/*.c ${GAME_DIR}/src/cred/*.c ${GAME_DIR}/src/iview/*.c)
+  ${GAME_DIR}/src/frontend/*.c ${GAME_DIR}/src/mcard/*.c ${GAME_DIR}/src/cred/*.c ${GAME_DIR}/src/iview/*.c
+  ${GAME_DIR}/src/nfmv/*.c)
 file(GLOB PC_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/pc/*.c)
 
 # Pointer fixups for the PS1 images loaded into PS1 RAM (port/pc/pc_gendata.py; README.md)
