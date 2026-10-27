@@ -540,6 +540,10 @@ void func_00022344();
 void LoadGameLevel();
 void InitModelNames();
 void func_00022818();
+#ifdef PSX_PC
+extern int PC_TestLadder(void);           /* port/pc/pc_testaids.c: D1_LADDER / D1_MISSION */
+extern void PC_TestLadderPlace(int *cur);
+#endif
 void func_000230B0();
 void func_0002360C();
 int func_00024370();
@@ -961,6 +965,9 @@ void func_00022818(void)
 
     p = &D_000C6F04;
     if (p->f2E0 != 0 && D_00096834 != 4) {
+#ifdef PSX_PC
+        PC_TestLadderPlace(&p->cur.x);   /* test aid only (D1_LADDER into a continuation mission): the start height */
+#endif
         func_000682C0(car_data, &p->cur);
         p->f2E0 = 0;
     }
@@ -1858,6 +1865,11 @@ void func_00024754(void)
     case 0:
         D_000970A8 = 0;
         D_000967C4 = 0;
+#ifdef PSX_PC
+        /* test aid (README "Test aids"): New Game takes the loaded-save path into the ladder at a chosen step */
+        if (D_000967F0 == 0 && PC_TestLadder())
+            D_000967F0 = 1;
+#endif
         if (D_000967F0 == 0) {
             func_0006EACC();
             D_00097068 = func_00079AE0();

@@ -89,6 +89,9 @@ extern void func_0006F728();
 extern void SetDispMask();
 extern int func_1C9048();
 extern void func_0004DF28();
+#ifdef PSX_PC
+extern int VSync(int);
+#endif
 
 /* ---- functions defined in this file ---- */
 int func_0006EACC();
@@ -255,6 +258,9 @@ ITEM16 *func_0006EEC4(ENTRY *p) {
                 func_000514E0();
                 if (*(short *)&D_00097538)
                     func_0006F728();
+#ifdef PSX_PC
+                VSync(-1);   /* the PS1's CD interrupt delivers the XA sectors (cbready ends the tune); here the poll does */
+#endif
             }
             SetDispMask(0);
             Loadfile("data\\mladder.psx", PC_RAM(0x1FE000));
@@ -284,6 +290,9 @@ ITEM16 *func_0006EEC4(ENTRY *p) {
                         func_000514E0();
                         if (*(short *)&D_00097538)
                             func_0006F728();
+#ifdef PSX_PC
+                        VSync(-1);   /* as above: services the XA stream */
+#endif
                     }
                     Loadfile("data\\mladder.psx", PC_RAM(0x1FE000));
                     found = 1;

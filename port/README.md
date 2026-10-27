@@ -380,3 +380,40 @@ Build notes (`port/CMakeLists.txt`): the PsyQ replacements are upper-case
   callee fixpoint, vs the parameter count of its C definition): no new leftover-register calls; the hits are the
   known ones (func_00059638, SilenceXM), asm_*.c register-convention entry points, jump-table over-approximation and
   PsyQ internals.
+- Career ladder (ladder.c func_0006EEC4): some jobs play a movie and then an XA track before the mission (tables
+  D_0008D0EC/D_0008D1A0: jobs 5, 10, 14, 20-22, 28-30, 37, 40-43 -> movies 51-62 + MV*.XA/CUTS.XA via func_0006F5CC), and
+  the ladder waits for the track with `while (func_0006F6DC()) { pad read }` - no VSync, so the XA stream (pc_xa.c,
+  serviced from VSync) never reached cbready's end marker: the game hung after the movie (D1_QUIT never fired). PC: the
+  two loops poll VSync(-1), as ladconfirm.c's track loop got PC_LadderFrame().
+- mission.c func_0006B9D8 (the 11 bonus checks of a "count" mission, e.g. TAXI!) walks the table D_0008C354 back from
+  its end, which the original names by pause.c's D_0008C380 (the next object in the PS1 .data). On PC the two objects
+  are not adjacent: it called pause.c's string pointers as functions (crash at 0x604). PC: end = D_0008C354 + 11. A scan
+  of every object whose PS1 end address is referenced as another file's symbol (nm -S over the objects) found no other
+  case (pres.c D_00097699/9A and two scalar neighbours are used as themselves).
+
+## Test aids
+
+PC-only, `port/pc/pc_testaids.c` (hooked into main.c func_00024754 case 0 and func_00022818 under `PSX_PC`).
+
+**Start the Undercover career at any step.** `D1_LADDER=<cmd>[:city[:flags]]` or `D1_MISSION=<n>`, then Undercover ->
+New Game (headless: `D1_PAD=2500=x,2700=x`). New Game then takes the path a loaded save takes (`D_000967F0 = 1`, save
+block `D_000A083C[0..3]` = unlocked cities, ladder command, city, flag bits - what func_0006EB74 case 1 stores before
+each apartment screen and the card saves), so the ladder interpreter (`data\mladder.psx`, 182 commands: 0 city, 1 job
+choice / apartment, 2 mission, 3 movie, 4 set flag, 5 if flag, 6-9 branches on "mission failed" `0xFF0`) starts there.
+`<cmd>` is a ladder command index (`D1_LADDER=list` prints the decoded ladder with each command's city/flags and
+starts nothing); `D1_MISSION=n` picks the command that plays mission n; city/flags default to the state the ladder has
+on first reaching the command. Starting at a movie command plays the movie and goes on from there (the mission after
+it, or the apartment); `D1_LADDER_FMV=1` turns the ladder's movies on while the boot movie of a `D1_PAD` run stays off
+(menu timing unchanged). Starting at a job choice shows the apartment (headless: `3600=right,3900=right,4200=right,
+4500=right,4800=x,5300=right,5700=right,6100=x` accepts the first job).
+- Second parts (missions 54-60, 62-64: script op 89 "start where the last part ended") start the car at
+  MISSION.saved, which op 88 of the first part fills when it is passed. Started directly, the test aid puts the first
+  part's own start position there (op 19/52 of its script; for a chain 55 -> 56 the part that has one), the height from
+  MapHeight once the level is loaded. That is a valid spot in the same city, not where a real player finishes part 1;
+  `D1_LADDER_POS=x,z[,dir]` sets it. Without this the car starts at 0,0 (in the bay in San Francisco; mission 62 spooled
+  regions past the end of the level and crashed - the PS1 does the same: the emulator never reaches a game frame).
+- Emulator equivalent (`lrhost`, the PS1 game unchanged): with the emulator's menu script `--pad '14500=x,14700=x'`,
+  `--poke 14600:967F0=1,14600:A083C=<city+1>,14600:A0840=<cmd>,14600:A0844=<city>,14600:A0848=<flags>` (decimal
+  values) - the same loaded-save state, poked between the Undercover screen and New Game. Missions with a replay-driven
+  target (`D_00096898 == 3`, e.g. 7 BUST OUT JEAN PAUL) pick its route by `VSync(-1) % 15` like Pursuit: pass the PC's
+  `D_00096914` with `--pursuit-r`. Mission 7 (495 frames to its fail) and 19 run in lockstep this way.

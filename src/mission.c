@@ -2028,7 +2028,13 @@ void func_0006B97C(struct S *p) {
 short func_0006B9D8(char *obj, int arg, short total) {
     FN *p;
     int ua;
+#ifdef PSX_PC
+    /* the original walks back from pause.c's D_0008C380, which follows the table in the PS1 .data; on PC the two
+     * objects are not adjacent (TAXI! called a pause.c string as a check) */
+    FN *end = D_0008C354 + 11;
+#else
     FN *end = (FN *)D_0008C380;
+#endif
     ENT *e = (ENT *)obj;
     for (p = end - 11; p < end; p++, e++) {
         if ((*p)(arg, obj)) {
