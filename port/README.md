@@ -3,7 +3,7 @@
 The decompiled game (`src/`) built as a native 32-bit Linux program on [PsyCross](https://github.com/OpenDriver2/PsyCross)
 (vendored in `port/psycross/`, MIT), the PsyQ-on-SDL2/OpenGL layer REDRIVER2 uses. Status: it builds, links and
 boots through the splashes to the frontend, runs the attract-mode demos, and plays (Take A Ride in Miami, driven
-headlessly through `D1_PAD`). No FMV yet. Memory card: slot 1 is a raw `.mcd` image (see Memory card).
+headlessly through `D1_PAD`). FMVs play (NFMV in-process, see FMV). Memory card: slot 1 is a raw `.mcd` image (see Memory card).
 
 ## 1. Game data: unpack your disc
 
@@ -56,7 +56,7 @@ rewrites the file when a setting is changed in a menu. A missing file means the 
 **Skip the garage test.** Toggle it on the Undercover screen (main menu, first icon): below *New Game* and
 *Load Saved Game* there is a third entry, **Skip Garage Test: On/Off** - move down to it with the d-pad and press
 X; the change is saved at once. With it on, *New Game* plays what the original plays before the test (the intro
-FMV, skipped on PC until NFMV is ported) and then goes straight to the apartment (TV / "Save Game", "Get A New
+FMV) and then goes straight to the apartment (TV / "Save Game", "Get A New
 Job" on the answering machine), exactly where passing the test leads. With it off the garage test runs as on the
 PS1.
 
@@ -181,6 +181,15 @@ loops and CdSearchFile). Here everything is synchronous and deterministic (neede
   ready callback (924h mode: CdGetSector starts at the header), where xaplay.c's cbready finds the end marker.
 Mods: replacing a file in `pcdata/` with one of the same sector count just works.
 
+### FMV: NFMV in-process (`port/pc/pc_fmv.c`, `pc_mdec.c`)
+fmvplay.c's Exec of NFMV.EXE runs src/nfmv (nfmv_main) in-process; STR sectors stream from pcdata at 150 sectors/s
+(video into frames, XA audio through pc_xa.c), libpress is a software MDEC (BS v2/v3, psx-spx tables), and each 24-bit
+frame is drawn as an RGBA texture quad from a shadow of the movie's VRAM writes (PsyCross copies presented frames back
+into VRAM as 15-bit). `D1_FMV=0/1` (default: on, off when `D1_PAD` is set); test aids `D1_FMV_LIST=n,..` (play these
+instead of the first movie) and `D1_FMV_DUMP=1` (fmv_<movie>_<frame>.ppm). Movies used: 0 intro, 2 new game, 33, 51-62
+(ladder tune tables), and the mladder.psx ones (1-45, 65, 70-74; 70/71 play RENDER73; RENDER14 is referenced but not on
+the disc). Verified: all 42 play to their end frame with audio; frames vs ffmpeg's MDEC decoder >= 46 dB PSNR.
+
 ### Memory card: `port/pc/pc_mcard.c`
 Slot 1 is a standard raw 128 KB PS1 card image (`.mcd`/`.mcr`, psx-spx layout) - the same file DuckStation/PCSX use,
 so saves move both ways (a symlink to an emulator's card works; writes go through to its target). Path: `D1_MCARD`, else
@@ -227,8 +236,8 @@ Identified for the port by BIOS call number (`li t2,0xA0/0xB0; li t1,n`), the fu
 | 7AEB4, 7AED4, 7AF94, 7B160, 7B198 | PadStartCom, PadGetState, PadInfoMode, PadSetActAlign, PadSetAct | pad.c use (7AEB4 right after PadInitDirect) | PsyCross |
 | 7C7D4 | SpuSetReverbVoice | signature | PsyCross |
 | 77E1C..7932C (12) | MemCardInit/Start/Stop/Exist/Accept/ReadFile/WriteFile/GetDirentry/Sync/CreateFile/DeleteFile/Format | "Access Denied" strings, mcard.c use | pc_mcard.c (raw .mcd image) |
-| 73AC4, 73AF8, 73B74, 73B94, 768E4, DecDCTvlcBuild | DecDCTReset, DecDCTin, DecDCTout, DecDCToutCallback, DecDCTvlc | MDEC, CRED.BIN portraits | pc_psyq.c stubs (callback chain kept) |
-| 7EB24, 7EBE8, 7EB34, 7EC78, 7C744 | Exec, FlushCache, ExitCriticalSection, EnterCriticalSection, exit | BIOS A(43h,44h), syscalls, B(38h) | pc_psyq.c |
+| 73AC4, 73AF8, 73B74, 73B94, 768E4, DecDCTvlcBuild | DecDCTReset, DecDCTin, DecDCTout, DecDCToutCallback, DecDCTvlc | MDEC, CRED.BIN portraits | pc_mdec.c (software MDEC); pc_psyq.c forwards |
+| 7EB24, 7EBE8, 7EB34, 7EC78, 7C744 | Exec, FlushCache, ExitCriticalSection, EnterCriticalSection, exit | BIOS A(43h,44h), syscalls, B(38h) | pc_psyq.c; Exec runs NFMV (pc_fmv.c) |
 | SsSetSerialVol, SetLineF2, SetLineF4 | (named) | missing in PsyCross | pc_psyq.c |
 
 ### PsyCross
