@@ -142,7 +142,8 @@ static void load_main_image(void)
 }
 
 /* Loadfile() hook. The overlays load for real (their data is used in place, see above), then get their
- * pointer fixups; NFMV.EXE (the FMV player, 0x800FF800) is not loaded - the FMV is skipped (pc_psyq.c Exec).
+ * pointer fixups; NFMV.EXE (the FMV player, 0x800FF800) is not loaded - pc_psyq.c's Exec runs NFMV in-process
+ * (pc_fmv.c).
  * Returns 1 when it handled the file (*size = bytes), 0 for an ordinary file. */
 int PC_OverlayLoad(const char *name, int addr, int *size)
 {
@@ -159,7 +160,7 @@ int PC_OverlayLoad(const char *name, int addr, int *size)
         snprintf(path, sizeof(path), "\\DRIVER\\%s;1", name);
         if (!ov[i].fix) {
             *size = PC_CdFileSize(path);
-            printf("[driver1] %s not loaded (FMV player not ported)\n", name);
+            printf("[driver1] %s not loaded (NFMV runs in-process, port/pc/pc_fmv.c)\n", name);
             return 1;
         }
         *size = CdReadFile(path, (unsigned long *)(pc_psxram + (addr & 0x1FFFFF)), 0);
@@ -286,7 +287,7 @@ static void debug_hooks(int vbl, int presenting)
     if (s_quit >= 0 && vbl >= s_quit) {
         printf("[driver1] D1_QUIT: exit at vblank %d\n", vbl);
         fflush(NULL);
-        _exit(0);           /* skip PsyX_Shutdown (atexit): tearing SDL down from the game context crashes */
+        exit(0);            /* PsyX_Shutdown (atexit) is safe from the game context now */
     }
 }
 
@@ -307,6 +308,8 @@ int __wrap_VSync(int mode)
     /* present what was drawn since the last frame: the frontend ends each frame with VSync(0), the in-game loop
      * (main.c func_0002360C) with DrawOTag then a VSync(-1) poll until 2 vblanks have passed */
     presenting = begin_scene_flag != 0;
+    if (presenting)
+        PsyX_WaitPresentVBlank();   /* present on the vblank after the frame was drawn, as a PS1 flip shows */
     now = __real_VSync(-1);
     if (presenting) {
         debug_hooks(now, 1);
@@ -314,9 +317,9 @@ int __wrap_VSync(int mode)
     }
     r = __real_VSync(mode);
     if (mode < 0) {
-        /* a busy-wait poll: give the CPU back while the vblank count stands still */
+        /* a busy-wait poll: sleep until the next vblank (at most 4 ms) while the vblank count stands still */
         if (r == last_poll)
-            usleep(200);
+            PsyX_Sys_WaitVBlankChange(r, 4);
         last_poll = r;
     }
     debug_hooks(r, 0);
@@ -367,9 +370,9 @@ static unsigned pad_bit(const char *b, int n)
     return 0;
 }
 
-static unsigned pad_script(int vbl)        /* buttons held at this vblank (active high) */
+static unsigned pad_script_env(const char *env, int vbl)   /* buttons held at this count (active high) */
 {
-    const char *p = getenv("D1_PAD");
+    const char *p = getenv(env);
     unsigned held = 0;
     while (p && *p) {
         char *e;
@@ -397,10 +400,30 @@ static unsigned pad_script(int vbl)        /* buttons held at this vblank (activ
     return held;
 }
 
+#define pad_script(vbl) pad_script_env("D1_PAD", vbl)
+
+/* D1_PADF=<script>: the same syntax keyed on the SIMULATION step (CameraCnt: 0 at the start of every game,
+ * +1 per sim step in main.c func_000230B0 - it stands still in the pause menu and mission cut-scenes, where the
+ * vblank-paced frame counter D_00097534 does not) instead of the vblank, for the pad reads of the in-game loop only
+ * (main.c func_0002360C -> func_000514E0 -> func_000357F0 -> here); steps with no entry read as nothing pressed.
+ * Boot/FMV/loading/pause times differ between machines, sim steps don't: the lockstep comparison drives the
+ * emulator with the same script (tools/pc/compare/lrhost.c --padf). Not while a replay plays (D_00096899: the cars
+ * replay the recorded pads, the pad drives the replay controls). Menus (and the pause menu) still read D1_PAD /
+ * the real pad. */
+extern int PC_TraceInGameLoop(void *addr);   /* pc_trace.c */
+extern int CameraCnt;
+extern unsigned char D_00096899;           /* replay playing (main.c) */
+
 void PC_PadRead(unsigned char *pad)
 {
     PsyX_UpdateInput();
-    if (getenv("D1_PAD")) {
+    if (getenv("D1_PADF") && !D_00096899 && PC_TraceInGameLoop(__builtin_return_address(2))) {
+        unsigned held = pad_script_env("D1_PADF", CameraCnt);
+        pad[0] = 0;
+        pad[1] = 0x41;
+        pad[2] = ~held & 0xFF;
+        pad[3] = ~held >> 8 & 0xFF;
+    } else if (getenv("D1_PAD")) {
         unsigned held = pad_script(__real_VSync(-1));
         pad[0] = 0;          /* status: ok */
         pad[1] = 0x41;       /* digital pad */

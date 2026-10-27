@@ -33,6 +33,7 @@ static const unsigned char **s_rangesrc[MAXREG];
 static int s_nreg, s_state;            /* s_state: 0 = not set up, 1 = tracing, -1 = off */
 static unsigned s_payload, s_seq;
 static int s_lastframe = -1;
+static unsigned last_frame_seen = ~0u;
 static unsigned long s_loop_lo, s_loop_hi;   /* func_0002360C */
 static FILE *s_out;
 
@@ -44,12 +45,14 @@ static const char *s_strtab;
 
 static int elf_load(void)
 {
-    FILE *f = fopen("/proc/self/exe", "rb");
+    FILE *f;
     long n;
     Elf32_Ehdr *eh;
     Elf32_Shdr *sh;
     int i;
-    if (!f)
+    if (s_syms)
+        return 0;
+    if (!(f = fopen("/proc/self/exe", "rb")))
         return -1;
     fseek(f, 0, SEEK_END);
     n = ftell(f);
@@ -181,6 +184,27 @@ static int range_setup(int r, unsigned addr, unsigned size, const char *spec)
     return 0;
 }
 
+/* func_0002360C's address range (the in-game loop) */
+static int loop_range(void)
+{
+    Elf32_Sym *s;
+    if (s_loop_hi)
+        return 0;
+    if (elf_load() || !(s = elf_find("func_0002360C")) || !s->st_size)
+        return -1;
+    s_loop_lo = s->st_value;
+    s_loop_hi = s->st_value + s->st_size;
+    return 0;
+}
+
+/* pc_main.c PC_PadRead (D1_PADF): is this return address in the in-game loop? */
+int PC_TraceInGameLoop(void *addr)
+{
+    if (loop_range())
+        return 0;
+    return (unsigned long)addr >= s_loop_lo && (unsigned long)addr < s_loop_hi;
+}
+
 static void setup(void)
 {
     const char *env = getenv("D1_TRACE");
@@ -196,16 +220,10 @@ static void setup(void)
         return;
     memcpy(spec, env, colon - env);
     spec[colon - env] = 0;
-    if (elf_load()) {
-        fprintf(stderr, "[trace] no symbol table in /proc/self/exe\n");
+    if (loop_range()) {
+        fprintf(stderr, "[trace] no symbol table / func_0002360C in /proc/self/exe\n");
         return;
     }
-    if (!(s = elf_find("func_0002360C")) || !s->st_size) {
-        fprintf(stderr, "[trace] func_0002360C not found\n");
-        return;
-    }
-    s_loop_lo = s->st_value;
-    s_loop_hi = s->st_value + s->st_size;
     if (!(f = fopen(spec, "r"))) {
         perror(spec);
         return;
@@ -215,8 +233,9 @@ static void setup(void)
         unsigned addr, size;
         if (h)
             *h = 0;
-        if (sscanf(line, "%63s %x %127s %u", label, &addr, name, &size) != 4)
-            continue;
+        if (sscanf(line, "%63s %x %127s %u", label, &addr, name, &size) != 4 || !strcmp(label, "mask") ||
+            !strcmp(label, "pausemask"))
+            continue;   /* mask lines are for lockstep.py ("mask car_data .." would scan "ca" as hex) */
         if (s_nreg == MAXREG) {
             fprintf(stderr, "[trace] too many spec entries\n");
             break;
@@ -270,11 +289,140 @@ static void setup(void)
     s_state = 1;
 }
 
+/* ---- function coverage (a build with -finstrument-functions; see port/README.md "Lockstep comparison") ----
+ * D1_FUNCS=<file>: every function entered is marked; the list of entry addresses is rewritten every 300 vblanks
+ * and just before D1_QUIT (which leaves with _exit), for tools/pc/compare/coverage.py. */
+#define COV_LO 0x400000u
+#define COV_HI 0x1000000u
+static unsigned char *s_cov;
+static int s_cov_state;               /* 0 = not set up, 1 = on, -1 = off */
+
+__attribute__((no_instrument_function)) void __cyg_profile_func_enter(void *fn, void *site)
+{
+    unsigned long a = (unsigned long)fn;
+    (void)site;
+    if (s_cov && a >= COV_LO && a < COV_HI)
+        s_cov[(a - COV_LO) >> 3] |= 1 << (a & 7);
+}
+
+__attribute__((no_instrument_function)) void __cyg_profile_func_exit(void *fn, void *site)
+{
+    (void)fn;
+    (void)site;
+}
+
+static void cov_dump(void)
+{
+    const char *path = getenv("D1_FUNCS");
+    char tmp[600];
+    FILE *f;
+    unsigned i;
+    snprintf(tmp, sizeof tmp, "%s.tmp", path);
+    if (!(f = fopen(tmp, "w")))
+        return;
+    for (i = 0; i < (COV_HI - COV_LO) / 8; i++)
+        if (s_cov[i]) {
+            int b;
+            for (b = 0; b < 8; b++)
+                if (s_cov[i] >> b & 1)
+                    fprintf(f, "%x\n", COV_LO + i * 8 + b);
+        }
+    fclose(f);
+    rename(tmp, path);
+}
+
+static void cov_vsync(unsigned vbl)
+{
+    static int quit = -1, last, final;
+    if (s_cov_state == 0) {
+        s_cov_state = getenv("D1_FUNCS") ? 1 : -1;
+        if (s_cov_state > 0) {
+            s_cov = calloc(1, (COV_HI - COV_LO) / 8);
+            quit = getenv("D1_QUIT") ? atoi(getenv("D1_QUIT")) : -1;
+        }
+    }
+    if (s_cov_state < 0)
+        return;
+    if (vbl - last >= 300 || (quit >= 0 && (int)vbl >= quit - 4 && !final)) {
+        final = quit >= 0 && (int)vbl >= quit - 4;
+        last = vbl;
+        cov_dump();
+    }
+}
+
+/* D1_POKE=VBL:SYMBOL=VALUE[,VBL:SYMBOL=VALUE..]: store a 32-bit VALUE into SYMBOL (a name the exe's symbol table
+ * knows, optionally +0xOFF) once the vblank count reaches VBL - test setup for scripted sessions, e.g. the Take A
+ * Ride city count D_000967E0=4 (LA and New York), matching lrhost --poke on the emulator side. */
+static void poke_vsync(unsigned vbl)
+{
+    static const char *p0;
+    static int state;
+    static unsigned done;   /* bit i: entry i applied */
+    const char *p;
+    int i;
+    if (state == 0)
+        state = (p0 = getenv("D1_POKE")) ? 1 : -1;
+    if (state < 0)
+        return;
+    for (p = p0, i = 0; p && *p && i < 32; i++) {
+        char name[128], *e;
+        unsigned at = strtoul(p, &e, 0), off = 0;
+        long val;
+        int n;
+        if (*e != ':')
+            break;
+        n = strcspn(e + 1, "+=");
+        snprintf(name, sizeof name, "%.*s", n, e + 1);
+        e += 1 + n;
+        if (*e == '+')
+            off = strtoul(e + 1, &e, 0);
+        val = *e == '=' ? strtol(e + 1, &e, 0) : 0;
+        if (vbl >= at && !(done >> i & 1)) {
+            Elf32_Sym *s = elf_load() ? NULL : elf_find(name);
+            done |= 1u << i;
+            if (s) {
+                *(int *)(unsigned long)(s->st_value + off) = (int)val;
+                fprintf(stderr, "[trace] vblank %u: D1_POKE %s+0x%x = %ld\n", vbl, name, off, val);
+            } else
+                fprintf(stderr, "[trace] D1_POKE: no symbol %s\n", name);
+        }
+        p = strchr(e, ',');
+        p = p ? p + 1 : NULL;
+    }
+}
+
+/* D1_TRACE_UNTIL=N: exit once a record has game frame >= N, or 3000 vblanks after the last record (the game ended
+ * and the frontend is back) - the PC side of lrhost --until-frame */
+static void until_vsync(unsigned vbl)
+{
+    static int until = -2;
+    static unsigned last;
+    if (until == -2)
+        until = getenv("D1_TRACE_UNTIL") ? atoi(getenv("D1_TRACE_UNTIL")) : -1;
+    if (until < 0 || s_state <= 0)
+        return;
+    if (s_seq && (s_lastframe >= until || vbl - last > 3000)) {
+        fprintf(stderr, "[trace] D1_TRACE_UNTIL: %s at vblank %u\n",
+                s_lastframe >= until ? "frame reached" : "no game frame for 3000 vblanks", vbl);
+        if (s_cov)
+            cov_dump();
+        fflush(NULL);
+        _exit(0);
+    }
+    if (!s_seq || s_lastframe != (int)last_frame_seen) {
+        last_frame_seen = s_lastframe;
+        last = vbl;
+    }
+}
+
 /* pc_main.c __wrap_VSync, game thread only, before anything else runs there */
 void PC_TraceVSync(void *caller)
 {
     unsigned vbl;
     int i;
+    cov_vsync(__real_VSync(-1));
+    poke_vsync(__real_VSync(-1));
+    until_vsync(__real_VSync(-1));
     if (s_state == 0)
         setup();
     if (s_state < 0)

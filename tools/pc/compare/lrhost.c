@@ -9,22 +9,33 @@
  *   --trace SPEC OUT  install the per-game-frame snapshot hook (see below) and write every snapshot to OUT
  *   --ramdump n1,..   write ram_<n>.bin (2 MB) at those vblanks
  *   --zerocheck A-B   report the words in [A,B) that were ever non-zero (finding RAM nobody uses, for the hook)
+ *   --ramdump-frame F write ram_f<F>.bin (2 MB) at the hook of game frame F (state exactly at the trace point)
+ *   --padf SCRIPT     in-game pad input by sim step (CameraCnt), the PC's D1_PADF (see PADCALL_ADDR)
+ *   --skip-garage     the PC mod skip_garage_test on the PS1 (see install_skip)
+ *   --pursuit-r R     Pursuit/Getaway: use setup R (0-14) instead of the vblank count's pick (see PURSUITR_ADDR)
+ *   --until-frame N   stop once a snapshot has game frame >= N, or 3000 vblanks after the last one (with --trace)
+ *   --poke VBL:ADDR=V,.. a 32-bit store into PS1 RAM at that vblank, ADDR hex (the PC's D1_POKE takes symbols)
+ *   --save N FILE     savestate before vblank N; --load FILE starts from one (exploration only: patches made
+ *                     before the save are in the state, so --padf/--trace must match what the saving run used)
  *
- * The snapshot hook. A trace record must be the game state at one fixed point of each game frame, but a libretro
- * core only returns between vblanks, and the in-game loop (main.c func_0002360C) takes >= 2 vblanks per game frame,
- * so between two retro_run()s the game is usually half-way through a frame. So the host patches the running game
- * (in emulated RAM, after the BIOS has loaded SLUS_008.42; the disc image is not modified):
+ * The game frame hook. A trace record must be the game state at one fixed point of each game frame, but a
+ * libretro core only returns between vblanks, and the in-game loop (main.c func_0002360C) takes >= 2 vblanks per
+ * game frame, so between two retro_run()s the game is usually half-way through a frame. So the host patches the
+ * running game (in emulated RAM, once the BIOS has loaded SLUS_008.42; the disc image is not modified):
  *   0x00024240  lui v0,%hi(FastForward)   ->  jal STUB
  *   0x00024244  lw  v0,%lo(FastForward)(v0) -> nop
- * i.e. right after ControlReplay, before the frame's VSync(-1) wait - the point where the PC build's
- * pc_trace.c takes its snapshot (the first VSync(-1) poll from func_0002360C in a frame). The stub copies the
- * regions listed in a table (written by the host from the spec) into a buffer, bumps a sequence word, redoes the
- * two replaced instructions and returns ($ra is free there: func_0002360C saved it in its prologue, and no
- * t-register is live at that label). One game frame takes >= 2 vblanks, so one buffer is enough: after every
- * retro_run the host checks the sequence word and copies the buffer out. Stub, table and buffer live in kernel
- * RAM that stays zero for the whole run (checked with --zerocheck; see STUB_BASE).
+ * i.e. right after ControlReplay, before the frame's VSync(-1) wait - the point where the PC build's pc_trace.c
+ * takes its snapshot (the first VSync(-1) poll from func_0002360C in a frame). The stub bumps a sequence word and
+ * spins until the host writes that number back: the game's main thread stands still at the hook while the host,
+ * after that retro_run, reads the spec's regions straight from emulated RAM (and hands over the next frame's pad
+ * for --padf), then releases it. Interrupt handlers keep running meanwhile (VSync callback: the XM player; CD
+ * callbacks: spooling) - only state the trace masks anyway. The stall costs the game at most one vblank per frame,
+ * which only moves timing that is not part of the deterministic model (frame pacing, CD, audio). Stubs and
+ * mailbox live in kernel RAM nothing uses (0xC000-0xC220, in the 0xBE34-0xDF80 gap that lrhost --zerocheck finds
+ * untouched over boot, menus, demos and play); the host checks the stub code every vblank. (The first version
+ * copied the regions into a buffer at 0x1E5100 instead - New York's level data lives there.)
  *
- * Spec lines (tools/pc/compare/trace.spec): "label ps1addr size" (the emulator only needs the PS1 address).
+ * Spec lines (tools/pc/compare/trace.spec): "label ps1addr pcsymbol size" (the emulator only needs the address).
  *
  * Build (in the build distrobox): gcc -O2 -o lrhost lrhost.c -ldl
  * Run:    lrhost CORE.so SYSTEMDIR GAME.cue [options]
@@ -72,6 +83,9 @@ static void (*p_set_audio_batch)(size_t (*)(const int16_t *, size_t));
 static void (*p_set_poll)(void (*)(void));
 static void (*p_set_state)(int16_t (*)(unsigned, unsigned, unsigned, unsigned));
 static void (*p_set_controller)(unsigned, unsigned);
+static size_t (*p_ser_size)(void);
+static bool (*p_serialize)(void *, size_t);
+static bool (*p_unserialize)(const void *, size_t);
 
 static const char *g_sysdir;
 static unsigned g_pixfmt;   /* 0 = 0RGB1555, 1 = XRGB8888, 2 = RGB565 */
@@ -273,23 +287,44 @@ static int in_list(const char *list, unsigned n)
     return 0;
 }
 
-/* ---- the snapshot hook ---- */
-#define HOOK_ADDR   0x00024240u
-#define HOOK_INSN0  0x3C020009u   /* lui v0, 0x9            (%hi(FastForward)) */
-#define HOOK_INSN1  0x8C426DC4u   /* lw  v0, 0x6DC4(v0)     (%lo(FastForward)) */
-/* RAM nothing touches during boot, the frontend and the attract demos (lrhost --zerocheck 0-0x200000 over 30000
- * vblanks): 0x1E4D64-0x1EDA6C, between IVIEW.BIN's end (0x1E0000 + code/data/bss) and the stack's deepest use. Only
- * CRED.BIN (the credits, 80 KB from 0x1E0000) covers it - the hook is reinstalled when the game's code comes back,
- * and the host warns whenever the buffer changes without the sequence word moving (someone else writes there).
- * Layout: stub (<= 0x100), table (count + 63 entries), buffer (seq word, then the regions). */
-#define STUB_BASE   0x001E4E00u
-#define TABLE_BASE  0x001E4F00u
-#define TABLE_MAX   ((0x200 - 4) / 8)
-#define BUF_BASE    0x001E5100u
-#define BUF_END     0x001ED800u
+/* ---- the game frame hook (see the top of the file) ---- */
+#define HOOK_ADDR     0x00024240u
+#define HOOK_INSN0    0x3C020009u   /* lui v0, 0x9            (%hi(FastForward)) */
+#define HOOK_INSN1    0x8C426DC4u   /* lw  v0, 0x6DC4(v0)     (%lo(FastForward)) */
+#define STUB_BASE     0x0000C000u   /* the stall stub */
+#define PADSTUB       0x0000C080u   /* --padf */
+#define SKIPSTUB      0x0000C140u   /* --skip-garage */
+#define CODE_END      0x0000C160u
+#define MAIL          0x0000C200u   /* +0 seq (stub), +4 release (host), +8 next frame, +C its pad, +10 frame 0's pad */
+#define MAIL_END      0x0000C220u
+#define FRAME_ADDR    0x00097534u   /* D_00097534, the game frame counter */
+#define CAMCNT_ADDR   0x000970D8u   /* CameraCnt, the sim step counter: what --padf is keyed on */
+/* --padf: main.c func_0002360C reads the pad once per game frame through func_000514E0 (call at 0x237B4). That call
+ * is redirected to PADSTUB, which calls func_000514E0 and then, as the PC's D1_PADF does, replaces the result with
+ * the scripted buttons of the current sim step (CameraCnt - +1 per sim step, still in pause and cut-scenes; nothing
+ * pressed where the script has no entry): D_000A8018 (decoded pad), D_0009752C (held) and D_00097538 (newly pressed
+ * = held & (previous ^ held), func_000514E0's own formula). The buttons come from the mailbox: at each stall the host
+ * writes the entry for the step the next read will see (CameraCnt does not change between the hook and the next
+ * frame's pad read), and step 0's is always there (a new game starts at 0 before any stall). Not while a replay
+ * plays (D_00096899 != 0), as on the PC. Menus and the pause menu read the pad elsewhere and keep the libretro pad
+ * (--pad, by vblank). */
+#define PADCALL_ADDR  0x000237B4u
+#define PADCALL_INSN  0x0C014538u   /* jal func_000514E0 */
+/* --skip-garage: the PC mod "skip_garage_test" (port/pc/pc_mods.c, main.c func_00024754 case 0) on the PS1: the
+ * `jal func_00024F1C` (play the interview) at 0x24C28 becomes a call to SKIPSTUB, which does what the PC does
+ * instead: D_000970A8 = 1, D_00096818 = 1 ($gp = 0x80096770). */
+#define SKIPCALL_ADDR 0x00024C28u
+#define SKIPCALL_INSN 0x0C0093C7u   /* jal func_00024F1C */
 
+/* --pursuit-r R: Pursuit/Getaway (D_00096898 == 3) pick one of 15 setups at level init with VSync(-1) % 15 (main.c
+ * func_00022818) - the vblank count, so it differs per run on a real PS1 too. To compare a session the emulator
+ * takes the PC's choice (its D_00096914 at frame 0): the first `jal VSync` there becomes `addiu v0, zero, R`. */
+#define PURSUITR_ADDR 0x00022A84u
+#define PURSUITR_INSN 0x0C01E6C0u   /* jal VSync */
+
+#define MAXREG 63
 struct region { char label[64]; uint32_t addr, size; };
-static struct region g_reg[TABLE_MAX];
+static struct region g_reg[MAXREG];
 static int g_nreg;
 static uint32_t g_bufsize;
 
@@ -308,10 +343,11 @@ static int load_spec(const char *path)
         if (h)
             *h = 0;
         /* "label ps1addr pcsymbol size" */
-        if (sscanf(line, "%63s %x %127s %u", label, &addr, pcname, &size) != 4)
-            continue;
-        if (g_nreg == TABLE_MAX || (size & 3) || (addr & 3)) {
-            fprintf(stderr, "lrhost: bad spec entry %s (table full or not word-sized)\n", label);
+        if (sscanf(line, "%63s %x %127s %u", label, &addr, pcname, &size) != 4 || !strcmp(label, "mask") ||
+            !strcmp(label, "pausemask"))
+            continue;   /* mask lines are for lockstep.py ("mask car_data .." would scan "ca" as hex) */
+        if (g_nreg == MAXREG || addr + size > 0x200000) {
+            fprintf(stderr, "lrhost: bad spec entry %s\n", label);
             return -1;
         }
         strcpy(g_reg[g_nreg].label, label);
@@ -321,10 +357,6 @@ static int load_spec(const char *path)
         g_nreg++;
     }
     fclose(f);
-    if (BUF_BASE + 4 + g_bufsize > BUF_END) {
-        fprintf(stderr, "lrhost: spec needs %u bytes, the buffer has %u\n", g_bufsize, BUF_END - BUF_BASE - 4);
-        return -1;
-    }
     return 0;
 }
 
@@ -334,92 +366,193 @@ static uint32_t r32(const uint8_t *ram, uint32_t a) { uint32_t v; memcpy(&v, ram
 /* MIPS encoders */
 #define R(op, rs, rt, rd, sh, fn) (((op) << 26) | ((rs) << 21) | ((rt) << 16) | ((rd) << 11) | ((sh) << 6) | (fn))
 #define I(op, rs, rt, imm) (((op) << 26) | ((rs) << 21) | ((rt) << 16) | ((imm) & 0xFFFF))
-enum { ZERO = 0, V0 = 2, T0 = 8, T1, T2, T3, T4, T5, T6, RA = 31 };
+enum { ZERO = 0, V0 = 2, T0 = 8, T1, T2, T3, T4, T5, T6, T7, GP = 28, SP = 29, RA = 31 };
 #define LUI(rt, imm) I(0x0F, 0, rt, imm)
 #define ORI(rt, rs, imm) I(0x0D, rs, rt, imm)
 #define LW(rt, off, rs) I(0x23, rs, rt, off)
 #define SW(rt, off, rs) I(0x2B, rs, rt, off)
+#define LHU(rt, off, rs) I(0x25, rs, rt, off)
+#define LBU(rt, off, rs) I(0x24, rs, rt, off)
+#define SH(rt, off, rs) I(0x29, rs, rt, off)
 #define ADDIU(rt, rs, imm) I(0x09, rs, rt, imm)
 #define BEQ(rs, rt, off) I(0x04, rs, rt, off)
 #define BNE(rs, rt, off) I(0x05, rs, rt, off)
+#define ADDU(rd, rs, rt) R(0, rs, rt, rd, 0, 0x21)
+#define XOR(rd, rs, rt) R(0, rs, rt, rd, 0, 0x26)
+#define AND(rd, rs, rt) R(0, rs, rt, rd, 0, 0x24)
 #define JR(rs) R(0, rs, 0, 0, 0, 8)
 #define NOP 0u
 #define JAL(a) ((3u << 26) | (((a) >> 2) & 0x03FFFFFF))
+#define BR(from, to) (((to) - ((from) + 1)) & 0xFFFF)
 
-static void install_stub(uint8_t *ram)
+static void put(uint8_t *ram, uint32_t base, const uint32_t *c, int n, uint32_t limit)
 {
-    uint32_t c[64];
-    int n = 0, loop, inner, next, done;
-    /* table: [count] then {src, words} per region; dst = BUF_BASE + 4 */
-    w32(ram, TABLE_BASE, g_nreg);
-    for (int i = 0; i < g_nreg; i++) {
-        w32(ram, TABLE_BASE + 4 + i * 8, 0x80000000u | g_reg[i].addr);
-        w32(ram, TABLE_BASE + 8 + i * 8, g_reg[i].size / 4);
+    if (base + n * 4 > limit) {
+        fprintf(stderr, "lrhost: stub at %X too long\n", base);
+        exit(1);
     }
-    c[n++] = LUI(T0, 0x8000 | (TABLE_BASE >> 16));
-    c[n++] = ORI(T0, T0, TABLE_BASE & 0xFFFF);
-    c[n++] = LW(T1, 0, T0);                       /* t1 = count */
-    c[n++] = ADDIU(T0, T0, 4);
-    c[n++] = LUI(T2, 0x8000 | ((BUF_BASE + 4) >> 16));
-    c[n++] = ORI(T2, T2, (BUF_BASE + 4) & 0xFFFF);
-    loop = n;
-    c[n++] = 0;                                   /* beq t1, zero, done (patched) */
+    for (int i = 0; i < n; i++)
+        w32(ram, base + i * 4, c[i]);
+}
+
+static void install_hook(uint8_t *ram)
+{
+    uint32_t c[32];
+    int n = 0, spin;
+    c[n++] = LUI(T0, 0x8000 | (MAIL >> 16));
+    c[n++] = ORI(T0, T0, MAIL & 0xFFFF);
+    c[n++] = LW(T1, 0, T0);
     c[n++] = NOP;
-    c[n++] = LW(T3, 0, T0);                       /* t3 = src */
-    c[n++] = LW(T4, 4, T0);                       /* t4 = words */
-    c[n++] = ADDIU(T0, T0, 8);
-    inner = n;
-    c[n++] = 0;                                   /* beq t4, zero, next (patched) */
+    c[n++] = ADDIU(T1, T1, 1);
+    c[n++] = SW(T1, 0, T0);                       /* seq++ */
+    spin = n;
+    c[n++] = LW(T2, 4, T0);                       /* until release == seq */
     c[n++] = NOP;
-    c[n++] = LW(T5, 0, T3);
-    c[n++] = ADDIU(T3, T3, 4);
-    c[n++] = SW(T5, 0, T2);
-    c[n++] = ADDIU(T4, T4, -1);
-    c[n] = BEQ(ZERO, ZERO, (inner - (n + 1)) & 0xFFFF);
+    c[n] = BNE(T2, T1, BR(n, spin));
     n++;
-    c[n++] = ADDIU(T2, T2, 4);                    /* delay slot */
-    next = n;
-    c[n] = BEQ(ZERO, ZERO, (loop - (n + 1)) & 0xFFFF);
-    n++;
-    c[n++] = ADDIU(T1, T1, -1);                   /* delay slot */
-    done = n;
-    c[n++] = LUI(T6, 0x8000 | (BUF_BASE >> 16));
-    c[n++] = ORI(T6, T6, BUF_BASE & 0xFFFF);
-    c[n++] = LW(T5, 0, T6);
     c[n++] = NOP;
-    c[n++] = ADDIU(T5, T5, 1);
-    c[n++] = SW(T5, 0, T6);                       /* seq++ last: the buffer is complete */
     c[n++] = HOOK_INSN0;                          /* the two replaced instructions */
     c[n++] = HOOK_INSN1;
     c[n++] = JR(RA);
     c[n++] = NOP;
-    c[loop] = BEQ(T1, ZERO, (done - (loop + 1)) & 0xFFFF);
-    c[inner] = BEQ(T4, ZERO, (next - (inner + 1)) & 0xFFFF);
-    for (int i = 0; i < n; i++)
-        w32(ram, STUB_BASE + i * 4, c[i]);
-    w32(ram, BUF_BASE, 0);
-    /* the hook last: jal STUB; nop */
+    put(ram, STUB_BASE, c, n, PADSTUB);
     w32(ram, HOOK_ADDR + 4, NOP);
     w32(ram, HOOK_ADDR, JAL(0x80000000u | STUB_BASE));
 }
 
+static void install_padf(uint8_t *ram)
+{
+    uint32_t c[40];
+    int n = 0, br0, b1, b2, b3, apply;
+    c[n++] = ADDIU(SP, SP, -24);
+    c[n++] = SW(RA, 16, SP);
+    c[n++] = JAL(0x800514E0u);                    /* func_000514E0 as before */
+    c[n++] = NOP;
+    c[n++] = LW(RA, 16, SP);
+    c[n++] = ADDIU(SP, SP, 24);
+    c[n++] = LUI(T0, 0x8009);
+    c[n++] = LBU(T1, 0x6899, T0);                 /* D_00096899: a replay plays - leave the pad alone */
+    c[n++] = NOP;
+    br0 = n;
+    c[n++] = 0;                                   /* bne t1, zero, out */
+    c[n++] = NOP;
+    c[n++] = LW(T1, CAMCNT_ADDR & 0xFFFF, T0);    /* step = CameraCnt */
+    c[n++] = LUI(T2, 0x8000 | (MAIL >> 16));
+    c[n++] = ORI(T2, T2, MAIL & 0xFFFF);
+    c[n++] = LW(T3, 8, T2);                       /* the mailbox's frame */
+    c[n++] = NOP;
+    b1 = n;
+    c[n++] = 0;                                   /* bne t3, t1, notnext */
+    c[n++] = ADDU(T5, ZERO, ZERO);                /* delay: v = 0 */
+    c[n++] = LHU(T5, 0xC, T2);                    /* v = its pad */
+    b2 = n;
+    c[n++] = 0;                                   /* b apply */
+    c[n++] = NOP;
+    int notnext = n;
+    b3 = n;
+    c[n++] = 0;                                   /* bne t1, zero, apply */
+    c[n++] = NOP;
+    c[n++] = LHU(T5, 0x10, T2);                   /* frame 0 */
+    apply = n;
+    c[n++] = LUI(T7, 0x800B);
+    c[n++] = SH(T5, -0x7FE8, T7);                 /* D_000A8018 = v */
+    c[n++] = SH(T5, 0x752C, T0);                  /* D_0009752C = v */
+    c[n++] = LHU(T6, 0x7544, T0);                 /* D_00097544 (previous) */
+    c[n++] = NOP;
+    c[n++] = XOR(T6, T6, T5);
+    c[n++] = AND(T6, T6, T5);
+    c[n++] = SH(T6, 0x7538, T0);                  /* D_00097538 = v & (prev ^ v) */
+    int out = n;
+    c[n++] = JR(RA);
+    c[n++] = NOP;
+    c[br0] = BNE(T1, ZERO, BR(br0, out));
+    c[b1] = BNE(T3, T1, BR(b1, notnext));
+    c[b2] = BEQ(ZERO, ZERO, BR(b2, apply));
+    c[b3] = BNE(T1, ZERO, BR(b3, apply));
+    put(ram, PADSTUB, c, n, SKIPSTUB);
+    w32(ram, PADCALL_ADDR, JAL(0x80000000u | PADSTUB));
+}
+
+static void install_skip(uint8_t *ram)
+{
+    uint32_t c[] = {
+        ADDIU(V0, ZERO, 1),
+        SW(V0, 0x0938, GP),                       /* D_000970A8 */
+        SW(V0, 0x00A8, GP),                       /* D_00096818 */
+        JR(RA),
+        NOP,
+    };
+    put(ram, SKIPSTUB, c, 5, CODE_END);
+    w32(ram, SKIPCALL_ADDR, JAL(0x80000000u | SKIPSTUB));
+}
+
+/* --padf script -> buttons per game frame, in the decoded word func_00035818 makes of the raw pad,
+ * ~((raw[2] << 8) | raw[3]); FROM[-TO]=BTN[+BTN], a lone FROM holds 6 frames (the D1_PAD rule) */
+#define PADF_MAX 100000
+static uint16_t *g_padf;
+
+static unsigned padraw_bit(const char *b, int n)   /* port/pc/pc_main.c pad_bit: the PADRAW word, active high */
+{
+    static const struct { const char *name; unsigned bit; } t[] = {
+        { "select", 0x1 }, { "l3", 0x2 }, { "r3", 0x4 }, { "start", 0x8 }, { "up", 0x10 }, { "right", 0x20 },
+        { "down", 0x40 }, { "left", 0x80 }, { "l2", 0x100 }, { "r2", 0x200 }, { "l1", 0x400 }, { "r1", 0x800 },
+        { "tri", 0x1000 }, { "o", 0x2000 }, { "x", 0x4000 }, { "sq", 0x8000 },
+    };
+    for (unsigned i = 0; i < sizeof t / sizeof t[0]; i++)
+        if ((int)strlen(t[i].name) == n && !strncmp(t[i].name, b, n))
+            return t[i].bit;
+    fprintf(stderr, "lrhost: unknown pad button '%.*s'\n", n, b);
+    return 0;
+}
+
+static int parse_padf(const char *s)
+{
+    g_padf = calloc(PADF_MAX, 2);
+    while (s && *s) {
+        char *e;
+        unsigned from = strtoul(s, &e, 10), to = from + 5, m = 0;
+        if (*e == '-')
+            to = strtoul(e + 1, &e, 10);
+        if (*e == '=') {
+            const char *b = e + 1;
+            for (;;) {
+                int n = strcspn(b, "+,");
+                m |= padraw_bit(b, n);
+                b += n;
+                if (*b != '+')
+                    break;
+                b++;
+            }
+            e = (char *)b;
+        }
+        if (to >= PADF_MAX) {
+            fprintf(stderr, "lrhost: --padf frame %u beyond %u\n", to, PADF_MAX);
+            return -1;
+        }
+        for (unsigned f = from; f <= to; f++)
+            g_padf[f] |= (uint16_t)(((m & 0xFF) << 8) | (m >> 8 & 0xFF));
+        s = strchr(e, ',');
+        s = s ? s + 1 : NULL;
+    }
+    return 0;
+}
+
+static uint16_t padf_at(uint32_t f) { return g_padf && f < PADF_MAX ? g_padf[f] : 0; }
+
 int main(int argc, char **argv)
 {
     const char *pad = NULL, *shots = NULL, *dumps = NULL, *spec = NULL, *out = NULL, *zc = NULL;
-    unsigned frames = 3600, zlo = 0, zhi = 0;
+    const char *save_path = NULL, *load_path = NULL, *pokes = NULL;
+    unsigned frames = 3600, zlo = 0, zhi = 0, save_at = 0, vbl0 = 0, last_snap = 0, nrec = 0;
+    int pursuit_r = -1, dump_frame = -1, padf = 0, skip = 0, until = -1, stop = 0, hooked = 0, extras = 0;
     struct retro_game_info gi = { 0 };
     void *h;
-    uint8_t *ram, *zmask = NULL;
+    uint8_t *ram, *zmask = NULL, *codecopy = NULL;
     FILE *fo = NULL;
     uint32_t lastseq = 0;
-    int hooked = 0;
-    unsigned nrec = 0, nclobber = 0;
-    int changing = 0;
-    uint8_t *stubcopy = NULL, *bufcopy = NULL;
 
     if (argc < 4) {
-        fprintf(stderr, "usage: lrhost CORE.so SYSTEMDIR GAME.cue [--pad S] [--frames N] [--shot L] "
-                        "[--ramdump L] [--trace SPEC OUT] [--zerocheck LO-HI] [-v]\n");
+        fprintf(stderr, "usage: lrhost CORE.so SYSTEMDIR GAME.cue [options, see the top of lrhost.c]\n");
         return 2;
     }
     g_sysdir = argv[2];
@@ -428,8 +561,16 @@ int main(int argc, char **argv)
         else if (!strcmp(argv[i], "--frames") && i + 1 < argc) frames = strtoul(argv[++i], NULL, 0);
         else if (!strcmp(argv[i], "--shot") && i + 1 < argc) shots = argv[++i];
         else if (!strcmp(argv[i], "--ramdump") && i + 1 < argc) dumps = argv[++i];
+        else if (!strcmp(argv[i], "--ramdump-frame") && i + 1 < argc) dump_frame = strtol(argv[++i], NULL, 0);
         else if (!strcmp(argv[i], "--trace") && i + 2 < argc) { spec = argv[++i]; out = argv[++i]; }
         else if (!strcmp(argv[i], "--zerocheck") && i + 1 < argc) zc = argv[++i];
+        else if (!strcmp(argv[i], "--padf") && i + 1 < argc) { if (parse_padf(argv[++i])) return 2; padf = 1; }
+        else if (!strcmp(argv[i], "--skip-garage")) skip = 1;
+        else if (!strcmp(argv[i], "--pursuit-r") && i + 1 < argc) pursuit_r = strtol(argv[++i], NULL, 0);
+        else if (!strcmp(argv[i], "--until-frame") && i + 1 < argc) until = strtol(argv[++i], NULL, 0);
+        else if (!strcmp(argv[i], "--save") && i + 2 < argc) { save_at = strtoul(argv[++i], NULL, 0); save_path = argv[++i]; }
+        else if (!strcmp(argv[i], "--load") && i + 1 < argc) load_path = argv[++i];
+        else if (!strcmp(argv[i], "--poke") && i + 1 < argc) pokes = argv[++i];
         else if (!strcmp(argv[i], "-v")) g_verbose = 1;
         else { fprintf(stderr, "lrhost: unknown option %s\n", argv[i]); return 2; }
     }
@@ -464,6 +605,9 @@ int main(int argc, char **argv)
     SYM(p_set_poll, "retro_set_input_poll");
     SYM(p_set_state, "retro_set_input_state");
     SYM(p_set_controller, "retro_set_controller_port_device");
+    SYM(p_ser_size, "retro_serialize_size");
+    SYM(p_serialize, "retro_serialize");
+    SYM(p_unserialize, "retro_unserialize");
 
     p_set_env(env_cb);
     p_init();
@@ -478,6 +622,21 @@ int main(int argc, char **argv)
         return 1;
     }
     p_set_controller(0, RETRO_DEVICE_JOYPAD);
+    if (load_path) {
+        /* a savestate made with --save (exploring menus faster; make it without --trace/--padf/--skip-garage, so
+         * the patches go in after loading); its first word is the vblank it was made at, so --pad / --shot /
+         * --frames keep counting from boot */
+        FILE *f = fopen(load_path, "rb");
+        size_t n = p_ser_size();
+        uint8_t *st = malloc(n);
+        if (!f || fread(&vbl0, 4, 1, f) != 1 || fread(st, 1, n, f) != n || !p_unserialize(st, n)) {
+            fprintf(stderr, "lrhost: cannot load state %s\n", load_path);
+            return 1;
+        }
+        fclose(f);
+        free(st);
+        fprintf(stderr, "lrhost: state %s (vblank %u)\n", load_path, vbl0);
+    }
     ram = p_mem_data(RETRO_MEMORY_SYSTEM_RAM);
     if (!ram || p_mem_size(RETRO_MEMORY_SYSTEM_RAM) < 0x200000) {
         fprintf(stderr, "lrhost: no system RAM\n");
@@ -496,57 +655,103 @@ int main(int argc, char **argv)
         }
     }
 
-    for (g_vbl = 0; g_vbl < frames; g_vbl++) {
-        p_run();
-        if (spec && !hooked && r32(ram, HOOK_ADDR) == HOOK_INSN0 && r32(ram, HOOK_ADDR + 4) == HOOK_INSN1 &&
-            r32(ram, 0x24254) == 0x0C01E6C0u /* jal VSync: SLUS_008.42 is loaded */) {
-            install_stub(ram);
-            hooked = 1;
-            lastseq = 0;
-            free(stubcopy);
-            stubcopy = malloc(BUF_BASE - STUB_BASE);
-            memcpy(stubcopy, ram + STUB_BASE, BUF_BASE - STUB_BASE);
-            free(bufcopy);
-            bufcopy = malloc(4 + g_bufsize);
-            memcpy(bufcopy, ram + BUF_BASE, 4 + g_bufsize);
-            fprintf(stderr, "lrhost: hook installed at vblank %u\n", g_vbl);
-        }
-        if (hooked && r32(ram, HOOK_ADDR) != JAL(0x80000000u | STUB_BASE)) {
-            fprintf(stderr, "lrhost: hook overwritten at vblank %u\n", g_vbl);
-            hooked = 0;
-        }
-        if (hooked && memcmp(stubcopy, ram + STUB_BASE, BUF_BASE - STUB_BASE)) {
-            fprintf(stderr, "lrhost: stub/table overwritten at vblank %u - unhooked\n", g_vbl);
-            w32(ram, HOOK_ADDR, HOOK_INSN0);
-            w32(ram, HOOK_ADDR + 4, HOOK_INSN1);
-            hooked = 0;
-        }
-        /* the buffer changing with no new sequence number: normally the stub is half-way through its copy as the
-         * vblank ends (the seq word is bumped one vblank later); if it is still not bumped a vblank later,
-         * something else writes there */
-        if (hooked && r32(ram, BUF_BASE) == lastseq && memcmp(bufcopy, ram + BUF_BASE, 4 + g_bufsize)) {
-            if (changing) {
-                fprintf(stderr, "lrhost: the snapshot buffer changed outside the hook at vblank %u\n", g_vbl);
-                nclobber++;
+    for (g_vbl = vbl0; g_vbl < frames && !stop; g_vbl++) {
+        if (save_path && g_vbl == save_at) {
+            size_t n = p_ser_size();
+            uint8_t *st = malloc(n);
+            FILE *f = fopen(save_path, "wb");
+            if (f && p_serialize(st, n)) {
+                fwrite(&g_vbl, 4, 1, f);
+                fwrite(st, 1, n, f);
+                fprintf(stderr, "lrhost: saved state at vblank %u -> %s\n", g_vbl, save_path);
             }
-            changing = 1;
-            memcpy(bufcopy, ram + BUF_BASE, 4 + g_bufsize);
-        } else
-            changing = 0;
-        if (hooked && r32(ram, BUF_BASE) != lastseq) {
-            uint32_t seq = r32(ram, BUF_BASE);
-            if (seq != lastseq + 1)
-                fprintf(stderr, "lrhost: missed %u snapshot(s) before vblank %u\n", seq - lastseq - 1, g_vbl);
+            if (f)
+                fclose(f);
+            free(st);
+        }
+        p_run();
+        if (pokes) {
+            /* --poke VBL:ADDR=VALUE,..: a 32-bit store into PS1 RAM at that vblank (the PC's D1_POKE) */
+            const char *q = pokes;
+            while (q && *q) {
+                char *e;
+                unsigned at = strtoul(q, &e, 0), a = 0;
+                long v = 0;
+                if (*e == ':')
+                    a = strtoul(e + 1, &e, 16);
+                if (*e == '=')
+                    v = strtol(e + 1, &e, 0);
+                if (at == g_vbl && a < 0x200000) {
+                    w32(ram, a & ~3u, (uint32_t)v);
+                    fprintf(stderr, "lrhost: vblank %u: poke %05X = %ld\n", g_vbl, a, v);
+                }
+                q = strchr(e, ',');
+                q = q ? q + 1 : NULL;
+            }
+        }
+        /* SLUS_008.42 is loaded and unpatched: install what was asked for */
+        if (!extras && (spec || padf || skip || pursuit_r >= 0) && r32(ram, 0x24254) == 0x0C01E6C0u /* jal VSync */ &&
+            r32(ram, HOOK_ADDR) == HOOK_INSN0 && r32(ram, HOOK_ADDR + 4) == HOOK_INSN1 &&
+            r32(ram, PADCALL_ADDR) == PADCALL_INSN && r32(ram, SKIPCALL_ADDR) == SKIPCALL_INSN) {
+            memset(ram + MAIL, 0, MAIL_END - MAIL);
+            w32(ram, MAIL + 8, 0xFFFFFFFFu);
+            w32(ram, MAIL + 0x10, padf_at(0));
+            if (spec || padf) {
+                install_hook(ram);
+                hooked = 1;
+            }
+            if (padf)
+                install_padf(ram);
+            if (skip)
+                install_skip(ram);
+            if (pursuit_r >= 0 && r32(ram, PURSUITR_ADDR) == PURSUITR_INSN)
+                w32(ram, PURSUITR_ADDR, ADDIU(V0, ZERO, pursuit_r % 15));
+            codecopy = malloc(CODE_END - STUB_BASE);
+            memcpy(codecopy, ram + STUB_BASE, CODE_END - STUB_BASE);
+            extras = 1;
+            fprintf(stderr, "lrhost: %s%s%sinstalled at vblank %u\n", hooked ? "hook " : "", padf ? "--padf " : "",
+                    skip ? "--skip-garage " : "", g_vbl);
+        }
+        if (extras && memcmp(codecopy, ram + STUB_BASE, CODE_END - STUB_BASE)) {
+            fprintf(stderr, "lrhost: kernel RAM 0x%X-0x%X (the stubs) overwritten at vblank %u - giving up\n",
+                    STUB_BASE, CODE_END, g_vbl);
+            return 3;
+        }
+        if (hooked && r32(ram, MAIL) != lastseq) {
+            /* the game stands in the stub at the hook: this is the frame's state */
+            uint32_t seq = r32(ram, MAIL), frame = r32(ram, FRAME_ADDR);
+            if (fo) {
+                fwrite(&seq, 4, 1, fo);
+                fwrite(&g_vbl, 4, 1, fo);
+                for (int i = 0; i < g_nreg; i++)
+                    fwrite(ram + g_reg[i].addr, 1, g_reg[i].size, fo);
+                nrec++;
+            }
+            if ((int)frame == dump_frame) {
+                char nm[64];
+                FILE *f;
+                snprintf(nm, sizeof nm, "ram_f%u.bin", frame);
+                if ((f = fopen(nm, "wb"))) {
+                    fwrite(ram, 1, 0x200000, f);
+                    fclose(f);
+                }
+                dump_frame = -1;
+            }
+            w32(ram, MAIL + 8, r32(ram, CAMCNT_ADDR));
+            w32(ram, MAIL + 0xC, padf_at(r32(ram, CAMCNT_ADDR)));
+            w32(ram, MAIL + 4, seq);              /* release */
             lastseq = seq;
-            fwrite(&seq, 4, 1, fo);
-            fwrite(&g_vbl, 4, 1, fo);
-            fwrite(ram + BUF_BASE + 4, 1, g_bufsize, fo);
-            memcpy(bufcopy, ram + BUF_BASE, 4 + g_bufsize);
-            nrec++;
+            last_snap = g_vbl;
+            if (until >= 0 && (int)frame >= until)
+                stop = 1;
+        }
+        if (until >= 0 && lastseq && g_vbl - last_snap > 3000) {
+            fprintf(stderr, "lrhost: no game frame for 3000 vblanks (the game ended) - stopping\n");
+            stop = 1;
         }
         if (zmask && (zhi - zlo <= 0x10000 || g_vbl % 8 == 0))
             for (uint32_t a = zlo; a < zhi; a += 4)
-                if (r32(ram, a) && !(hooked && a >= STUB_BASE && a < BUF_END))
+                if (r32(ram, a) && !(extras && a >= STUB_BASE && a < MAIL_END))
                     zmask[a] = 1;
         if (shots && in_list(shots, g_vbl)) {
             char nm[64];
@@ -577,6 +782,6 @@ int main(int argc, char **argv)
     }
     if (fo)
         fclose(fo);
-    fprintf(stderr, "lrhost: %u vblanks, %u snapshots, %u buffer clobbers\n", g_vbl, nrec, nclobber);
+    fprintf(stderr, "lrhost: %u vblanks, %u snapshots\n", g_vbl, nrec);
     return 0;
 }

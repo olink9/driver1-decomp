@@ -74,56 +74,105 @@ driver (`func_001C2644`/`func_001C26E4`); the label is drawn by a hook at the en
 
 ## Lockstep comparison
 
-Proof that the PC build simulates what the PS1 game does: both run the attract-mode demos (the four disc replays,
-missions 0xB4-0xB7; no input needed), both write the same set of game variables once per game frame, and
-`tools/pc/compare/lockstep.py` compares them frame by frame and names the first word that differs.
+Proof that the PC build simulates what the PS1 game does: both sides run the same game - the attract-mode demos, or
+live play driven by a pad script keyed on the simulation step - write the same set of game variables once per game
+frame, and `tools/pc/compare/lockstep.py` compares them frame by frame and names the first word that differs.
 
 ```
-tools/pc/compare/run.sh <pc build dir> <out dir> [pc vblanks=30000] [emulator vblanks=62000]
+tools/pc/compare/run.sh <pc build dir> <out dir> [pc vblanks=30000] [emulator vblanks=62000]   # the 4 attract demos
+tools/pc/compare/session.sh <pc build dir> <out dir> [session ...]                            # live play
 ```
 
-runs both sides (headless, silent, in the `build` distrobox, in parallel), then the diff. It needs
+Both run the two sides headless and silent in the `build` distrobox, then the diff. They need
 `~/dev/driver1-work/emu/` (or `EMU_DIR`): `swanstation_libretro.so` (the DuckStation libretro core; copied from the
-RetroArch flatpak's cores), `system/scph5501.bin` (US BIOS, copied from the EmuDeck bios folder), and builds `lrhost`
-there from `tools/pc/compare/lrhost.c`; the disc is `~/dev/driver1-work/driver1.cue` (`D1_CUE`). The PC side defaults
-cover all four demos (they start at ~4400 vblanks and end at ~31000; the PC runs in real time, so ~9 min), the
-emulator side runs ~10x faster than real time but plays the intro FMVs first (demo 1 at ~18300 vblanks). Traces are
-~25 KB per game frame (~250 MB for the four demos). Output: per demo, `lockstep: N frames identical`, or
+RetroArch flatpak's cores), `system/scph5501.bin` (US BIOS, copied from the EmuDeck bios folder), and build `lrhost`
+there from `tools/pc/compare/lrhost.c`; the disc is `~/dev/driver1-work/driver1.cue` (`D1_CUE`). The PC side runs in
+real time (the attract demos start at ~4400 vblanks and end at ~31000: ~9 min; a live session takes its menu time +
+~2.3 vblanks per game frame), the emulator side a few times faster but plays the intro FMVs first (main menu at
+~14400 vblanks). Traces are ~25 KB per game frame. Output: per game, `lockstep: N frames identical`, or
 `FIRST DIVERGENCE at frame F` with every differing word (region, field or PS1 symbol, PS1 address, both values).
 
-Pieces:
+### Live sessions (`tools/pc/compare/sessions.txt`)
+One line per session: name | PC menu script (`D1_PAD`, vblanks) | emulator menu script (`lrhost --pad`, vblanks) |
+in-game script | last game frame | extra lrhost args | extra PC environment. Menus are scripted per side because
+boot, FMV and loading times differ (the PS1 plays the intro FMVs; the PC skips them because `D1_FMV` defaults to off
+when `D1_PAD` is set - a PC run with FMVs needs new numbers in its column); everything in game is driven by the same
+script on both sides:
+- `D1_PADF=<script>` (PC, `port/pc/pc_main.c`) / `lrhost --padf`: the D1_PAD syntax keyed on **CameraCnt**, the sim
+  step counter (0 at the start of a game, +1 per sim step in main.c func_000230B0; it stands still in the pause menu
+  and mission cut-scenes, where the vblank-paced frame counter D_00097534 does not). Applies to the in-game loop's
+  own pad read only (func_0002360C -> func_000514E0; the PC checks the call chain, the emulator redirects that one
+  `jal`); steps without an entry read as nothing pressed; menus and the pause menu still read D1_PAD / `--pad`.
+  `drive:LEN:SEED` in sessions.txt expands to `padgen.py LEN SEED`: accelerate with random steering bursts, back
+  out every 240 steps - it crashes into things and gets chased.
+- Setup on both sides: `D1_POKE=VBL:SYMBOL=VALUE` (PC, `pc_trace.c`) / `lrhost --poke VBL:ADDR=VALUE` (e.g. the
+  unlocked-city count D_000967E0 = 4 for LA/New York, cheat 0 for the credits); `lrhost --skip-garage` applies the
+  PC mod skip_garage_test to the PS1 game; `lrhost --pursuit-r R` gives Pursuit/Getaway the setup the PC picked
+  (main.c func_00022818 picks 1 of 15 with VSync(-1) % 15 - a vblank count, different on every run on a PS1 too;
+  `@R@` in sessions.txt makes session.sh run the PC first and pass its pick).
+- The PC stops by itself with `D1_TRACE_UNTIL=N` (a record at frame >= N, or 3000 vblanks without one: the game
+  ended), the emulator with `--until-frame N`.
+- When the pause menu ran, the frame counters of the two sides differ afterwards; lockstep.py then aligns on CameraCnt
+  (the last record of each sim step) and leaves the frame counter out.
+
+### Pieces
 - `tools/pc/compare/trace.spec` - what is traced (label, PS1 address, PC symbol, size): frame counter, CameraCnt,
   the BIOS rand seed, camera position, Random2's table, car_data[20], felony.c's pursuer records, MISSION, the civ
   slots, and all of .sdata/.sbss (`*`: a PS1 range the PC assembles from PC_RAM and the C-owned objects inside it),
   plus `mask` lines: the words that legitimately differ, each with its reason (vblank clocks, saved stack pointers,
-  a string literal's address, CD-streaming progress, the XM player's interrupt-driven state, a speech-queue timer
-  that follows SPU playback). A new divergence is either a port bug or gets a mask line with its explanation.
+  a string literal's address, CD-streaming progress, the XM/XA players' interrupt-driven state, a speech-queue timer
+  that follows SPU playback, an R3000 load-delay quirk in a hand-written asm return value). A new divergence is
+  either a port bug or gets a mask line with its explanation.
 - PC: `port/pc/pc_trace.c`, `D1_TRACE=<spec>:<out>`. `__wrap_VSync` passes its return address; the first VSync call
   per game frame from the in-game loop (main.c func_0002360C: the VSync(-1) wait right after ControlReplay) writes a
   record. Symbols come from the exe's own ELF symbol table (so statics like pc_psyq.c's rand seed work); `*` ranges
   read build/slus_008.42.map (`D1_TRACE_MAP` overrides).
-- Emulator: `tools/pc/compare/lrhost.c`, a ~600-line headless libretro frontend (no window, no audio, software
-  renderer, interpreter CPU, no memory cards; `--pad` takes the D1_PAD syntax, `--shot`, `--ramdump`,
-  `--zerocheck`). A libretro core only returns between vblanks and a game frame takes >= 2, so the host patches the
-  PS1 game in emulated RAM (not the disc) once SLUS_008.42 is loaded: `jal stub` at 0x24240, the same point as the
-  PC hook. The 31-instruction stub copies the spec's regions into a buffer at 0x1E5100 and bumps a sequence word;
-  the host collects the buffer after every vblank. 0x1E4E00-0x1ED800 is RAM nothing uses during boot, menus and
-  the demos (measured with `--zerocheck`; only CRED.BIN, the credits overlay, would cover it), and the host
-  reports if anything else writes there.
-- `lockstep.py info|diff|show`: games are runs of the frame counter (0,1,2..), paired in order and aligned on that
-  counter, never on vblanks. Pointers are compared by what they point at (`--pc-exe`: PC addresses of C-owned
-  objects, functions and the scratchpad are mapped back to PS1 addresses; Driver stores physical addresses).
-  `show TRACE GAME FRAME [label]` dumps a record; `--all` lists the first divergent frame per region.
+- Emulator: `tools/pc/compare/lrhost.c`, a headless libretro frontend (no window, no audio, software renderer,
+  interpreter CPU, no memory cards; `--shot`, `--ramdump`, `--ramdump-frame F` (RAM at the trace point of frame F),
+  `--save`/`--load` savestates for exploring menus, `--zerocheck`). A libretro core only returns between vblanks and
+  a game frame takes >= 2, so the host patches the PS1 game in emulated RAM (not the disc) once SLUS_008.42 is
+  loaded: `jal stub` at 0x24240, the same point as the PC hook. The stub bumps a sequence word and spins until the
+  host has read the spec's regions straight from RAM (and left the next step's pad in the mailbox), so the main
+  thread stands still at the trace point; interrupts (XM player, CD) keep running, which only touches masked state.
+  Stubs and mailbox sit in kernel RAM nothing uses (0xC000-0xC220); the host checks the stub code every vblank. (A
+  first version copied into a buffer at 0x1E5100: New York's level data lives there.)
+- `lockstep.py info|diff|show`: games are runs of the frame counter (restarting at 0), aligned on that counter (or on
+  CameraCnt after a pause), never on vblanks. Pointers are compared by what they point at (`--pc-exe`: PC addresses
+  of C-owned objects, functions and the scratchpad are mapped back to PS1 addresses; Driver stores physical
+  addresses). `show TRACE GAME FRAME [label]` dumps a record; `--all` lists the first divergent frame per region.
+- Coverage: build with `cmake ... -DCMAKE_C_FLAGS=-finstrument-functions` and run with `D1_FUNCS=<file>` (session.sh:
+  `D1_FUNCS=1`); `tools/pc/compare/coverage.py <build> <funcs.txt ...> [--list]` reports which game functions ran,
+  which of the 58 asm routines (port/pc/asm_*.c), the 10 wips (port/pc/wips_pc.c) and the FAKEMATCH functions.
 
-Result (2026-10-27, commit fb2b13f + this tool): all four demos (0xB4/0xB5 in city 0, 0xB6/0xB7 in city 1) are
-identical for their whole length - 2747 + 2292 + 1776 + 1674 = 8489 game frames, every traced byte outside the mask
-lines; the demos also end on the same frame. Divergences found and explained on the way: felony.c func_00065424's
-uninitialised stack VEC (vy/pad garbage in the pursuers' cur/prev, unread), pathfind's heap pointers to the sentinel
-cell (a PC address - same object), and the timing/platform words in the mask list. Sensitivity check: pairing two
-different demos diverges at frame 0 in 1051 words.
+### Results
+2026-10-27 (commit 3691197 + the working tree's pause.c fix):
+- Attract demos (`run.sh`): 0xB4/0xB5 (city 0) and 0xB6/0xB7 (city 1) identical for their whole length,
+  2747 + 2292 + 1776 + 1674 frames, ending on the same frame.
+- Live sessions (`session.sh`, all 17 of sessions.txt): every one identical on every traced byte outside the mask
+  lines - 24246 game frames: Take A Ride in Miami (felony 2976, two pursuers), San Francisco, LA (felony 988) and New
+  York; the first Undercover mission after the garage skip; the garage test itself; Pursuit, Getaway and Survival
+  (felony at the 4096 maximum), Cross Town Checkpoint, Trail Blazer; Training Car Park and Desert; the credits;
+  Take A Ride with two pauses (aligned on CameraCnt); and a session plus its Quick Replay (the replay of what was
+  just played is identical too). Every session crashes the car (damage 17000-25000 where driving is possible).
+- Divergences found and explained or fixed: felony.c func_00065424's uninitialised stack VEC (vy/pad garbage in the
+  pursuers' cur/prev, unread); pathfind's heap pointers to the sentinel cell (a PC address - same object); the
+  unpacker's return value (R3000 load delay: the PS1 caller stores the address 0x2613C, unread); Pursuit/Getaway's
+  vblank-count pick of the setup (different on every PS1 run too: `--pursuit-r`); rendering counters that run on
+  through pause/end menus; the timing/platform words in the mask list. One port bug: pause.c's void menu actions
+  (the "Continue" crash, PC only - fixed in pause.c). Sensitivity check: pairing two different demos diverges at
+  frame 0 in 1051 words.
+- Function coverage over the 17 sessions (`coverage.py`, PC build with -finstrument-functions): 833 of 1300 game
+  functions ran; 54 of the 58 asm routines (not run: func_0002C688, func_00031048/31050, func_00026B94 - polygon
+  draw handlers no level used); 6 of the 10 wips (not run: mcard.c's three, ladoptions.c's func_001CD7C0 - memory
+  card and apartment options screens, outside the in-game loop the trace compares); 34 of the 42 FAKEMATCH functions
+  (not run: func_00029448 tile draw, func_00057AE4 full-screen map, func_0006BE14 an item of another pause menu,
+  func_0006F81C XM, func_000E8E84/EB5B8 memory card, func_001C3FD0/001C84C0 frontend). Not reached in game:
+  handlers.c and job_fx.c (later career missions' events and explosions), most of mission.c, director.c's
+  Film Director editing, pedestrians beyond the basics.
 
 To find the code behind a divergence on the PC side, watch the word with gdb in the build box (break on
-`PC_TraceVSync if D_00097534 == F-1`, then `watch` the PC address and print `bt` in its commands).
+`PC_TraceVSync if D_00097534 == F-1`, then `watch` the PC address and print `bt` in its commands); on the
+emulator side `lrhost --ramdump-frame F` gives the whole PS1 RAM at the same point.
 
 ## How it fits together
 
@@ -245,7 +294,11 @@ Source changes: (1) the two GCC 13 build fixes (PsyX_GPU.cpp prim_terminator cas
 (2) `src/audio/PsyX_SPUAL.cpp` decodeSound stops at the output buffer size (a sample without an end flag overran
 waveBuffer and crashed in attract mode); (2b) same file, Driver 1 port: integer SPU ADPCM decode, loop start at
 the start of the LoopStart block (was one block late, and offset by a byte distance so whole samples looped), and the
-XA stream output (`PsyX_SPUAL_XAQueue/XAStop/XASetVolume`); (3) `include/psx/libgpu.h` DRAWENV loses PsyCross's unused `drt` byte, so DRAWENV has the real
+XA stream output (`PsyX_SPUAL_XAQueue/XAStop/XASetVolume`); (2c) same file, the SPU ADSR envelope (psx-spx rules; registers
+built as Driver's libspu SpuSetVoiceAttr does; fast attack/decay baked into the key-on PCM, the rest as AL gain from a 4 ms envelope
+thread, release played out, libspu key status = key bit + ENVX), SpuSetMute silencing voices (CD input unaffected), negative (surround)
+volumes, SpuSetReverbDepth/ModeParam depth and SpuSetCommonAttr master volume; `D1_SPU_LOG=1` prints every key-on/off;
+(2d) `src/psx/LIBETC.C` VSync(n > 1) waits n vblanks (was: returned at once); (3) `include/psx/libgpu.h` DRAWENV loses PsyCross's unused `drt` byte, so DRAWENV has the real
 PsyQ layout (0x5C bytes; Driver's draw buffers put DISPENV at DRAWENV + 0x5C and address fields by offset).
 Build notes (`port/CMakeLists.txt`): the PsyQ replacements are upper-case
 `src/psx/*.C`; gcc compiles `.C` as C++ (their headers have the `extern "C"` blocks for it), with `-fpermissive
@@ -278,6 +331,11 @@ Build notes (`port/CMakeLists.txt`): the PsyQ replacements are upper-case
 - Function pointers splat printed as `.byte` runs (the frontend's menu tables, e.g. city select D_001CE048, and
   main's mission handler tables) got no fixup: pc_gendata.py now also fixes an aligned word of a .byte/.short run
   whose value is exactly a game function's entry address.
+- Audio: PsyCross's VSync(n > 1) returned at once, so xaplay.c func_0006F4D8's XA fade-out (VSync(2) per volume step, main.c
+  func_00024754 on leaving the frontend) cut the music; LIBETC.C now waits (the only n > 1 caller besides NFMV's own waits).
+- Audio: Driver's envelopes are gates on the PS1 too (SFX voices keep SpuInit's ADSR 0000/0000; XM InitSPUChannel 100Fh/0000h:
+  0.8 ms attack, 2-sample release), so the ADSR work changes onsets only; XM's Dolby-surround volumes (L = v, R = -v) used to
+  average to silence in PsyCross's panning (magnitudes now).
 - The career ladder after a new game / loaded save (first exercised by the garage-skip mod; passing the test for real
   takes the same path) had three PC faults: (1) `modelpointers` slots no level has filled since boot are NULL and the
   apartment view's first `func_000148C4` -> `func_0001EEB4` reads `modelpointers[tile][1]` before InitSpooling (the
@@ -286,3 +344,39 @@ Build notes (`port/CMakeLists.txt`): the PsyQ replacements are upper-case
   PC_OverlayLoad rewrites them to `pc_scratchpad`. (3) ladconfirm.c (3 loops) and ladoptions.c loop on DrawSync +
   the buffer flip with no VSync, so nothing was presented ("Get A New Job" froze, D1_QUIT never fired):
   `PC_LadderFrame()` paces them like ladder.c's own loop (poll VSync(-1) until 2 vblanks passed).
+- Driving Games -> Pursuit/Getaway crashed in scores.c func_0006E39C: those modes (game types 0x14/0x15) have no
+  score table, func_0006E418 returns NULL and the original loads `s[2]` before its switch anyway (the PS1 reads the
+  NULL garbage area, then no case uses it). PC reads it only when `s` is set. (The "You lost your target!" a second in
+  is not a bug: main.c picks the target's replay from 15 by `VSync(-1) % 15`; with the emulator's pick forced, Pursuit
+  Miami 2 runs in lockstep for 325 frames.)
+- ladder.c func_001C9404 cases 1/2 (apartment camera moves) are two more DrawSync + flip loops with no VSync: the move
+  ran unshown. `PC_LadderFrame()` as in ladconfirm.c.
+- PsyCross `setDrawMode` set length 3 (PsyQ: 2; SetDrawMode at 0x74D54 stores 2), so DR_MODE packets swallowed the
+  next primitive's tag word; with its zero texture-window word ending ProcessDrawEnv early, the walker misparsed the
+  rest ("Unhandled zero length primitive" x3377 + "did not output valid primitive" in the night-rain demo 0xB5:
+  draw.c's wet-road reflections) and drew the following subtractive polygon twice. Fixed both: length 2, and a zero
+  word inside a draw-env packet is a GP0 NOP.
+- PsyCross drew polygons the PS1 GPU skips: a triangle whose vertices are >= 1024 apart horizontally or >= 512
+  vertically (psx-spx; quads per triangle, coordinates signed 11-bit) is not rendered. Near-camera geometry projected
+  far off screen showed as huge stretched stripes (Training Desert demo, where the emulator shows nothing).
+  PsyX_GPU.cpp CullOversizeTri/Quad collapse such triangles.
+- Pause menu "Show Map" crashed (call through a garbage function pointer): the menu loop (pause.c func_0006C4BC) takes
+  each action's return value as the new selection, and four actions the C declares `void` return one in the original
+  (v0 at `jr ra`): func_0006BE14/func_0006BE3C return D_00096F08 (their volatile read), func_0006C3FC and func_0006C490
+  ("Show Map") return 1. PC: `PAUSE_ACT` makes them `int` with those returns (PS1 still sees `void`). A scan of every
+  MENU_ITEM action slot (C tables and the raw .data bytes) found no other void action whose result is used
+  (ladconfirm func_001CB0E0 returns -1 but its loop ignores the result; func_0006BDA4/C4A4 are never invoked).
+- Options -> "View Controls" (options.c func_001C37BC) hung: it LoadImages GFX\PAD.TIM into the frame buffer, turns
+  the display on and polls the pad for X with no VSync and no drawing - the PS1 scans VRAM out as is, PsyCross shows
+  only drawn scenes, and D1_QUIT never fired. `port/pc/pc_display.c` PC_ShowDisplayVRAM() draws the display area
+  from VRAM (15-bit quads over a black tile; saved on the first call because presenting writes the scene back into
+  the display area) and PC_LadderFrame() presents/paces. Matches the emulator's frame.
+- Credits (Cheats -> CREDITS, the button code L1 L2 R1 R2 L1 R1 R2 L2 R1 R2 L1 L2 R1 on the main menu; also the end of
+  the game) showed a grey screen: cred.c draws its logo with SetDrawMode(mode, dfe = 0, ...), and PsyCross reads a
+  DR_TPAGE's dfe bit as "render off screen" (its own render-to-VRAM mode) - on the PS1 the bit only gates drawing
+  to the displayed field in interlaced modes. PsyX_GPU.cpp ProcessDrawEnv leaves the render target to the DRAWENV.
+  The 3D view, logo, names and MDEC portraits now show as on the emulator. (Earlier builds crashed there.)
+- Arg-register scan by data flow (`tools/pc/livein.py [-d]`: live-in a0-a3 of every asm function via CFG + delay slots +
+  callee fixpoint, vs the parameter count of its C definition): no new leftover-register calls; the hits are the
+  known ones (func_00059638, SilenceXM), asm_*.c register-convention entry points, jump-table over-approximation and
+  PsyQ internals.

@@ -32,6 +32,8 @@ mask smalldata DD0 4
 # addresses vs the PC's token (pc_psyq.c GetSp/SetSp)
 mask smalldata 8F4 4
 mask smalldata C3C 4
+mask smalldata 8F8 4
+# (D_00097068: main.c func_00024754 case 0, the Undercover start, saves GetSp() around PlayRender too)
 # pres.c D_00096E30 = (int)"DATA\LANG.ENG": the address of a string literal (PS1 .rodata 0x10EF4 / PC .rodata)
 mask smalldata 6C0 4
 # CD streaming (spool.c .sdata 0x969E8 + .sbss 0x971E0-0x972DC): the PC serves the stream synchronously inside the
@@ -54,3 +56,24 @@ mask smalldata D50 4
 # D_00097728 (felony.c, the last direction called) then holds another quadrant. Only compared to choose whether to
 # queue the next call (speech only).
 mask smalldata FB8 4
+# overmap.c LoadMapTile stores func_00026140's result (the RNC unpacker, hand-written asm) in D_00096D5C. The asm
+# returns with `jr ra; lw v0, 0(v0)`: on the R3000 the load is still in its delay slot when the caller's
+# `sw v0, D_00096D5C` runs, so the PS1 stores the OLD v0 - the address 0x2613C - while the C translation
+# (port/pc/asm_unpack.c) returns the loaded word (the unpacked size). Nothing reads D_00096D5C.
+mask smalldata 5EC 4
+# xaplay.c .sdata 0x96F94-0x96FA0: XA sector-interrupt bookkeeping (the PC's XA reader, port/pc/pc_xa.c, delivers
+# the sectors at its own pace)
+mask smalldata 824 12
+
+# Rendering counters that advance per DRAWN frame - and the game keeps drawing the scene behind the pause menu and
+# the end-of-game menu for a vblank-paced time, so after either they differ between the two sides: draw.c's frame
+# stamp D_0009707C (CompoundMatrix .computed), the double buffer in use (D_00097524 / current), the overhead map's
+# blink counter D_000975B0 (overmap.c), and each car's light flash phase (car_data[].flash, +0x132: debris.c's
+# light/siren drawing). Nothing in the simulation reads them.
+mask smalldata 90C 4
+mask smalldata DB4 4
+mask smalldata DC0 4
+mask smalldata E40 4
+mask car_data 132 1 18C 20
+# director.c D_0009760C: a vblcounter timestamp the replay controls take (vblank clock)
+mask smalldata E9C 4

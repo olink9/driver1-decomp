@@ -49,13 +49,14 @@ class Trace:
         return struct.unpack_from("<i", payload, r.off + off)[0]
 
     def games(self):
-        """[(first record, record count)] for each run of frame = 0,1,2,..."""
+        """[(first record, record count)] for each game: a run of the frame counter that only goes up (it restarts
+        at 0 with every game; the pause menu advances it by its own vblank-paced length)"""
         out = []
         start = None
         prev = None
         for i in range(self.count):
             fr = self.word(self.rec(i)[2], "frame")
-            if fr == 0 or prev is None or fr != prev + 1:
+            if fr == 0 or prev is None or fr <= prev:
                 if start is not None:
                     out.append((start, i - start))
                 start = i
@@ -184,25 +185,27 @@ def load_pcmap(path):
     return m
 
 
-def load_masks(path):
-    """spec "mask label offset bytes [stride count]" lines -> {label: set(word offsets)}"""
+def load_masks(path, kind="mask"):
+    """spec "mask label offset bytes [stride count]" lines (or "pausemask", used only when a pause made the two
+    sides' frame counters differ) -> {label: set(byte offsets)}"""
     masks = {}
     if not path:
         return masks
     for line in open(path):
         p = line.split("#")[0].split()
-        if len(p) >= 4 and p[0] == "mask":
+        if len(p) >= 4 and p[0] == kind:
             off, size = int(p[2], 16), int(p[3])
             stride, count = (int(p[4], 16), int(p[5])) if len(p) >= 6 else (0, 1)
             for i in range(count):
-                for o in range(off + i * stride, off + i * stride + size, 4):
-                    masks.setdefault(p[1], set()).add(o & ~3)
+                for o in range(off + i * stride, off + i * stride + size):
+                    masks.setdefault(p[1], set()).add(o)
     return masks
 
 
 def cmd_diff(a):
     pc, em = Trace(a.pc), Trace(a.emu)
     masks = load_masks(a.spec)
+    pausemasks = load_masks(a.spec, "pausemask")
     if [(r.label, r.size) for r in pc.regions] != [(r.label, r.size) for r in em.regions]:
         sys.exit("the two traces were made with different specs")
     ignore = set(a.ignore.split(",")) if a.ignore else set()
@@ -220,12 +223,38 @@ def cmd_diff(a):
             continue
         print(f"\nPC game {gi}: {game_desc(pc, pg[gi])}\nemu game {gj}: {game_desc(em, eg[gj])}")
         (ps, pn), (es, en) = pg[gi], eg[gj]
+        pf = [pc.word(pc.rec(ps + k)[2], "frame") for k in range(pn)]
+        ef = [em.word(em.rec(es + k)[2], "frame") for k in range(en)]
         n = min(pn, en)
+        if pf[:n] == ef[:n]:
+            pairs_k = [(ps + k, es + k) for k in range(n)]
+            rmasks = masks
+        else:
+            # the frame counters went apart (a pause: its menu runs vblank-paced frames that count): align on the
+            # sim step counter instead, the last record of each CameraCnt value on both sides, and leave the frame
+            # counter itself (region "frame", D_00097534 in smalldata) out
+            def last_per_cc(t, s0, cnt):
+                d = {}
+                for k in range(cnt):
+                    d[t.word(t.rec(s0 + k)[2], "CameraCnt")] = s0 + k
+                return d
+            pc_cc, em_cc = last_per_cc(pc, ps, pn), last_per_cc(em, es, en)
+            common = sorted(set(pc_cc) & set(em_cc))
+            pairs_k = [(pc_cc[c], em_cc[c]) for c in common]
+            n = len(pairs_k)
+            rmasks = {k: set(v) for k, v in masks.items()}
+            for k, v in pausemasks.items():
+                rmasks.setdefault(k, set()).update(v)
+            rmasks.setdefault("frame", set()).update(range(4))
+            sd = pc.by_label.get("smalldata")
+            if sd and sd.addr <= 0x97534 < sd.addr + sd.size:
+                rmasks.setdefault("smalldata", set()).update(range(0x97534 - sd.addr, 0x97538 - sd.addr))
+            print(f"  frame counters differ (pause): aligned on CameraCnt, {n} sim steps in common")
         first = None
         diffs_per_region = {}
-        for k in range(n):
-            _, _, pp = pc.rec(ps + k)
-            _, _, ep = em.rec(es + k)
+        for k, (ip, ie) in enumerate(pairs_k):
+            _, _, pp = pc.rec(ip)
+            _, _, ep = em.rec(ie)
             if pp == ep:
                 continue
             found = []
@@ -235,9 +264,10 @@ def cmd_diff(a):
                 a0, b0 = bytes(pp[r.off:r.off + r.size]), bytes(ep[r.off:r.off + r.size])
                 if a0 == b0:
                     continue
-                rm = masks.get(r.label, ())
+                rm = rmasks.get(r.label, ())
                 for o in range(0, r.size, 4):
-                    if a0[o:o + 4] != b0[o:o + 4] and o not in rm:
+                    if a0[o:o + 4] != b0[o:o + 4] and not all(
+                            a0[o + j] == b0[o + j] or (o + j) in rm for j in range(4)):
                         pv = struct.unpack_from("<I", a0, o)[0]
                         ev = struct.unpack_from("<I", b0, o)[0]
                         if ps1_pointer_equiv(pv, ev, pcmap):
@@ -256,9 +286,11 @@ def cmd_diff(a):
                   + (f" (ignoring {','.join(sorted(ignore))})" if ignore else ""))
             continue
         k, found = first
-        fr = pc.word(pc.rec(ps + k)[2], "frame")
+        fr = pc.word(pc.rec(pairs_k[k][0])[2], "frame")
+        cc = pc.word(pc.rec(pairs_k[k][0])[2], "CameraCnt")
         worst = max(worst, 1)
-        print(f"  FIRST DIVERGENCE at frame {fr} (record pair {ps + k} / {es + k}), {k} frames identical before it;"
+        print(f"  FIRST DIVERGENCE at frame {fr} / CameraCnt {cc} (record pair {pairs_k[k][0]} / {pairs_k[k][1]}),"
+              f" {k} records identical before it;"
               f" {len(found)} differing words:")
         for r, o, pv, ev in found[:a.max]:
             print(f"    {describe(r, o):46s} @PS1 {r.addr + o:05X}   PC {pv:08X} ({pv if pv < 0x80000000 else pv - (1 << 32)})"
