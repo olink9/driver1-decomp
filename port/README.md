@@ -3,7 +3,7 @@
 The decompiled game (`src/`) built as a native 32-bit Linux program on [PsyCross](https://github.com/OpenDriver2/PsyCross)
 (vendored in `port/psycross/`, MIT), the PsyQ-on-SDL2/OpenGL layer REDRIVER2 uses. Status: it builds, links and
 boots through the splashes to the frontend, runs the attract-mode demos, and plays (Take A Ride in Miami, driven
-headlessly through `D1_PAD`). No FMV, no memory card yet.
+headlessly through `D1_PAD`). No FMV yet. Memory card: slot 1 is a raw `.mcd` image (see Memory card).
 
 ## 1. Game data: unpack your disc
 
@@ -181,6 +181,15 @@ loops and CdSearchFile). Here everything is synchronous and deterministic (neede
   ready callback (924h mode: CdGetSector starts at the header), where xaplay.c's cbready finds the end marker.
 Mods: replacing a file in `pcdata/` with one of the same sector count just works.
 
+### Memory card: `port/pc/pc_mcard.c`
+Slot 1 is a standard raw 128 KB PS1 card image (`.mcd`/`.mcr`, psx-spx layout) - the same file DuckStation/PCSX use,
+so saves move both ways (a symlink to an emulator's card works; writes go through to its target). Path: `D1_MCARD`, else
+`card1.mcd` in the working directory; a missing file is created as a freshly formatted card (byte-identical to a
+DuckStation-formatted one). Slot 2 is always empty. A file that isn't 128 KB is never touched (slot reads "no card");
+one without the "MC" header is an unformatted card the game offers to format. libmcrd semantics follow the game's own
+library (async Exist/Accept/Read/WriteFile + MemCardSync, McErr codes, new-card flag cleared by Accept); commands complete
+at once. Every change is written immediately (temp file + rename). Check a card: `python3 port/pc/pc_mcard_check.py card1.mcd`.
+
 ### Frames
 The game never calls `PsyX_EndScene` (REDRIVER2 does, from its game code), so `VSync` is wrapped
 (`-Wl,--wrap=VSync`, `pc_main.c`): a drawn scene is presented there, and pending CD/MDEC work completes there.
@@ -217,7 +226,7 @@ Identified for the port by BIOS call number (`li t2,0xA0/0xB0; li t1,n`), the fu
 | 7D66C, 7D720 | SetDefDrawEnv, SetDefDispEnv | args, D2 twins | PsyCross |
 | 7AEB4, 7AED4, 7AF94, 7B160, 7B198 | PadStartCom, PadGetState, PadInfoMode, PadSetActAlign, PadSetAct | pad.c use (7AEB4 right after PadInitDirect) | PsyCross |
 | 7C7D4 | SpuSetReverbVoice | signature | PsyCross |
-| 77E1C..7932C (12) | MemCardInit/Start/Stop/Exist/Accept/ReadFile/WriteFile/GetDirentry/Sync/CreateFile/DeleteFile/Format | "Access Denied" strings, mcard.c use | pc_psyq.c: "no card" for now |
+| 77E1C..7932C (12) | MemCardInit/Start/Stop/Exist/Accept/ReadFile/WriteFile/GetDirentry/Sync/CreateFile/DeleteFile/Format | "Access Denied" strings, mcard.c use | pc_mcard.c (raw .mcd image) |
 | 73AC4, 73AF8, 73B74, 73B94, 768E4, DecDCTvlcBuild | DecDCTReset, DecDCTin, DecDCTout, DecDCToutCallback, DecDCTvlc | MDEC, CRED.BIN portraits | pc_psyq.c stubs (callback chain kept) |
 | 7EB24, 7EBE8, 7EB34, 7EC78, 7C744 | Exec, FlushCache, ExitCriticalSection, EnterCriticalSection, exit | BIOS A(43h,44h), syscalls, B(38h) | pc_psyq.c |
 | SsSetSerialVol, SetLineF2, SetLineF4 | (named) | missing in PsyCross | pc_psyq.c |

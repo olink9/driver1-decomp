@@ -159,48 +159,4 @@ void func_00073B94(void (*func)(void))
     s_dct_cb = func;
 }
 
-/* ---- libmcrd. PC-PORT: phase 1 has no memory card: every slot reports "no card" (McErrCardNotExist), so the
- * game takes its no-card paths. A .mcd-backed card is a later step (PsyCross's LIBMCRD is not usable as is:
- * it indexes memoryCards[2] with chan = port << 4 and crashes when the card file is missing). ---- */
-enum { McErrNone, McErrCardNotExist, McErrCardInvalid, McErrNewCard };
-enum { McFuncExist = 1, McFuncAccept, McFuncReadFile, McFuncWriteFile };
-static int s_mc_cmd = -1, s_mc_result;
-
-static int mc_register(int cmd)
-{
-    s_mc_cmd = cmd;
-    s_mc_result = McErrCardNotExist;
-    return 1;
-}
-
-void func_00077E1C(int val) { }                                        /* MemCardInit */
-void func_00077E48(void) { ONCE("memory cards: none inserted (not emulated yet)"); }   /* MemCardStart */
-void func_00077E98(void) { }                                           /* MemCardStop */
-int func_00077ED8(int chan) { return mc_register(McFuncExist); }       /* MemCardExist */
-int func_00078114(int chan) { return mc_register(McFuncAccept); }      /* MemCardAccept */
-int func_00078798(int chan, char *name, void *buf, int ofs, int n) { return 0; }   /* MemCardReadFile */
-int func_000789B8(int chan, char *name, void *buf, int ofs, int n) { return 0; }   /* MemCardWriteFile */
-int func_00078F68(int chan, char *name, int blocks) { return McErrCardNotExist; }  /* MemCardCreateFile */
-int func_00079170(int chan, char *name) { return McErrCardNotExist; }              /* MemCardDeleteFile */
-int func_0007932C(int chan) { return McErrCardNotExist; }                          /* MemCardFormat */
-
-/* MemCardGetDirentry(chan, name, dir, files, ofs, max) */
-int func_00078BD8(int chan, char *name, void *dir, int *files, int ofs, int max)
-{
-    if (files)
-        *files = 0;
-    return McErrCardNotExist;
-}
-
-/* MemCardSync(mode, *cmds, *rslt): 1 = the registered command finished, -1 = none registered */
-int func_00078E4C(int mode, int *cmds, int *rslt)
-{
-    if (s_mc_cmd < 0)
-        return -1;
-    if (cmds)
-        *cmds = s_mc_cmd;
-    if (rslt)
-        *rslt = s_mc_result;
-    s_mc_cmd = -1;
-    return 1;
-}
+/* ---- libmcrd: port/pc/pc_mcard.c (a raw .mcd card image) ---- */
