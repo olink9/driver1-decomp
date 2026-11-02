@@ -125,12 +125,46 @@ What that means for you:
 
 The decompiled game runs as a native Linux program on [PsyCross](https://github.com/OpenDriver2/PsyCross), with
 SDL2 and OpenGL: menus, FMVs, music, the whole Undercover career and the driving games, with keyboard or gamepad.
-`port/README.md` has the full steps. In short:
 
-1. Rip your own US disc (SLUS-008.42) to a `.bin`/`.cue` and unpack it:
-   `python3 port/pc/pc_extract.py driver1.cue pcdata`.
-2. Build: `cmake -S port -B build-pc && make -C build-pc` (32-bit SDL2/OpenAL dev packages).
-3. Run: `D1_DATA=pcdata build-pc/driver1`.
+**You need your own copy of the game:** the US release, Rev 1 (SLUS-008.42), as a disc image. Nothing from the
+game is in this repo or downloaded by it, and there are no ready-made builds: everything is made from your disc.
+
+### The quick way: `driver1.sh` (optional)
+
+```sh
+git clone https://github.com/olink9/driver1-decomp && cd driver1-decomp
+./driver1.sh setup ~/path/to/your/driver1.cue      # once: unpacks your disc and builds the game
+./driver1.sh                                       # play (./driver1.sh --window for a window)
+```
+
+What it needs: Linux, `python3`, and `podman` or `docker` (most gaming distros and SteamOS have podman).
+The build runs in a container, so no compilers or 32-bit packages go onto your system.
+
+What `setup` does, step by step:
+1. **Reads your disc image.** A `.cue`/`.bin` rip as it is; a `.chd` is converted first with `chdman`
+   (package `mame-tools`). A `.pbp` needs converting to bin/cue first (psxtract or pop-fe); a plain `.iso`
+   won't do, because the music and videos need the raw 2352-byte sectors.
+2. **Unpacks it into `pcdata/`** and checks it is the right version (sha1 of `SLUS_008.42`). Another version
+   gets a clear message, not a broken build.
+3. **Copies the executable and the four code overlays to `orig/`** and checks them against the `*.sha1` files.
+4. **Builds in a container** (`port/container/Containerfile`: Ubuntu 24.04 with 32-bit SDL2/OpenAL, CMake and
+   splat at pinned versions; about 1 GB, downloaded once). The build splits the game's data out of your files,
+   compiles the PC program into `play/`, and puts the 32-bit libraries it uses (SDL2, OpenAL and what they need,
+   all open source) in `play/lib` as **fallbacks**: at start, your system's own 32-bit copy of each library is
+   used whenever there is one, and a bundled one only where it is missing. Your C library and graphics drivers
+   are always your system's own. A system that runs Steam has everything else the game needs.
+
+`./driver1.sh` then starts `play/driver1` fullscreen. Saves (`card1.mcd`), settings (`driver1_mods.ini`) and the
+log (`driver1.log`) are in `play/`. To update later: `git pull` and run `setup` again.
+
+Options: `./driver1.sh setup <disc> --engine docker` picks the container tool; `--no-container` builds on your
+system instead (you need gcc/g++ multilib, CMake, pkg-config, python3-venv and the 32-bit SDL2 and OpenAL
+development packages). Everything is in `driver1.sh` and `port/container/`, readable shell.
+
+### By hand
+
+Every step without the script is in `port/README.md` (unpack, split, build, run, plus the debug and test
+switches).
 
 How it was checked against the PlayStation original:
 - **Lockstep:** the PC build and the PS1 game (in an emulator) run the same input and log the same game state
