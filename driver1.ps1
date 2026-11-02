@@ -115,8 +115,13 @@ function Install-Tools {
     return @($msys, $py)
 }
 
-# OpenAL Soft, built once into .deps\openal with the MSYS2 toolchain
+# OpenAL Soft, built once into .deps\openal with the MSYS2 toolchain (or D1_OPENAL=<dir>: a 32-bit OpenAL you
+# already have there, as bin\OpenAL32.dll + lib\pkgconfig\openal.pc + include\AL)
 function Build-OpenAl([string]$msys) {
+    if ($env:D1_OPENAL) {
+        if (-not (Test-Path -LiteralPath "$env:D1_OPENAL\bin\OpenAL32.dll")) { Die "D1_OPENAL=${env:D1_OPENAL}: no bin\OpenAL32.dll there" }
+        return $env:D1_OPENAL
+    }
     $oal = "$Root\.deps\openal"
     if (Test-Path -LiteralPath "$oal\bin\OpenAL32.dll") { return $oal }
     New-Item -ItemType Directory -Force "$Root\.deps" | Out-Null
