@@ -117,7 +117,15 @@ play() {
   [ -x play/driver1 ] && [ -d pcdata ] || die "not set up yet: ./driver1.sh setup <path to your disc image>"
   # Saves (card1.mcd), settings (driver1_mods.ini) and the log live in play/.
   cd play
-  export LD_LIBRARY_PATH="$ROOT/play/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+  # play/lib holds 32-bit fallbacks (SDL2, OpenAL and what they use). Use one only where this system has
+  # no 32-bit copy of its own: the system's libraries match its graphics driver, the bundled ones may not.
+  rm -rf .libs && mkdir .libs
+  local have so
+  have=$(/sbin/ldconfig -p 2>/dev/null | grep -F '(libc6)' | awk '{print $1}')   # (libc6) = 32-bit entries
+  for so in lib/*; do
+    grep -qxF "$(basename "$so")" <<< "$have" || ln -s "../$so" ".libs/$(basename "$so")"
+  done
+  export LD_LIBRARY_PATH="$ROOT/play/.libs${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
   local missing
   missing=$(ldd ./driver1 2>/dev/null | awk '/not found/{print $1}' | tr '\n' ' ')
   [ -z "$missing" ] || die "your system lacks these 32-bit libraries: $missing

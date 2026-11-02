@@ -27,12 +27,21 @@ cmake -S port -B build-pc > build/cmake.log 2>&1 \
 make -C build-pc -j"$(nproc)" > build/make.log 2>&1 \
   || { echo "compiling failed, see build/make.log" >&2; exit 1; }
 
-# 3. Put the program next to the two 32-bit libraries most systems lack: SDL2 and OpenAL (both open source).
-#    Everything else (C/C++ runtime, X11/Wayland, sound, OpenGL drivers) must be your system's own 32-bit
-#    libraries: bundling Ubuntu's copies breaks a newer system's graphics driver. A system that runs Steam has them.
+# 3. Put the program next to the 32-bit libraries it needs (SDL2, OpenAL and the libraries they use, all open
+#    source). ./driver1.sh uses each one only if your system lacks it (a system's own copies always win, so a
+#    newer graphics driver never meets an older bundled library). Never bundled: the C library and the
+#    OpenGL/GPU driver libraries, which must be your system's own.
 rm -rf play/lib && mkdir -p play/lib
 cp build-pc/driver1 play/driver1
-for so in libSDL2-2.0.so.0 libopenal.so.1; do
-  cp -L "/usr/lib/i386-linux-gnu/$so" play/lib/ 2>/dev/null || cp -L "$(ldd build-pc/driver1 | awk -v n="$so" '$1==n{print $3}')" play/lib/
+skip='^(libc|libm|libdl|libpthread|librt|libresolv|ld-linux|libGL|libGLX|libGLdispatch|libEGL|libOpenGL|libdrm|libgbm|libvulkan)\.'
+# SDL2 opens its video and audio backends at run time, so ldd on the program alone misses them.
+extra=$(ls /usr/lib/i386-linux-gnu/{libX11.so.6,libXext.so.6,libXcursor.so.1,libXi.so.6,libXfixes.so.3,libXrandr.so.2,libXss.so.1,libxkbcommon.so.0,libwayland-client.so.0,libwayland-cursor.so.0,libwayland-egl.so.1,libdecor-0.so.0,libpulse.so.0,libasound.so.2,libdbus-1.so.3} 2>/dev/null || true)
+for f in build-pc/driver1 $extra; do
+  ldd "$f" 2>/dev/null | awk '/=> \//{print $3}'
+  case "$f" in /*) echo "$f";; esac
+done | sort -u | while read -r lib; do
+  base=$(basename "$lib")
+  [[ "$base" =~ $skip ]] && continue
+  cp -L "$lib" "play/lib/$base"
 done
-say "built: play/driver1 (+ SDL2 and OpenAL in play/lib)"
+say "built: play/driver1, with $(ls play/lib | wc -l) fallback libraries in play/lib"
