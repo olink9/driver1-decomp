@@ -29,3 +29,11 @@ undefined_funcs_auto.*.txt
 undefined_syms_auto.*.txt
 nfmv.ld
 nfmv.d
+# ./driver1.sh: your unpacked disc, the PC build and the playable copy (saves, settings, log)
+pcdata/
+pcdata.new/
+.disc/
+build-pc/
+play/
+.venv-pc/
+.build-container.log
