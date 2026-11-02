@@ -25,6 +25,7 @@ options:
 
   o_as_suffix: True
   use_legacy_include_asm: False
+  generate_asm_macros_files: False   # include/include_asm.h, macro.inc etc. are committed; splat must not rewrite them
 
   section_order: [".rodata", ".text", ".data", ".bss"]
   # auto_link_sections: [".data", ".rodata", ".bss"]

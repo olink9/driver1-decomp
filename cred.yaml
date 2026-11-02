@@ -20,6 +20,7 @@ options:
   global_vram_end: 0x200000
   o_as_suffix: True
   use_legacy_include_asm: False
+  generate_asm_macros_files: False   # include/include_asm.h, macro.inc etc. are committed; splat must not rewrite them
   section_order: [".rodata", ".text", ".data", ".bss"]
   symbol_addrs_path:
     - symbol_addrs.txt            # main (calls/refs into the executable)
