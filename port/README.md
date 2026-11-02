@@ -1,6 +1,6 @@
 # Driver 1 PC port (PsyCross)
 
-The decompiled game (`src/`) built as a native 32-bit Linux program on [PsyCross](https://github.com/OpenDriver2/PsyCross)
+The decompiled game (`src/`) built as a native 32-bit Linux or Windows program on [PsyCross](https://github.com/OpenDriver2/PsyCross)
 (vendored in `port/psycross/`, MIT), the PsyQ-on-SDL2/OpenGL layer REDRIVER2 uses. Status: **playable**. Menus, FMVs, XA music and sound, the memory card, the whole Undercover career and the
 driving games run, with keyboard or gamepad; 17 recorded play sessions are frame-identical to the PS1 game (see
 *Lockstep comparison*). Memory card: slot 1 is a raw `.mcd` image (see Memory card).
@@ -27,6 +27,32 @@ In the `build` distrobox (32-bit SDL2/OpenAL dev packages, Python 3):
 cmake -S port -B ../driver1-work/pcbuild/<dir> && make -C ../driver1-work/pcbuild/<dir> -j2
 ```
 
+### Windows (MinGW-w64, by hand; `driver1.ps1` does all of this)
+
+A GNU toolchain, not MSVC: the build relies on GCC's data layout flags and on GNU ld (see *How it fits together*).
+1. [MSYS2](https://www.msys2.org) (e.g. `winget install MSYS2.MSYS2`), then in an MSYS2 shell:
+   `pacman -S --needed mingw-w64-i686-{gcc,binutils,cmake,ninja,pkgconf,SDL2}`. Put `C:\msys64\mingw32\bin` first on
+   your PATH for the steps below.
+2. Python 3 from python.org (or `winget install Python.Python.3.13`; not MSYS2's, whose builds of splat's helper
+   packages need compiling): `py -3 -m venv .venv-pc`, then `.venv-pc\Scripts\pip install` the pinned versions
+   from `port/container/Containerfile`. Unpack with `py -3 port\pc\pc_extract.py driver1.cue pcdata`, copy the
+   five originals to `orig\` and split them as `port/container/build.sh` does
+   (`.venv-pc\Scripts\python -m splat split slus_008.42.yaml`, then frontend, mcard, cred, iview; with
+   `build\main_syms.txt` from `port\container\main_syms.txt`).
+3. OpenAL Soft: MSYS2 has no 32-bit package. Build its source release with the same toolchain:
+   `cmake -S openal-soft-1.25.2 -B oal-build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=<dir>
+   -DALSOFT_UTILS=OFF -DALSOFT_EXAMPLES=OFF -DALSOFT_TESTS=OFF` and `ninja -C oal-build install`, then
+   `set PKG_CONFIG_PATH=<dir>\lib\pkgconfig`.
+4. `cmake -S port -B build-pc -G Ninja -DPython3_EXECUTABLE=%CD%\.venv-pc\Scripts\python.exe` and
+   `ninja -C build-pc`. Out come `build-pc\driver1.exe` and `driver1.sym` (its symbols with sizes, for `D1_TRACE`).
+5. Next to the exe (or on PATH): `SDL2.dll`, `OpenAL32.dll` and the MinGW runtime DLLs it pulls in
+   (`objdump -p driver1.exe | findstr "DLL Name"`, recursively; `driver1.ps1` copies them).
+
+The game is a GUI program (no console window): its output goes to whatever you redirect it to
+(`driver1.exe > driver1.log 2>&1`). The environment switches below work the same; on Windows set them with
+`set NAME=value` (cmd) or `$env:NAME = 'value'` (PowerShell). The lockstep sessions run against a reference pack
+of emulator traces (`D1_REF`, see *Lockstep comparison*).
+
 ## 3. Run
 
 ```
@@ -41,7 +67,9 @@ frontend and in game. `D1_PAD=FROM[-TO]=BTN[+BTN..],...` replaces pad 1 with scr
 6 vblanks; BTN: up down left right x o tri sq l1 l2 r1 r2 start select) and ignores real input - set it (even
 empty) for any unattended run, or a connected gamepad leaks in. Take A Ride, Miami, day:
 `D1_PAD=2500=right,2600=right,2700=right,2800=right,2900=right,3000=x,3200=x,4000-8900=x`.
-Silent: `ALSOFT_DRIVERS=null SDL_AUDIODRIVER=dummy`. A crash prints a backtrace (`addr2line -e driver1 <addr>`).
+Silent: `ALSOFT_DRIVERS=null SDL_AUDIODRIVER=dummy`. A crash prints a backtrace (`addr2line -e driver1 <addr>`;
+Windows: the exception, the faulting address and the return addresses into the program, `addr2line -f -e
+driver1.exe <addr>`).
 
 ## Mods
 
@@ -82,6 +110,12 @@ frame, and `tools/pc/compare/lockstep.py` compares them frame by frame and names
 tools/pc/compare/run.sh <pc build dir> <out dir> [pc vblanks=30000] [emulator vblanks=62000]   # the 4 attract demos
 tools/pc/compare/session.sh <pc build dir> <out dir> [session ...]                            # live play
 ```
+
+**Windows** (no emulator side there): `D1_REF=<reference pack> PYTHON=<python.exe> D1_DATA=C:/.../pcdata
+tools/pc/compare/session.sh build-pc <out dir> [session ...]` (from Git Bash) runs the PC side natively against
+each session's `emu.trace` from a pack made on Linux (`<pack>/<session>/emu.trace`; the attract demos:
+`<pack>/attract2/emu.trace`, PC side as in `run.sh`). Such a pack is a snapshot of the game's RAM: keep it out of
+the repo.
 
 Both run the two sides headless and silent in the `build` distrobox, then the diff. They need
 `~/dev/driver1-work/emu/` (or `EMU_DIR`): `swanstation_libretro.so` (the DuckStation libretro core; copied from the
@@ -198,6 +232,16 @@ emulator side `lrhost --ramdump-frame F` gives the whole PS1 RAM at the same poi
 - Game files are compiled with `-fno-toplevel-reorder -malign-data=abi -fno-zero-initialized-in-bss -fno-common`
   so each file's data keeps its PS1 order and alignment: the game reads across neighbours
   (`xmplay.c` reads `D_0008D218[-1]` = `D_0008D208[7]`).
+- **Windows** (MinGW-w64 i686, PE): Windows maps its own things (the process parameters, NLS tables, the heap,
+  the main stack) into the low address space before `main()` runs, so 0x10000-0x1FFFFF can't be mapped later.
+  The PS1 RAM is part of the exe image instead: image base 0x10000 (`--image-base`, no ASLR), and a 2 MB
+  uninitialised section `.psxram` first (0x11000-0x1FFFFF; the toolchain's default linker script with that section
+  put in front, `pc_pe.x`), the program from 0x200000. The first 0x400 bytes at 0x10000 must stay the PE headers
+  (the loader reads them whenever a DLL loads, e.g. SDL's audio and GL drivers); the PS1 bytes of 0x10000-0x103FF
+  live in `pc_hdrshadow`, and `pc_gendata.py --pe` resolves names and fixups in that range there like any
+  C-owned object. The rest of the header page is made writable for SLUS_008.42. The game stack switch sets the
+  thread's stack bounds in the TIB (exception dispatch checks them) instead of `ucontext`. OpenGL entry points are
+  `__stdcall` on 32-bit Windows (`PC_GLAPI`).
 
 ### Linking: `port/pc/pc_gendata.py` (build step)
 `pc_gendata.py fixups` writes `pc_fixups.s` (above). `pc_gendata.py syms` runs after compiling, reads every object
@@ -208,7 +252,13 @@ with `nm`, and writes `pc_syms.ld` (an implicit linker script) with one `PROVIDE
 3. data inside a PS1 image (main 0x10000-0xD0054 incl. .bss, the overlays' ranges) -> its PS1 address;
 4. splat's short overlay call names (`func_1E0290`) -> the overlay function.
 Every decision is listed in `<build>/pc_syms.txt`; names it can't resolve are left to the linker and listed as
-MISSING (currently none).
+MISSING (currently none; on Windows the list shows the MinGW/Windows runtime symbols it doesn't scan, which the
+linker finds). Windows (`--pe`): C names carry a leading `_`; COFF objects keep no symbol sizes, so a data
+object's size comes from its type in the DWARF info (`objdump --dwarf=info`; the default build is `-g`) -
+`-fdata-sections` would give sizes too, but COFF pads each such section to 4 bytes, which moves small
+neighbours; declarations bound to a raw asm name (`__asm__("D_000B9110")`, no `_`) get the same resolution under
+that spelling; ld accepts no implicit script next to `-T`, so `pc_syms.ld` is appended to the main script
+(`pc_link.x`). `pc_gendata.py symfile` writes `driver1.sym` for `pc_trace.c` and `lockstep.py`.
 
 ### CD: `port/pc/pc_cd.c` (replaces PsyCross's LIBCD.C, which is never linked)
 Served from `pcdata/` through `DISC.LBA`: every file keeps its original sector numbers, so the game's own sector

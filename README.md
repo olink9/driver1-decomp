@@ -123,8 +123,8 @@ What that means for you:
 
 ## Playing it on PC
 
-The decompiled game runs as a native Linux program on [PsyCross](https://github.com/OpenDriver2/PsyCross), with
-SDL2 and OpenGL: menus, FMVs, music, the whole Undercover career and the driving games, with keyboard or gamepad.
+The decompiled game runs as a native Linux or Windows program on [PsyCross](https://github.com/OpenDriver2/PsyCross),
+with SDL2 and OpenGL: menus, FMVs, music, the whole Undercover career and the driving games, with keyboard or gamepad.
 
 **You need your own copy of the game:** the US release, Rev 1 (SLUS-008.42), as a disc image. Nothing from the
 game is in this repo or downloaded by it, and there are no ready-made builds: everything is made from your disc.
@@ -161,10 +161,43 @@ Options: `./driver1.sh setup <disc> --engine docker` picks the container tool; `
 system instead (you need gcc/g++ multilib, CMake, pkg-config, python3-venv and the 32-bit SDL2 and OpenAL
 development packages). Everything is in `driver1.sh` and `port/container/`, readable shell.
 
+### Windows: `driver1.cmd` (optional)
+
+```bat
+git clone https://github.com/olink9/driver1-decomp
+cd driver1-decomp
+driver1 setup C:\path\to\your\driver1.cue
+driver1
+```
+
+`setup` runs once: it unpacks your disc and builds the game. `driver1` plays (`driver1 --window` for a window).
+That is a Command Prompt; in PowerShell, type `.\driver1`. Or without a command line: drop your `.cue` onto `driver1.cmd` to set up, then double-click `driver1.cmd` to
+play. (No git? GitHub's *Code > Download ZIP* works too.)
+
+What it needs: Windows 10 or 11, 64-bit. `setup` checks for the rest and offers to install what is missing,
+saying exactly what and asking first: [MSYS2](https://www.msys2.org) (via `winget`, into `C:\msys64`) with its
+32-bit MinGW-w64 compiler, CMake, Ninja and SDL2 (`pacman`), and Python 3 (via `winget`). The game is a native
+32-bit Windows program: no WSL, no container.
+
+What `setup` does, step by step (`driver1.ps1`, readable PowerShell):
+1. **Checks the tools** (above) and installs the missing ones if you say yes.
+2. **Reads your disc image**, unpacks it into `pcdata\` and checks the version, exactly as on Linux (same
+   messages for a `.pbp`, a plain `.iso` or another version; a `.chd` needs `chdman.exe` from MAME on your PATH).
+3. **Copies the executable and the four code overlays to `orig\`** and checks them against the `*.sha1` files.
+4. **Splits the game's data out** with splat, at the versions the Linux container pins (a Python venv in
+   `.venv-pc\`).
+5. **Builds OpenAL Soft** (the sound library, open source) once into `.deps\` from its source release, checked
+   against a pinned sha256: MSYS2 has no 32-bit package of it.
+6. **Compiles the PC program** and puts it in `play\` with the DLLs it uses next to it: SDL2, OpenAL and the
+   MinGW runtime, all open source, all built or installed on your machine.
+
+`driver1` then starts `play\driver1.exe` fullscreen. Saves (`card1.mcd`), settings (`driver1_mods.ini`) and the
+log (`driver1.log`) are in `play\`. To update later: `git pull` and run `setup` again.
+
 ### By hand
 
-Every step without the script is in `port/README.md` (unpack, split, build, run, plus the debug and test
-switches).
+Every step without the scripts is in `port/README.md` (unpack, split, build, run, plus the debug and test
+switches), for Linux and Windows.
 
 How it was checked against the PlayStation original:
 - **Lockstep:** the PC build and the PS1 game (in an emulator) run the same input and log the same game state
@@ -172,7 +205,7 @@ How it was checked against the PlayStation original:
   replay) match frame for frame, 24,246 frames in total. `tools/pc/compare/` has the tools.
 - **Crash and hang sweep** of every game mode, and a run through the whole Undercover career (47 missions).
 
-Known limits: it is a 32-bit Linux build so far (no Windows or 64-bit build yet). The 11 unmatched functions run
+Known limits: it is a 32-bit build (Linux, and Windows since November 2026; no 64-bit build yet). The 11 unmatched functions run
 as C translated from their assembly. One optional PC-only mod ships with it: skip the garage driving test
 (toggle on the Undercover screen; see `port/README.md`, *Mods*).
 
