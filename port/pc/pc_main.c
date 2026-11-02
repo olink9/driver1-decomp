@@ -51,7 +51,6 @@ static unsigned char s_game_stack[1 << 20] __attribute__((aligned(16)));   /* be
  * to 0x200000, the program above. The first 0x400 bytes at 0x10000 stay the PE headers (the loader reads them
  * whenever a DLL loads); the PS1 bytes of 0x10000-0x103FF live in pc_hdrshadow (pc_gendata.py --pe resolves names
  * there), the rest of that page is made writable. */
-__asm__(".section .psxram,\"bw\"\n\t.globl _pc_psxram_section\n_pc_psxram_section:\n\t.space 0x1EF000\n\t.text");
 extern unsigned char pc_psxram_section[];
 unsigned char pc_hdrshadow[0x400] __attribute__((aligned(16)));
 #define PC_HDR_END 0x10400
@@ -603,3 +602,9 @@ int main(int argc, char **argv)
 #endif
     return 0;
 }
+
+#ifdef _WIN32
+/* the PS1 RAM section (see the top). Last in the file: COFF gas has no .pushsection, and GCC would carry on in
+ * whatever section this leaves current */
+__asm__(".section .psxram,\"bw\"\n\t.globl _pc_psxram_section\n_pc_psxram_section:\n\t.space 0x1EF000");
+#endif

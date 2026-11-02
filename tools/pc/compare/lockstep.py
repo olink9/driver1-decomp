@@ -11,6 +11,7 @@ func_0002360C loop) counts up 0,1,2,..; games are paired in order (--pc-game/--e
 that counter - never by vblank, which differs (CD timing, FMV, the PC's skipped FMVs).
 """
 import argparse
+import os
 import struct
 import sys
 from collections import namedtuple
@@ -107,7 +108,7 @@ def ps1_symbol(addr):
     if _PS1SYMS is None:
         syms = {}
         try:
-            for line in open(__file__.rsplit("/", 1)[0] + "/../../../build/slus_008.42.map"):
+            for line in open(os.path.dirname(os.path.abspath(__file__)) + "/../../../build/slus_008.42.map"):
                 mm = re.match(r"\s+0x([0-9a-f]{8})\s+([A-Za-z_]\w*)\s*(=.*)?$", line)
                 if mm:
                     syms.setdefault(int(mm.group(1), 16), mm.group(2))
@@ -149,7 +150,7 @@ def load_pcmap(path):
     import re
     import subprocess
     ps1 = {}
-    mapfile = __file__.rsplit("/", 1)[0] + "/../../../build/slus_008.42.map"
+    mapfile = os.path.dirname(os.path.abspath(__file__)) + "/../../../build/slus_008.42.map"
     try:
         for line in open(mapfile):
             m = re.match(r"\s+0x([0-9a-f]{8})\s+([A-Za-z_]\w*)\s*(=.*)?$", line)
@@ -158,7 +159,11 @@ def load_pcmap(path):
     except OSError:
         pass
     m = {}
-    out = subprocess.run(["nm", "-S", path], capture_output=True, text=True).stdout
+    sym = os.path.splitext(path)[0] + ".sym"
+    if path.lower().endswith(".exe") and os.path.exists(sym):
+        out = open(sym).read()   # Windows: PE keeps no symbol sizes, the build writes them here (pc_gendata.py)
+    else:
+        out = subprocess.run(["nm", "-S", path], capture_output=True, text=True).stdout
     for line in out.splitlines():   # the scratchpad: PS1 0x1F800000, PC pc_scratchpad (pc_main.c)
         p = line.split()
         if len(p) == 4 and p[3] == "pc_scratchpad":
@@ -335,7 +340,7 @@ def main():
     p.add_argument("--all", action="store_true", help="scan every frame (first divergence per region)")
     p.add_argument("--max", type=int, default=40, help="differing words to list")
     p.add_argument("--pc-exe", help="the PC driver1 (nm) to recognise equal pointers")
-    p.add_argument("--spec", default=__file__.rsplit("/", 1)[0] + "/trace.spec", help="spec with the mask lines")
+    p.add_argument("--spec", default=os.path.dirname(os.path.abspath(__file__)) + "/trace.spec", help="spec with the mask lines")
     p = sub.add_parser("show")
     p.add_argument("trace")
     p.add_argument("game", type=int)

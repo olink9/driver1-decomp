@@ -25,8 +25,8 @@ pc_syms.ld: one PROVIDE() per symbol the objects leave undefined (a PROVIDE only
   A name none of these resolve is left to the linker and listed in pc_syms.txt, next to every resolution.
 
 --pe (Windows, MinGW i686): C names carry a leading underscore in the objects and the scripts. COFF keeps no
-  symbol sizes, so the objects are compiled with -fdata-sections and an object's size is that of its own
-  .data$NAME/.rdata$NAME/.bss$NAME section (the link keeps those in input order, port/CMakeLists.txt). PS1 RAM
+  symbol sizes: a data object's size comes from its type in the DWARF debug info (the build is -g; objdump
+  --dwarf=info). (Not -fdata-sections: COFF pads every such section to 4 bytes, which moves the neighbours.) PS1 RAM
   is part of the exe image (port/pc/pc_main.c), whose first 0x400 bytes, PS1 0x10000-0x103FF, stay the PE
   headers: that part of SLUS_008.42 lives in pc_hdrshadow, and names inside it resolve there like any C-owned
   object.
@@ -255,16 +255,90 @@ def unprefix(n):
     return n[1:] if PE and n.startswith("_") else n
 
 
-def coff_sized(obj, nm_lines):
-    """nm lines of a COFF object with the C prefix dropped and the sizes COFF lacks: a data object's size is
-    that of its own section (-fdata-sections), from objdump -h."""
-    sizes = {}
-    hdr = subprocess.run([os.environ.get("OBJDUMP", "objdump"), "-h", obj], capture_output=True, text=True,
-                         check=True).stdout
-    for l in hdr.splitlines():
-        m = re.match(r"\s*\d+\s+\.(?:data|rdata|bss)\$(\S+)\s+([0-9a-fA-F]+)\s", l)
+def dwarf_sizes(path):
+    """{name: byte size} of the file-scope variables in an object's or exe's DWARF info (None where two
+    compilation units define different objects of that name)."""
+    txt = subprocess.run([os.environ.get("OBJDUMP", "objdump"), "--dwarf=info", path], capture_output=True,
+                         text=True, errors="replace").stdout
+    dies, stack, cur = {}, [], None
+    die_re = re.compile(r"^\s*<(\d+)><([0-9a-f]+)>: Abbrev Number: (\d+)(?: \((\w+)\))?")
+    at_re = re.compile(r"^\s*<[0-9a-f]+>\s+(DW_AT_\w+)\s*:\s*(.*?)\s*$")
+    for l in txt.splitlines():
+        m = die_re.match(l)
         if m:
-            sizes[m.group(1)] = int(m.group(2), 16)
+            depth = int(m.group(1))
+            if m.group(3) == "0":
+                cur = None
+                continue
+            cur = {"tag": m.group(4), "depth": depth, "at": {}, "kids": []}
+            off = int(m.group(2), 16)
+            dies[off] = cur
+            del stack[depth:]
+            if stack:
+                stack[-1]["kids"].append(cur)
+            stack.append(cur)
+            continue
+        m = at_re.match(l)
+        if m and cur is not None:
+            v = m.group(2)
+            if v.startswith("(indirect"):
+                v = v.split("): ", 1)[-1]
+            cur["at"][m.group(1)] = v
+
+    def num(v):
+        try:
+            return int(v.split()[0], 0)
+        except (ValueError, IndexError):
+            return None
+
+    def ref(v):
+        m = re.match(r"<0x([0-9a-f]+)>", v or "")
+        return dies.get(int(m.group(1), 16)) if m else None
+
+    memo = {}
+
+    def size(d, depth=0):
+        if d is None or depth > 40:
+            return None
+        if id(d) in memo:
+            return memo[id(d)]
+        a, t, r = d["at"], d["tag"], None
+        if "DW_AT_byte_size" in a:
+            r = num(a["DW_AT_byte_size"])
+        elif t == "DW_TAG_pointer_type":
+            r = 4
+        elif t == "DW_TAG_array_type":
+            r = size(ref(a.get("DW_AT_type")), depth + 1)
+            for k in d["kids"]:
+                if k["tag"] == "DW_TAG_subrange_type" and r is not None:
+                    ka = k["at"]
+                    n = num(ka["DW_AT_count"]) if "DW_AT_count" in ka else (
+                        num(ka["DW_AT_upper_bound"]) + 1 if num(ka.get("DW_AT_upper_bound", "")) is not None else 0)
+                    r *= n
+        elif "DW_AT_type" in a:
+            r = size(ref(a["DW_AT_type"]), depth + 1)
+        memo[id(d)] = r
+        return r
+
+    out = {}
+    for d in dies.values():
+        a = d["at"]
+        if d["tag"] != "DW_TAG_variable" or d["depth"] != 1 or "DW_AT_declaration" in a:
+            continue
+        spec = ref(a.get("DW_AT_specification"))
+        name = a.get("DW_AT_name") or (spec and spec["at"].get("DW_AT_name"))
+        typ = a.get("DW_AT_type") or (spec and spec["at"].get("DW_AT_type"))
+        if not name:
+            continue
+        s = size(ref(typ))
+        if s is not None:
+            out[name] = s if out.get(name, s) == s else None
+    return out
+
+
+def coff_sized(obj, nm_lines):
+    """nm lines of a COFF object with the C prefix dropped and the sizes COFF lacks (from the DWARF info)."""
+    sizes = dwarf_sizes(obj)
     out = []
     for l in nm_lines:
         p = l.split()
@@ -274,7 +348,7 @@ def coff_sized(obj, nm_lines):
             out.append(f"{p[0]} {unprefix(p[1])}")
         elif len(p) == 3:
             n = unprefix(p[2])
-            if p[1].upper() in "BDR" and n in sizes:
+            if p[1].upper() in "BDR" and sizes.get(n):
                 out.append(f"{p[0]} {sizes[n]:08x} {p[1]} {n}")
             else:
                 out.append(f"{p[0]} {p[1]} {n}")
@@ -282,9 +356,9 @@ def coff_sized(obj, nm_lines):
 
 
 def gen_symfile(exe, out_path):
-    """driver1.sym: `nm -S`-style lines (address size type name) for the Windows exe, which keeps no sizes: each
-    symbol extends to the next one in its section (data objects lie back to back in input order, see --pe above;
-    functions up to the next function)."""
+    """driver1.sym: `nm -S`-style lines (address size type name) for the Windows exe, which keeps no sizes: a data
+    object's from the DWARF info, anything else (functions) up to the next symbol in its section."""
+    dsz = dwarf_sizes(exe)
     secs = []
     for l in subprocess.run([os.environ.get("OBJDUMP", "objdump"), "-h", exe], capture_output=True, text=True,
                             check=True).stdout.splitlines():
@@ -306,6 +380,8 @@ def gen_symfile(exe, out_path):
         size = 0
         if sec and t.upper() in "TBDR":
             size = min(nxt.get(a, sec[1]), sec[1]) - a
+            if t.upper() in "BDR" and dsz.get(n):
+                size = dsz[n]
         out.append(f"{a:08x} {size:08x} {t} {n}")
     open(out_path, "w").write("\n".join(out) + "\n")
 

@@ -74,10 +74,6 @@ if(CMAKE_C_COMPILER_VERSION VERSION_GREATER_EQUAL 14)
   # GCC 14 made the decompiled code's int<->pointer mixes errors; they are what the PS1 code does
   target_compile_options(d1obj PRIVATE $<$<COMPILE_LANGUAGE:C>:-fpermissive>)
 endif()
-if(WIN32)
-  # COFF has no symbol sizes: one section per object gives pc_gendata.py --pe each object's size
-  target_compile_options(d1obj PRIVATE -fdata-sections)
-endif()
 
 if(WIN32)
   set(LIBC_NAME libmsvcrt.a)
@@ -116,11 +112,6 @@ if(WIN32)
   if(LD_PSX STREQUAL LD_DEFAULT)
     message(FATAL_ERROR "could not place .psxram in the default linker script (ld --verbose changed?)")
   endif()
-  # -fdata-sections (d1obj, below) puts each object in its own .data$NAME/.rdata$NAME/.bss$NAME: keep them in
-  # input (= definition) order instead of sorted by name, so neighbours stay neighbours as on Linux
-  string(REPLACE "*(SORT(.data$*))" "*(.data$*)" LD_PSX "${LD_PSX}")
-  string(REPLACE "*(SORT(.rdata$*))" "*(.rdata$*)" LD_PSX "${LD_PSX}")
-  string(REGEX REPLACE "\n    \\*\\(\\.bss\\)\n" "\n    *(.bss .bss$*)\n" LD_PSX "${LD_PSX}")
   # ld takes neither an implicit script next to -T nor an INCLUDE of one here ("appears multiple times"), so
   # pc_syms.ld is appended to the script: pc_link.x
   file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/pc_pe.x "${LD_PSX}
