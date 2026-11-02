@@ -1,9 +1,9 @@
 # Driver 1 PC port (PsyCross)
 
 The decompiled game (`src/`) built as a native 32-bit Linux program on [PsyCross](https://github.com/OpenDriver2/PsyCross)
-(vendored in `port/psycross/`, MIT), the PsyQ-on-SDL2/OpenGL layer REDRIVER2 uses. Status: it builds, links and
-boots through the splashes to the frontend, runs the attract-mode demos, and plays (Take A Ride in Miami, driven
-headlessly through `D1_PAD`). FMVs play (NFMV in-process, see FMV). Memory card: slot 1 is a raw `.mcd` image (see Memory card).
+(vendored in `port/psycross/`, MIT), the PsyQ-on-SDL2/OpenGL layer REDRIVER2 uses. Status: **playable**. Menus, FMVs, XA music and sound, the memory card, the whole Undercover career and the
+driving games run, with keyboard or gamepad; 17 recorded play sessions are frame-identical to the PS1 game (see
+*Lockstep comparison*). Memory card: slot 1 is a raw `.mcd` image (see Memory card).
 
 ## 1. Game data: unpack your disc
 

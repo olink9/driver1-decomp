@@ -1,7 +1,7 @@
 # Driver 1 decomp
 
-A matching decompilation of **Driver: You Are the Wheelman** (PlayStation, 1999, Reflections), aiming for a
-**native PC port**.
+A matching decompilation of **Driver: You Are the Wheelman** (PlayStation, 1999, Reflections), and a
+**native PC port** built from it that is **playable** on Linux (see *Playing it on PC*).
 
 *Matching* means C source that compiles back to the **byte-identical** original executable, using the
 original compiler. Once the code is C, it can be rebuilt for other platforms. Driver 2 already got this
@@ -77,7 +77,9 @@ verified* below).
    in `include/structs.h` (plus `frontend.h`, `mcard.h`, `nfmv.h`), and every file owns its own data. The whole
    build is still byte-identical. File boundaries come from the binary itself (data ownership, `$gp` use, shared
    string literals, object padding); see `pilot/TU-PLAN.md`, `pilot/TU1.md` and `pilot/TU4.md`.
-4. Port to PC on [PsyCross](https://github.com/OpenDriver2/PsyCross), the compatibility layer REDRIVER2 uses.
+4. ~~Port to PC on [PsyCross](https://github.com/OpenDriver2/PsyCross), the compatibility layer REDRIVER2 uses.~~
+   Playable (2026-10-27): see *Playing it on PC* and `port/README.md`.
+5. Next: a 64-bit build, other platforms, widescreen and other PC options.
 
 ## How a match is verified
 
@@ -118,6 +120,27 @@ What that means for you:
 - If you prefer not to use or contribute to AI-assisted projects, that's completely fine. The tools and
   findings here (compiler identification, the maspsx patch, the Driver 2 symbol mapping) may still be useful
   for your own work.
+
+## Playing it on PC
+
+The decompiled game runs as a native Linux program on [PsyCross](https://github.com/OpenDriver2/PsyCross), with
+SDL2 and OpenGL: menus, FMVs, music, the whole Undercover career and the driving games, with keyboard or gamepad.
+`port/README.md` has the full steps. In short:
+
+1. Rip your own US disc (SLUS-008.42) to a `.bin`/`.cue` and unpack it:
+   `python3 port/pc/pc_extract.py driver1.cue pcdata`.
+2. Build: `cmake -S port -B build-pc && make -C build-pc` (32-bit SDL2/OpenAL dev packages).
+3. Run: `D1_DATA=pcdata build-pc/driver1`.
+
+How it was checked against the PlayStation original:
+- **Lockstep:** the PC build and the PS1 game (in an emulator) run the same input and log the same game state
+  every frame. 17 recorded sessions (all 4 cities, the career, the driving games, training, credits, pause and
+  replay) match frame for frame, 24,246 frames in total. `tools/pc/compare/` has the tools.
+- **Crash and hang sweep** of every game mode, and a run through the whole Undercover career (47 missions).
+
+Known limits: it is a 32-bit Linux build so far (no Windows or 64-bit build yet). The 11 unmatched functions run
+as C translated from their assembly. One optional PC-only mod ships with it: skip the garage driving test
+(toggle on the Undercover screen; see `port/README.md`, *Mods*).
 
 ## Building
 
@@ -192,6 +215,10 @@ hints in `fnasm.py` need two optional checkouts, each with its own environment v
 | `tools/` | scorer, link check, disassembly helper, Driver 2 matcher, PsyQ signature matcher |
 
 ## Contributing
+
+**Bug reports for the PC port are very welcome.** Please say what you did and where (city, mission or mode),
+what happened, and what the PlayStation version does there if you know. A memory card image (`card1.mcd`) or a
+`D1_PAD` input script that reproduces it helps most.
 
 Issues and pull requests are welcome, from people and from people's agents. A PR that adds or changes a
 match must pass `tools/linkcheck.py`. Please don't commit anything taken from the game disc. This repo
