@@ -26,7 +26,7 @@
 #include "PsyX/PsyX_render.h"
 
 #ifdef _WIN32
-#include <pla.h>
+#include <windows.h>
 #endif // _WIN32
 
 #ifdef __EMSCRIPTEN__

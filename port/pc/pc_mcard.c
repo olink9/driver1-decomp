@@ -28,6 +28,12 @@
 #include <string.h>
 #include <limits.h>
 #include <sys/stat.h>
+#ifdef _WIN32
+#include <windows.h>
+/* Windows: rename() won't replace an existing file; no symlinks to follow */
+#define realpath(p, r) _fullpath((r), (p), PATH_MAX)
+#define rename(from, to) (MoveFileExA((from), (to), MOVEFILE_REPLACE_EXISTING) ? 0 : -1)
+#endif
 
 #define MC_SIZE   0x20000
 #define MC_BLOCK  0x2000
@@ -156,7 +162,10 @@ static void refresh(int create)
         return;
     }
     if (s_st_valid && st.st_mtime == s_st.st_mtime && st.st_size == s_st.st_size && st.st_ino == s_st.st_ino
-        && st.st_mtim.tv_nsec == s_st.st_mtim.tv_nsec)
+#ifndef _WIN32
+        && st.st_mtim.tv_nsec == s_st.st_mtim.tv_nsec
+#endif
+        )
         return;
     s_st = st;
     s_st_valid = 1;

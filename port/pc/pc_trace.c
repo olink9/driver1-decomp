@@ -18,7 +18,9 @@
  * label[32] ps1addr size; then records: seq, vblank, payload (the regions back to back).
  */
 #define _GNU_SOURCE
+#ifndef _WIN32
 #include <elf.h>
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -37,11 +39,66 @@ static unsigned last_frame_seen = ~0u;
 static unsigned long s_loop_lo, s_loop_hi;   /* func_0002360C */
 static FILE *s_out;
 
+#ifdef _WIN32
+/* Windows: the exe's symbols come from driver1.sym next to it (port/pc/pc_gendata.py symfile, a build step; PE
+ * keeps no symbol sizes): `address size type name` lines */
+#include <windows.h>
+typedef struct { unsigned long st_value, st_size; char *name; } Elf32_Sym;
+static Elf32_Sym *s_syms;
+static int s_nsyms;
+#define SYM_NAME(s) ((s)->name)
+
+static int elf_load(void)
+{
+    char path[MAX_PATH + 8], line[512], name[400];
+    unsigned long a, sz;
+    char t;
+    int cap = 0;
+    DWORD n;
+    FILE *f;
+    if (s_syms)
+        return 0;
+    n = GetModuleFileNameA(NULL, path, MAX_PATH);
+    if (!n || n < 4)
+        return -1;
+    strcpy(path + n - 4, ".sym");
+    if (!(f = fopen(path, "r"))) {
+        fprintf(stderr, "[trace] %s: missing (the build writes it next to the exe)\n", path);
+        return -1;
+    }
+    while (fgets(line, sizeof line, f))
+        if (sscanf(line, "%lx %lx %c %399s", &a, &sz, &t, name) == 4) {
+            if (s_nsyms == cap)
+                s_syms = realloc(s_syms, (cap = cap ? cap * 2 : 4096) * sizeof(*s_syms));
+            s_syms[s_nsyms].st_value = a;
+            s_syms[s_nsyms].st_size = sz;
+            s_syms[s_nsyms++].name = strdup(name);
+        }
+    fclose(f);
+    return s_nsyms ? 0 : -1;
+}
+
+static Elf32_Sym *elf_find(const char *name)
+{
+    Elf32_Sym *found = NULL;
+    int i, n = 0;
+    for (i = 0; i < s_nsyms; i++)
+        if (!strcmp(s_syms[i].name, name)) {
+            if (!found)
+                found = &s_syms[i];
+            n++;
+        }
+    if (n > 1)
+        fprintf(stderr, "[trace] %s: %d symbols of that name, using the first\n", name, n);
+    return found;
+}
+#else
 /* this executable's .symtab: name -> (value, size) */
 static char *s_elf;
 static Elf32_Sym *s_syms;
 static int s_nsyms;
 static const char *s_strtab;
+#define SYM_NAME(s) (s_strtab + (s)->st_name)
 
 static int elf_load(void)
 {
@@ -92,6 +149,7 @@ static Elf32_Sym *elf_find(const char *name)
         fprintf(stderr, "[trace] %s: %d symbols of that name, using the first\n", name, n);
     return found;
 }
+#endif
 
 /* A "*" entry: the PS1 range [addr, addr+size) as the PS1 sees it. Every byte comes from PC_RAM(a) (pc_psxram is at
  * address 0, so that is just the address) unless the PS1 map puts a symbol there that the PC build defines elsewhere
@@ -135,7 +193,7 @@ static int range_setup(int r, unsigned addr, unsigned size, const char *spec)
     fclose(f);
     /* plus the PC's own D_xxxxxxxx objects in the range the PS1 map has no label for */
     for (j = 0; j < (unsigned)s_nsyms; j++) {
-        const char *nm = s_strtab + s_syms[j].st_name;
+        const char *nm = SYM_NAME(&s_syms[j]);
         unsigned a;
         char *e;
         if (strncmp(nm, "D_", 2) || strlen(nm) != 10)
@@ -216,7 +274,7 @@ static void setup(void)
     int i;
 
     s_state = -1;
-    if (!env || !(colon = strchr(env, ':')) || colon - env >= (int)sizeof(spec))
+    if (!env || !(colon = strchr(env + (env[0] && env[1] == ':' ? 2 : 0), ':')) || colon - env >= (int)sizeof(spec))
         return;
     memcpy(spec, env, colon - env);
     spec[colon - env] = 0;

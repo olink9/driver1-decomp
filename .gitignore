@@ -37,3 +37,8 @@ build-pc/
 play/
 .venv-pc/
 .build-container.log
+# a run from the repo root (build-pc/driver1 with ./pcdata): log, memory card, settings
+/Driver.log
+/driver1.log
+/card1.mcd
+/driver1_mods.ini

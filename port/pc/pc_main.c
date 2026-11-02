@@ -16,17 +16,23 @@
 #include <string.h>
 #include <strings.h>
 #include <unistd.h>
-#include <sys/mman.h>
 #include <sys/stat.h>
-#include <ucontext.h>
 #include <limits.h>
 #include <signal.h>
-#include <execinfo.h>
 #include <pthread.h>
+#ifndef _WIN32
+#include <sys/mman.h>
+#include <ucontext.h>
+#include <execinfo.h>
+#endif
 
 #include "common.h"            /* PsyQ types (DISPENV, RECT16) */
 #include "PsyX/PsyX_public.h"
 #include <SDL.h>
+#ifdef _WIN32
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>        /* after the PsyQ headers: it #defines OpenEvent */
+#endif
 
 extern unsigned char pc_psxram[];          /* = 0, port/pc/pc_syms.ld */
 unsigned char pc_scratchpad[4096] __attribute__((aligned(16)));   /* PS1: 1 KB; the rest catches overruns */
@@ -39,7 +45,29 @@ extern int PC_CdFileSize(const char *name);
 
 static char s_datadir[PATH_MAX];
 static unsigned char s_game_stack[1 << 20] __attribute__((aligned(16)));   /* below 16 MB, see above */
+#ifdef _WIN32
+/* Windows: the kernel fills the low address space with its own mappings before main() runs, so PS1 RAM is part of
+ * the exe image instead (port/CMakeLists.txt): image base 0x10000, then this uninitialised section from 0x11000 up
+ * to 0x200000, the program above. The first 0x400 bytes at 0x10000 stay the PE headers (the loader reads them
+ * whenever a DLL loads); the PS1 bytes of 0x10000-0x103FF live in pc_hdrshadow (pc_gendata.py --pe resolves names
+ * there), the rest of that page is made writable. */
+__asm__(".section .psxram,\"bw\"\n\t.globl _pc_psxram_section\n_pc_psxram_section:\n\t.space 0x1EF000\n\t.text");
+extern unsigned char pc_psxram_section[];
+unsigned char pc_hdrshadow[0x400] __attribute__((aligned(16)));
+#define PC_HDR_END 0x10400
+#else
 static ucontext_t s_main_ctx, s_game_ctx;
+#endif
+
+/* where a PS1 image byte lives (only differs on Windows, for the PE header bytes) */
+static unsigned char *img_byte(unsigned int addr)
+{
+#ifdef _WIN32
+    if (addr - 0x10000u < PC_HDR_END - 0x10000u)
+        return pc_hdrshadow + (addr - 0x10000);
+#endif
+    return pc_psxram + addr;
+}
 
 const char *PC_DataDir(void)
 {
@@ -56,6 +84,16 @@ void PC_Break(const char *file, int line)
 
 static void map_psxram(void)
 {
+#ifdef _WIN32
+    DWORD old;
+    if (pc_psxram_section != pc_psxram + 0x11000 ||
+        !VirtualProtect(pc_psxram + 0x10000, 0x1000, PAGE_READWRITE, &old)) {
+        fprintf(stderr, "[driver1] PS1 RAM is not where the build put it (%p, expected %p): built without "
+                        "port/CMakeLists.txt's Windows link options?\n", (void *)pc_psxram_section,
+                (void *)(pc_psxram + 0x11000));
+        exit(1);
+    }
+#else
     void *want = pc_psxram + 0x10000;
     void *p = mmap(want, 0x200000 - 0x10000, PROT_READ | PROT_WRITE,
                    MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED_NOREPLACE, -1, 0);
@@ -63,6 +101,7 @@ static void map_psxram(void)
         fprintf(stderr, "[driver1] can't map PS1 RAM at %p (got %p): is vm.mmap_min_addr above 0x10000?\n", want, p);
         exit(1);
     }
+#endif
 }
 
 static int is_dir(const char *p)
@@ -90,10 +129,17 @@ static void find_datadir(int argc, char **argv)
         snprintf(s_datadir, sizeof(s_datadir), "pcdata");
         return;
     }
+#ifdef _WIN32
+    n = GetModuleFileNameA(NULL, exe, sizeof(exe) - 1);
+    if (n > 0 && strrchr(exe, '\\')) {
+        exe[n] = 0;
+        *strrchr(exe, '\\') = 0;
+#else
     n = readlink("/proc/self/exe", exe, sizeof(exe) - 1);
     if (n > 0) {
         exe[n] = 0;
         *strrchr(exe, '/') = 0;
+#endif
         snprintf(s_datadir, sizeof(s_datadir), "%s/pcdata", exe);
         if (is_dir(s_datadir))
             return;
@@ -117,7 +163,7 @@ static void apply_fixups(const unsigned int *t)
     const Fixup *f = (const Fixup *)(t + 1);
     unsigned int i;
     for (i = 0; i < t[0]; i++)
-        *(unsigned int *)(pc_psxram + f[i].addr) = f[i].value;
+        *(unsigned int *)img_byte(f[i].addr) = f[i].value;
 }
 
 static void load_main_image(void)
@@ -133,7 +179,12 @@ static void load_main_image(void)
     }
     /* header: +0x18 text address, +0x1C text size; the image starts at file offset 0x800 */
     fseek(f, 0x800, SEEK_SET);
+#ifdef _WIN32
+    if (hdr[6] != 0x10000 || fread(pc_hdrshadow, 1, sizeof(pc_hdrshadow), f) != sizeof(pc_hdrshadow) ||
+        fread(pc_psxram + PC_HDR_END, 1, hdr[7] - sizeof(pc_hdrshadow), f) != hdr[7] - sizeof(pc_hdrshadow)) {
+#else
     if (hdr[6] != 0x10000 || fread(pc_psxram + hdr[6], 1, hdr[7], f) != hdr[7]) {
+#endif
         fprintf(stderr, "[driver1] %s: unexpected layout (text 0x%x size 0x%x)\n", path, hdr[6], hdr[7]);
         exit(1);
     }
@@ -249,7 +300,7 @@ static void shot_vram(int n)
 
 static void grab_window(int n)
 {
-    typedef void (*ReadPixels)(int, int, int, int, unsigned, unsigned, void *);
+    typedef void (PC_GLAPI *ReadPixels)(int, int, int, int, unsigned, unsigned, void *);
     static ReadPixels rp;
     int w = 640, h = 480, y;
     unsigned char *px = malloc(w * h * 3);
@@ -432,6 +483,54 @@ void PC_PadRead(unsigned char *pad)
     }
 }
 
+#ifdef _WIN32
+/* crash report: exception code, faulting instruction and data address, and the return addresses on the stack that
+ * fall into the program (no ASLR: addr2line -f -e driver1.exe <addr> resolves them). Only faults inside the
+ * program itself: a DLL (a GPU driver) may fault and handle it on purpose. */
+static LONG CALLBACK on_crash(EXCEPTION_POINTERS *ep)
+{
+    extern unsigned char etext[];
+    const EXCEPTION_RECORD *er = ep->ExceptionRecord;
+    unsigned int eip = ep->ContextRecord->Eip, *sp = (unsigned int *)ep->ContextRecord->Esp;
+    int n = 0;
+    switch (er->ExceptionCode) {
+    case EXCEPTION_ACCESS_VIOLATION: case EXCEPTION_ILLEGAL_INSTRUCTION: case EXCEPTION_INT_DIVIDE_BY_ZERO:
+    case EXCEPTION_PRIV_INSTRUCTION: case EXCEPTION_STACK_OVERFLOW: case EXCEPTION_ARRAY_BOUNDS_EXCEEDED:
+        break;
+    default:
+        return EXCEPTION_CONTINUE_SEARCH;
+    }
+    if (eip < 0x200000 || eip >= (unsigned int)etext)
+        return EXCEPTION_CONTINUE_SEARCH;
+    fprintf(stderr, "[driver1] exception 0x%08lX at %08X, data address %08lX. backtrace:\n  %08X\n",
+            er->ExceptionCode, eip, er->NumberParameters > 1 ? (unsigned long)er->ExceptionInformation[1] : 0, eip);
+    if (!IsBadReadPtr(sp, 4096))
+        for (; n < 1024 && !IsBadReadPtr(sp, 4); sp++, n++)
+            if (*sp >= 0x200000 && *sp < (unsigned int)etext)
+                fprintf(stderr, "  %08X\n", *sp);
+    fflush(stderr);
+    TerminateProcess(GetCurrentProcess(), 3);
+    return EXCEPTION_CONTINUE_SEARCH;
+}
+
+static void install_crash_handler(void)
+{
+    AddVectoredExceptionHandler(1, on_crash);
+}
+
+/* Run the game on s_game_stack (below 16 MB, see above): switch the stack pointer and tell Windows (the thread's
+ * stack bounds, which exception dispatch checks; an empty SEH chain, as the old one lives on the other stack).
+ * game_entry() never returns. */
+static void run_game(void (*entry)(void))
+{
+    NT_TIB *tib = (NT_TIB *)NtCurrentTeb();
+    unsigned char *top = s_game_stack + sizeof(s_game_stack);
+    tib->StackBase = top;
+    tib->StackLimit = s_game_stack;
+    tib->ExceptionList = (EXCEPTION_REGISTRATION_RECORD *)-1;
+    __asm__ volatile("movl %0, %%esp\n\tcall *%1\n\tud2" : : "r"(top), "r"(entry) : "memory");
+}
+#else
 /* crash report: the faulting address and a backtrace (addr2line -e driver1 <addr> resolves the frames) */
 static void on_crash(int sig, siginfo_t *si, void *uc)
 {
@@ -457,6 +556,7 @@ static void install_crash_handler(void)
     sigaction(SIGFPE, &sa, NULL);
     sigaction(SIGILL, &sa, NULL);
 }
+#endif
 
 static void game_entry(void)
 {
@@ -491,11 +591,15 @@ int main(int argc, char **argv)
     PsyX_Initialise("Driver", 640, 480, getenv("D1_FULLSCREEN") && atoi(getenv("D1_FULLSCREEN")) ? 1 : 0);
     install_crash_handler();
 
+#ifdef _WIN32
+    run_game(game_entry);
+#else
     getcontext(&s_game_ctx);
     s_game_ctx.uc_stack.ss_sp = s_game_stack;
     s_game_ctx.uc_stack.ss_size = sizeof(s_game_stack);
     s_game_ctx.uc_link = &s_main_ctx;
     makecontext(&s_game_ctx, game_entry, 0);
     swapcontext(&s_main_ctx, &s_game_ctx);
+#endif
     return 0;
 }

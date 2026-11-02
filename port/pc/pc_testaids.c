@@ -14,6 +14,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#ifdef _WIN32
+#define setenv(n, v, o) _putenv_s((n), (v))
+#endif
 
 extern int D_000A083C[];          /* the memory card's career block (frontend newgame.c/hiscores.c) */
 extern int func_0006EACC(void);   /* ladder.c: loads data\mladder.psx to 0x1FE000 */

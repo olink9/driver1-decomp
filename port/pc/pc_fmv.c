@@ -397,8 +397,8 @@ extern unsigned int g_lastBoundTexture;             /* PsyX_render.cpp: its bind
  * samples at (uv + 0.5) / size, see the declared size below), which puts every screen pixel on its texel centre. */
 void PC_FmvPresent(DISPENV *d)
 {
-    typedef void (*BindTex)(unsigned, unsigned);
-    typedef void (*TexSub)(unsigned, int, int, int, int, int, unsigned, unsigned, const void *);
+    typedef void (PC_GLAPI *BindTex)(unsigned, unsigned);
+    typedef void (PC_GLAPI *TexSub)(unsigned, int, int, int, int, int, unsigned, unsigned, const void *);
     static BindTex bind;
     static TexSub sub;
     RECT16 r = d->disp;

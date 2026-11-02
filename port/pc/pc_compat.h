@@ -10,6 +10,13 @@
 /* common.h typedefs this too; gnu11 allows the repeat. gte.h (PsyCross inline_c.h) needs it in files without common.h */
 typedef unsigned int uint;
 
+/* OpenGL entry points fetched with SDL_GL_GetProcAddress are __stdcall on 32-bit Windows */
+#ifdef _WIN32
+#define PC_GLAPI __stdcall
+#else
+#define PC_GLAPI
+#endif
+
 /* Emulated PS1 memory (A's audit, pilot/PORT1.md): the 1 KB scratchpad at 0x1F800000 and the 2 MB main RAM
  * (offset = physical address) are plain arrays, so hard-coded PS1 addresses and the 24-bit OT links stay valid.
  * Per-file copies in src/ are #ifndef PC_SCRATCH / PC_RAM and step aside for these. */
