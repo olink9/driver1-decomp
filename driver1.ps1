@@ -78,6 +78,7 @@ function Install-Tools {
     $py = Find-Python
     $missing = @()
     if ($msys) {
+        & "$msys\usr\bin\bash.exe" -lc true | Out-Null    # (a new MSYS2's first start sets itself up and says so)
         $missing = @(& "$msys\usr\bin\bash.exe" -lc "pacman -T $($MsysPackages -join ' ')" 2>$null | Where-Object { $_ })
     }
     if ($msys -and $py -and $missing.Count -eq 0) { return @($msys, $py) }
@@ -89,6 +90,7 @@ function Install-Tools {
     if (-not $msys -or $missing.Count) {
         $list = if ($msys) { $missing } else { $MsysPackages }
         Say "  - in MSYS2, the 32-bit MinGW-w64 toolchain and SDL2: pacman -S $($list -join ' ')"
+        Say '    (after bringing MSYS2 up to date first: pacman -Syu)'
     }
     if (-not $py) { Say '  - Python 3.13 (python.org build): winget install Python.Python.3.13' }
     if (-not (Ask 'Install them now?')) {
@@ -99,10 +101,12 @@ function Install-Tools {
         winget install --id MSYS2.MSYS2 -e --accept-source-agreements --accept-package-agreements
         $msys = Find-Msys
         if (-not $msys) { Die 'MSYS2 did not install (see above). Install it from https://www.msys2.org, then run setup again' }
-        # first start: MSYS2 updates itself (twice: the second run finishes what the first had to stop for)
-        Msys $msys 'pacman -Syu --noconfirm'
-        Msys $msys 'pacman -Syu --noconfirm'
+        & "$msys\usr\bin\bash.exe" -lc true | Out-Null
     }
+    # MSYS2 installs from an up-to-date package list only (twice: the second run finishes what the first had to
+    # stop for when MSYS2's own core was updated)
+    Msys $msys 'pacman -Syu --noconfirm'
+    Msys $msys 'pacman -Syu --noconfirm'
     Msys $msys "pacman -S --needed --noconfirm $($MsysPackages -join ' ')"
     if ($LASTEXITCODE -ne 0) { Die 'pacman could not install the packages (see above)' }
     if (-not $py) {
