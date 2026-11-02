@@ -118,6 +118,10 @@ play() {
   # Saves (card1.mcd), settings (driver1_mods.ini) and the log live in play/.
   cd play
   export LD_LIBRARY_PATH="$ROOT/play/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+  local missing
+  missing=$(ldd ./driver1 2>/dev/null | awk '/not found/{print $1}' | tr '\n' ' ')
+  [ -z "$missing" ] || die "your system lacks these 32-bit libraries: $missing
+Installing Steam usually brings them; otherwise install your distribution's 32-bit (i386/lib32) packages for them."
   export D1_DATA="$ROOT/pcdata"
   export D1_FULLSCREEN="${D1_FULLSCREEN:-$fullscreen}"
   say "Driver is running. The log is play/driver1.log."
