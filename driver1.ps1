@@ -294,7 +294,7 @@ function Play([string[]]$a) {
     $env:D1_DATA = "$Root\pcdata"
     if (-not $env:D1_FULLSCREEN) { $env:D1_FULLSCREEN = $fullscreen }
     Say 'Driver is running. The log is play\driver1.log.'
-    cmd /s /c "`"cd /d `"$Root\play`" && .driver1.exe >> driver1.log 2>&1`""
+    cmd /s /c "`"cd /d `"$Root\play`" && .\driver1.exe >> driver1.log 2>&1`""
 }
 
 $cmd = if ($args.Count) { "$($args[0])" } else { '' }
